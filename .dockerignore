@@ -1,0 +1,56 @@
+# Version control
+.git
+.gitignore
+.github/
+
+# Go build files
+bin/
+pkg/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go test coverage and profiling files
+*.out
+*.prof
+*.test
+
+# Local development files
+.env
+.env.*
+!.env.example
+*.local
+*.log
+
+# IDE-specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-*
+.DS_Store
+
+# Project specific
+/data/
+/config/*.local.json
+/assets/writing_samples/personal/
+tmp/
+
+# Docker related
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Documentation and non-essential files
+README.md
+LICENSE
+CONTRIBUTING.md
+docs/
+examples/
+.github/
+*.md
+
+# Module and dependency caches
+vendor/

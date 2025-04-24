@@ -1,0 +1,36 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/dev/Dockerfile
+    container_name: app
+    environment:
+      - DB_PATH=/app/data/prospector.db
+    volumes:
+      - .:/app
+      - prospector-data:/app/data
+    ports:
+      - "8000:8080"
+    networks:
+      - prospector
+
+  db-dashboard:
+    image: coleifer/sqlite-web:latest
+    container_name: db-dashboard
+    volumes:
+      - prospector-data:/data
+    command: sqlite_web -H 0.0.0.0 -p 8080 /data/prospector.db
+    depends_on:
+      - app
+    ports:
+      - "8080:8080"
+    networks:
+      - prospector
+
+
+networks:
+  prospector:
+
+
+volumes:
+  prospector-data:
