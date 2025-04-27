@@ -82,10 +82,10 @@ jobs:
             exit 1
           fi
           echo "✅ Coverage threshold met: $COVERAGE% ≥ $MIN_COVERAGE%"
-  
+
   summary:
     name: CI Summary
-    needs: [build, lint, test, coverage-check]
+    needs: [build, lint, test-and-coverage]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -99,12 +99,8 @@ jobs:
             echo "Lint job failed"
             exit 1
           fi
-          if [[ "${{ needs.test.result }}" != "success" ]]; then
-            echo "Test job failed"
-            exit 1
-          fi
-          if [[ "${{ needs.coverage-check.result }}" != "success" ]]; then
-            echo "Coverage check job failed"
+          if [[ "${{ needs.test-and-coverage.result }}" != "success" ]]; then
+            echo "Test and coverage job failed"
             exit 1
           fi
           echo "All checks passed successfully!"
