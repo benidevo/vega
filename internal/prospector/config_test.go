@@ -19,6 +19,7 @@ func TestGetEnv(t *testing.T) {
 	t.Setenv("SERVER_PORT", ":8081")
 	t.Setenv("DB_CONNECTION_STRING", "/app/data/test.db?_journal=WAL&_busy_timeout=5000")
 	t.Setenv("DB_DRIVER", "postgres")
+	t.Setenv("LOG_LEVEL", "debug")
 
 	t.Run("should return overridden SERVER_PORT from environment variable", func(t *testing.T) {
 		value := getEnv("SERVER_PORT", ":8080")
@@ -35,11 +36,17 @@ func TestGetEnv(t *testing.T) {
 		assert.Equal(t, "postgres", value, "Expected DB_DRIVER to be postgres")
 	})
 
+	t.Run("should return overridden LOG_LEVEL from environment variable", func(t *testing.T) {
+		value := getEnv("LOG_LEVEL", "info")
+		assert.Equal(t, "debug", value, "Expected LOG_LEVEL to be debug")
+	})
+
 	t.Run("should use environment variables in NewConfig", func(t *testing.T) {
 		config := NewConfig()
 		assert.Equal(t, ":8081", config.ServerPort)
 		assert.Equal(t, "/app/data/test.db?_journal=WAL&_busy_timeout=5000", config.DBConnectionString)
 		assert.Equal(t, "postgres", config.DBDriver)
+		assert.Equal(t, "debug", config.LogLevel)
 	})
 
 	t.Run("should handle empty environment variables", func(t *testing.T) {

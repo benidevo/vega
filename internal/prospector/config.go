@@ -7,6 +7,8 @@ type Config struct {
 	ServerPort         string
 	DBConnectionString string
 	DBDriver           string
+	LogLevel           string
+	IsDevelopment      bool
 }
 
 // NewConfig initializes and returns a Config struct with default values
@@ -17,6 +19,8 @@ func NewConfig() Config {
 		ServerPort:         getEnv("SERVER_PORT", ":8080"),
 		DBConnectionString: getEnv("DB_CONNECTION_STRING", "/app/data/prospector.db?_journal=WAL&_busy_timeout=5000"),
 		DBDriver:           getEnv("DB_DRIVER", "sqlite"),
+		LogLevel:           getEnv("LOG_LEVEL", "info"),
+		IsDevelopment:      getEnv("IS_DEVELOPMENT", "false") == "true",
 	}
 }
 

@@ -1,9 +1,12 @@
+setup-hooks:
+	git config core.hooksPath .githooks
+	chmod +x .githooks/pre-commit
+
 test:
 	docker compose exec app sh -c "go test ./... -coverprofile=coverage.out -coverpkg=github.com/benidevo/prospector/internal/... && go tool cover -func=coverage.out | grep total:"
 
 test-verbose:
 	docker compose exec app sh -c "go test ./... -coverprofile=coverage.out -coverpkg=github.com/benidevo/prospector/internal/... && go tool cover -func=coverage.out"
-
 
 run:
 	docker compose down
@@ -21,4 +24,4 @@ enter-app:
 format:
 	docker compose exec app sh -c "go fmt ./... && go vet ./..."
 
-.PHONY: run stop logs enter-app format
+.PHONY: run stop logs enter-app format test test-verbose setup-hooks

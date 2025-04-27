@@ -1,0 +1,18 @@
+# .githooks/pre-commit
+#!/bin/bash
+set -e
+
+echo "Running formatting and tests in Docker container..."
+
+echo "Checking code formatting..."
+if ! docker compose exec -T app sh -c "test -z \$(gofmt -l .)" > /dev/null 2>&1; then
+  echo "The following files need formatting:"
+  docker compose exec -T app sh -c "gofmt -l ."
+  echo "Run 'make format' to format your code."
+  exit 1
+fi
+
+echo "Running go vet..."
+docker compose exec -T app go vet ./...
+
+echo "All checks passed!"

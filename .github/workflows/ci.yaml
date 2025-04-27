@@ -1,0 +1,141 @@
+name: Go Docker CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: docker compose build app
+
+  lint:
+    name: Lint
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: docker compose build app
+
+      - name: Check code formatting
+        run: |
+          if ! docker compose run --rm app sh -c "test -z \$(gofmt -l .)"; then
+            echo "Code formatting issues detected:"
+            docker compose run --rm app sh -c "gofmt -l ."
+            exit 1
+          fi
+
+      - name: Run go vet
+        run: docker compose run --rm app go vet ./...
+
+  test:
+    name: Test
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: docker compose build app
+
+      - name: Run tests with coverage
+        run: |
+          docker compose run --rm app sh -c "go test -v -race -coverprofile=coverage.out -covermode=atomic ./..."
+
+      - name: Extract coverage report
+        run: docker compose run --rm app cat coverage.out > coverage.out
+
+      - name: Upload coverage report as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage.out
+          retention-days: 1
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.out
+          flags: unittests
+
+  coverage-check:
+    name: Coverage Check
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Download coverage report
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage-report
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: docker compose build app
+
+      - name: Check test coverage
+        run: |
+          MIN_COVERAGE=70.0
+
+          # Copy coverage file into container and run check
+          docker compose run --rm -v "$(pwd)/coverage.out:/app/coverage.out" app sh -c "go tool cover -func=coverage.out | grep total:"
+
+          COVERAGE=$(docker compose run --rm -v "$(pwd)/coverage.out:/app/coverage.out" app sh -c "go tool cover -func=coverage.out | grep total: | awk '{print \$3}'" | tr -d '%')
+          echo "Code coverage: $COVERAGE%"
+
+          if (( $(echo "$COVERAGE < $MIN_COVERAGE" | bc -l) )); then
+            echo "Code coverage is below the threshold of $MIN_COVERAGE%"
+            exit 1
+          fi
+          echo "✅ Coverage threshold met: $COVERAGE% ≥ $MIN_COVERAGE%"
+
+  summary:
+    name: CI Summary
+    needs: [build, lint, test, coverage-check]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check status
+        run: |
+          if [[ "${{ needs.build.result }}" != "success" ]]; then
+            echo "Build job failed"
+            exit 1
+          fi
+          if [[ "${{ needs.lint.result }}" != "success" ]]; then
+            echo "Lint job failed"
+            exit 1
+          fi
+          if [[ "${{ needs.test.result }}" != "success" ]]; then
+            echo "Test job failed"
+            exit 1
+          fi
+          if [[ "${{ needs.coverage-check.result }}" != "success" ]]; then
+            echo "Coverage check job failed"
+            exit 1
+          fi
+          echo "All checks passed successfully!"

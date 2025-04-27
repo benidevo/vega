@@ -3,15 +3,15 @@ package prospector
 import (
 	"context"
 	"database/sql"
-	"log"
+	"github.com/benidevo/prospector/internal/logger"
+	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
+	_ "modernc.org/sqlite"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/gin-gonic/gin"
-	_ "modernc.org/sqlite"
 )
 
 // App represents the core application structure, encapsulating configuration,
@@ -36,10 +36,20 @@ func New(config Config) *App {
 
 // Setup initializes the application by setting up dependencies and routes.
 func (a *App) Setup() error {
+	logger.Initialize(
+		a.config.IsDevelopment,
+		a.config.LogLevel,
+	)
+
+	log.Info().Msg("Starting application setup")
+
 	if err := a.setupDependencies(); err != nil {
+		log.Error().Err(err).Msg("Failed to setup dependencies")
 		return err
 	}
 	a.setupRoutes()
+
+	log.Info().Msg("Application setup completed successfully")
 	return nil
 }
 
@@ -72,16 +82,16 @@ func (a *App) Run() error {
 // to ensure the shutdown completes within the specified time.
 func (a *App) WaitForShutdown() {
 	<-a.done
-	log.Println("Shutting down server...")
+	log.Info().Msg("Received shutdown signal, shutting down server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if err := a.Shutdown(ctx); err != nil {
-		log.Fatalf("Error shutting down server: %v\n", err)
+		log.Error().Err(err).Msg("Error during shutdown")
 	}
 
-	log.Println("Server shut down gracefully")
+	log.Info().Msg("Server shut down gracefully")
 }
 
 // Shutdown gracefully shuts down the application by stopping the server
