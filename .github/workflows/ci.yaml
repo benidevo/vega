@@ -61,7 +61,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          docker compose run --rm app sh -c "go test -v -coverprofile=coverage.out -covermode=count ./..."
+          docker compose run --rm app sh -c "go test -v -coverprofile=coverage.out -covermode=count -coverpkg=github.com/benidevo/prospector/internal/... ./..."
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
