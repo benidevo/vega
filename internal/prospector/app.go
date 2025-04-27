@@ -1,36 +1,109 @@
 package prospector
 
 import (
+	"context"
 	"database/sql"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	_ "modernc.org/sqlite"
 )
 
-// App represents the core application structure, containing configuration,
-// HTTP router, and database connection.
+// App represents the core application structure, encapsulating configuration,
+// HTTP router, database connection, HTTP server, and a channel for handling OS signals.
 type App struct {
 	config Config
 	router *gin.Engine
 	db     *sql.DB
+	server *http.Server
+	done   chan os.Signal
 }
 
+// New creates and returns a new instance of App with the provided configuration.
+// It initializes the router using the Gin framework and sets up a channel to handle OS signals.
 func New(config Config) *App {
 	return &App{
 		config: config,
 		router: gin.Default(),
+		done:   make(chan os.Signal, 1),
 	}
 }
 
-// Run initializes the application by setting up dependencies and routes,
-// and starts the HTTP server on the configured port.
-func (a *App) Run() {
-	a.setupDependencies()
-	a.setupRoutes()
-	if err := a.router.Run(a.config.ServerPort); err != nil {
-		log.Fatal(err)
+// Setup initializes the application by setting up dependencies and routes.
+func (a *App) Setup() error {
+	if err := a.setupDependencies(); err != nil {
+		return err
 	}
+	a.setupRoutes()
+	return nil
+}
+
+// Run initializes the application, sets up the HTTP server, and starts it in a separate goroutine.
+// It also listens for system interrupt signals to handle graceful shutdown.
+func (a *App) Run() error {
+	if err := a.Setup(); err != nil {
+		return err
+	}
+
+	a.server = &http.Server{
+		Addr:    a.config.ServerPort,
+		Handler: a.router,
+	}
+
+	signal.Notify(a.done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		log.Printf("Starting server on %s\n", a.config.ServerPort)
+		if err := a.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Printf("Error starting server: %v\n", err)
+		}
+	}()
+
+	return nil
+}
+
+// WaitForShutdown waits for a shutdown signal, gracefully shuts down the server,
+// It uses a context with a 10-second timeout
+// to ensure the shutdown completes within the specified time.
+func (a *App) WaitForShutdown() {
+	<-a.done
+	log.Println("Shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := a.Shutdown(ctx); err != nil {
+		log.Fatalf("Error shutting down server: %v\n", err)
+	}
+
+	log.Println("Server shut down gracefully")
+}
+
+// Shutdown gracefully shuts down the application by stopping the server
+// and closing the database connection.
+func (a *App) Shutdown(ctx context.Context) error {
+	var err error
+
+	if a.server != nil {
+		err = a.server.Shutdown(ctx)
+	}
+
+	if a.db != nil {
+		dbErr := a.db.Close()
+		if err == nil {
+			err = dbErr
+		}
+	}
+
+	a.server = nil
+	a.db = nil
+
+	return err
 }
 
 func (a *App) setupRoutes() {
@@ -46,24 +119,15 @@ func (a *App) setupRoutes() {
 	}
 }
 
-func (a *App) setupDependencies() {
+func (a *App) setupDependencies() error {
 	db, err := sql.Open(a.config.DBDriver, a.config.DBConnectionString)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	if err := db.Ping(); err != nil {
-		log.Fatal("Failed to establish a database connection:", err)
+		return err
 	}
 	a.db = db
-}
-
-// Shutdown gracefully shuts down the application by closing the database
-// connection if it is open.
-func (a *App) Shutdown() {
-	if a.db != nil {
-		if err := a.db.Close(); err != nil {
-			log.Fatal("Failed to close database:", err)
-		}
-	}
+	return nil
 }
