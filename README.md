@@ -51,4 +51,4 @@ This project uses Git hooks to ensure code quality. To set up:
 make setup-hooks
 ```
 
-This will install the pre-commit hooks defined in the `.pre-commit-config.yaml` file. The hooks will run automatically on commit and push, ensuring that code quality checks are performed.
+This will install the pre-commit hooks defined in the `.githooks/pre-commit` file. The hooks will run automatically on commit and push, ensuring that code quality checks are performed.

@@ -1,5 +1,5 @@
-# .githooks/pre-commit
 #!/bin/bash
+
 set -e
 
 echo "Running formatting and tests in Docker container..."
