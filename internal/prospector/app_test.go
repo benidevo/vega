@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benidevo/prospector/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -112,9 +113,9 @@ func TestWaitForShutdown(t *testing.T) {
 	}
 }
 
-func mockConfig(t *testing.T) Config {
+func mockConfig(t *testing.T) config.Settings {
 	t.Helper()
-	return Config{
+	return config.Settings{
 		ServerPort:         ":0",
 		DBConnectionString: ":memory:",
 		DBDriver:           "sqlite",

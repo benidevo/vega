@@ -1,9 +1,9 @@
-package prospector
+package config
 
 import "os"
 
-// Config holds the configuration settings for the application,
-type Config struct {
+// Settings holds the configuration settings for the application.
+type Settings struct {
 	ServerPort         string
 	DBConnectionString string
 	DBDriver           string
@@ -11,11 +11,11 @@ type Config struct {
 	IsDevelopment      bool
 }
 
-// NewConfig initializes and returns a Config struct with default values
+// NewSettings initializes and returns a Settings struct with default values
 // populated from environment variables. If an environment variable is
 // not set, a predefined default value is used.
-func NewConfig() Config {
-	return Config{
+func NewSettings() Settings {
+	return Settings{
 		ServerPort:         getEnv("SERVER_PORT", ":8080"),
 		DBConnectionString: getEnv("DB_CONNECTION_STRING", "/app/data/prospector.db?_journal=WAL&_busy_timeout=5000"),
 		DBDriver:           getEnv("DB_DRIVER", "sqlite"),

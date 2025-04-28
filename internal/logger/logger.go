@@ -32,7 +32,3 @@ func Initialize(isDevelopment bool, logLevel string) {
 		Caller().
 		Logger()
 }
-
-func GetLogger(component string) zerolog.Logger {
-	return log.With().Str("component", component).Logger()
-}

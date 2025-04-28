@@ -3,21 +3,23 @@ package prospector
 import (
 	"context"
 	"database/sql"
-	"github.com/benidevo/prospector/internal/logger"
-	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog/log"
-	_ "modernc.org/sqlite"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/benidevo/prospector/internal/config"
+	"github.com/benidevo/prospector/internal/logger"
+	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
+	_ "modernc.org/sqlite"
 )
 
 // App represents the core application structure, encapsulating configuration,
 // HTTP router, database connection, HTTP server, and a channel for handling OS signals.
 type App struct {
-	config Config
+	config config.Settings
 	router *gin.Engine
 	db     *sql.DB
 	server *http.Server
@@ -26,9 +28,9 @@ type App struct {
 
 // New creates and returns a new instance of App with the provided configuration.
 // It initializes the router using the Gin framework and sets up a channel to handle OS signals.
-func New(config Config) *App {
+func New(cfg config.Settings) *App {
 	return &App{
-		config: config,
+		config: cfg,
 		router: gin.Default(),
 		done:   make(chan os.Signal, 1),
 	}

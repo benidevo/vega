@@ -1,4 +1,4 @@
-package prospector
+package config
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -6,13 +6,13 @@ import (
 	"testing"
 )
 
-func TestNewConfig(t *testing.T) {
-	config := NewConfig()
+func TestNewSettings(t *testing.T) {
+	settings := NewSettings()
 
-	require.NotNil(t, config, "Expected config to be initialized")
-	assert.Equal(t, config.ServerPort, ":8080", "Expected default server port to be :8080")
-	assert.Equal(t, config.DBConnectionString, "/app/data/prospector.db?_journal=WAL&_busy_timeout=5000", "Expected default DB connection string to be /app/data/prospector.db?_journal=WAL&_busy_timeout=5000")
-	assert.Equal(t, config.DBDriver, "sqlite", "Expected default DB driver to be sqlite")
+	require.NotNil(t, settings, "Expected config to be initialized")
+	assert.Equal(t, ":8080", settings.ServerPort, "Expected default server port to be :8080")
+	assert.Equal(t, settings.DBConnectionString, "/app/data/prospector.db?_journal=WAL&_busy_timeout=5000", "Expected default DB connection string to be /app/data/prospector.db?_journal=WAL&_busy_timeout=5000")
+	assert.Equal(t, settings.DBDriver, "sqlite", "Expected default DB driver to be sqlite")
 }
 
 func TestGetEnv(t *testing.T) {
@@ -42,11 +42,11 @@ func TestGetEnv(t *testing.T) {
 	})
 
 	t.Run("should use environment variables in NewConfig", func(t *testing.T) {
-		config := NewConfig()
-		assert.Equal(t, ":8081", config.ServerPort)
-		assert.Equal(t, "/app/data/test.db?_journal=WAL&_busy_timeout=5000", config.DBConnectionString)
-		assert.Equal(t, "postgres", config.DBDriver)
-		assert.Equal(t, "debug", config.LogLevel)
+		settings := NewSettings()
+		assert.Equal(t, ":8081", settings.ServerPort)
+		assert.Equal(t, "/app/data/test.db?_journal=WAL&_busy_timeout=5000", settings.DBConnectionString)
+		assert.Equal(t, "postgres", settings.DBDriver)
+		assert.Equal(t, "debug", settings.LogLevel)
 	})
 
 	t.Run("should handle empty environment variables", func(t *testing.T) {
