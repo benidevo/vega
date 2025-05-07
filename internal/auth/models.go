@@ -2,9 +2,19 @@ package auth
 
 import (
 	"errors"
+	"strings"
 	"time"
 )
 
+// Role represents the role of a user in the system.
+// It is an enumerated type with predefined constants for different roles.
+//
+// The available roles are:
+//   - ADMIN: Represents an administrative user with elevated privileges.
+//   - STANDARD: Represents a standard user with regular privileges.
+//
+// Role can be converted to and from its string representation using the
+// RoleFromString and String methods, respectively.
 type Role int
 
 const (
@@ -12,14 +22,28 @@ const (
 	STANDARD
 )
 
-func (r Role) String() string {
+// RoleFromString converts a string representation of a role to its corresponding
+// Role type.
+func RoleFromString(role string) (Role, error) {
+	switch strings.ToLower(role) {
+	case "admin":
+		return ADMIN, nil
+	case "standard":
+		return STANDARD, nil
+	default:
+		return -1, ErrInvalidRole
+	}
+}
+
+// String returns the string representation of the Role.
+func (r Role) String() (string, error) {
 	switch r {
 	case ADMIN:
-		return "Admin"
+		return "Admin", nil
 	case STANDARD:
-		return "Standard"
+		return "Standard", nil
 	default:
-		return "Unknown"
+		return "", ErrInvalidRole
 	}
 }
 
