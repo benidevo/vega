@@ -32,3 +32,11 @@ func Initialize(isDevelopment bool, logLevel string) {
 		Caller().
 		Logger()
 }
+
+// GetLogger returns a zerolog.Logger instance with the specified module name
+// added as a contextual field.
+//
+// This allows for structured logging with module-specific context.
+func GetLogger(module string) zerolog.Logger {
+	return log.Logger.With().Str("module", module).Logger()
+}
