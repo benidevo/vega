@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/benidevo/prospector/internal/auth"
 	"github.com/benidevo/prospector/internal/config"
 	"github.com/benidevo/prospector/internal/logger"
 	"github.com/gin-gonic/gin"
@@ -123,11 +124,11 @@ func (a *App) setupRoutes() {
 		c.String(200, "Hello World")
 	})
 
+	authHandler := auth.SetupAuth(a.db, &a.config)
+
 	authGroup := a.router.Group("/auth")
 	{
-		authGroup.GET("/login", func(c *gin.Context) {
-			c.String(200, "Login")
-		})
+		authGroup.GET("/login", authHandler.GetLoginPage)
 	}
 }
 

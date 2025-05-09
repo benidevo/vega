@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"database/sql"
 	"testing"
 	"time"
@@ -35,9 +36,10 @@ func TestCreateUser(t *testing.T) {
 	defer db.Close()
 
 	repo := NewSQLiteUserRepository(db)
+	ctx := context.Background()
 
 	t.Run("should create a new user", func(t *testing.T) {
-		user, err := repo.CreateUser("testuser", "password123", "admin")
+		user, err := repo.CreateUser(ctx, "testuser", "password123", "admin")
 		require.NoError(t, err)
 		assert.NotNil(t, user)
 		assert.Equal(t, "testuser", user.Username)
@@ -50,14 +52,14 @@ func TestCreateUser(t *testing.T) {
 	})
 
 	t.Run("should fail with duplicate username", func(t *testing.T) {
-		repo.CreateUser("testuser", "anotherpassword", "standard")
-		_, err := repo.CreateUser("testuser", "anotherpassword", "standard")
+		repo.CreateUser(ctx, "testuser2", "anotherpassword", "standard")
+		_, err := repo.CreateUser(ctx, "testuser2", "anotherpassword", "standard")
 		assert.Error(t, err)
 		assert.Equal(t, ErrUserCreationFailed, err)
 	})
 
 	t.Run("should create a user with standard role", func(t *testing.T) {
-		user, err := repo.CreateUser("standarduser", "password123", "standard")
+		user, err := repo.CreateUser(ctx, "standarduser", "password123", "standard")
 		require.NoError(t, err)
 		assert.NotNil(t, user)
 		assert.Equal(t, "standarduser", user.Username)
@@ -70,12 +72,13 @@ func TestFindUser(t *testing.T) {
 	defer db.Close()
 
 	repo := NewSQLiteUserRepository(db)
+	ctx := context.Background()
 
-	createdUser, err := repo.CreateUser("testuser", "password123", "admin")
+	createdUser, err := repo.CreateUser(ctx, "testuser", "password123", "admin")
 	require.NoError(t, err)
 
 	t.Run("should find a user by ID", func(t *testing.T) {
-		user, err := repo.FindByID(createdUser.ID)
+		user, err := repo.FindByID(ctx, createdUser.ID)
 		require.NoError(t, err)
 		assert.NotNil(t, user)
 		assert.Equal(t, createdUser.ID, user.ID)
@@ -85,7 +88,7 @@ func TestFindUser(t *testing.T) {
 	})
 
 	t.Run("should find a user by username", func(t *testing.T) {
-		user, err := repo.FindByUsername("testuser")
+		user, err := repo.FindByUsername(ctx, "testuser")
 		require.NoError(t, err)
 		assert.NotNil(t, user)
 		assert.Equal(t, createdUser.ID, user.ID)
@@ -93,14 +96,14 @@ func TestFindUser(t *testing.T) {
 	})
 
 	t.Run("should return error for non-existent user ID", func(t *testing.T) {
-		user, err := repo.FindByID(9999)
+		user, err := repo.FindByID(ctx, 9999)
 		assert.Error(t, err)
 		assert.Equal(t, ErrUserNotFound, err)
 		assert.Nil(t, user)
 	})
 
 	t.Run("should return error for non-existent username", func(t *testing.T) {
-		user, err := repo.FindByUsername("nonexistentuser")
+		user, err := repo.FindByUsername(ctx, "nonexistentuser")
 		assert.Error(t, err)
 		assert.Equal(t, ErrUserNotFound, err)
 		assert.Nil(t, user)
@@ -112,8 +115,9 @@ func TestUpdateUser(t *testing.T) {
 	defer db.Close()
 
 	repo := NewSQLiteUserRepository(db)
+	ctx := context.Background()
 
-	createdUser, err := repo.CreateUser("testuser", "password123", "admin")
+	createdUser, err := repo.CreateUser(ctx, "testuser", "password123", "admin")
 	require.NoError(t, err)
 
 	t.Run("should update user details", func(t *testing.T) {
@@ -122,7 +126,7 @@ func TestUpdateUser(t *testing.T) {
 		createdUser.Role = STANDARD
 		createdUser.UpdatedAt = time.Now().UTC()
 
-		updatedUser, err := repo.UpdateUser(createdUser)
+		updatedUser, err := repo.UpdateUser(ctx, createdUser)
 		require.NoError(t, err)
 		assert.NotNil(t, updatedUser)
 		assert.Equal(t, "updateduser", updatedUser.Username)
@@ -130,7 +134,7 @@ func TestUpdateUser(t *testing.T) {
 		assert.Equal(t, STANDARD, updatedUser.Role)
 
 		// Verify the update was persisted
-		fetchedUser, err := repo.FindByID(createdUser.ID)
+		fetchedUser, err := repo.FindByID(ctx, createdUser.ID)
 		require.NoError(t, err)
 		assert.Equal(t, "updateduser", fetchedUser.Username)
 		assert.Equal(t, "newpassword", fetchedUser.Password)
@@ -146,7 +150,7 @@ func TestUpdateUser(t *testing.T) {
 			UpdatedAt: time.Now().UTC(),
 		}
 
-		updatedUser, err := repo.UpdateUser(nonExistentUser)
+		updatedUser, err := repo.UpdateUser(ctx, nonExistentUser)
 		assert.Error(t, err)
 		assert.Nil(t, updatedUser)
 	})
@@ -157,24 +161,25 @@ func TestDeleteUser(t *testing.T) {
 	defer db.Close()
 
 	repo := NewSQLiteUserRepository(db)
+	ctx := context.Background()
 
 	// Create a test user
-	createdUser, err := repo.CreateUser("testuser", "password123", "admin")
+	createdUser, err := repo.CreateUser(ctx, "testuser", "password123", "admin")
 	require.NoError(t, err)
 
 	t.Run("should delete a user", func(t *testing.T) {
-		err := repo.DeleteUser(createdUser.ID)
+		err := repo.DeleteUser(ctx, createdUser.ID)
 		require.NoError(t, err)
 
 		// Verify the user was deleted
-		user, err := repo.FindByID(createdUser.ID)
+		user, err := repo.FindByID(ctx, createdUser.ID)
 		assert.Error(t, err)
 		assert.Equal(t, ErrUserNotFound, err)
 		assert.Nil(t, user)
 	})
 
 	t.Run("should not return error when deleting non-existent user", func(t *testing.T) {
-		err := repo.DeleteUser(9999)
+		err := repo.DeleteUser(ctx, 9999)
 		assert.NoError(t, err)
 	})
 }
@@ -184,22 +189,23 @@ func TestFindAllUsers(t *testing.T) {
 	defer db.Close()
 
 	repo := NewSQLiteUserRepository(db)
+	ctx := context.Background()
 
 	t.Run("should return empty slice when no users exist", func(t *testing.T) {
-		users, err := repo.FindAllUsers()
+		users, err := repo.FindAllUsers(ctx)
 		require.NoError(t, err)
 		assert.Empty(t, users)
 	})
 
 	t.Run("should return all users", func(t *testing.T) {
 		// Create test users
-		user1, err := repo.CreateUser("user1", "password1", "admin")
+		user1, err := repo.CreateUser(ctx, "user1", "password1", "admin")
 		require.NoError(t, err)
 
-		user2, err := repo.CreateUser("user2", "password2", "standard")
+		user2, err := repo.CreateUser(ctx, "user2", "password2", "standard")
 		require.NoError(t, err)
 
-		users, err := repo.FindAllUsers()
+		users, err := repo.FindAllUsers(ctx)
 		require.NoError(t, err)
 		assert.Len(t, users, 2)
 

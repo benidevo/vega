@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"time"
 
 	"github.com/benidevo/prospector/internal/config"
@@ -28,14 +29,14 @@ func NewAuthService(repo UserRepository, config *config.Settings) *AuthService {
 }
 
 // Register creates a new user with the provided username, password, and role.
-func (s *AuthService) Register(username, password, role string) (*User, error) {
+func (s *AuthService) Register(ctx context.Context, username, password, role string) (*User, error) {
 	hashedPassword, err := hashPassword(password)
 	if err != nil {
 		s.log.Error().Err(err).Msg("Failed to hash password")
 		return nil, ErrUserCreationFailed
 	}
 
-	user, err := s.repo.CreateUser(username, hashedPassword, role)
+	user, err := s.repo.CreateUser(ctx, username, hashedPassword, role)
 	if err != nil {
 		s.log.Error().Err(err).Msg("Failed to create user")
 		return nil, ErrUserCreationFailed
@@ -48,8 +49,8 @@ func (s *AuthService) Register(username, password, role string) (*User, error) {
 //
 // If successful, it generates and returns a JWT token. It also updates the
 // user's last login timestamp.
-func (s *AuthService) Login(username, password string) (string, error) {
-	user, err := s.repo.FindByUsername(username)
+func (s *AuthService) Login(ctx context.Context, username, password string) (string, error) {
+	user, err := s.repo.FindByUsername(ctx, username)
 	if err != nil {
 		s.log.Error().Err(err).Msg("User not found")
 		return "", ErrUserNotFound
@@ -67,7 +68,7 @@ func (s *AuthService) Login(username, password string) (string, error) {
 	}
 
 	user.LastLogin = time.Now()
-	_, err = s.repo.UpdateUser(user)
+	_, err = s.repo.UpdateUser(ctx, user)
 	if err != nil {
 		s.log.Warn().Err(err).Msg("Failed to update user last login")
 	}
@@ -77,8 +78,8 @@ func (s *AuthService) Login(username, password string) (string, error) {
 }
 
 // GetUserByID retrieves a user by their unique ID from the repository.
-func (s *AuthService) GetUserByID(userID int) (*User, error) {
-	user, err := s.repo.FindByID(userID)
+func (s *AuthService) GetUserByID(ctx context.Context, userID int) (*User, error) {
+	user, err := s.repo.FindByID(ctx, userID)
 	if err != nil {
 		s.log.Error().Err(err).Msg("Failed to find user by ID")
 		return nil, ErrUserNotFound
@@ -142,8 +143,8 @@ func (s *AuthService) VerifyToken(token string) (*Claims, error) {
 // ChangePassword updates the password for a user identified by userID.
 //
 // It hashes the new password and updates the user's record in the repository.
-func (s *AuthService) ChangePassword(userID int, newPassword string) error {
-	user, err := s.repo.FindByID(userID)
+func (s *AuthService) ChangePassword(ctx context.Context, userID int, newPassword string) error {
+	user, err := s.repo.FindByID(ctx, userID)
 	if err != nil {
 		return ErrUserNotFound
 	}
@@ -155,7 +156,7 @@ func (s *AuthService) ChangePassword(userID int, newPassword string) error {
 	}
 
 	user.Password = hashedPassword
-	_, err = s.repo.UpdateUser(user)
+	_, err = s.repo.UpdateUser(ctx, user)
 	if err != nil {
 		s.log.Error().Err(err).Msg("Failed to update user password")
 		return ErrUserPasswordChangeFailed
