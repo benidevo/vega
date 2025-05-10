@@ -48,8 +48,16 @@ func NewSQLiteUserRepository(db *sql.DB) *SQLiteUserRepository {
 
 // CreateUser inserts a new user into the database with the specified username,
 // password, and role, and returns the created User object.
-// It returns an error if the user creation fails.
+// If a user with the given username already exists, it returns the existing user
+// along with ErrUserAlreadyExists.
 func (r *SQLiteUserRepository) CreateUser(ctx context.Context, username, password, role string) (*User, error) {
+	existingUser, err := r.FindByUsername(ctx, username)
+	if err == nil {
+		return existingUser, ErrUserAlreadyExists
+	} else if err != ErrUserNotFound {
+		return nil, err
+	}
+
 	query := "INSERT INTO users (username, password, role) VALUES (?, ?, ?)"
 
 	roleValue, err := RoleFromString(role)
@@ -58,6 +66,13 @@ func (r *SQLiteUserRepository) CreateUser(ctx context.Context, username, passwor
 	}
 	result, err := r.db.ExecContext(ctx, query, username, password, roleValue)
 	if err != nil {
+		if err.Error() == "UNIQUE constraint failed: users.username" {
+			existingUser, findErr := r.FindByUsername(ctx, username)
+			if findErr == nil {
+				return existingUser, ErrUserAlreadyExists
+			}
+			return nil, ErrUserAlreadyExists
+		}
 		return nil, ErrUserCreationFailed
 	}
 

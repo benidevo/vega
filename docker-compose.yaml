@@ -14,6 +14,34 @@ services:
     networks:
       - prospector
 
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/dev/Dockerfile
+    container_name: scheduler
+    environment:
+      - DB_PATH=/app/data/prospector.db
+      - GO_ENV=development
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      "
+      # Wait for app to initialize database
+      sleep 10
+
+      # Run scheduler in development mode
+      cd /app && go run cmd/scheduler/main.go sync-users /app/config/users.yaml
+
+      # Keep container running
+      tail -f /dev/null
+      "
+    volumes:
+      - .:/app
+      - prospector-data:/app/data
+    depends_on:
+      - app
+    networks:
+      - prospector
+
   db-dashboard:
     image: coleifer/sqlite-web:latest
     container_name: db-dashboard

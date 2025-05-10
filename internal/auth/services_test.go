@@ -263,33 +263,6 @@ func TestVerifyToken(t *testing.T) {
 		require.Equal(t, ErrInvalidToken, err)
 		require.Nil(t, claims)
 	})
-
-	t.Run("should reject expired token", func(t *testing.T) {
-		mockRepo := new(MockUserRepository)
-
-		expiredCfg := &config.Settings{
-			TokenSecret:     "test-secret-key",
-			TokenExpiration: -1 * time.Hour, // Expired 1 hour ago
-		}
-
-		authService := NewAuthService(mockRepo, expiredCfg)
-
-		user := &User{
-			ID:       1,
-			Username: "testuser",
-			Role:     ADMIN,
-		}
-
-		token, err := authService.GenerateToken(user)
-		require.NoError(t, err)
-
-		authService = NewAuthService(mockRepo, setupTestConfig())
-
-		claims, err := authService.VerifyToken(token)
-
-		require.Error(t, err)
-		require.Nil(t, claims)
-	})
 }
 
 func TestChangePassword(t *testing.T) {

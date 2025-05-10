@@ -18,6 +18,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+// AuthService provides authentication and user management functionality
 type AuthService struct {
 	repo   UserRepository
 	config *config.Settings
@@ -29,6 +30,7 @@ func NewAuthService(repo UserRepository, config *config.Settings) *AuthService {
 }
 
 // Register creates a new user with the provided username, password, and role.
+// It returns the user and ErrUserAlreadyExists if a user with that username already exists.
 func (s *AuthService) Register(ctx context.Context, username, password, role string) (*User, error) {
 	hashedPassword, err := hashPassword(password)
 	if err != nil {
@@ -38,10 +40,15 @@ func (s *AuthService) Register(ctx context.Context, username, password, role str
 
 	user, err := s.repo.CreateUser(ctx, username, hashedPassword, role)
 	if err != nil {
+		if err == ErrUserAlreadyExists {
+			s.log.Warn().Str("username", username).Msg("User already exists")
+			return user, ErrUserAlreadyExists
+		}
 		s.log.Error().Err(err).Msg("Failed to create user")
 		return nil, ErrUserCreationFailed
 	}
 
+	s.log.Info().Str("username", username).Msg("User registered successfully")
 	return user, nil
 }
 

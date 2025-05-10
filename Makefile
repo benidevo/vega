@@ -25,6 +25,9 @@ logs:
 enter-app:
 	docker compose exec app sh
 
+enter-scheduler:
+	docker compose run --rm scheduler /bin/sh
+
 format:
 	docker compose exec app sh -c "go fmt ./... && go vet ./..."
 

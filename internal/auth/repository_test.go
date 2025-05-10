@@ -52,18 +52,15 @@ func TestCreateUser(t *testing.T) {
 	})
 
 	t.Run("should fail with duplicate username", func(t *testing.T) {
-		repo.CreateUser(ctx, "testuser2", "anotherpassword", "standard")
-		_, err := repo.CreateUser(ctx, "testuser2", "anotherpassword", "standard")
-		assert.Error(t, err)
-		assert.Equal(t, ErrUserCreationFailed, err)
-	})
-
-	t.Run("should create a user with standard role", func(t *testing.T) {
-		user, err := repo.CreateUser(ctx, "standarduser", "password123", "standard")
+		user, err := repo.CreateUser(ctx, "testuser2", "anotherpassword", "standard")
 		require.NoError(t, err)
-		assert.NotNil(t, user)
-		assert.Equal(t, "standarduser", user.Username)
-		assert.Equal(t, STANDARD, user.Role)
+		require.NotNil(t, user)
+
+		existingUser, err := repo.CreateUser(ctx, "testuser2", "anotherpassword", "standard")
+		assert.Error(t, err)
+		assert.Equal(t, ErrUserAlreadyExists, err)
+		assert.NotNil(t, existingUser) // The repository returns the existing user along with the error
+		assert.Equal(t, user.ID, existingUser.ID)
 	})
 }
 

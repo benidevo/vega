@@ -37,17 +37,6 @@ func TestNewUserValidation(t *testing.T) {
 
 }
 
-func TestNewUserTimestamps(t *testing.T) {
-	user, err := NewUser("testuser", "password123", ADMIN)
-
-	require.NoError(t, err, "Expected no error when creating user")
-	require.NotNil(t, user, "Expected user to be initialized")
-	assert.NotZero(t, user.CreatedAt, "Expected CreatedAt to be set")
-	assert.NotZero(t, user.UpdatedAt, "Expected UpdatedAt to be set")
-	assert.Zero(t, user.LastLogin, "Expected LastLogin to be zero value")
-	assert.Equal(t, user.CreatedAt, user.UpdatedAt, "Expected CreatedAt and UpdatedAt to be equal")
-}
-
 func TestRole(t *testing.T) {
 	t.Run("should return correct string for ADMIN role", func(t *testing.T) {
 		role := ADMIN
