@@ -16,6 +16,7 @@ type Settings struct {
 	TokenExpiration    time.Duration
 	TokenSecret        string
 	IsTest             bool
+	MigrationsDir      string
 }
 
 // NewSettings initializes and returns a Settings struct with default values
@@ -36,6 +37,7 @@ func NewSettings() Settings {
 		TokenExpiration:    time.Duration(tokenExpiration) * time.Minute,
 		TokenSecret:        getEnv("TOKEN_SECRET", "default-secret"),
 		IsTest:             getEnv("GO_ENV", "") == "test",
+		MigrationsDir:      getEnv("MIGRATIONS_DIR", "migrations/sqlite"),
 	}
 }
 

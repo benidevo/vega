@@ -11,6 +11,7 @@ import (
 
 	"github.com/benidevo/prospector/internal/auth"
 	"github.com/benidevo/prospector/internal/config"
+	"github.com/benidevo/prospector/internal/db"
 	"github.com/benidevo/prospector/internal/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -140,14 +141,39 @@ func (a *App) setupRoutes() {
 }
 
 func (a *App) setupDependencies() error {
-	db, err := sql.Open(a.config.DBDriver, a.config.DBConnectionString)
+	database, err := sql.Open(a.config.DBDriver, a.config.DBConnectionString)
 	if err != nil {
 		return err
 	}
 
-	if err := db.Ping(); err != nil {
+	if err := database.Ping(); err != nil {
 		return err
 	}
-	a.db = db
+	a.db = database
+
+	if !a.config.IsTest {
+		if err := a.runMigrations(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// runMigrations applies database migrations from the configured migrations directory
+func (a *App) runMigrations() error {
+	dbPath := a.config.DBConnectionString
+	for i, char := range dbPath {
+		if char == '?' {
+			dbPath = dbPath[:i]
+			break
+		}
+	}
+
+	if err := db.MigrateDatabase(dbPath, a.config.MigrationsDir); err != nil {
+		log.Error().Err(err).Msg("Database migration failed")
+		return err
+	}
+
 	return nil
 }
