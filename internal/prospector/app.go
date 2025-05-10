@@ -128,15 +128,20 @@ func (a *App) Shutdown(ctx context.Context) error {
 }
 
 func (a *App) setupRoutes() {
+	authHandler := auth.SetupAuth(a.db, &a.config)
+
 	a.router.GET("/", func(c *gin.Context) {
-		c.String(200, "Hello World")
+		c.String(http.StatusOK, "ProspecTor API")
 	})
 
-	authHandler := auth.SetupAuth(a.db, &a.config)
+	a.router.GET("/dashboard", authHandler.AuthMiddleware(), func(c *gin.Context) {
+		c.String(200, "Hello World")
+	})
 
 	authGroup := a.router.Group("/auth")
 	{
 		authGroup.GET("/login", authHandler.GetLoginPage)
+		authGroup.POST("/login", authHandler.Login)
 	}
 }
 

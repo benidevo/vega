@@ -151,7 +151,7 @@ func TestLogin(t *testing.T) {
 		token, err := authService.Login(ctx, "testuser", "password123")
 
 		require.Error(t, err)
-		require.Equal(t, ErrUserNotFound, err)
+		require.Equal(t, ErrInvalidCredentials, err)
 		require.Empty(t, token)
 
 		mockRepo.AssertExpectations(t)

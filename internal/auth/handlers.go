@@ -1,28 +1,26 @@
 package auth
 
 import (
-	"github.com/benidevo/prospector/internal/logger"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
 )
 
 // AuthHandler handles authentication-related HTTP requests.
 type AuthHandler struct {
 	service *AuthService
-	log     zerolog.Logger
 }
 
-// NewAuthHandler creates and returns a new AuthHandler with the provided AuthService and a logger instance.
+// NewAuthHandler creates and returns a new AuthHandler with the provided AuthService.
 func NewAuthHandler(service *AuthService) *AuthHandler {
 	return &AuthHandler{
 		service: service,
-		log:     logger.GetLogger("auth"),
 	}
 }
 
 // GetLoginPage renders the login page template.
 func (h *AuthHandler) GetLoginPage(c *gin.Context) {
-	c.HTML(200, "auth/login.html", gin.H{
+	c.HTML(http.StatusOK, "auth/login.html", gin.H{
 		"title": "Login",
 	})
 }
@@ -35,8 +33,25 @@ func (h *AuthHandler) GetProfilePage(c *gin.Context) {
 	c.String(200, "Profile Page")
 }
 
+// Login handles user authentication by validating credentials from the POST form.
+// On success, it sets a session cookie and redirects to the dashboard.
+// On failure, it returns an unauthorized status and error message for HTMX response swapping.
 func (h *AuthHandler) Login(c *gin.Context) {
-	c.String(200, "Login")
+	username := c.PostForm("username")
+	password := c.PostForm("password")
+
+	token, loginErr := h.service.Login(c.Request.Context(), username, password)
+	if loginErr != nil {
+		c.Header("HX-Reswap", "innerHTML")
+		c.Header("HX-Retarget", "#form-response")
+
+		c.String(http.StatusUnauthorized, loginErr.Error())
+		return
+	}
+
+	c.SetCookie("token", token, 3600, "/", "", false, true)
+	c.Header("HX-Redirect", "/dashboard")
+	c.Status(http.StatusOK)
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
@@ -51,8 +66,28 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 	c.String(200, "Profile")
 }
 
+// AuthMiddleware is a Gin middleware that checks for a valid JWT token in the "token" cookie.
+// If the token is valid, it sets user information (userID, username, role) in the context.
+// If the token is missing or invalid, it redirects the user to the login page.
 func (h *AuthHandler) AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		tokenString, err := c.Cookie("token")
+		if err != nil {
+			c.Redirect(http.StatusFound, "/auth/login")
+			c.Abort()
+			return
+		}
+
+		claims, err := h.service.VerifyToken(tokenString)
+		if err != nil {
+			c.Redirect(http.StatusFound, "/auth/login")
+			c.Abort()
+			return
+		}
+
+		c.Set("userID", claims.UserID)
+		c.Set("username", claims.Username)
+		c.Set("role", claims.Role)
 		c.Next()
 	}
 }

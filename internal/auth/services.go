@@ -60,7 +60,7 @@ func (s *AuthService) Login(ctx context.Context, username, password string) (str
 	user, err := s.repo.FindByUsername(ctx, username)
 	if err != nil {
 		s.log.Error().Err(err).Msg("User not found")
-		return "", ErrUserNotFound
+		return "", ErrInvalidCredentials
 	}
 
 	if !verifyPassword(user.Password, password) {
@@ -71,7 +71,7 @@ func (s *AuthService) Login(ctx context.Context, username, password string) (str
 	token, err := s.GenerateToken(user)
 	if err != nil {
 		s.log.Error().Err(err).Msg("Failed to generate token")
-		return "", err
+		return "", ErrInvalidCredentials
 	}
 
 	user.LastLogin = time.Now()

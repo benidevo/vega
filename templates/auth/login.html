@@ -46,8 +46,10 @@
                  placeholder="Enter your password">
         </div>
 
-        <!-- Form response area -->
-        <div id="form-response" class="text-center text-sm"></div>
+        <!-- Form response area - error message container -->
+        <div id="form-response" class="text-center text-sm hidden">
+          <!-- Error messages from server will be placed here and styled via JS -->
+        </div>
 
         <!-- Submit button -->
         <div class="pt-2 relative">
@@ -67,9 +69,44 @@
   </div>
 </div>
 
-<!-- Initialize particles.js -->
+<!-- Initialize particles.js, handle HTMX errors, and add toast animation -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // Handle 401 response - allow swap and hide spinner
+    document.body.addEventListener('htmx:beforeSwap', function(event) {
+      if (event.detail.xhr.status === 401) {
+        event.detail.shouldSwap = true;
+        event.detail.isError = false;
+      }
+    });
+
+    // Hide spinner on any error
+    document.body.addEventListener('htmx:responseError', function(event) {
+      document.getElementById('spinner').classList.add('htmx-hide');
+    });
+
+    // Style and handle error messages
+    document.body.addEventListener('htmx:afterSwap', function(event) {
+      if (event.detail.xhr.status === 401) {
+        const errorDiv = document.getElementById('form-response');
+        if (errorDiv) {
+          // Add styling classes
+          errorDiv.classList.remove('hidden');
+          errorDiv.classList.add('animate-fade-in', 'mb-3', 'p-2', 'bg-red-800', 'bg-opacity-50', 'text-white', 'rounded-md');
+
+          // Auto-hide after 5 seconds
+          setTimeout(function() {
+            errorDiv.classList.add('animate-fade-out');
+            // Hide again after animation completes
+            setTimeout(function() {
+              errorDiv.classList.add('hidden');
+              errorDiv.classList.remove('animate-fade-out');
+            }, 300); // match animation duration
+          }, 5000);
+        }
+      }
+    });
+
     particlesJS('particles-js', {
       particles: {
         number: {

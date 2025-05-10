@@ -31,6 +31,23 @@
     .htmx-request.htmx-indicator {
       display: inline-block;
     }
+
+    /* Toast animations */
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fade-in 0.3s ease-in-out;
+    }
+
+    @keyframes fade-out {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    .animate-fade-out {
+      animation: fade-out 0.3s ease-in-out forwards;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 </head>
