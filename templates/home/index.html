@@ -1,0 +1,115 @@
+{{define "home-content"}}
+<!-- Hero section with glow effect -->
+<div class="w-full max-w-5xl z-10 relative">
+  <!-- Glow effect -->
+  <div class="absolute -inset-1 rounded-xl bg-gradient-to-r from-primary via-secondary to-primary opacity-30 blur-xl"></div>
+  
+  <!-- Main content container -->
+  <div class="relative p-8 md:p-12 bg-slate-900 bg-opacity-70 backdrop-blur-xl rounded-xl shadow-2xl border border-white border-opacity-10">
+    
+    <!-- Logo/Brand with animation -->
+    <div class="flex justify-center mb-8">
+      <div class="animate-float">
+        <div class="p-6 bg-slate-800 bg-opacity-30 rounded-full border border-primary border-opacity-30 shadow-lg shadow-primary/20">
+          <svg class="h-20 w-20 text-primary" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 3L4 9V21H9V14H15V21H20V9L12 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 8L8 11V16H16V11L12 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="absolute -inset-1 bg-primary opacity-20 blur-xl rounded-full animate-pulse-slow"></div>
+      </div>
+    </div>
+
+    <!-- Title with gradient text -->
+    <h1 class="text-5xl font-bold text-center mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">Welcome to ProspecTor</h1>
+    <p class="text-xl text-center text-gray-300 mb-14 max-w-2xl mx-auto">Your intelligent job prospecting assistant powered by advanced AI technology</p>
+    
+    <!-- Features section with hover effects -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-14">
+      <div class="group p-6 bg-slate-800 bg-opacity-50 rounded-xl border border-slate-700 hover:border-primary transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/20">
+        <div class="flex items-center justify-center mb-4">
+          <div class="p-3 bg-slate-700 bg-opacity-50 rounded-lg group-hover:bg-primary group-hover:bg-opacity-20 transition-all duration-300">
+            <svg class="h-10 w-10 text-secondary group-hover:text-primary transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+        </div>
+        <h3 class="text-lg font-semibold text-center text-white mb-3">Find Relevant Jobs</h3>
+        <p class="text-gray-300 text-center">Discover job opportunities perfectly matched to your unique skills and experience profile</p>
+      </div>
+      
+      <div class="group p-6 bg-slate-800 bg-opacity-50 rounded-xl border border-slate-700 hover:border-primary transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/20">
+        <div class="flex items-center justify-center mb-4">
+          <div class="p-3 bg-slate-700 bg-opacity-50 rounded-lg group-hover:bg-primary group-hover:bg-opacity-20 transition-all duration-300">
+            <svg class="h-10 w-10 text-secondary group-hover:text-primary transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
+        </div>
+        <h3 class="text-lg font-semibold text-center text-white mb-3">AI-Powered Matching</h3>
+        <p class="text-gray-300 text-center">Advanced algorithms evaluate job compatibility with detailed reasoning and confidence scoring</p>
+      </div>
+      
+      <div class="group p-6 bg-slate-800 bg-opacity-50 rounded-xl border border-slate-700 hover:border-primary transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/20">
+        <div class="flex items-center justify-center mb-4">
+          <div class="p-3 bg-slate-700 bg-opacity-50 rounded-lg group-hover:bg-primary group-hover:bg-opacity-20 transition-all duration-300">
+            <svg class="h-10 w-10 text-secondary group-hover:text-primary transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </div>
+        </div>
+        <h3 class="text-lg font-semibold text-center text-white mb-3">Generate Cover Letters</h3>
+        <p class="text-gray-300 text-center">Create customized, professional cover letters perfectly tailored to each opportunity</p>
+      </div>
+    </div>
+    
+    <!-- Get Started section with animated button -->
+    <div class="text-center mb-14">
+      <a href="/auth/login" class="inline-block py-4 px-8 relative overflow-hidden rounded-lg">
+        <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-80 hover:opacity-100 transition-opacity duration-300"></div>
+        <span class="relative z-10 font-semibold text-white text-lg">
+          Sign In to Get Started
+        </span>
+      </a>
+    </div>
+    
+    <!-- Setup Instructions with improved styling -->
+    <div class="p-8 bg-slate-800 bg-opacity-40 rounded-xl border border-slate-700 border-opacity-50 shadow-inner">
+      <h3 class="text-2xl font-semibold text-white mb-6 flex items-center">
+        <svg class="h-6 w-6 mr-2 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Creating Your Account
+      </h3>
+      <div class="text-gray-200 space-y-4">
+        <p class="mb-4">ProspecTor requires account creation through the admin configuration. Follow these steps to create a new user:</p>
+        <ol class="list-none space-y-4">
+          <li class="flex items-start">
+            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white font-bold mr-3 mt-0.5 flex-shrink-0">1</span>
+            <span>Add your user details to the <code class="px-2 py-1 rounded text-sm bg-slate-700 font-mono">/config/users.yaml</code> file</span>
+          </li>
+          <li class="flex items-start">
+            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white font-bold mr-3 mt-0.5 flex-shrink-0">2</span>
+            <span>Run <code class="px-2 py-1 rounded text-sm bg-slate-700 font-mono">make enter-scheduler</code> to access the scheduler container</span>
+          </li>
+          <li class="flex items-start">
+            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white font-bold mr-3 mt-0.5 flex-shrink-0">3</span>
+            <span>Execute <code class="px-2 py-1 rounded text-sm bg-slate-700 font-mono">go run cmd/scheduler/main.go sync-users /app/config/users.yaml</code> to create the user</span>
+          </li>
+          <li class="flex items-start">
+            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white font-bold mr-3 mt-0.5 flex-shrink-0">4</span>
+            <span>Return to this page and sign in with your new credentials</span>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer with subtle animation -->
+<div class="w-full max-w-5xl z-10 p-6 mt-8 text-center">
+  <p class="text-gray-400 text-sm border-t border-gray-800 pt-4">
+    &copy; {{.currentYear}} <span class="text-primary font-semibold">ProspecTor</span> | Your intelligent job prospecting assistant
+  </p>
+</div>
+{{end}}

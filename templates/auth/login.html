@@ -1,160 +1,98 @@
-{{define "auth/login.html"}}
-{{template "layouts/base.html" .}}
-{{end}}
-
-{{define "content"}}
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 relative overflow-hidden">
-  <!-- Animated background -->
-  <div class="absolute inset-0 z-0">
-    <div id="particles-js" class="h-full w-full"></div>
-  </div>
-
-  <!-- Login container -->
-  <div class="w-full max-w-md z-10 p-6 bg-white bg-opacity-10 backdrop-blur-lg rounded-xl shadow-xl border border-white border-opacity-20">
-    <!-- Logo/Brand -->
-    <div class="flex justify-center mb-8">
-      <svg class="h-12 w-12 text-primary" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 3L4 9V21H9V14H15V21H20V9L12 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M12 8L8 11V16H16V11L12 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+{{define "login-content"}}
+<!-- Login container with glow effect -->
+<div class="w-full max-w-md z-10 relative">
+  <!-- Glow effect -->
+  <div class="absolute -inset-1 rounded-xl bg-gradient-to-r from-primary via-secondary to-primary opacity-40 blur-xl animate-pulse-slow"></div>
+  
+  <!-- Main content container -->
+  <div class="relative p-8 bg-slate-900 bg-opacity-70 backdrop-blur-xl rounded-xl shadow-2xl border border-white border-opacity-10">
+    <!-- Logo/Brand with animation -->
+    <div class="flex justify-center mb-6">
+      <div class="animate-float">
+        <div class="p-4 bg-slate-800 bg-opacity-30 rounded-full border border-primary border-opacity-30 shadow-lg shadow-primary/20">
+          <svg class="h-16 w-16 text-primary" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 3L4 9V21H9V14H15V21H20V9L12 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 8L8 11V16H16V11L12 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="absolute -inset-1 bg-primary opacity-20 blur-xl rounded-full animate-pulse-slow"></div>
+      </div>
     </div>
 
-    <h2 class="text-2xl font-bold text-center text-white mb-8">Sign in to ProspecTor</h2>
+    <!-- Title with gradient text -->
+    <h2 class="text-3xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary leading-tight">Sign in to ProspecTor</h2>
 
     <!-- Login Form with HTMX -->
     <form hx-post="/auth/login"
           hx-target="#form-response"
           hx-swap="outerHTML"
           hx-indicator="#spinner">
-      <div class="space-y-4">
-        <!-- Username field -->
+      <div class="space-y-5">
+        <!-- Username field with enhanced styling -->
         <div>
-          <label for="username" class="block text-sm font-medium text-gray-200 mb-1">Username</label>
-          <input type="text" id="username" name="username" required
-                 class="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                 placeholder="Enter your username"
-                 hx-trigger="keyup[keyCode==13]"
-                 hx-target="next input"
-                 hx-swap="none">
+          <label for="username" class="block text-sm font-medium text-gray-200 mb-2">Username</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+            <input type="text" id="username" name="username" required
+                   class="w-full pl-10 pr-4 py-3 rounded-lg bg-slate-800 bg-opacity-70 backdrop-blur-lg border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all shadow-inner"
+                   placeholder="Enter your username"
+                   hx-trigger="keyup[keyCode==13]"
+                   hx-target="next input"
+                   hx-swap="none">
+          </div>
         </div>
 
-        <!-- Password field -->
+        <!-- Password field with enhanced styling -->
         <div>
-          <label for="password" class="block text-sm font-medium text-gray-200 mb-1">Password</label>
-          <input type="password" id="password" name="password" required
-                 class="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                 placeholder="Enter your password">
+          <label for="password" class="block text-sm font-medium text-gray-200 mb-2">Password</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <input type="password" id="password" name="password" required
+                   class="w-full pl-10 pr-4 py-3 rounded-lg bg-slate-800 bg-opacity-70 backdrop-blur-lg border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all shadow-inner"
+                   placeholder="Enter your password">
+          </div>
         </div>
 
-        <!-- Form response area - error message container -->
+        <!-- Form response area - error message container with improved styling -->
         <div id="form-response" class="text-center text-sm hidden">
           <!-- Error messages from server will be placed here and styled via JS -->
         </div>
 
-        <!-- Submit button -->
+        <!-- Submit button with gradient animation -->
         <div class="pt-2 relative">
-          <button type="submit"
-                  class="w-full py-2 px-4 bg-primary hover:bg-teal-700 text-white font-semibold rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 transition-colors">
-            Sign in
-            <span id="spinner" class="htmx-indicator">
-              <svg class="animate-spin -mr-1 ml-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
+          <button type="submit" class="w-full py-3 relative overflow-hidden rounded-lg">
+            <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-80 hover:opacity-100 transition-opacity duration-300"></div>
+            <span class="relative z-10 font-semibold text-white flex items-center justify-center">
+              Sign in
+              <span id="spinner" class="htmx-indicator ml-2">
+                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </span>
             </span>
           </button>
+        </div>
+        
+        <!-- Return to home link -->
+        <div class="text-center mt-6">
+          <a href="/" class="text-gray-400 hover:text-primary transition-colors text-sm flex items-center justify-center">
+            <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Return to home
+          </a>
         </div>
       </div>
     </form>
   </div>
 </div>
-
-<!-- Initialize particles.js, handle HTMX errors, and add toast animation -->
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Handle 401 response - allow swap and hide spinner
-    document.body.addEventListener('htmx:beforeSwap', function(event) {
-      if (event.detail.xhr.status === 401) {
-        event.detail.shouldSwap = true;
-        event.detail.isError = false;
-      }
-    });
-
-    // Hide spinner on any error
-    document.body.addEventListener('htmx:responseError', function(event) {
-      document.getElementById('spinner').classList.add('htmx-hide');
-    });
-
-    // Style and handle error messages
-    document.body.addEventListener('htmx:afterSwap', function(event) {
-      if (event.detail.xhr.status === 401) {
-        const errorDiv = document.getElementById('form-response');
-        if (errorDiv) {
-          // Add styling classes
-          errorDiv.classList.remove('hidden');
-          errorDiv.classList.add('animate-fade-in', 'mb-3', 'p-2', 'bg-red-800', 'bg-opacity-50', 'text-white', 'rounded-md');
-
-          // Auto-hide after 5 seconds
-          setTimeout(function() {
-            errorDiv.classList.add('animate-fade-out');
-            // Hide again after animation completes
-            setTimeout(function() {
-              errorDiv.classList.add('hidden');
-              errorDiv.classList.remove('animate-fade-out');
-            }, 300); // match animation duration
-          }, 5000);
-        }
-      }
-    });
-
-    particlesJS('particles-js', {
-      particles: {
-        number: {
-          value: 80,
-          density: { enable: true, value_area: 800 }
-        },
-        color: { value: "#0D9488" },
-        opacity: {
-          value: 0.1,
-          random: true,
-          anim: { enable: true, speed: 1, opacity_min: 0.05, sync: false }
-        },
-        size: {
-          value: 3,
-          random: true,
-          anim: { enable: true, speed: 2, size_min: 0.1, sync: false }
-        },
-        line_linked: {
-          enable: true,
-          distance: 150,
-          color: "#0D9488",
-          opacity: 0.1,
-          width: 1
-        },
-        move: {
-          enable: true,
-          speed: 1,
-          direction: "none",
-          random: true,
-          straight: false,
-          out_mode: "out",
-          bounce: false
-        }
-      },
-      interactivity: {
-        detect_on: "canvas",
-        events: {
-          onhover: { enable: true, mode: "repulse" },
-          onclick: { enable: true, mode: "push" },
-          resize: true
-        },
-        modes: {
-          repulse: { distance: 100, duration: 0.4 },
-          push: { particles_nb: 4 }
-        }
-      },
-      retina_detect: true
-    });
-  });
-</script>
 {{end}}

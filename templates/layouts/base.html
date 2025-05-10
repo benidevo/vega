@@ -48,11 +48,181 @@
     .animate-fade-out {
       animation: fade-out 0.3s ease-in-out forwards;
     }
+
+    /* Custom animation keyframes */
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+    
+    .animate-float {
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-slow {
+      0% { opacity: 0.8; }
+      50% { opacity: 0.3; }
+      100% { opacity: 0.8; }
+    }
+    
+    .animate-pulse-slow {
+      animation: pulse-slow 5s ease-in-out infinite;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 </head>
 <body class="bg-slate-900 text-gray-100">
-  {{block "content" .}}{{end}}
+  <!-- Use template switching based on page variable -->
+  {{if eq .page "dashboard"}}
+    <!-- Dashboard has a different layout -->
+    <div class="min-h-screen bg-slate-900">
+      {{template "dashboard-content" .}}
+    </div>
+  {{else}}
+    <!-- Standard centered layout for home and login pages -->
+    <div class="min-h-screen flex {{if eq .page "home"}}flex-col{{end}} items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
+      <!-- Animated background -->
+      <div class="absolute inset-0 z-0">
+        <div id="particles-js" class="h-full w-full"></div>
+      </div>
+
+      <!-- Content area -->
+      {{if eq .page "home"}}
+        {{template "home-content" .}}
+      {{else if eq .page "login"}}
+        {{template "login-content" .}}
+      {{else}}
+        <div class="z-10 text-white">Unknown page template</div>
+      {{end}}
+    </div>
+  {{end}}
+
+  <!-- Global scripts -->
+  <script>
+    // Initialize particles.js on all pages that have a particles-js element
+    document.addEventListener('DOMContentLoaded', function() {
+      const particlesContainer = document.getElementById('particles-js');
+      if (particlesContainer) {
+        particlesJS('particles-js', {
+          particles: {
+            number: {
+              value: 100,
+              density: { enable: true, value_area: 800 }
+            },
+            color: {
+              value: ["#0D9488", "#F59E0B", "#0EA5E9", "#8B5CF6"]
+            },
+            shape: {
+              type: "circle",
+              stroke: { width: 0, color: "#000000" },
+              polygon: { nb_sides: 5 }
+            },
+            opacity: {
+              value: 0.15,
+              random: true,
+              anim: { enable: true, speed: 0.8, opacity_min: 0.05, sync: false }
+            },
+            size: {
+              value: 4,
+              random: true,
+              anim: { enable: true, speed: 1.5, size_min: 0.1, sync: false }
+            },
+            line_linked: {
+              enable: true,
+              distance: 150,
+              color: "#0D9488",
+              opacity: 0.12,
+              width: 1
+            },
+            move: {
+              enable: true,
+              speed: 0.8,
+              direction: "none",
+              random: true,
+              straight: false,
+              out_mode: "out",
+              bounce: false,
+              attract: { enable: true, rotateX: 600, rotateY: 1200 }
+            }
+          },
+          interactivity: {
+            detect_on: "canvas",
+            events: {
+              onhover: { enable: true, mode: "grab" },
+              onclick: { enable: true, mode: "push" },
+              resize: true
+            },
+            modes: {
+              grab: { 
+                distance: 180, 
+                line_linked: { opacity: 0.25 } 
+              },
+              bubble: { 
+                distance: 250, 
+                size: 6, 
+                duration: 2, 
+                opacity: 0.2, 
+                speed: 3 
+              },
+              repulse: { 
+                distance: 150, 
+                duration: 0.4 
+              },
+              push: { 
+                particles_nb: 4 
+              },
+              remove: { 
+                particles_nb: 2 
+              }
+            }
+          },
+          retina_detect: true
+        });
+      }
+
+      // Handle HTMX events for any page using HTMX
+      if (typeof htmx !== 'undefined') {
+        // Handle 401 response - allow swap and hide spinner
+        document.body.addEventListener('htmx:beforeSwap', function(event) {
+          if (event.detail.xhr.status === 401) {
+            event.detail.shouldSwap = true;
+            event.detail.isError = false;
+          }
+        });
+
+        // Hide spinner on any error
+        document.body.addEventListener('htmx:responseError', function(event) {
+          const spinner = document.getElementById('spinner');
+          if (spinner) {
+            spinner.classList.add('htmx-hide');
+          }
+        });
+
+        // Style and handle error messages
+        document.body.addEventListener('htmx:afterSwap', function(event) {
+          if (event.detail.xhr.status === 401) {
+            const errorDiv = document.getElementById('form-response');
+            if (errorDiv) {
+              // Add styling classes
+              errorDiv.classList.remove('hidden');
+              errorDiv.classList.add('animate-fade-in', 'mb-4', 'p-3', 'bg-red-900', 'bg-opacity-50', 'text-white', 'rounded-lg', 'border', 'border-red-800');
+
+              // Auto-hide after 5 seconds
+              setTimeout(function() {
+                errorDiv.classList.add('animate-fade-out');
+                // Hide again after animation completes
+                setTimeout(function() {
+                  errorDiv.classList.add('hidden');
+                  errorDiv.classList.remove('animate-fade-out');
+                }, 300); // match animation duration
+              }, 5000);
+            }
+          }
+        });
+      }
+    });
+  </script>
 </body>
 </html>
 {{end}}

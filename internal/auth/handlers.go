@@ -20,8 +20,9 @@ func NewAuthHandler(service *AuthService) *AuthHandler {
 
 // GetLoginPage renders the login page template.
 func (h *AuthHandler) GetLoginPage(c *gin.Context) {
-	c.HTML(http.StatusOK, "auth/login.html", gin.H{
+	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
 		"title": "Login",
+		"page":  "login",
 	})
 }
 
@@ -54,8 +55,10 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// Logout logs out the current user by clearing the authentication cookie and redirecting to the home page.
 func (h *AuthHandler) Logout(c *gin.Context) {
-	c.String(200, "Logout")
+	c.SetCookie("token", "", -1, "/", "", false, true)
+	c.Redirect(http.StatusFound, "/")
 }
 
 func (h *AuthHandler) ChangePassword(c *gin.Context) {

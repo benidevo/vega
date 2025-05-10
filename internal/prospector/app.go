@@ -11,7 +11,9 @@ import (
 
 	"github.com/benidevo/prospector/internal/auth"
 	"github.com/benidevo/prospector/internal/config"
+	"github.com/benidevo/prospector/internal/dashboard"
 	"github.com/benidevo/prospector/internal/db"
+	"github.com/benidevo/prospector/internal/home"
 	"github.com/benidevo/prospector/internal/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -129,20 +131,19 @@ func (a *App) Shutdown(ctx context.Context) error {
 
 func (a *App) setupRoutes() {
 	authHandler := auth.SetupAuth(a.db, &a.config)
+	homeHandler := home.Setup(&a.config)
+	dashboardHandler := dashboard.Setup(&a.config)
 
-	a.router.GET("/", func(c *gin.Context) {
-		c.String(http.StatusOK, "ProspecTor API")
-	})
-
-	a.router.GET("/dashboard", authHandler.AuthMiddleware(), func(c *gin.Context) {
-		c.String(200, "Hello World")
-	})
+	a.router.GET("/", homeHandler.GetHomePage)
 
 	authGroup := a.router.Group("/auth")
 	{
 		authGroup.GET("/login", authHandler.GetLoginPage)
 		authGroup.POST("/login", authHandler.Login)
+		authGroup.POST("/logout", authHandler.AuthMiddleware(), authHandler.Logout)
 	}
+
+	a.router.GET("/dashboard", authHandler.AuthMiddleware(), dashboardHandler.GetDashboardPage)
 }
 
 func (a *App) setupDependencies() error {
