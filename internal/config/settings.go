@@ -15,6 +15,7 @@ type Settings struct {
 	IsDevelopment      bool
 	TokenExpiration    time.Duration
 	TokenSecret        string
+	IsTest             bool
 }
 
 // NewSettings initializes and returns a Settings struct with default values
@@ -34,6 +35,7 @@ func NewSettings() Settings {
 		IsDevelopment:      getEnv("IS_DEVELOPMENT", "false") == "true",
 		TokenExpiration:    time.Duration(tokenExpiration) * time.Minute,
 		TokenSecret:        getEnv("TOKEN_SECRET", "default-secret"),
+		IsTest:             getEnv("GO_ENV", "") == "test",
 	}
 }
 

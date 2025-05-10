@@ -30,9 +30,16 @@ type App struct {
 // New creates and returns a new instance of App with the provided configuration.
 // It initializes the router using the Gin framework and sets up a channel to handle OS signals.
 func New(cfg config.Settings) *App {
+	router := gin.Default()
+
+	// Only load templates in non-test environment
+	if !cfg.IsTest {
+		router.LoadHTMLGlob("templates/**/*")
+	}
+
 	return &App{
 		config: cfg,
-		router: gin.Default(),
+		router: router,
 		done:   make(chan os.Signal, 1),
 	}
 }

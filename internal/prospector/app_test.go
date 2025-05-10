@@ -119,5 +119,6 @@ func mockConfig(t *testing.T) config.Settings {
 		ServerPort:         ":0",
 		DBConnectionString: ":memory:",
 		DBDriver:           "sqlite",
+		IsTest:             true,
 	}
 }

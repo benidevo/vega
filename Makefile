@@ -12,6 +12,10 @@ run:
 	docker compose down
 	docker compose up -d --build --remove-orphans
 
+run-it:
+	docker compose down
+	docker compose up --build --remove-orphans
+
 stop:
 	docker compose down
 

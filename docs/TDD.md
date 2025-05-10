@@ -74,7 +74,21 @@ ProspecTor MVP uses a **monolithic architecture** implemented entirely in Go, wi
 * **Database**: SQLite3
 * **AI/ML**: API clients for OpenAI, Claude, and Gemini
 * **PDF Generation**: `jung-kurt/gofpdf` or similar
-* **UI**: Go templates + HTMX + Tailwind CSS (minimal JavaScript)
+* **UI Framework**:
+  * Go templates with template inheritance
+  * HTMX for interactive UI elements and form submissions
+  * Tailwind CSS for responsive styling
+  * Particles.js for background animations
+  * Minimal JavaScript approach
+* **Color Theme**:
+  * Primary: Teal (#0D9488)
+  * Secondary: Amber (#F59E0B)
+  * Background: Slate gradient (slate-800 to slate-900)
+  * Text: White/Gray for readability
+* **UI Layout**:
+  * Responsive design with mobile-first approach
+  * Glass-morphism effects (backdrop blur) for containers
+  * Clean, minimalist interface with subtle animations
 * **Scheduling**: Cron (via separate container)
 
 ### 2.2 Development & Deployment

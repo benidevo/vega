@@ -1,0 +1,41 @@
+{{define "layouts/base.html"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProspecTor - {{.title}}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.4"></script>
+  <!-- Configure Tailwind with color theme -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#0D9488',
+            secondary: '#F59E0B',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* HTMX indicator styling */
+    .htmx-indicator {
+      display: none;
+    }
+    .htmx-request .htmx-indicator {
+      display: inline-block;
+    }
+    .htmx-request.htmx-indicator {
+      display: inline-block;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+</head>
+<body class="bg-slate-900 text-gray-100">
+  {{block "content" .}}{{end}}
+</body>
+</html>
+{{end}}
