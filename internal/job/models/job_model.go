@@ -3,8 +3,6 @@ package models
 import (
 	"strings"
 	"time"
-
-	"github.com/benidevo/prospector/internal/job"
 )
 
 // JobStatus represents the status of a job application.
@@ -35,7 +33,7 @@ func (s JobStatus) FromString(status string) (JobStatus, error) {
 	case "Not Interested":
 		return NOT_INTERESTED, nil
 	default:
-		return -1, job.ErrInvalidJobStatus
+		return -1, ErrInvalidJobStatus
 	}
 }
 
@@ -90,7 +88,7 @@ func (j JobType) FromString(jobType string) (JobType, error) {
 	case "Other":
 		return OTHER, nil
 	default:
-		return OTHER, job.ErrInvalidJobType
+		return OTHER, ErrInvalidJobType
 	}
 }
 
@@ -137,7 +135,7 @@ func (e ExperienceLevel) FromString(experience string) (ExperienceLevel, error) 
 	case "executive", "leadership":
 		return EXECUTIVE, nil
 	default:
-		return MID_LEVEL, job.ErrInvalidExperienceLevel
+		return MID_LEVEL, ErrInvalidExperienceLevel
 	}
 }
 
@@ -295,15 +293,15 @@ func NewJob(title, description string, company Company, options ...JobOption) *J
 // Validate performs basic validation on the Job struct
 func (j *Job) Validate() error {
 	if j.Title == "" {
-		return job.ErrJobTitleRequired
+		return ErrJobTitleRequired
 	}
 
 	if j.Description == "" {
-		return job.ErrJobDescriptionRequired
+		return ErrJobDescriptionRequired
 	}
 
 	if j.Company.Name == "" {
-		return job.ErrCompanyRequired
+		return ErrCompanyRequired
 	}
 
 	return nil
@@ -316,4 +314,14 @@ func (j *Job) IsActive() bool {
 	}
 
 	return j.ApplicationDeadline.After(time.Now())
+}
+
+// JobFilter defines filters for querying jobs
+type JobFilter struct {
+	CompanyID *int
+	Status    *JobStatus
+	JobType   *JobType
+	Search    string
+	Limit     int
+	Offset    int
 }

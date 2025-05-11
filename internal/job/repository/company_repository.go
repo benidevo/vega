@@ -6,19 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/benidevo/prospector/internal/job"
 	"github.com/benidevo/prospector/internal/job/models"
 )
-
-// CompanyRepository defines methods for interacting with company data
-type CompanyRepository interface {
-	GetOrCreate(ctx context.Context, name string) (*models.Company, error)
-	GetByID(ctx context.Context, id int) (*models.Company, error)
-	GetByName(ctx context.Context, name string) (*models.Company, error)
-	GetAll(ctx context.Context) ([]*models.Company, error)
-	Delete(ctx context.Context, id int) error
-	Update(ctx context.Context, company *models.Company) error
-}
 
 // SQLiteCompanyRepository is a SQLite implementation of CompanyRepository
 type SQLiteCompanyRepository struct {
@@ -39,8 +28,8 @@ func (r *SQLiteCompanyRepository) GetOrCreate(ctx context.Context, name string) 
 
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, &job.RepositoryError{
-			SentinelError: job.ErrTransactionFailed,
+		return nil, &models.RepositoryError{
+			SentinelError: models.ErrTransactionFailed,
 			InnerError:    err,
 		}
 	}
@@ -66,24 +55,24 @@ func (r *SQLiteCompanyRepository) GetOrCreate(ctx context.Context, name string) 
 			normalizedName, now, now,
 		)
 		if err != nil {
-			return nil, &job.RepositoryError{
-				SentinelError: job.ErrFailedToCreateCompany,
+			return nil, &models.RepositoryError{
+				SentinelError: models.ErrFailedToCreateCompany,
 				InnerError:    err,
 			}
 		}
 
 		id, err := result.LastInsertId()
 		if err != nil {
-			return nil, &job.RepositoryError{
-				SentinelError: job.ErrFailedToCreateCompany,
+			return nil, &models.RepositoryError{
+				SentinelError: models.ErrFailedToCreateCompany,
 				InnerError:    err,
 			}
 		}
 
 		err = tx.Commit()
 		if err != nil {
-			return nil, &job.RepositoryError{
-				SentinelError: job.ErrTransactionFailed,
+			return nil, &models.RepositoryError{
+				SentinelError: models.ErrTransactionFailed,
 				InnerError:    err,
 			}
 		}
@@ -98,16 +87,16 @@ func (r *SQLiteCompanyRepository) GetOrCreate(ctx context.Context, name string) 
 		}
 		return &company, nil
 	} else if err != nil {
-		return nil, &job.RepositoryError{
-			SentinelError: job.ErrCompanyNotFound,
+		return nil, &models.RepositoryError{
+			SentinelError: models.ErrCompanyNotFound,
 			InnerError:    err,
 		}
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return nil, &job.RepositoryError{
-			SentinelError: job.ErrTransactionFailed,
+		return nil, &models.RepositoryError{
+			SentinelError: models.ErrTransactionFailed,
 			InnerError:    err,
 		}
 	}
@@ -118,7 +107,7 @@ func (r *SQLiteCompanyRepository) GetOrCreate(ctx context.Context, name string) 
 
 // wrapError is a helper function to create a repository error
 func wrapError(sentinel, inner error) error {
-	return &job.RepositoryError{
+	return &models.RepositoryError{
 		SentinelError: sentinel,
 		InnerError:    inner,
 	}
@@ -127,7 +116,7 @@ func wrapError(sentinel, inner error) error {
 // GetByID retrieves a company by its ID
 func (r *SQLiteCompanyRepository) GetByID(ctx context.Context, id int) (*models.Company, error) {
 	if id <= 0 {
-		return nil, job.ErrInvalidCompanyID
+		return nil, models.ErrInvalidCompanyID
 	}
 
 	query := "SELECT id, name, created_at, updated_at FROM companies WHERE id = ?"
@@ -135,9 +124,9 @@ func (r *SQLiteCompanyRepository) GetByID(ctx context.Context, id int) (*models.
 	err := r.db.QueryRowContext(ctx, query, id).Scan(&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, job.ErrCompanyNotFound
+			return nil, models.ErrCompanyNotFound
 		}
-		return nil, wrapError(job.ErrCompanyNotFound, err)
+		return nil, wrapError(models.ErrCompanyNotFound, err)
 	}
 	return &company, nil
 }
@@ -154,9 +143,9 @@ func (r *SQLiteCompanyRepository) GetByName(ctx context.Context, name string) (*
 	err = r.db.QueryRowContext(ctx, query, normalizedName).Scan(&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, job.ErrCompanyNotFound
+			return nil, models.ErrCompanyNotFound
 		}
-		return nil, wrapError(job.ErrCompanyNotFound, err)
+		return nil, wrapError(models.ErrCompanyNotFound, err)
 	}
 
 	return &company, nil
@@ -165,12 +154,12 @@ func (r *SQLiteCompanyRepository) GetByName(ctx context.Context, name string) (*
 // validateCompanyName checks if the company name is valid and normalizes it
 func validateCompanyName(name string) (string, error) {
 	if name == "" {
-		return "", job.ErrCompanyNameRequired
+		return "", models.ErrCompanyNameRequired
 	}
 
 	normalizedName := strings.TrimSpace(name)
 	if normalizedName == "" {
-		return "", job.ErrCompanyNameRequired
+		return "", models.ErrCompanyNameRequired
 	}
 
 	return normalizedName, nil
@@ -182,7 +171,7 @@ func (r *SQLiteCompanyRepository) GetAll(ctx context.Context) ([]*models.Company
 
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
-		return nil, wrapError(job.ErrFailedToCreateCompany, err)
+		return nil, wrapError(models.ErrFailedToCreateCompany, err)
 	}
 	defer rows.Close()
 
@@ -191,13 +180,13 @@ func (r *SQLiteCompanyRepository) GetAll(ctx context.Context) ([]*models.Company
 		var company models.Company
 		err := rows.Scan(&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt)
 		if err != nil {
-			return nil, wrapError(job.ErrFailedToCreateCompany, err)
+			return nil, wrapError(models.ErrFailedToCreateCompany, err)
 		}
 		companies = append(companies, &company)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, wrapError(job.ErrFailedToCreateCompany, err)
+		return nil, wrapError(models.ErrFailedToCreateCompany, err)
 	}
 
 	return companies, nil
@@ -206,23 +195,23 @@ func (r *SQLiteCompanyRepository) GetAll(ctx context.Context) ([]*models.Company
 // Delete removes a company from the database by ID
 func (r *SQLiteCompanyRepository) Delete(ctx context.Context, id int) error {
 	if id <= 0 {
-		return job.ErrInvalidCompanyID
+		return models.ErrInvalidCompanyID
 	}
 
 	query := "DELETE FROM companies WHERE id = ?"
 
 	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
-		return wrapError(job.ErrFailedToDeleteCompany, err)
+		return wrapError(models.ErrFailedToDeleteCompany, err)
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return wrapError(job.ErrFailedToDeleteCompany, err)
+		return wrapError(models.ErrFailedToDeleteCompany, err)
 	}
 
 	if rowsAffected == 0 {
-		return job.ErrCompanyNotFound
+		return models.ErrCompanyNotFound
 	}
 
 	return nil
@@ -231,11 +220,11 @@ func (r *SQLiteCompanyRepository) Delete(ctx context.Context, id int) error {
 // Update updates a company in the database
 func (r *SQLiteCompanyRepository) Update(ctx context.Context, company *models.Company) error {
 	if company == nil {
-		return job.ErrInvalidCompanyID
+		return models.ErrInvalidCompanyID
 	}
 
 	if company.ID <= 0 {
-		return job.ErrInvalidCompanyID
+		return models.ErrInvalidCompanyID
 	}
 
 	normalizedName, err := validateCompanyName(company.Name)
@@ -248,16 +237,16 @@ func (r *SQLiteCompanyRepository) Update(ctx context.Context, company *models.Co
 
 	result, err := r.db.ExecContext(ctx, query, normalizedName, now, company.ID)
 	if err != nil {
-		return wrapError(job.ErrFailedToUpdateCompany, err)
+		return wrapError(models.ErrFailedToUpdateCompany, err)
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return wrapError(job.ErrFailedToUpdateCompany, err)
+		return wrapError(models.ErrFailedToUpdateCompany, err)
 	}
 
 	if rowsAffected == 0 {
-		return job.ErrCompanyNotFound
+		return models.ErrCompanyNotFound
 	}
 
 	company.Name = normalizedName

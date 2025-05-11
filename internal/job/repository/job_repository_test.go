@@ -36,7 +36,7 @@ func NewMockCompanyRepository() *MockCompanyRepository {
 
 	repo.GetOrCreateFunc = func(ctx context.Context, name string) (*models.Company, error) {
 		if name == "" {
-			return nil, ErrCompanyNameRequired
+			return nil, models.ErrCompanyNameRequired
 		}
 
 		normalizedName := name
@@ -70,12 +70,12 @@ func (r *MockCompanyRepository) GetByID(ctx context.Context, id int) (*models.Co
 			return company, nil
 		}
 	}
-	return nil, ErrCompanyNotFound
+	return nil, models.ErrCompanyNotFound
 }
 
 func (r *MockCompanyRepository) GetByName(ctx context.Context, name string) (*models.Company, error) {
 	if name == "" {
-		return nil, ErrCompanyNameRequired
+		return nil, models.ErrCompanyNameRequired
 	}
 
 	normalizedName := name
@@ -83,7 +83,7 @@ func (r *MockCompanyRepository) GetByName(ctx context.Context, name string) (*mo
 		return company, nil
 	}
 
-	return nil, ErrCompanyNotFound
+	return nil, models.ErrCompanyNotFound
 }
 
 func (r *MockCompanyRepository) GetAll(ctx context.Context) ([]*models.Company, error) {
@@ -101,7 +101,7 @@ func (r *MockCompanyRepository) Delete(ctx context.Context, id int) error {
 			return nil
 		}
 	}
-	return ErrCompanyNotFound
+	return models.ErrCompanyNotFound
 }
 
 func (r *MockCompanyRepository) Update(ctx context.Context, company *models.Company) error {
@@ -122,7 +122,7 @@ func (r *MockCompanyRepository) Update(ctx context.Context, company *models.Comp
 		}
 	}
 
-	return ErrCompanyNotFound
+	return models.ErrCompanyNotFound
 }
 
 func TestSQLiteJobRepository_Create(t *testing.T) {
@@ -208,7 +208,7 @@ func TestSQLiteJobRepository_Create(t *testing.T) {
 		createdJob, err := repo.Create(ctx, j)
 
 		assert.Error(t, err)
-		assert.Equal(t, ErrJobTitleRequired, err)
+		assert.Equal(t, models.ErrJobTitleRequired, err)
 		assert.Nil(t, createdJob)
 
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -312,7 +312,7 @@ func TestSQLiteJobRepository_GetByID(t *testing.T) {
 		j, err := repo.GetByID(ctx, jobID)
 
 		assert.Error(t, err)
-		assert.Equal(t, ErrJobNotFound, err)
+		assert.Equal(t, models.ErrJobNotFound, err)
 		assert.Nil(t, j)
 
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -355,7 +355,7 @@ func TestSQLiteJobRepository_UpdateStatus(t *testing.T) {
 		err := repo.UpdateStatus(ctx, jobID, newStatus)
 
 		assert.Error(t, err)
-		assert.Equal(t, ErrJobNotFound, err)
+		assert.Equal(t, models.ErrJobNotFound, err)
 
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
@@ -420,7 +420,7 @@ func TestSQLiteJobRepository_GetAll(t *testing.T) {
 
 		// Execute with empty filter
 		ctx := context.Background()
-		jobs, err := repo.GetAll(ctx, JobFilter{})
+		jobs, err := repo.GetAll(ctx, models.JobFilter{})
 
 		require.NoError(t, err)
 		require.NotNil(t, jobs)
@@ -468,7 +468,7 @@ func TestSQLiteJobRepository_GetAll(t *testing.T) {
 			WillReturnRows(rows)
 
 		ctx := context.Background()
-		filter := JobFilter{
+		filter := models.JobFilter{
 			CompanyID: &companyID,
 		}
 		jobs, err := repo.GetAll(ctx, filter)

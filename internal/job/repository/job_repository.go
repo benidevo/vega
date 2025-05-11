@@ -7,38 +7,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/benidevo/prospector/internal/job"
+	"github.com/benidevo/prospector/internal/job/interfaces"
 	"github.com/benidevo/prospector/internal/job/models"
 )
-
-// JobRepository defines methods for interacting with job data
-type JobRepository interface {
-	Create(ctx context.Context, job *models.Job) (*models.Job, error)
-	GetByID(ctx context.Context, id int) (*models.Job, error)
-	GetAll(ctx context.Context, filter JobFilter) ([]*models.Job, error)
-	Update(ctx context.Context, job *models.Job) error
-	Delete(ctx context.Context, id int) error
-	UpdateStatus(ctx context.Context, id int, status models.JobStatus) error
-}
-
-// JobFilter defines filters for querying jobs
-type JobFilter struct {
-	CompanyID *int
-	Status    *models.JobStatus
-	JobType   *models.JobType
-	Search    string
-	Limit     int
-	Offset    int
-}
 
 // SQLiteJobRepository is a SQLite implementation of JobRepository
 type SQLiteJobRepository struct {
 	db                *sql.DB
-	companyRepository CompanyRepository
+	companyRepository interfaces.CompanyRepository
 }
 
 // NewSQLiteJobRepository creates a new SQLiteJobRepository instance
-func NewSQLiteJobRepository(db *sql.DB, companyRepository CompanyRepository) *SQLiteJobRepository {
+func NewSQLiteJobRepository(db *sql.DB, companyRepository interfaces.CompanyRepository) *SQLiteJobRepository {
 	return &SQLiteJobRepository{
 		db:                db,
 		companyRepository: companyRepository,
@@ -48,7 +28,7 @@ func NewSQLiteJobRepository(db *sql.DB, companyRepository CompanyRepository) *SQ
 // validateJob performs basic validation on a job
 func validateJob(jobModel *models.Job) error {
 	if jobModel == nil {
-		return job.ErrInvalidJobID
+		return models.ErrInvalidJobID
 	}
 
 	return jobModel.Validate()
@@ -66,7 +46,7 @@ func (r *SQLiteJobRepository) Create(ctx context.Context, jobModel *models.Job) 
 
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, wrapError(job.ErrTransactionFailed, err)
+		return nil, models.WrapError(models.ErrTransactionFailed, err)
 	}
 
 	defer func() {
@@ -86,7 +66,7 @@ func (r *SQLiteJobRepository) Create(ctx context.Context, jobModel *models.Job) 
 
 	skillsJSON, err := json.Marshal(jobModel.RequiredSkills)
 	if err != nil {
-		return nil, wrapError(job.ErrFailedToCreateJob, err)
+		return nil, models.WrapError(models.ErrFailedToCreateJob, err)
 	}
 
 	query := `
@@ -130,16 +110,16 @@ func (r *SQLiteJobRepository) Create(ctx context.Context, jobModel *models.Job) 
 		jobModel.UpdatedAt,
 	)
 	if err != nil {
-		return nil, wrapError(job.ErrFailedToCreateJob, err)
+		return nil, models.WrapError(models.ErrFailedToCreateJob, err)
 	}
 
 	id, err := result.LastInsertId()
 	if err != nil {
-		return nil, wrapError(job.ErrFailedToCreateJob, err)
+		return nil, models.WrapError(models.ErrFailedToCreateJob, err)
 	}
 
 	if err = tx.Commit(); err != nil {
-		return nil, wrapError(job.ErrTransactionFailed, err)
+		return nil, models.WrapError(models.ErrTransactionFailed, err)
 	}
 
 	tx = nil
@@ -153,7 +133,7 @@ func (r *SQLiteJobRepository) Create(ctx context.Context, jobModel *models.Job) 
 // GetByID retrieves a job by its ID
 func (r *SQLiteJobRepository) GetByID(ctx context.Context, id int) (*models.Job, error) {
 	if id <= 0 {
-		return nil, job.ErrInvalidJobID
+		return nil, models.ErrInvalidJobID
 	}
 
 	query := `
@@ -187,10 +167,10 @@ func (r *SQLiteJobRepository) GetByID(ctx context.Context, id int) (*models.Job,
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, job.ErrJobNotFound
+			return nil, models.ErrJobNotFound
 		}
-		return nil, &job.RepositoryError{
-			SentinelError: job.ErrJobNotFound,
+		return nil, &models.RepositoryError{
+			SentinelError: models.ErrJobNotFound,
 			InnerError:    err,
 		}
 	}
@@ -234,7 +214,7 @@ func (r *SQLiteJobRepository) GetByID(ctx context.Context, id int) (*models.Job,
 }
 
 // GetAll retrieves all jobs with optional filtering
-func (r *SQLiteJobRepository) GetAll(ctx context.Context, filter JobFilter) ([]*models.Job, error) {
+func (r *SQLiteJobRepository) GetAll(ctx context.Context, filter models.JobFilter) ([]*models.Job, error) {
 	query := `
 		SELECT
 			j.id, j.title, j.description, j.location, j.job_type,
@@ -362,11 +342,11 @@ func (r *SQLiteJobRepository) GetAll(ctx context.Context, filter JobFilter) ([]*
 // Update updates an existing job in the database
 func (r *SQLiteJobRepository) Update(ctx context.Context, job *models.Job) error {
 	if job == nil {
-		return ErrInvalidJobID
+		return models.ErrInvalidJobID
 	}
 
 	if job.ID <= 0 {
-		return ErrInvalidJobID
+		return models.ErrInvalidJobID
 	}
 
 	if err := validateJob(job); err != nil {
@@ -380,7 +360,7 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, job *models.Job) error
 
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return ErrTransactionFailed
+		return models.ErrTransactionFailed
 	}
 
 	defer func() {
@@ -393,7 +373,7 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, job *models.Job) error
 
 	skillsJSON, err := json.Marshal(job.RequiredSkills)
 	if err != nil {
-		return ErrFailedToUpdateJob
+		return models.ErrFailedToUpdateJob
 	}
 
 	query := `
@@ -438,20 +418,20 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, job *models.Job) error
 		job.ID,
 	)
 	if err != nil {
-		return ErrFailedToUpdateJob
+		return models.ErrFailedToUpdateJob
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return ErrFailedToUpdateJob
+		return models.ErrFailedToUpdateJob
 	}
 
 	if rowsAffected == 0 {
-		return ErrJobNotFound
+		return models.ErrJobNotFound
 	}
 
 	if err = tx.Commit(); err != nil {
-		return ErrTransactionFailed
+		return models.ErrTransactionFailed
 	}
 
 	tx = nil
@@ -464,23 +444,23 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, job *models.Job) error
 // Delete removes a job from the database
 func (r *SQLiteJobRepository) Delete(ctx context.Context, id int) error {
 	if id <= 0 {
-		return ErrInvalidJobID
+		return models.ErrInvalidJobID
 	}
 
 	query := "DELETE FROM jobs WHERE id = ?"
 
 	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
-		return ErrFailedToDeleteJob
+		return models.ErrFailedToDeleteJob
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return ErrFailedToDeleteJob
+		return models.ErrFailedToDeleteJob
 	}
 
 	if rowsAffected == 0 {
-		return ErrJobNotFound
+		return models.ErrJobNotFound
 	}
 
 	return nil
@@ -489,11 +469,11 @@ func (r *SQLiteJobRepository) Delete(ctx context.Context, id int) error {
 // UpdateStatus updates the status of a job
 func (r *SQLiteJobRepository) UpdateStatus(ctx context.Context, id int, status models.JobStatus) error {
 	if id <= 0 {
-		return ErrInvalidJobID
+		return models.ErrInvalidJobID
 	}
 
 	if status < models.INTERESTED || status > models.NOT_INTERESTED {
-		return job.ErrInvalidJobStatus
+		return models.ErrInvalidJobStatus
 	}
 
 	query := "UPDATE jobs SET status = ?, updated_at = ? WHERE id = ?"
@@ -501,16 +481,16 @@ func (r *SQLiteJobRepository) UpdateStatus(ctx context.Context, id int, status m
 	now := time.Now()
 	result, err := r.db.ExecContext(ctx, query, int(status), now, id)
 	if err != nil {
-		return ErrFailedToUpdateJob
+		return models.ErrFailedToUpdateJob
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return ErrFailedToUpdateJob
+		return models.ErrFailedToUpdateJob
 	}
 
 	if rowsAffected == 0 {
-		return ErrJobNotFound
+		return models.ErrJobNotFound
 	}
 
 	return nil
