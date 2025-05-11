@@ -72,7 +72,7 @@ func (h *testAuthHandler) AuthMiddleware() gin.HandlerFunc {
 func TestLoginHandler(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	t.Run("should return error when login fails", func(t *testing.T) {
+	t.Run("should_return_error_when_login_fails", func(t *testing.T) {
 		r := gin.New()
 
 		handler := newTestAuthHandler()
@@ -96,7 +96,7 @@ func TestLoginHandler(t *testing.T) {
 		assert.Equal(t, "#form-response", w.Header().Get("HX-Retarget"))
 	})
 
-	t.Run("should set cookie and redirect on successful login", func(t *testing.T) {
+	t.Run("should_set_cookie_and_redirect_when_login_successful", func(t *testing.T) {
 		r := gin.New()
 
 		handler := newTestAuthHandler()
@@ -134,7 +134,7 @@ func TestLoginHandler(t *testing.T) {
 func TestAuthMiddleware(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	t.Run("should redirect to login when no token provided", func(t *testing.T) {
+	t.Run("should_redirect_to_login_when_no_token_provided", func(t *testing.T) {
 		r := gin.New()
 
 		handler := newTestAuthHandler()
@@ -152,7 +152,7 @@ func TestAuthMiddleware(t *testing.T) {
 		assert.Equal(t, "/auth/login", w.Header().Get("Location"))
 	})
 
-	t.Run("should redirect to login when token is invalid", func(t *testing.T) {
+	t.Run("should_redirect_to_login_when_token_is_invalid", func(t *testing.T) {
 		r := gin.New()
 
 		handler := newTestAuthHandler()
@@ -172,7 +172,7 @@ func TestAuthMiddleware(t *testing.T) {
 		assert.Equal(t, "/auth/login", w.Header().Get("Location"))
 	})
 
-	t.Run("should set user context and allow access when token is valid", func(t *testing.T) {
+	t.Run("should_set_user_context_and_allow_access_when_token_is_valid", func(t *testing.T) {
 		r := gin.New()
 
 		handler := newTestAuthHandler()
@@ -209,7 +209,6 @@ func TestAuthMiddleware(t *testing.T) {
 	})
 }
 
-// Test service implementation
 type testAuthService struct {
 	loginResult  string
 	loginError   error

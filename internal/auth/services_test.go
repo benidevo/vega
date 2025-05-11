@@ -69,7 +69,7 @@ func setupTestConfig() *config.Settings {
 }
 
 func TestRegisterUser(t *testing.T) {
-	t.Run("should successfully register a new user", func(t *testing.T) {
+	t.Run("should_register_user_successfully_when_valid_data", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
 		cfg := setupTestConfig()
 		ctx := context.Background()
@@ -92,7 +92,7 @@ func TestRegisterUser(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("should return error when repository fails", func(t *testing.T) {
+	t.Run("should_return_error_when_repository_fails", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
 		cfg := setupTestConfig()
 		ctx := context.Background()
@@ -112,7 +112,7 @@ func TestRegisterUser(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
-	t.Run("should successfully login a user", func(t *testing.T) {
+	t.Run("should_login_successfully_when_credentials_valid", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
 		cfg := setupTestConfig()
 		ctx := context.Background()
@@ -139,32 +139,15 @@ func TestLogin(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("should return error when user not found", func(t *testing.T) {
+	t.Run("should_return_error_when_credentials_invalid", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
 		cfg := setupTestConfig()
 		ctx := context.Background()
 
-		mockRepo.On("FindByUsername", ctx, "testuser").Return(nil, ErrUserNotFound)
-
-		authService := NewAuthService(mockRepo, cfg)
-
-		token, err := authService.Login(ctx, "testuser", "password123")
-
-		require.Error(t, err)
-		require.Equal(t, ErrInvalidCredentials, err)
-		require.Empty(t, token)
-
-		mockRepo.AssertExpectations(t)
-	})
-
-	t.Run("should return error when password is incorrect", func(t *testing.T) {
-		mockRepo := new(MockUserRepository)
-		cfg := setupTestConfig()
-		ctx := context.Background()
+		mockRepo.On("FindByUsername", ctx, "nonexistent").Return(nil, ErrUserNotFound)
 
 		hashedPassword, err := hashPassword("correctpassword")
 		require.NoError(t, err)
-
 		mockRepo.On("FindByUsername", ctx, "testuser").Return(&User{
 			ID:       1,
 			Username: "testuser",
@@ -174,75 +157,70 @@ func TestLogin(t *testing.T) {
 
 		authService := NewAuthService(mockRepo, cfg)
 
-		token, err := authService.Login(ctx, "testuser", "wrongpassword")
+		token1, err1 := authService.Login(ctx, "nonexistent", "password123")
+		require.Error(t, err1)
+		require.Equal(t, ErrInvalidCredentials, err1)
+		require.Empty(t, token1)
 
-		require.Error(t, err)
-		require.Equal(t, ErrInvalidCredentials, err)
-		require.Empty(t, token)
+		token2, err2 := authService.Login(ctx, "testuser", "wrongpassword")
+		require.Error(t, err2)
+		require.Equal(t, ErrInvalidCredentials, err2)
+		require.Empty(t, token2)
 
 		mockRepo.AssertExpectations(t)
 	})
 }
 
 func TestGetUserByID(t *testing.T) {
-	t.Run("should return user when found", func(t *testing.T) {
-		mockRepo := new(MockUserRepository)
-		cfg := setupTestConfig()
-		ctx := context.Background()
+	mockRepo := new(MockUserRepository)
+	cfg := setupTestConfig()
+	ctx := context.Background()
 
-		mockRepo.On("FindByID", ctx, 1).Return(&User{
-			ID:       1,
-			Username: "testuser",
-			Role:     ADMIN,
-		}, nil)
+	mockRepo.On("FindByID", ctx, 1).Return(&User{
+		ID:       1,
+		Username: "testuser",
+		Role:     ADMIN,
+	}, nil)
 
-		authService := NewAuthService(mockRepo, cfg)
+	mockRepo.On("FindByID", ctx, 999).Return(nil, ErrUserNotFound)
 
+	authService := NewAuthService(mockRepo, cfg)
+
+	t.Run("should_return_user_when_found", func(t *testing.T) {
 		user, err := authService.GetUserByID(ctx, 1)
 
 		require.NoError(t, err)
 		require.NotNil(t, user)
 		require.Equal(t, 1, user.ID)
 		require.Equal(t, "testuser", user.Username)
-
-		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("should return error when user not found", func(t *testing.T) {
-		mockRepo := new(MockUserRepository)
-		cfg := setupTestConfig()
-		ctx := context.Background()
-
-		mockRepo.On("FindByID", ctx, 999).Return(nil, ErrUserNotFound)
-
-		authService := NewAuthService(mockRepo, cfg)
-
+	t.Run("should_return_error_when_user_not_found", func(t *testing.T) {
 		user, err := authService.GetUserByID(ctx, 999)
 
 		require.Error(t, err)
 		require.Equal(t, ErrUserNotFound, err)
 		require.Nil(t, user)
-
-		mockRepo.AssertExpectations(t)
 	})
+
+	mockRepo.AssertExpectations(t)
 }
 
 func TestVerifyToken(t *testing.T) {
-	t.Run("should verify valid token", func(t *testing.T) {
-		mockRepo := new(MockUserRepository)
-		cfg := setupTestConfig()
+	mockRepo := new(MockUserRepository)
+	cfg := setupTestConfig()
+	authService := NewAuthService(mockRepo, cfg)
 
-		authService := NewAuthService(mockRepo, cfg)
+	user := &User{
+		ID:       1,
+		Username: "testuser",
+		Role:     ADMIN,
+	}
 
-		user := &User{
-			ID:       1,
-			Username: "testuser",
-			Role:     ADMIN,
-		}
+	token, err := authService.GenerateToken(user)
+	require.NoError(t, err)
 
-		token, err := authService.GenerateToken(user)
-		require.NoError(t, err)
-
+	t.Run("should_verify_token_when_valid", func(t *testing.T) {
 		claims, err := authService.VerifyToken(token)
 
 		require.NoError(t, err)
@@ -251,12 +229,7 @@ func TestVerifyToken(t *testing.T) {
 		require.Equal(t, "testuser", claims.Username)
 	})
 
-	t.Run("should reject invalid token", func(t *testing.T) {
-		mockRepo := new(MockUserRepository)
-		cfg := setupTestConfig()
-
-		authService := NewAuthService(mockRepo, cfg)
-
+	t.Run("should_reject_token_when_invalid", func(t *testing.T) {
 		claims, err := authService.VerifyToken("invalid.token.here")
 
 		require.Error(t, err)
@@ -266,62 +239,39 @@ func TestVerifyToken(t *testing.T) {
 }
 
 func TestChangePassword(t *testing.T) {
-	t.Run("should change password successfully", func(t *testing.T) {
-		mockRepo := new(MockUserRepository)
-		cfg := setupTestConfig()
-		ctx := context.Background()
+	mockRepo := new(MockUserRepository)
+	cfg := setupTestConfig()
+	ctx := context.Background()
 
-		mockRepo.On("FindByID", ctx, 1).Return(&User{
-			ID:       1,
-			Username: "testuser",
-			Password: "oldhash",
-		}, nil)
+	mockRepo.On("FindByID", ctx, 1).Return(&User{
+		ID:       1,
+		Username: "testuser",
+		Password: "oldhash",
+	}, nil)
 
-		mockRepo.On("UpdateUser", ctx, mock.AnythingOfType("*auth.User")).Return(&User{}, nil)
+	mockRepo.On("FindByID", ctx, 999).Return(nil, ErrUserNotFound)
 
-		authService := NewAuthService(mockRepo, cfg)
+	mockRepo.On("UpdateUser", ctx, mock.AnythingOfType("*auth.User")).Return(&User{}, nil).Once()
+	mockRepo.On("UpdateUser", ctx, mock.AnythingOfType("*auth.User")).Return(nil, errors.New("update error")).Once()
 
+	authService := NewAuthService(mockRepo, cfg)
+
+	t.Run("should_change_password_when_user_exists", func(t *testing.T) {
 		err := authService.ChangePassword(ctx, 1, "newpassword")
-
 		require.NoError(t, err)
-		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("should return error when user not found", func(t *testing.T) {
-		mockRepo := new(MockUserRepository)
-		cfg := setupTestConfig()
-		ctx := context.Background()
-
-		mockRepo.On("FindByID", ctx, 999).Return(nil, ErrUserNotFound)
-
-		authService := NewAuthService(mockRepo, cfg)
-
+	t.Run("should_return_error_when_user_not_found", func(t *testing.T) {
 		err := authService.ChangePassword(ctx, 999, "newpassword")
-
 		require.Error(t, err)
 		require.Equal(t, ErrUserNotFound, err)
-		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("should return error when update fails", func(t *testing.T) {
-		mockRepo := new(MockUserRepository)
-		cfg := setupTestConfig()
-		ctx := context.Background()
-
-		mockRepo.On("FindByID", ctx, 1).Return(&User{
-			ID:       1,
-			Username: "testuser",
-			Password: "oldhash",
-		}, nil)
-
-		mockRepo.On("UpdateUser", ctx, mock.AnythingOfType("*auth.User")).Return(nil, errors.New("update error"))
-
-		authService := NewAuthService(mockRepo, cfg)
-
+	t.Run("should_return_error_when_update_fails", func(t *testing.T) {
 		err := authService.ChangePassword(ctx, 1, "newpassword")
-
 		require.Error(t, err)
 		require.Equal(t, ErrUserPasswordChangeFailed, err)
-		mockRepo.AssertExpectations(t)
 	})
+
+	mockRepo.AssertExpectations(t)
 }

@@ -54,16 +54,17 @@ func setupApp(t *testing.T) (*App, *MockCommand) {
 	return app, mockCmd
 }
 
-func TestRegisterCommand(t *testing.T) {
-	app, mockCmd := setupApp(t)
+func TestApp(t *testing.T) {
+	t.Run("should_register_command_when_valid", func(t *testing.T) {
+		app, mockCmd := setupApp(t)
+		defer app.db.Close()
 
-	assert.Len(t, app.commands, 1)
-	assert.Contains(t, app.commands, "test-command")
-	assert.Equal(t, mockCmd, app.commands["test-command"])
-}
+		assert.Len(t, app.commands, 1)
+		assert.Contains(t, app.commands, "test-command")
+		assert.Equal(t, mockCmd, app.commands["test-command"])
+	})
 
-func TestRunCommand(t *testing.T) {
-	t.Run("successfully executes a command", func(t *testing.T) {
+	t.Run("should_execute_command_when_name_exists", func(t *testing.T) {
 		app, mockCmd := setupApp(t)
 		defer app.db.Close()
 
@@ -76,7 +77,7 @@ func TestRunCommand(t *testing.T) {
 		mockCmd.AssertExpectations(t)
 	})
 
-	t.Run("returns error for unknown command", func(t *testing.T) {
+	t.Run("should_return_error_when_command_not_found", func(t *testing.T) {
 		app, _ := setupApp(t)
 		defer app.db.Close()
 
@@ -86,7 +87,7 @@ func TestRunCommand(t *testing.T) {
 		assert.Contains(t, err.Error(), "unknown command")
 	})
 
-	t.Run("returns error when command execution fails", func(t *testing.T) {
+	t.Run("should_return_error_when_command_execution_fails", func(t *testing.T) {
 		app, mockCmd := setupApp(t)
 		defer app.db.Close()
 
@@ -99,58 +100,58 @@ func TestRunCommand(t *testing.T) {
 		assert.Equal(t, expectedErr, err)
 		mockCmd.AssertExpectations(t)
 	})
-}
 
-func TestShowHelp(t *testing.T) {
-	app, _ := setupApp(t)
-	defer app.db.Close()
+	t.Run("should_show_help_when_no_args_provided", func(t *testing.T) {
+		app, _ := setupApp(t)
+		defer app.db.Close()
 
-	// Execute the app with no arguments to show help
-	err := app.Run([]string{})
+		err := app.Run([]string{})
+		assert.NoError(t, err)
+	})
 
-	assert.NoError(t, err)
-}
+	t.Run("should_initialize_app_with_config", func(t *testing.T) {
+		cfg := &config.Settings{
+			DBDriver:           "sqlite",
+			DBConnectionString: ":memory:",
+		}
 
-func TestNewApp(t *testing.T) {
-	cfg := &config.Settings{}
-	app := NewApp(cfg)
+		app := NewApp(cfg)
 
-	assert.NotNil(t, app)
-	assert.Equal(t, cfg, app.config)
-	assert.NotNil(t, app.commands)
-	assert.Len(t, app.commands, 0)
-}
+		assert.NotNil(t, app)
+		assert.Equal(t, cfg, app.config)
+		assert.NotNil(t, app.commands)
+		assert.Len(t, app.commands, 0)
+	})
 
-func TestSetupDB(t *testing.T) {
-	cfg := &config.Settings{
-		DBDriver:           "sqlite",
-		DBConnectionString: ":memory:",
-	}
+	t.Run("should_setup_database_when_valid_config", func(t *testing.T) {
+		cfg := &config.Settings{
+			DBDriver:           "sqlite",
+			DBConnectionString: ":memory:",
+		}
 
-	app := NewApp(cfg)
+		app := NewApp(cfg)
 
-	err := app.setupDB()
-	assert.NoError(t, err)
-	assert.NotNil(t, app.db)
+		err := app.setupDB()
+		assert.NoError(t, err)
+		assert.NotNil(t, app.db)
+		defer app.db.Close()
+	})
 
-	app.db.Close()
-}
+	t.Run("should_register_commands_after_initialization", func(t *testing.T) {
+		cfg := &config.Settings{
+			DBDriver:           "sqlite",
+			DBConnectionString: ":memory:",
+		}
 
-// This is a simple test to ensure registerCommands doesn't panic
-func TestRegisterCommands(t *testing.T) {
-	cfg := &config.Settings{
-		DBDriver:           "sqlite",
-		DBConnectionString: ":memory:",
-	}
+		app := NewApp(cfg)
+		err := app.setupDB()
+		require.NoError(t, err)
+		defer app.db.Close()
 
-	app := NewApp(cfg)
-	err := app.setupDB()
-	require.NoError(t, err)
-	defer app.db.Close()
+		app.registerCommands()
+		assert.NotEmpty(t, app.commands)
 
-	app.registerCommands()
-	assert.NotEmpty(t, app.commands)
-
-	_, hasUserSync := app.commands["sync-users"]
-	assert.True(t, hasUserSync, "UserSyncCommand should be registered")
+		_, hasUserSync := app.commands["sync-users"]
+		assert.True(t, hasUserSync, "UserSyncCommand should be registered")
+	})
 }
