@@ -1,0 +1,19 @@
+{{define "partials/alert-success.html"}}
+<div class="text-center text-sm block mb-4 p-4 rounded-md bg-emerald-900 bg-opacity-50 border border-emerald-700 text-emerald-200" hx-target="this" hx-swap="outerHTML" hx-trigger="click delay:5s">
+  <div class="flex items-center justify-center">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+    </svg>
+    <span>{{ .message }}</span>
+  </div>
+  <div class="mt-2">
+    <a href="/dashboard/jobs/{{ .jobID }}/details" class="text-emerald-300 hover:text-emerald-200 underline">
+      View job details
+    </a>
+    <span class="mx-2">|</span>
+    <a href="/dashboard" class="text-emerald-300 hover:text-emerald-200 underline">
+      Return to dashboard
+    </a>
+  </div>
+</div>
+{{end}}

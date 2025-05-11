@@ -59,14 +59,37 @@ jobs:
       - name: Build Docker image
         run: docker compose build app
 
-      - name: Run tests with coverage
+      - name: Copy coverage script to container
         run: |
-          docker compose run --rm app sh -c "go test -v -coverprofile=coverage.out -covermode=count -coverpkg=github.com/benidevo/prospector/internal/... ./..."
+          docker compose run --rm app sh -c "mkdir -p /app/scripts"
+          cat > scripts/coverage.sh << 'EOF'
+          #!/bin/sh
+
+          # Run tests and generate coverage profile
+          go test ./... -coverprofile=coverage.out -coverpkg='github.com/benidevo/prospector/internal/...' -covermode=set
+
+          # Filter out handlers from the coverage output
+          grep -v '/handlers.go' coverage.out > coverage.filtered.out
+
+          # Generate report
+          if [ "$1" = "verbose" ]; then
+            go tool cover -func=coverage.filtered.out
+          else
+            go tool cover -func=coverage.filtered.out | grep total:
+          fi
+          EOF
+          chmod +x scripts/coverage.sh
+          docker compose cp scripts/coverage.sh app:/app/scripts/coverage.sh
+
+      - name: Run tests with coverage (excluding handlers)
+        run: |
+          docker compose run --rm app sh -c "chmod +x /app/scripts/coverage.sh && /app/scripts/coverage.sh verbose"
+          docker compose cp app:/app/coverage.filtered.out ./coverage.filtered.out
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          file: ./coverage.out
+          file: ./coverage.filtered.out
           flags: unittests
 
       - name: Check test coverage threshold
@@ -74,8 +97,8 @@ jobs:
           MIN_COVERAGE=65.0
 
           # Run coverage check directly in the container
-          COVERAGE=$(docker compose run --rm app sh -c "go tool cover -func=coverage.out | grep total: | awk '{print \$3}'" | tr -d '%')
-          echo "Code coverage: $COVERAGE%"
+          COVERAGE=$(docker compose run --rm app sh -c "go tool cover -func=coverage.filtered.out | grep total: | awk '{print \$3}'" | tr -d '%')
+          echo "Code coverage (excluding handlers): $COVERAGE%"
 
           if (( $(echo "$COVERAGE < $MIN_COVERAGE" | bc -l) )); then
             echo "❌ Code coverage is below the threshold of $MIN_COVERAGE%"

@@ -80,6 +80,11 @@ ProspecTor MVP uses a **monolithic architecture** implemented entirely in Go, wi
   * Tailwind CSS for responsive styling
   * Particles.js for background animations
   * Minimal JavaScript approach
+* **Typography**:
+  * Primary Font (Body): Inter - A clean, modern sans-serif with excellent readability
+  * Heading Font: Poppins - A geometric sans-serif with distinctive character
+  * Font Weights: 300/400/500/600/700 for varied emphasis and hierarchy
+  * Scale: Text-xs to text-5xl with responsive adjustments
 * **Color Theme**:
   * Primary: Teal (#0D9488)
   * Secondary: Amber (#F59E0B)

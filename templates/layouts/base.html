@@ -1,16 +1,30 @@
 {{define "layouts/base.html"}}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" hx-ext="response-targets">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ProspecTor - {{.title}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/htmx.org@1.9.4"></script>
-  <!-- Configure Tailwind with color theme -->
+  <script src="https://unpkg.com/htmx.org/dist/ext/response-targets.js"></script>
+  <!-- HTMX response-targets extension is enabled globally -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      htmx.config.responseTargetUnsetsError = true;
+    });
+  </script>
+  <!-- Configure Tailwind with color theme and fonts -->
   <script>
     tailwind.config = {
       theme: {
+        fontFamily: {
+          'sans': ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          'heading': ['Poppins', 'ui-sans-serif', 'system-ui', 'sans-serif']
+        },
         extend: {
           colors: {
             primary: '#0D9488',
@@ -21,6 +35,11 @@
     }
   </script>
   <style>
+    /* Base font styling */
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+    }
+
     /* HTMX indicator styling */
     .htmx-indicator {
       display: none;
@@ -72,7 +91,7 @@
   </style>
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 </head>
-<body class="bg-slate-900 text-gray-100">
+<body class="bg-slate-900 text-gray-100 font-sans">
   <!-- Use template switching based on page variable -->
   {{if eq .page "dashboard"}}
     <!-- Dashboard has a different layout -->
@@ -113,6 +132,33 @@
 
   <!-- Global scripts -->
   <script>
+    // Global function to auto-dismiss alerts
+    function setupAutoDismissAlerts() {
+      // Find all alerts with the auto-dismiss-alert class
+      const alerts = document.querySelectorAll('.auto-dismiss-alert');
+
+      // For each alert, set a timeout to remove it
+      alerts.forEach(alert => {
+        setTimeout(() => {
+          // Add fade-out animation
+          alert.style.transition = 'opacity 0.5s ease-out';
+          alert.style.opacity = '0';
+
+          // After animation completes, remove the element
+          setTimeout(() => {
+            if (alert.parentNode) {
+              alert.parentNode.removeChild(alert);
+            }
+          }, 500); // 500ms matches the transition duration
+        }, 3000); // 3 second delay before starting fade-out
+      });
+    }
+
+    // Run the auto-dismiss setup whenever the DOM content changes
+    // This handles both initial page load and HTMX swaps
+    document.addEventListener('DOMContentLoaded', setupAutoDismissAlerts);
+    document.body.addEventListener('htmx:afterSwap', setupAutoDismissAlerts);
+
     // Initialize particles.js on all pages that have a particles-js element
     document.addEventListener('DOMContentLoaded', function() {
       const particlesContainer = document.getElementById('particles-js');

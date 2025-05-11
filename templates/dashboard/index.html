@@ -2,8 +2,17 @@
   {{template "dashboard-layout" .}}
 {{end}}
 
+{{define "dashboard-page-content"}}
+  {{template "dashboard-jobs-content" .}}
+{{end}}
+
 {{define "dashboard-jobs-content"}}
 <div>
+  {{if .error}}
+  <div class="bg-red-900 bg-opacity-50 border border-red-800 text-red-100 px-4 py-3 rounded mb-6">
+    <p>{{.error}}</p>
+  </div>
+  {{end}}
   <!-- Stats -->
   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5 mb-8">
     <div class="bg-slate-800 rounded-lg shadow-lg p-4 md:p-5">
@@ -15,7 +24,7 @@
         </div>
         <div class="ml-5">
           <p class="text-gray-400 text-xs md:text-sm">Total Jobs</p>
-          <p class="text-2xl md:text-3xl font-semibold text-white">12</p>
+          <p class="text-2xl md:text-3xl font-semibold text-white">{{.totalJobs}}</p>
         </div>
       </div>
     </div>
@@ -29,7 +38,7 @@
         </div>
         <div class="ml-5">
           <p class="text-gray-400 text-xs md:text-sm">Applied</p>
-          <p class="text-2xl md:text-3xl font-semibold text-white">4</p>
+          <p class="text-2xl md:text-3xl font-semibold text-white">{{.applied}}</p>
         </div>
       </div>
     </div>
@@ -43,7 +52,7 @@
         </div>
         <div class="ml-5">
           <p class="text-gray-400 text-xs md:text-sm">High Match</p>
-          <p class="text-2xl md:text-3xl font-semibold text-white">7</p>
+          <p class="text-2xl md:text-3xl font-semibold text-white">{{.highMatch}}</p>
         </div>
       </div>
     </div>
@@ -51,118 +60,213 @@
 
   <!-- Filtering Controls -->
   <div class="flex flex-col sm:flex-row gap-4 mb-8">
-    <select class="bg-slate-700 text-white border-slate-600 rounded-md px-3 py-2 text-sm w-full sm:w-auto">
-      <option value="all">All Jobs</option>
-      <option value="interested">Interested</option>
-      <option value="applied">Applied</option>
-      <option value="rejected">Not Interested</option>
+    <select
+      id="status-filter"
+      class="bg-slate-700 text-white border-slate-600 rounded-md px-3 py-2 text-sm w-full sm:w-auto"
+      hx-get="/dashboard"
+      hx-trigger="change"
+      hx-target="body"
+      hx-push-url="true"
+      name="status"
+    >
+      <option value="all" {{if or (eq .statusFilter "") (eq .statusFilter "all")}}selected{{end}}>All Jobs</option>
+      <option value="interested" {{if eq .statusFilter "interested"}}selected{{end}}>Interested</option>
+      <option value="applied" {{if eq .statusFilter "applied"}}selected{{end}}>Applied</option>
+      <option value="interviewing" {{if eq .statusFilter "interviewing"}}selected{{end}}>Interviewing</option>
+      <option value="offer received" {{if eq .statusFilter "offer received"}}selected{{end}}>Offer Received</option>
+      <option value="rejected" {{if eq .statusFilter "rejected"}}selected{{end}}>Rejected</option>
+      <option value="not interested" {{if eq .statusFilter "not interested"}}selected{{end}}>Not Interested</option>
     </select>
-    <button class="bg-primary text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-teal-700 transition-colors w-full sm:w-auto">
+    <button
+      class="bg-primary text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-teal-700 transition-colors w-full sm:w-auto"
+      hx-get="/dashboard"
+      hx-target="body"
+    >
       Refresh Matches
     </button>
   </div>
 
   <!-- Job Cards -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- Job 1 -->
-    <div class="bg-slate-800 rounded-lg shadow-lg overflow-hidden">
-      <div class="px-4 md:px-6 py-4 md:py-5 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-        <div>
-          <h3 class="text-lg font-semibold text-white">Senior Go Developer</h3>
-          <p class="text-gray-400 text-sm">TechCorp Inc.</p>
-        </div>
-        <div class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-          92% Match
-        </div>
-      </div>
-      <div class="px-4 md:px-6 py-4">
-        <p class="text-gray-300 mb-4 text-sm md:text-base">
-          Looking for a skilled Go developer with 5+ years of experience in building scalable microservices and
-          distributed systems. Knowledge of Kubernetes and event-driven architecture is a plus.
-        </p>
-        <div class="flex flex-wrap gap-2 mb-4">
-          <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Go</span>
-          <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Microservices</span>
-          <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Kubernetes</span>
-          <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Docker</span>
-        </div>
-        <div class="mt-2 border-t border-slate-700 pt-4">
-          <div class="flex flex-col sm:flex-row justify-between gap-4">
-            <div class="w-full sm:w-auto">
-              <select class="bg-slate-700 text-white border-slate-600 rounded-md px-2 py-1 text-sm w-full">
-                <option value="">Set Status</option>
-                <option value="interested">Interested</option>
-                <option value="applied">Applied</option>
-                <option value="rejected">Not Interested</option>
-              </select>
-            </div>
-            <div class="flex gap-2 w-full sm:w-auto">
-              <a href="/dashboard/jobs/1/details" class="flex-1 sm:flex-auto text-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors">
-                View Details
-              </a>
-              <a href="#" class="flex-1 sm:flex-auto text-center px-3 py-1 bg-primary hover:bg-teal-700 text-white rounded-md text-sm transition-colors">
-                Get Cover Letter
-              </a>
-              <button type="button" class="flex-1 sm:flex-auto text-center px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm transition-colors">
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <!-- Add a debug section for jobs data -->
+    {{if .debug}}
+    <div class="col-span-2 p-4 bg-slate-800 rounded-lg text-xs font-mono overflow-auto" style="max-height: 200px;">
+      <h3 class="font-bold mb-2 text-white">Debug Info:</h3>
+      <pre>Jobs object exists: {{if .jobs}}yes{{else}}no{{end}}</pre>
+      <pre>Jobs count: {{if .jobs}}{{len .jobs}}{{else}}0{{end}}</pre>
     </div>
+    {{end}}
 
-    <!-- Job 2 -->
-    <div class="bg-slate-800 rounded-lg shadow-lg overflow-hidden">
-      <div class="px-4 md:px-6 py-4 md:py-5 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-        <div>
-          <h3 class="text-lg font-semibold text-white">Backend Engineer</h3>
-          <p class="text-gray-400 text-sm">Innovative Solutions Ltd.</p>
+    {{if and .jobs (gt (len .jobs) 0)}}
+      {{range .jobs}}
+      <div class="bg-slate-800 rounded-lg shadow-lg overflow-hidden">
+        <div class="px-4 md:px-6 py-4 md:py-5 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <div>
+            <h3 class="text-lg font-semibold text-white">{{.Title}}</h3>
+            <p class="text-gray-400 text-sm">{{.Company.Name}}{{if .Location}} · {{.Location}}{{end}}</p>
+          </div>
+          <div class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+            92% Match <!-- Keeping match percentage as dummy data -->
+          </div>
         </div>
-        <div class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
-          78% Match
-        </div>
-      </div>
-      <div class="px-4 md:px-6 py-4">
-        <p class="text-gray-300 mb-4 text-sm md:text-base">
-          We're seeking a backend engineer with strong experience in Go. You'll work on our core API
-          services and help scale our infrastructure. Experience with PostgreSQL and message queues required.
-        </p>
-        <div class="flex flex-wrap gap-2 mb-4">
-          <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Go</span>
-          <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">API Design</span>
-          <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">PostgreSQL</span>
-          <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Kafka</span>
-        </div>
-        <div class="mt-2 border-t border-slate-700 pt-4">
-          <div class="flex flex-col sm:flex-row justify-between gap-4">
-            <div class="w-full sm:w-auto">
-              <select class="bg-slate-700 text-white border-slate-600 rounded-md px-2 py-1 text-sm w-full">
-                <option value="">Set Status</option>
-                <option value="interested">Interested</option>
-                <option value="applied">Applied</option>
-                <option value="rejected">Not Interested</option>
-              </select>
-            </div>
-            <div class="flex gap-2 w-full sm:w-auto">
-              <a href="/dashboard/jobs/1/details" class="flex-1 sm:flex-auto text-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors">
-                View Details
-              </a>
-              <a href="#" class="flex-1 sm:flex-auto text-center px-3 py-1 bg-primary hover:bg-teal-700 text-white rounded-md text-sm transition-colors">
-                Get Cover Letter
-              </a>
-              <button type="button" class="flex-1 sm:flex-auto text-center px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm transition-colors">
-                Delete
-              </button>
+        <div class="px-4 md:px-6 py-4">
+          <p class="text-gray-300 mb-4 text-sm md:text-base h-[60px] overflow-hidden">
+            {{if gt (len .Description) 150}}
+              {{slice .Description 0 150}}...
+            {{else}}
+              {{.Description}}
+            {{end}}
+          </p>
+          <div class="flex flex-wrap gap-2 mb-4">
+            {{range .RequiredSkills}}
+              <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">{{.}}</span>
+            {{else}}
+              <span class="text-gray-400 text-xs">No skills listed</span>
+            {{end}}
+          </div>
+          <div class="mt-2 border-t border-slate-700 pt-4">
+            <div class="flex flex-col sm:flex-row justify-between gap-4">
+              <div class="w-full sm:w-auto">
+                <div class="flex flex-col">
+                  <select
+                    class="bg-slate-700 text-white border-slate-600 rounded-md px-2 py-1 text-sm w-full"
+                    hx-post="/dashboard/jobs/{{.ID}}/status"
+                    hx-headers='{"X-HTTP-Method-Override": "PUT"}'
+                    hx-trigger="change"
+                    hx-target="#status-response-{{.ID}}"
+                    hx-swap="innerHTML"
+                    name="status"
+                  >
+                    <option value="interested" {{if eq .Status 0}}selected{{end}}>Interested</option>
+                    <option value="applied" {{if eq .Status 1}}selected{{end}}>Applied</option>
+                    <option value="interviewing" {{if eq .Status 2}}selected{{end}}>Interviewing</option>
+                    <option value="offered" {{if eq .Status 3}}selected{{end}}>Offer Received</option>
+                    <option value="rejected" {{if eq .Status 4}}selected{{end}}>Rejected</option>
+                    <option value="not_interested" {{if eq .Status 5}}selected{{end}}>Not Interested</option>
+                  </select>
+                  <div id="status-response-{{.ID}}" class="w-full text-center h-5 mt-1"></div>
+                </div>
+              </div>
+              <div class="flex gap-2 w-full sm:w-auto mt-4 sm:mt-0">
+                <a href="/dashboard/jobs/{{.ID}}/details" class="w-full sm:w-auto inline-flex items-center justify-center px-2 py-0.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors">
+                  View Details
+                </a>
+                <button
+                  type="button"
+                  class="w-full sm:w-auto inline-flex items-center justify-center px-2 py-0.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium transition-colors"
+                  onclick="openDeleteModalForJob({{.ID}})"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>
+      </div>
+      {{end}}
+    {{else}}
+      <div class="col-span-2 text-center py-8">
+        <p class="text-gray-400">No jobs found. <a href="/dashboard/jobs/new" class="text-primary hover:text-teal-400">Add your first job</a>.</p>
+      </div>
+    {{end}}
+  </div>
+
+  <!-- Delete Confirmation Modal (shared) -->
+  <div id="delete-modal-dashboard" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div class="bg-slate-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4 border border-slate-700">
+      <h3 class="text-xl font-semibold text-white mb-4">Confirm Deletion</h3>
+      <p class="text-gray-300 mb-6">Are you sure you want to delete this job? This action cannot be undone.</p>
+      <div class="flex justify-end space-x-3">
+        <button
+          id="cancel-delete-btn-dashboard"
+          class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md"
+          onclick="closeDeleteModalDashboard()">
+          Cancel
+        </button>
+        <button
+          id="confirm-delete-btn-dashboard"
+          class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md"
+          onclick="deleteJob()">
+          Delete
+        </button>
       </div>
     </div>
   </div>
-</div>
-{{end}}
 
-{{define "main-content"}}
-  {{template "dashboard-jobs-content" .}}
+  <!-- JavaScript for modal handling -->
+  <script>
+    let jobToDelete = null;
+
+    // Auto dismiss alerts after 3 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+      document.body.addEventListener('htmx:afterSwap', function(event) {
+        const alerts = document.querySelectorAll('.auto-dismiss-alert');
+        alerts.forEach(alert => {
+          setTimeout(() => {
+            if (alert && alert.parentNode) {
+              alert.parentNode.removeChild(alert);
+            }
+          }, 3000);
+        });
+      });
+    });
+
+    function openDeleteModalForJob(jobId) {
+      jobToDelete = jobId;
+      const modal = document.getElementById('delete-modal-dashboard');
+      modal.classList.remove('hidden');
+
+      // Add listener for ESC key to close modal
+      document.addEventListener('keydown', handleEscKeyDashboard);
+
+      // Add click outside to close
+      modal.addEventListener('click', handleOutsideClickDashboard);
+    }
+
+    function closeDeleteModalDashboard() {
+      const modal = document.getElementById('delete-modal-dashboard');
+      modal.classList.add('hidden');
+
+      // Remove event listeners
+      document.removeEventListener('keydown', handleEscKeyDashboard);
+      modal.removeEventListener('click', handleOutsideClickDashboard);
+    }
+
+    function handleEscKeyDashboard(e) {
+      if (e.key === 'Escape') {
+        closeDeleteModalDashboard();
+      }
+    }
+
+    function handleOutsideClickDashboard(e) {
+      if (e.target.id === 'delete-modal-dashboard') {
+        closeDeleteModalDashboard();
+      }
+    }
+
+    function deleteJob() {
+      if (!jobToDelete) return;
+
+      // Close the modal
+      closeDeleteModalDashboard();
+
+      // Create a fetch request to delete the job
+      fetch('/dashboard/jobs/' + jobToDelete, {
+        method: 'DELETE',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => {
+        // Reload the page to show updated job list
+        window.location.reload();
+      })
+      .catch(error => {
+        console.error('Error deleting job:', error);
+        // Reload anyway to ensure consistency
+        window.location.reload();
+      });
+    }
+  </script>
+</div>
 {{end}}

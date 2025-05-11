@@ -1,7 +1,12 @@
 {{define "job-new-content"}}
-<!-- Using the dashboard layout template for consistent navigation -->
-{{template "dashboard-layout" .}}
+  {{template "dashboard-layout" .}}
 {{end}}
+
+{{define "dashboard-page-content"}}
+  {{template "job-form-content" .}}
+{{end}}
+
+{{template "partials/job-form-validation.html" .}}
 
 {{define "job-form-content"}}
 <!-- Form Content with Glassy Effect -->
@@ -11,7 +16,7 @@
 
   <!-- Form container -->
   <div class="relative p-6 bg-slate-800 bg-opacity-70 backdrop-blur-xl rounded-xl shadow-2xl border border-white border-opacity-10">
-    <form hx-post="/dashboard/jobs/new" hx-target="#form-response" hx-swap="outerHTML" hx-indicator="#spinner">
+    <form id="job-form" hx-post="/dashboard/jobs/new" hx-target="#form-response" hx-target-4*="#form-response" hx-target-5*="#form-response" hx-swap="innerHTML" hx-indicator="#spinner" hx-on::after-request="if(event.detail.successful && event.detail.xhr.responseText.includes('successfully')) { this.reset(); }">
 
       <!-- Form sections -->
       <div class="space-y-8">
@@ -193,7 +198,7 @@
         </div>
 
         <!-- Form response area -->
-        <div id="form-response" class="text-center text-sm hidden">
+        <div id="form-response" class="text-center text-sm block mb-4 p-4 rounded-md min-h-[60px]">
           <!-- Error or success messages will be placed here -->
         </div>
 

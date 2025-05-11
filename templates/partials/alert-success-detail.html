@@ -1,0 +1,10 @@
+{{define "partials/alert-success-detail.html"}}
+<div class="text-center text-sm block mb-2 p-2 rounded-md bg-emerald-900 bg-opacity-50 border border-emerald-700 text-emerald-200 auto-dismiss-alert" hx-target="this" hx-swap="outerHTML" hx-trigger="click delay:5s">
+  <div class="flex items-center justify-center">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+    </svg>
+    <span>{{ .message }}</span>
+  </div>
+</div>
+{{end}}

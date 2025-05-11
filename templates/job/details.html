@@ -1,6 +1,9 @@
 {{define "job-details-content"}}
-<!-- Using the dashboard layout template for consistent navigation -->
-{{template "dashboard-layout" .}}
+  {{template "dashboard-layout" .}}
+{{end}}
+
+{{define "dashboard-page-content"}}
+  {{template "job-details" .}}
 {{end}}
 
 {{define "job-details"}}
@@ -9,8 +12,68 @@
   <div class="bg-slate-800 rounded-xl shadow-lg overflow-hidden mb-6">
     <div class="px-6 py-5 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
-        <h2 class="text-xl md:text-2xl font-semibold text-white">Senior Go Developer</h2>
-        <p class="text-gray-400 text-sm md:text-base">TechCorp Inc. · Remote</p>
+        <div id="job-header-display">
+          <div class="flex items-center">
+            <h2 class="text-xl md:text-2xl font-semibold text-white mr-2">{{.job.Title}}</h2>
+            <button onclick="toggleJobHeaderEdit()" class="text-gray-400 hover:text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </button>
+          </div>
+          <p class="text-gray-400 text-sm md:text-base">{{.job.Company.Name}}{{if .job.Location}} · {{.job.Location}}{{end}}</p>
+        </div>
+
+        <div id="job-header-edit" class="hidden space-y-2">
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Job Title</label>
+            <input
+              type="text"
+              id="job-title-input"
+              name="title"
+              class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+              value="{{.job.Title}}"
+            >
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Company</label>
+            <input
+              type="text"
+              id="job-company-input"
+              name="company_name"
+              class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+              value="{{.job.Company.Name}}"
+            >
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Location</label>
+            <input
+              type="text"
+              id="job-location-input"
+              name="location"
+              class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+              value="{{.job.Location}}"
+            >
+          </div>
+          <div class="flex gap-2">
+            <button
+              class="px-3 py-1 bg-primary hover:bg-teal-700 text-white text-sm rounded-md"
+              hx-post="/dashboard/jobs/{{.jobID}}/basic"
+              hx-headers='{"X-HTTP-Method-Override": "PUT"}'
+              hx-include="#job-title-input, #job-company-input, #job-location-input"
+              hx-target="#header-response"
+              hx-swap="innerHTML"
+              hx-on::after-request="if(event.detail.successful) { toggleJobHeaderEdit(); window.location.reload(); }">
+              Save
+            </button>
+            <button
+              class="px-3 py-1 bg-slate-600 hover:bg-slate-700 text-white text-sm rounded-md"
+              onclick="toggleJobHeaderEdit()">
+              Cancel
+            </button>
+          </div>
+          <div id="header-response"></div>
+        </div>
       </div>
       <div class="px-4 py-1.5 bg-green-100 text-green-800 rounded-full text-sm font-medium">
         92% Match
@@ -25,59 +88,148 @@
         <div>
           <h3 class="text-lg font-medium text-primary mb-3">Job Description</h3>
           <div class="text-gray-300 space-y-4">
+            <p>{{.job.Description}}</p>
+            {{if .job.Notes}}
             <p>
-              Looking for a skilled Go developer with 5+ years of experience in building scalable microservices and
-              distributed systems. Knowledge of Kubernetes and event-driven architecture is a plus.
+              <strong>Notes:</strong>
             </p>
-            <p>
-              As a Senior Go Developer, you will be responsible for designing, implementing, and maintaining our core
-              backend services. You'll work closely with our product and infrastructure teams to build scalable and
-              reliable systems.
-            </p>
-            <p>
-              <strong>Required Skills:</strong>
-            </p>
-            <ul class="list-disc pl-5 space-y-1">
-              <li>5+ years of experience with Go</li>
-              <li>Strong understanding of microservices architecture</li>
-              <li>Experience with Docker and container orchestration</li>
-              <li>Proficiency in SQL and NoSQL databases</li>
-              <li>Experience with CI/CD pipelines</li>
-            </ul>
-            <p>
-              <strong>Nice to Have:</strong>
-            </p>
-            <ul class="list-disc pl-5 space-y-1">
-              <li>Experience with Kubernetes</li>
-              <li>Knowledge of event-driven architecture</li>
-              <li>Experience with message brokers like Kafka or RabbitMQ</li>
-              <li>Experience with cloud platforms (AWS, GCP, Azure)</li>
-            </ul>
+            <p>{{.job.Notes}}</p>
+            {{end}}
           </div>
         </div>
 
         <!-- Skills section -->
         <div>
-          <h3 class="text-lg font-medium text-primary mb-3">Skills</h3>
-          <div class="flex flex-wrap gap-2">
-            <span class="px-3 py-1.5 bg-slate-700 rounded-md text-sm text-primary">Go</span>
-            <span class="px-3 py-1.5 bg-slate-700 rounded-md text-sm text-primary">Microservices</span>
-            <span class="px-3 py-1.5 bg-slate-700 rounded-md text-sm text-primary">Kubernetes</span>
-            <span class="px-3 py-1.5 bg-slate-700 rounded-md text-sm text-primary">Docker</span>
-            <span class="px-3 py-1.5 bg-slate-700 rounded-md text-sm text-primary">SQL</span>
-            <span class="px-3 py-1.5 bg-slate-700 rounded-md text-sm text-primary">NoSQL</span>
-            <span class="px-3 py-1.5 bg-slate-700 rounded-md text-sm text-primary">CI/CD</span>
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="text-lg font-medium text-primary">Skills</h3>
+            <button id="edit-skills-btn"
+              class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md"
+              onclick="toggleSkillsEdit()">
+              Edit Skills
+            </button>
           </div>
+
+          <!-- Skills display (default view) -->
+          <div id="skills-display" class="flex flex-wrap gap-2">
+            {{range .job.RequiredSkills}}
+            <span class="px-3 py-1.5 bg-slate-700 rounded-md text-sm text-primary">{{.}}</span>
+            {{else}}
+            <span class="text-gray-400">No skills listed</span>
+            {{end}}
+          </div>
+
+          <!-- Skills edit form (hidden by default) -->
+          <div id="skills-edit" class="hidden">
+            <div class="mb-2">
+              <input
+                type="text"
+                id="skills-input"
+                name="skills"
+                class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                placeholder="Enter skills separated by commas"
+                value="{{range $i, $skill := .job.RequiredSkills}}{{if $i}}, {{end}}{{$skill}}{{end}}"
+              >
+              <p class="text-xs text-gray-400 mt-1">Enter skills separated by commas (e.g., "Go, Docker, SQL")</p>
+            </div>
+            <div class="flex gap-2">
+              <button
+                class="px-3 py-1 bg-primary hover:bg-teal-700 text-white text-sm rounded-md"
+                hx-post="/dashboard/jobs/{{.jobID}}/skills"
+                hx-headers='{"X-HTTP-Method-Override": "PUT"}'
+                hx-include="#skills-input"
+                hx-target="#skills-response"
+                hx-swap="innerHTML"
+                hx-on::after-request="if(event.detail.successful) { handleSkillsUpdate(); }">
+                Save
+              </button>
+              <button
+                class="px-3 py-1 bg-slate-600 hover:bg-slate-700 text-white text-sm rounded-md"
+                onclick="toggleSkillsEdit()">
+                Cancel
+              </button>
+            </div>
+          </div>
+
+          <div id="skills-response" class="mt-2"></div>
         </div>
+
+        <script>
+          function toggleSkillsEdit() {
+            const displayEl = document.getElementById('skills-display');
+            const editEl = document.getElementById('skills-edit');
+            const editBtn = document.getElementById('edit-skills-btn');
+
+            if (displayEl.classList.contains('hidden')) {
+              // Switch to display mode
+              displayEl.classList.remove('hidden');
+              editEl.classList.add('hidden');
+              editBtn.textContent = 'Edit Skills';
+            } else {
+              // Switch to edit mode
+              displayEl.classList.add('hidden');
+              editEl.classList.remove('hidden');
+              editBtn.textContent = 'Cancel';
+            }
+          }
+
+          function handleSkillsUpdate() {
+            // Get the current skills from the input
+            const skillsInput = document.getElementById('skills-input');
+            const skillsValue = skillsInput.value;
+            const skillsArray = skillsValue.split(',').map(skill => skill.trim()).filter(skill => skill);
+
+            // Update the skills display
+            const skillsDisplay = document.getElementById('skills-display');
+
+            if (skillsArray.length > 0) {
+              // Clear existing skills
+              skillsDisplay.innerHTML = '';
+
+              // Add new skills
+              skillsArray.forEach(skill => {
+                const skillSpan = document.createElement('span');
+                skillSpan.className = 'px-3 py-1.5 bg-slate-700 rounded-md text-sm text-primary';
+                skillSpan.textContent = skill;
+                skillsDisplay.appendChild(skillSpan);
+
+                // Add a space between skill tags for better layout
+                const space = document.createTextNode(' ');
+                skillsDisplay.appendChild(space);
+              });
+            } else {
+              skillsDisplay.innerHTML = '<span class="text-gray-400">No skills listed</span>';
+            }
+
+            // Skills are now only displayed in the skills section, no need to update elsewhere
+
+            // Now switch back to display mode
+            toggleSkillsEdit();
+          }
+        </script>
 
         <!-- Notes section -->
         <div>
-          <h3 class="text-lg font-medium text-primary mb-3">Your Notes</h3>
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="text-lg font-medium text-primary">Your Notes</h3>
+            <button id="save-notes-btn"
+              class="px-3 py-1 bg-primary hover:bg-teal-700 text-white text-sm rounded-md hidden"
+              hx-post="/dashboard/jobs/{{.jobID}}/notes"
+              hx-headers='{"X-HTTP-Method-Override": "PUT"}'
+              hx-include="#job-notes"
+              hx-target="#notes-response"
+              hx-swap="innerHTML">
+              Save Notes
+            </button>
+          </div>
           <textarea
+            id="job-notes"
+            name="notes"
             class="w-full px-4 py-3 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
             rows="4"
             placeholder="Add your personal notes about this job..."
-          ></textarea>
+            oninput="document.getElementById('save-notes-btn').classList.remove('hidden')"
+          >{{.job.Notes}}</textarea>
+          <div id="notes-response" class="mt-2"></div>
         </div>
       </div>
 
@@ -89,27 +241,27 @@
 
           <div>
             <p class="text-gray-400 text-sm">Location</p>
-            <p class="text-white">Remote</p>
+            <p class="text-white">{{if .job.Location}}{{.job.Location}}{{else}}Not specified{{end}}</p>
           </div>
 
           <div>
             <p class="text-gray-400 text-sm">Job Type</p>
-            <p class="text-white">Full Time</p>
+            <p class="text-white">{{.job.JobType.String}}</p>
           </div>
 
           <div>
             <p class="text-gray-400 text-sm">Experience Level</p>
-            <p class="text-white">Senior</p>
+            <p class="text-white">{{.job.ExperienceLevel.String}}</p>
           </div>
 
           <div>
             <p class="text-gray-400 text-sm">Salary Range</p>
-            <p class="text-white">$120,000 - $160,000</p>
+            <p class="text-white">{{if .job.SalaryRange}}{{.job.SalaryRange}}{{else}}Not specified{{end}}</p>
           </div>
 
           <div>
             <p class="text-gray-400 text-sm">Posted</p>
-            <p class="text-white">May 10, 2023</p>
+            <p class="text-white">{{if .job.PostedAt}}{{.job.PostedAt.Format "Jan 2, 2006"}}{{else}}{{.job.CreatedAt.Format "Jan 2, 2006"}}{{end}}</p>
           </div>
         </div>
 
@@ -118,14 +270,20 @@
           <h3 class="text-lg font-medium text-white mb-3">Application Status</h3>
           <select
             class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors mb-4"
+            hx-post="/dashboard/jobs/{{.jobID}}/status"
+            hx-headers='{"X-HTTP-Method-Override": "PUT"}'
+            hx-target="#status-response"
+            hx-trigger="change"
+            name="status"
           >
-            <option value="interested">Interested</option>
-            <option value="applied">Applied</option>
-            <option value="interviewing">Interviewing</option>
-            <option value="offered">Offered</option>
-            <option value="rejected">Rejected</option>
-            <option value="not_interested">Not Interested</option>
+            <option value="interested" {{if eq .job.Status 0}}selected{{end}}>Interested</option>
+            <option value="applied" {{if eq .job.Status 1}}selected{{end}}>Applied</option>
+            <option value="interviewing" {{if eq .job.Status 2}}selected{{end}}>Interviewing</option>
+            <option value="offered" {{if eq .job.Status 3}}selected{{end}}>Offer Received</option>
+            <option value="rejected" {{if eq .job.Status 4}}selected{{end}}>Rejected</option>
+            <option value="not_interested" {{if eq .job.Status 5}}selected{{end}}>Not Interested</option>
           </select>
+          <div id="status-response"></div>
 
           <button id="analyze-button" class="w-full mb-3 py-2.5 px-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -141,14 +299,20 @@
             Generate Cover Letter
           </button>
 
-          <a href="https://example.com/job-posting" target="_blank" class="w-full mb-3 py-2.5 px-4 bg-slate-600 hover:bg-slate-500 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center">
+          {{if .job.SourceURL}}
+          <a href="{{.job.SourceURL}}" target="_blank" class="w-full mb-3 py-2.5 px-4 bg-slate-600 hover:bg-slate-500 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
             View Original Posting
           </a>
+          {{end}}
 
-          <button class="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center">
+          <button
+            id="delete-job-btn"
+            class="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center"
+            onclick="openDeleteModal()"
+          >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
@@ -246,8 +410,98 @@
   </div>
 </div>
 
-<!-- JavaScript for toggling the AI analysis section -->
+<!-- Delete Confirmation Modal -->
+<div id="delete-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+  <div class="bg-slate-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4 border border-slate-700">
+    <h3 class="text-xl font-semibold text-white mb-4">Confirm Deletion</h3>
+    <p class="text-gray-300 mb-6">Are you sure you want to delete this job? This action cannot be undone.</p>
+    <div class="flex justify-end space-x-3">
+      <button
+        id="cancel-delete-btn"
+        class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md"
+        onclick="closeDeleteModal()">
+        Cancel
+      </button>
+      <button
+        id="confirm-delete-btn"
+        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md"
+        onclick="deleteJob()">
+        Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript for all toggle functions and other UI interactions -->
 <script>
+  function toggleJobHeaderEdit() {
+    const displayEl = document.getElementById('job-header-display');
+    const editEl = document.getElementById('job-header-edit');
+
+    if (displayEl.classList.contains('hidden')) {
+      // Switch to display mode
+      displayEl.classList.remove('hidden');
+      editEl.classList.add('hidden');
+    } else {
+      // Switch to edit mode
+      displayEl.classList.add('hidden');
+      editEl.classList.remove('hidden');
+    }
+  }
+
+  function openDeleteModal() {
+    const modal = document.getElementById('delete-modal');
+    modal.classList.remove('hidden');
+
+    // Add click outside to close
+    modal.addEventListener('click', handleOutsideClick);
+
+    // Add listener for ESC key to close modal
+    document.addEventListener('keydown', handleEscKey);
+  }
+
+  function closeDeleteModal() {
+    const modal = document.getElementById('delete-modal');
+    modal.classList.add('hidden');
+
+    // Remove event listeners
+    document.removeEventListener('keydown', handleEscKey);
+    modal.removeEventListener('click', handleOutsideClick);
+  }
+
+  function handleEscKey(e) {
+    if (e.key === 'Escape') {
+      closeDeleteModal();
+    }
+  }
+
+  function handleOutsideClick(e) {
+    if (e.target.id === 'delete-modal') {
+      closeDeleteModal();
+    }
+  }
+
+  function deleteJob() {
+    // Close the modal
+    closeDeleteModal();
+
+    // Create a fetch request to delete the job
+    fetch('/dashboard/jobs/{{.jobID}}', {
+      method: 'DELETE',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => {
+      // Redirect to dashboard regardless of response
+      window.location.href = '/dashboard';
+    })
+    .catch(error => {
+      // Even if there's an error, redirect to dashboard
+      window.location.href = '/dashboard';
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function() {
     const analyzeButton = document.getElementById('analyze-button');
     const aiAnalysis = document.getElementById('ai-analysis');

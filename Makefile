@@ -3,10 +3,10 @@ setup-hooks:
 	chmod +x .githooks/pre-commit
 
 test:
-	docker compose exec app sh -c "go test ./... -coverprofile=coverage.out -coverpkg=github.com/benidevo/prospector/internal/... && go tool cover -func=coverage.out | grep total:"
+	docker compose exec app sh -c "/app/scripts/coverage.sh"
 
 test-verbose:
-	docker compose exec app sh -c "go test ./... -coverprofile=coverage.out -coverpkg=github.com/benidevo/prospector/internal/... && go tool cover -func=coverage.out"
+	docker compose exec app sh -c "/app/scripts/coverage.sh verbose"
 
 run:
 	docker compose down

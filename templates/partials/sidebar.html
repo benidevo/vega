@@ -162,7 +162,10 @@
       {{else if eq .page "dashboard"}}
         {{template "dashboard-jobs-content" .}}
       {{else}}
-        {{template "main-content" .}}
+        <!-- Fallback content if no specific template is defined -->
+        <div class="text-center py-8">
+          <p class="text-gray-400">This page is currently under development.</p>
+        </div>
       {{end}}
     </main>
   </div>

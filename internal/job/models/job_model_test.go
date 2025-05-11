@@ -26,8 +26,7 @@ func TestJobStatus_FromString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var s JobStatus
-			got, err := s.FromString(tt.str)
+			got, err := JobStatusFromString(tt.str)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -108,18 +107,12 @@ func TestExperienceLevel_FromString(t *testing.T) {
 		{"Senior Level", "senior level", SENIOR, false},
 		{"Executive", "executive", EXECUTIVE, false},
 		{"Leadership", "leadership", EXECUTIVE, false},
-		{"Invalid", "invalid", MID_LEVEL, true},
+		{"Invalid", "invalid", NOT_SPECIFIED, true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var e ExperienceLevel
-			got, err := e.FromString(tt.str)
-			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-			}
+			got := ExperienceLevelFromString(tt.str)
 			assert.Equal(t, tt.want, got)
 		})
 	}

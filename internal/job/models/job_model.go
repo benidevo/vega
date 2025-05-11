@@ -18,19 +18,19 @@ const (
 )
 
 // FromString converts a string representation of a job status to its corresponding JobStatus value.
-func (s JobStatus) FromString(status string) (JobStatus, error) {
-	switch status {
-	case "Interested":
+func JobStatusFromString(status string) (JobStatus, error) {
+	switch strings.ToLower(status) {
+	case "interested":
 		return INTERESTED, nil
-	case "Applied":
+	case "applied":
 		return APPLIED, nil
-	case "Interviewing":
+	case "interviewing":
 		return INTERVIEWING, nil
-	case "Offer Received":
+	case "offered", "offer received", "offer_received":
 		return OFFER_RECEIVED, nil
-	case "Rejected":
+	case "rejected":
 		return REJECTED, nil
-	case "Not Interested":
+	case "not_interested", "not interested":
 		return NOT_INTERESTED, nil
 	default:
 		return -1, ErrInvalidJobStatus
@@ -120,22 +120,24 @@ const (
 	MID_LEVEL
 	SENIOR
 	EXECUTIVE
+	NOT_SPECIFIED
 )
 
 // FromString parses a string and returns the corresponding ExperienceLevel.
-// Accepts various synonyms for each level. Returns an error if the input is invalid.
-func (e ExperienceLevel) FromString(experience string) (ExperienceLevel, error) {
+// Accepts various synonyms for each level.
+// Returns NOT_SPECIFIED if the string does not match any known level.
+func ExperienceLevelFromString(experience string) ExperienceLevel {
 	switch strings.ToLower(experience) {
 	case "entry", "entry level", "junior":
-		return ENTRY, nil
+		return ENTRY
 	case "mid", "mid level", "intermediate":
-		return MID_LEVEL, nil
+		return MID_LEVEL
 	case "senior", "senior level":
-		return SENIOR, nil
+		return SENIOR
 	case "executive", "leadership":
-		return EXECUTIVE, nil
+		return EXECUTIVE
 	default:
-		return MID_LEVEL, ErrInvalidExperienceLevel
+		return NOT_SPECIFIED
 	}
 }
 

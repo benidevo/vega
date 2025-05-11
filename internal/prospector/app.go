@@ -133,7 +133,7 @@ func (a *App) Shutdown(ctx context.Context) error {
 func (a *App) setupRoutes() {
 	authHandler := auth.SetupAuth(a.db, &a.config)
 	homeHandler := home.Setup(&a.config)
-	dashboardHandler := dashboard.Setup(&a.config)
+	dashboardHandler := dashboard.Setup(a.db, &a.config)
 	jobHandler := job.Setup(a.db, &a.config)
 
 	a.router.GET("/", homeHandler.GetHomePage)
@@ -151,9 +151,12 @@ func (a *App) setupRoutes() {
 	jobGroup := a.router.Group("/dashboard/jobs", authHandler.AuthMiddleware())
 	{
 		jobGroup.GET("/new", jobHandler.GetNewJobForm)
+		jobGroup.POST("/new", jobHandler.CreateJob)
 		jobGroup.GET("/:id/details", jobHandler.GetJobDetails)
+		jobGroup.PUT("/:id/:field", jobHandler.UpdateJobField)
+		jobGroup.POST("/:id/:field", jobHandler.UpdateJobField) // Supports POST with X-HTTP-Method-Override header
+		jobGroup.DELETE("/:id", jobHandler.DeleteJob)
 	}
-
 	a.router.NoRoute(func(c *gin.Context) {
 		c.HTML(http.StatusNotFound, "layouts/base.html", gin.H{
 			"title":       "Page Not Found",
