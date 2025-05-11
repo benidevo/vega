@@ -127,7 +127,7 @@
           <div class="mt-2 border-t border-slate-700 pt-4">
             <div class="flex flex-col sm:flex-row justify-between gap-4">
               <div class="w-full sm:w-auto">
-                <div class="flex flex-col">
+                <div>
                   <select
                     class="bg-slate-700 text-white border-slate-600 rounded-md px-2 py-1 text-sm w-full"
                     hx-post="/dashboard/jobs/{{.ID}}/status"
@@ -144,16 +144,16 @@
                     <option value="rejected" {{if eq .Status 4}}selected{{end}}>Rejected</option>
                     <option value="not_interested" {{if eq .Status 5}}selected{{end}}>Not Interested</option>
                   </select>
-                  <div id="status-response-{{.ID}}" class="w-full text-center h-5 mt-1"></div>
                 </div>
+                <div id="status-response-{{.ID}}" class="text-xs text-green-400 mt-2 ml-2"></div>
               </div>
-              <div class="flex gap-2 w-full sm:w-auto mt-4 sm:mt-0">
-                <a href="/dashboard/jobs/{{.ID}}/details" class="w-full sm:w-auto inline-flex items-center justify-center px-2 py-0.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors">
+              <div class="flex items-center gap-2 w-full sm:w-auto mt-4 sm:mt-0">
+                <a href="/dashboard/jobs/{{.ID}}/details" class="inline-flex items-center justify-center text-xs px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded">
                   View Details
                 </a>
                 <button
                   type="button"
-                  class="w-full sm:w-auto inline-flex items-center justify-center px-2 py-0.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium transition-colors"
+                  class="inline-flex items-center justify-center text-xs px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded"
                   onclick="openDeleteModalForJob({{.ID}})"
                 >
                   Delete
