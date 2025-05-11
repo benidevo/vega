@@ -1,0 +1,228 @@
+{{define "job-new-content"}}
+<!-- Using the dashboard layout template for consistent navigation -->
+{{template "dashboard-layout" .}}
+{{end}}
+
+{{define "job-form-content"}}
+<!-- Form Content with Glassy Effect -->
+<div class="max-w-6xl mx-auto relative">
+  <!-- Glow effect -->
+  <div class="absolute -inset-1 rounded-xl bg-gradient-to-r from-primary via-secondary to-primary opacity-20 blur-xl"></div>
+
+  <!-- Form container -->
+  <div class="relative p-6 bg-slate-800 bg-opacity-70 backdrop-blur-xl rounded-xl shadow-2xl border border-white border-opacity-10">
+    <form hx-post="/dashboard/jobs/new" hx-target="#form-response" hx-swap="outerHTML" hx-indicator="#spinner">
+
+      <!-- Form sections -->
+      <div class="space-y-8">
+        <!-- Job Basics Section -->
+        <div>
+          <h2 class="text-lg font-medium text-white mb-5 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            Job Details
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Job Title -->
+            <div class="col-span-1 md:col-span-2">
+              <label for="title" class="block text-sm font-medium text-gray-300 mb-1">Job Title *</label>
+              <input type="text" id="title" name="title" required
+                     class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+            </div>
+
+            <!-- Company Section -->
+            <div>
+              <label for="company_name" class="block text-sm font-medium text-gray-300 mb-1">Company Name *</label>
+              <input type="text" id="company_name" name="company_name" required
+                     class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+            </div>
+
+            <!-- Location -->
+            <div>
+              <label for="location" class="block text-sm font-medium text-gray-300 mb-1">Location</label>
+              <input type="text" id="location" name="location"
+                     class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                     placeholder="e.g., Remote, San Francisco, CA">
+            </div>
+
+            <!-- URL -->
+            <div class="col-span-1 md:col-span-3">
+              <label for="url" class="block text-sm font-medium text-gray-300 mb-1">Job URL</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                </div>
+                <input type="url" id="url" name="url"
+                       class="w-full pl-10 pr-4 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                       placeholder="https://example.com/job-posting">
+              </div>
+            </div>
+
+            <!-- Salary Range -->
+            <div>
+              <label for="salary_min" class="block text-sm font-medium text-gray-300 mb-1">Salary Range Min</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span class="text-gray-400">$</span>
+                </div>
+                <input type="number" id="salary_min" name="salary_min"
+                       class="w-full pl-8 pr-4 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+              </div>
+            </div>
+
+            <div>
+              <label for="salary_max" class="block text-sm font-medium text-gray-300 mb-1">Salary Range Max</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span class="text-gray-400">$</span>
+                </div>
+                <input type="number" id="salary_max" name="salary_max"
+                       class="w-full pl-8 pr-4 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description Section -->
+        <div>
+          <h2 class="text-lg font-medium text-white mb-5 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Job Description
+          </h2>
+          <div class="space-y-4">
+            <!-- Description -->
+            <div>
+              <label for="description" class="block text-sm font-medium text-gray-300 mb-1">Description *</label>
+              <textarea id="description" name="description" rows="6" required
+                        class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"></textarea>
+              <p class="mt-1 text-sm text-gray-400">Paste the full job description or enter the key responsibilities and requirements</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skills & Tags Section -->
+        <div>
+          <h2 class="text-lg font-medium text-white mb-5 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+            Skills & Classification
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Skills -->
+            <div class="col-span-1 md:col-span-3">
+              <label for="skills" class="block text-sm font-medium text-gray-300 mb-1">Skills (comma separated) *</label>
+              <input type="text" id="skills" name="skills" required
+                     class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                     placeholder="e.g., Go, Docker, Kubernetes, SQL, API Design">
+              <p class="mt-1 text-sm text-gray-400">List the required technical skills for this position</p>
+            </div>
+
+            <!-- Job Type -->
+            <div>
+              <label for="job_type" class="block text-sm font-medium text-gray-300 mb-1">Job Type</label>
+              <select id="job_type" name="job_type"
+                      class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                <option value="full_time">Full Time</option>
+                <option value="part_time">Part Time</option>
+                <option value="contract">Contract</option>
+                <option value="freelance">Freelance</option>
+                <option value="internship">Internship</option>
+              </select>
+            </div>
+
+            <!-- Experience Level -->
+            <div>
+              <label for="experience_level" class="block text-sm font-medium text-gray-300 mb-1">Experience Level</label>
+              <select id="experience_level" name="experience_level"
+                      class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                <option value="entry">Entry Level</option>
+                <option value="mid">Mid Level</option>
+                <option value="senior">Senior Level</option>
+                <option value="lead">Lead / Manager</option>
+                <option value="executive">Executive</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Application Status and Notes in One Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <!-- Application Status -->
+          <div>
+            <h2 class="text-lg font-medium text-white mb-5 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Application Status
+            </h2>
+            <div>
+              <label for="status" class="block text-sm font-medium text-gray-300 mb-1">Current Status</label>
+              <select id="status" name="status"
+                      class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                <option value="interested">Interested</option>
+                <option value="applied">Applied</option>
+                <option value="interviewing">Interviewing</option>
+                <option value="offered">Offered</option>
+                <option value="rejected">Rejected</option>
+                <option value="not_interested">Not Interested</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Notes Section -->
+          <div>
+            <h2 class="text-lg font-medium text-white mb-5 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Notes
+            </h2>
+            <div>
+              <label for="notes" class="block text-sm font-medium text-gray-300 mb-1">Additional Notes</label>
+              <textarea id="notes" name="notes" rows="4"
+                        class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                        placeholder="Any additional details or personal notes about this position"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form response area -->
+        <div id="form-response" class="text-center text-sm hidden">
+          <!-- Error or success messages will be placed here -->
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-6 border-t border-slate-700">
+          <div class="flex flex-col sm:flex-row justify-end gap-4">
+            <a href="/dashboard" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-md text-sm transition-colors text-center">
+              Cancel
+            </a>
+            <button type="submit" class="px-6 py-2.5 relative overflow-hidden rounded-lg">
+              <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-80 hover:opacity-100 transition-opacity duration-300"></div>
+              <span class="relative z-10 font-semibold text-white flex items-center justify-center">
+                Save Job
+                <span id="spinner" class="htmx-indicator ml-2">
+                  <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </span>
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{{end}}
+
+{{define "job-content"}}
+  {{template "job-form-content" .}}
+{{end}}

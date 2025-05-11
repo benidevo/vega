@@ -22,16 +22,12 @@ func NewHandler(cfg *config.Settings) *Handler {
 
 // GetDashboardPage renders the dashboard page template.
 func (h *Handler) GetDashboardPage(c *gin.Context) {
-	if h.cfg != nil && h.cfg.IsTest {
-		// In test mode, just return a status code
-		c.Status(http.StatusOK)
-		return
-	}
-
 	username, _ := c.Get("username")
 	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
 		"title":       "Dashboard",
 		"page":        "dashboard",
+		"activeNav":   "jobs",
+		"pageTitle":   "Job Matches",
 		"currentYear": time.Now().Year(),
 		"username":    username,
 	})

@@ -55,17 +55,17 @@
       50% { transform: translateY(-10px); }
       100% { transform: translateY(0px); }
     }
-    
+
     .animate-float {
       animation: float 6s ease-in-out infinite;
     }
-    
+
     @keyframes pulse-slow {
       0% { opacity: 0.8; }
       50% { opacity: 0.3; }
       100% { opacity: 0.8; }
     }
-    
+
     .animate-pulse-slow {
       animation: pulse-slow 5s ease-in-out infinite;
     }
@@ -79,6 +79,19 @@
     <div class="min-h-screen bg-slate-900">
       {{template "dashboard-content" .}}
     </div>
+  {{else if eq .page "job-new"}}
+    <!-- Job form uses the job-specific template -->
+    <div class="min-h-screen bg-slate-900">
+      {{template "job-new-content" .}}
+    </div>
+  {{else if eq .page "job-details"}}
+    <!-- Job details page -->
+    <div class="min-h-screen bg-slate-900">
+      {{template "job-details-content" .}}
+    </div>
+  {{else if eq .page "404"}}
+    <!-- 404 Not Found page -->
+    {{template "404-content" .}}
   {{else}}
     <!-- Standard centered layout for home and login pages -->
     <div class="min-h-screen flex {{if eq .page "home"}}flex-col{{end}} items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
@@ -154,26 +167,26 @@
               resize: true
             },
             modes: {
-              grab: { 
-                distance: 180, 
-                line_linked: { opacity: 0.25 } 
+              grab: {
+                distance: 180,
+                line_linked: { opacity: 0.25 }
               },
-              bubble: { 
-                distance: 250, 
-                size: 6, 
-                duration: 2, 
-                opacity: 0.2, 
-                speed: 3 
+              bubble: {
+                distance: 250,
+                size: 6,
+                duration: 2,
+                opacity: 0.2,
+                speed: 3
               },
-              repulse: { 
-                distance: 150, 
-                duration: 0.4 
+              repulse: {
+                distance: 150,
+                duration: 0.4
               },
-              push: { 
-                particles_nb: 4 
+              push: {
+                particles_nb: 4
               },
-              remove: { 
-                particles_nb: 2 
+              remove: {
+                particles_nb: 2
               }
             }
           },

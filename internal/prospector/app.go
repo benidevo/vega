@@ -14,6 +14,7 @@ import (
 	"github.com/benidevo/prospector/internal/dashboard"
 	"github.com/benidevo/prospector/internal/db"
 	"github.com/benidevo/prospector/internal/home"
+	"github.com/benidevo/prospector/internal/job"
 	"github.com/benidevo/prospector/internal/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -37,7 +38,7 @@ func New(cfg config.Settings) *App {
 
 	// Only load templates in non-test environment
 	if !cfg.IsTest {
-		router.LoadHTMLGlob("templates/**/*")
+		router.LoadHTMLGlob("templates/**/*.html")
 	}
 
 	return &App{
@@ -133,6 +134,7 @@ func (a *App) setupRoutes() {
 	authHandler := auth.SetupAuth(a.db, &a.config)
 	homeHandler := home.Setup(&a.config)
 	dashboardHandler := dashboard.Setup(&a.config)
+	jobHandler := job.Setup(a.db, &a.config)
 
 	a.router.GET("/", homeHandler.GetHomePage)
 
@@ -144,6 +146,21 @@ func (a *App) setupRoutes() {
 	}
 
 	a.router.GET("/dashboard", authHandler.AuthMiddleware(), dashboardHandler.GetDashboardPage)
+
+	// Job routes
+	jobGroup := a.router.Group("/dashboard/jobs", authHandler.AuthMiddleware())
+	{
+		jobGroup.GET("/new", jobHandler.GetNewJobForm)
+		jobGroup.GET("/:id/details", jobHandler.GetJobDetails)
+	}
+
+	a.router.NoRoute(func(c *gin.Context) {
+		c.HTML(http.StatusNotFound, "layouts/base.html", gin.H{
+			"title":       "Page Not Found",
+			"page":        "404",
+			"currentYear": time.Now().Year(),
+		})
+	})
 }
 
 func (a *App) setupDependencies() error {

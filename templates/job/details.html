@@ -1,0 +1,285 @@
+{{define "job-details-content"}}
+<!-- Using the dashboard layout template for consistent navigation -->
+{{template "dashboard-layout" .}}
+{{end}}
+
+{{define "job-details"}}
+<div class="max-w-6xl mx-auto">
+  <!-- Job details container -->
+  <div class="bg-slate-800 rounded-xl shadow-lg overflow-hidden mb-6">
+    <div class="px-6 py-5 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div>
+        <h2 class="text-xl md:text-2xl font-semibold text-white">Senior Go Developer</h2>
+        <p class="text-gray-400 text-sm md:text-base">TechCorp Inc. · Remote</p>
+      </div>
+      <div class="px-4 py-1.5 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+        92% Match
+      </div>
+    </div>
+
+    <!-- Main content with two columns on larger screens -->
+    <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Left column (2/3 width) - Job description -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Job description -->
+        <div>
+          <h3 class="text-lg font-medium text-primary mb-3">Job Description</h3>
+          <div class="text-gray-300 space-y-4">
+            <p>
+              Looking for a skilled Go developer with 5+ years of experience in building scalable microservices and
+              distributed systems. Knowledge of Kubernetes and event-driven architecture is a plus.
+            </p>
+            <p>
+              As a Senior Go Developer, you will be responsible for designing, implementing, and maintaining our core
+              backend services. You'll work closely with our product and infrastructure teams to build scalable and
+              reliable systems.
+            </p>
+            <p>
+              <strong>Required Skills:</strong>
+            </p>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>5+ years of experience with Go</li>
+              <li>Strong understanding of microservices architecture</li>
+              <li>Experience with Docker and container orchestration</li>
+              <li>Proficiency in SQL and NoSQL databases</li>
+              <li>Experience with CI/CD pipelines</li>
+            </ul>
+            <p>
+              <strong>Nice to Have:</strong>
+            </p>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>Experience with Kubernetes</li>
+              <li>Knowledge of event-driven architecture</li>
+              <li>Experience with message brokers like Kafka or RabbitMQ</li>
+              <li>Experience with cloud platforms (AWS, GCP, Azure)</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Skills section -->
+        <div>
+          <h3 class="text-lg font-medium text-primary mb-3">Skills</h3>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1.5 bg-slate-700 rounded-md text-sm text-primary">Go</span>
+            <span class="px-3 py-1.5 bg-slate-700 rounded-md text-sm text-primary">Microservices</span>
+            <span class="px-3 py-1.5 bg-slate-700 rounded-md text-sm text-primary">Kubernetes</span>
+            <span class="px-3 py-1.5 bg-slate-700 rounded-md text-sm text-primary">Docker</span>
+            <span class="px-3 py-1.5 bg-slate-700 rounded-md text-sm text-primary">SQL</span>
+            <span class="px-3 py-1.5 bg-slate-700 rounded-md text-sm text-primary">NoSQL</span>
+            <span class="px-3 py-1.5 bg-slate-700 rounded-md text-sm text-primary">CI/CD</span>
+          </div>
+        </div>
+
+        <!-- Notes section -->
+        <div>
+          <h3 class="text-lg font-medium text-primary mb-3">Your Notes</h3>
+          <textarea
+            class="w-full px-4 py-3 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+            rows="4"
+            placeholder="Add your personal notes about this job..."
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Right column (1/3 width) - Status and actions -->
+      <div class="space-y-6">
+        <!-- Job details -->
+        <div class="bg-slate-700 bg-opacity-60 rounded-lg p-5 space-y-4">
+          <h3 class="text-lg font-medium text-white">Job Details</h3>
+
+          <div>
+            <p class="text-gray-400 text-sm">Location</p>
+            <p class="text-white">Remote</p>
+          </div>
+
+          <div>
+            <p class="text-gray-400 text-sm">Job Type</p>
+            <p class="text-white">Full Time</p>
+          </div>
+
+          <div>
+            <p class="text-gray-400 text-sm">Experience Level</p>
+            <p class="text-white">Senior</p>
+          </div>
+
+          <div>
+            <p class="text-gray-400 text-sm">Salary Range</p>
+            <p class="text-white">$120,000 - $160,000</p>
+          </div>
+
+          <div>
+            <p class="text-gray-400 text-sm">Posted</p>
+            <p class="text-white">May 10, 2023</p>
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div class="bg-slate-700 bg-opacity-60 rounded-lg p-5">
+          <h3 class="text-lg font-medium text-white mb-3">Application Status</h3>
+          <select
+            class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors mb-4"
+          >
+            <option value="interested">Interested</option>
+            <option value="applied">Applied</option>
+            <option value="interviewing">Interviewing</option>
+            <option value="offered">Offered</option>
+            <option value="rejected">Rejected</option>
+            <option value="not_interested">Not Interested</option>
+          </select>
+
+          <button id="analyze-button" class="w-full mb-3 py-2.5 px-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            Analyze Job Match
+          </button>
+
+          <button class="w-full mb-3 py-2.5 px-4 bg-gradient-to-r from-primary to-teal-600 hover:from-primary hover:to-teal-700 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            Generate Cover Letter
+          </button>
+
+          <a href="https://example.com/job-posting" target="_blank" class="w-full mb-3 py-2.5 px-4 bg-slate-600 hover:bg-slate-500 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            View Original Posting
+          </a>
+
+          <button class="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Delete Job
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Analysis section - hidden by default -->
+  <div id="ai-analysis" class="bg-slate-800 rounded-xl shadow-lg overflow-hidden mb-6 hidden">
+    <div class="px-6 py-5 border-b border-slate-700">
+      <h3 class="text-xl font-semibold text-white flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        AI Match Analysis
+      </h3>
+    </div>
+    <div class="p-6 space-y-6">
+      <!-- Match Score -->
+      <div class="flex items-center space-x-4">
+        <div class="relative w-24 h-24 flex-shrink-0">
+          <svg class="w-24 h-24 transform -rotate-90" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="54" fill="none" stroke="#1e293b" stroke-width="12" />
+            <circle cx="60" cy="60" r="54" fill="none" stroke="#10b981" stroke-width="12" stroke-dasharray="339.292" stroke-dashoffset="27.1434" />
+          </svg>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <span class="text-2xl font-bold text-white">92%</span>
+          </div>
+        </div>
+        <div>
+          <h4 class="text-lg font-medium text-white">Strong Match</h4>
+          <p class="text-gray-300">Your profile aligns well with this job's requirements</p>
+        </div>
+      </div>
+
+      <!-- Strengths -->
+      <div>
+        <h4 class="text-lg font-medium text-green-400 mb-3">Strengths</h4>
+        <ul class="space-y-2">
+          <li class="flex items-start">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span class="text-gray-300">Your 7 years of Go experience exceeds the 5+ years requirement</span>
+          </li>
+          <li class="flex items-start">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span class="text-gray-300">Strong microservices background with 5 years of experience</span>
+          </li>
+          <li class="flex items-start">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span class="text-gray-300">Your Docker and Kubernetes experience is directly relevant</span>
+          </li>
+          <li class="flex items-start">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span class="text-gray-300">You have experience with both SQL and NoSQL databases</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Areas to Highlight -->
+      <div>
+        <h4 class="text-lg font-medium text-yellow-400 mb-3">Areas to Highlight</h4>
+        <ul class="space-y-2">
+          <li class="flex items-start">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-yellow-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span class="text-gray-300">Emphasize your Kafka experience as it's listed as a "nice to have"</span>
+          </li>
+          <li class="flex items-start">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-yellow-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span class="text-gray-300">Your AWS experience is relevant but not explicitly mentioned</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Recommendation -->
+      <div class="bg-blue-900 bg-opacity-30 border border-blue-800 rounded-lg p-5">
+        <h4 class="text-lg font-medium text-blue-400 mb-2">Recommendation</h4>
+        <p class="text-gray-300">Based on your profile, you're an excellent match for this position. When applying, emphasize your extensive Go experience, microservices architecture work, and container orchestration skills. Make sure to highlight your experience with message brokers like Kafka to address their "nice to have" requirements.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript for toggling the AI analysis section -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const analyzeButton = document.getElementById('analyze-button');
+    const aiAnalysis = document.getElementById('ai-analysis');
+
+    analyzeButton.addEventListener('click', function() {
+      if (aiAnalysis.classList.contains('hidden')) {
+        aiAnalysis.classList.remove('hidden');
+
+        // Scroll to the analysis section
+        setTimeout(() => {
+          aiAnalysis.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+
+        // Update button text
+        analyzeButton.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          Hide Analysis
+        `;
+      } else {
+        aiAnalysis.classList.add('hidden');
+
+        // Update button text
+        analyzeButton.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          Analyze Job Match
+        `;
+      }
+    });
+  });
+</script>
+{{end}}

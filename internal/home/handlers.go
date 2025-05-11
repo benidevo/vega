@@ -22,12 +22,6 @@ func NewHandler(cfg *config.Settings) *Handler {
 
 // GetHomePage renders the home page template.
 func (h *Handler) GetHomePage(c *gin.Context) {
-	if h.cfg != nil && h.cfg.IsTest {
-		// In test mode, just return a status code
-		c.Status(http.StatusOK)
-		return
-	}
-
 	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
 		"title":       "Home",
 		"currentYear": time.Now().Year(),

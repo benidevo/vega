@@ -1,28 +1,28 @@
 package repository
 
 import (
-	"github.com/benidevo/prospector/internal/job"
+	"github.com/benidevo/prospector/internal/job/models"
 )
 
 var (
 	// Company errors
-	ErrCompanyNotFound     = job.ErrCompanyNotFound
-	ErrCompanyNameRequired = job.ErrCompanyNameRequired
+	ErrCompanyNotFound     = models.ErrCompanyNotFound
+	ErrCompanyNameRequired = models.ErrCompanyNameRequired
 
 	// Transaction errors
-	ErrTransactionFailed = job.ErrTransactionFailed
+	ErrTransactionFailed = models.ErrTransactionFailed
 
 	// Job errors
-	ErrJobNotFound            = job.ErrJobNotFound
-	ErrJobTitleRequired       = job.ErrJobTitleRequired
-	ErrJobDescriptionRequired = job.ErrJobDescriptionRequired
-	ErrDuplicateJob           = job.ErrDuplicateJob
-	ErrInvalidJobID           = job.ErrInvalidJobID
-	ErrInvalidCompanyID       = job.ErrInvalidCompanyID
-	ErrFailedToCreateJob      = job.ErrFailedToCreateJob
-	ErrFailedToUpdateJob      = job.ErrFailedToUpdateJob
-	ErrFailedToDeleteJob      = job.ErrFailedToDeleteJob
-	ErrFailedToCreateCompany  = job.ErrFailedToCreateCompany
-	ErrFailedToUpdateCompany  = job.ErrFailedToUpdateCompany
-	ErrFailedToDeleteCompany  = job.ErrFailedToDeleteCompany
+	ErrJobNotFound            = models.ErrJobNotFound
+	ErrJobTitleRequired       = models.ErrJobTitleRequired
+	ErrJobDescriptionRequired = models.ErrJobDescriptionRequired
+	ErrDuplicateJob           = models.ErrDuplicateJob
+	ErrInvalidJobID           = models.ErrInvalidJobID
+	ErrInvalidCompanyID       = models.ErrInvalidCompanyID
+	ErrFailedToCreateJob      = models.ErrFailedToCreateJob
+	ErrFailedToUpdateJob      = models.ErrFailedToUpdateJob
+	ErrFailedToDeleteJob      = models.ErrFailedToDeleteJob
+	ErrFailedToCreateCompany  = models.ErrFailedToCreateCompany
+	ErrFailedToUpdateCompany  = models.ErrFailedToUpdateCompany
+	ErrFailedToDeleteCompany  = models.ErrFailedToDeleteCompany
 )

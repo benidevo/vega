@@ -1,391 +1,168 @@
 {{define "dashboard-content"}}
-<!-- Mobile responsive dashboard with sidebar that converts to top navbar on small screens -->
-<div class="h-screen flex flex-col md:flex-row bg-slate-900">
-  <!-- Mobile Top Navbar - only visible on small screens -->
-  <div class="md:hidden bg-slate-800 py-3 px-4 shadow-lg flex justify-between items-center">
-    <div class="flex items-center">
-      <button id="mobile-menu-button" class="mr-3 text-white">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-      <h1 class="text-xl font-bold text-primary flex items-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-        ProspecTor
-      </h1>
-    </div>
-    <div>
-      <span class="text-white text-sm">{{ .username }}</span>
-    </div>
-  </div>
+  {{template "dashboard-layout" .}}
+{{end}}
 
-  <!-- Sidebar Navigation - hidden on mobile by default -->
-  <div id="sidebar" class="hidden md:flex w-full md:w-64 bg-slate-800 text-white shadow-lg py-6 md:py-8 px-4 flex-col justify-between fixed md:relative h-full z-20 overflow-y-auto transition-all duration-300 transform -translate-x-full md:translate-x-0">
-    <!-- Logo and Nav -->
-    <div>
-      <!-- Logo - hidden on mobile as it's in the top bar -->
-      <div class="mb-8 px-4 hidden md:block">
-        <h1 class="text-2xl font-bold text-primary flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+{{define "dashboard-jobs-content"}}
+<div>
+  <!-- Stats -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5 mb-8">
+    <div class="bg-slate-800 rounded-lg shadow-lg p-4 md:p-5">
+      <div class="flex items-center">
+        <div class="p-2 md:p-3 rounded-full bg-blue-500 bg-opacity-10">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:h-8 md:w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
-          ProspecTor
-        </h1>
+        </div>
+        <div class="ml-5">
+          <p class="text-gray-400 text-xs md:text-sm">Total Jobs</p>
+          <p class="text-2xl md:text-3xl font-semibold text-white">12</p>
+        </div>
       </div>
-      
-      <!-- Close button - only on mobile -->
-      <div class="md:hidden flex justify-end mb-6">
-        <button id="close-sidebar" class="text-gray-400">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-      
-      <nav class="space-y-1 px-2">
-        <a href="/dashboard" class="bg-slate-700 text-white group flex items-center px-3 py-3 text-sm font-medium rounded-md">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-          </svg>
-          Job Matches
-        </a>
-        
-        <a href="/dashboard/jobs/new" class="text-gray-300 hover:bg-slate-700 hover:text-white group flex items-center px-3 py-3 text-sm font-medium rounded-md">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400 group-hover:text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Add New Job
-        </a>
-        
-        <a href="/dashboard/settings" class="text-gray-300 hover:bg-slate-700 hover:text-white group flex items-center px-3 py-3 text-sm font-medium rounded-md">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400 group-hover:text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          Settings
-        </a>
-      </nav>
     </div>
-    
-    <!-- Logout Button -->
-    <div class="px-4 mt-8">
-      <form action="/auth/logout" method="POST">
-        <button type="submit" class="w-full group relative bg-gradient-to-br from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-150">
-          <div class="flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            Logout
-          </div>
-        </button>
-      </form>
+
+    <div class="bg-slate-800 rounded-lg shadow-lg p-4 md:p-5">
+      <div class="flex items-center">
+        <div class="p-2 md:p-3 rounded-full bg-green-500 bg-opacity-10">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:h-8 md:w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div class="ml-5">
+          <p class="text-gray-400 text-xs md:text-sm">Applied</p>
+          <p class="text-2xl md:text-3xl font-semibold text-white">4</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-slate-800 rounded-lg shadow-lg p-4 md:p-5">
+      <div class="flex items-center">
+        <div class="p-2 md:p-3 rounded-full bg-yellow-500 bg-opacity-10">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:h-8 md:w-8 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+          </svg>
+        </div>
+        <div class="ml-5">
+          <p class="text-gray-400 text-xs md:text-sm">High Match</p>
+          <p class="text-2xl md:text-3xl font-semibold text-white">7</p>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Main Content Area -->
-  <div class="flex-1 overflow-auto bg-slate-900 min-h-0">
-    <!-- Header -->
-    <header class="bg-slate-800 shadow-md">
-      <div class="px-4 py-6 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-        <h1 class="text-xl md:text-2xl font-bold text-white">Job Matches</h1>
-        <div class="flex flex-col sm:flex-row gap-4">
-          <select class="bg-slate-700 text-white border-slate-600 rounded-md px-3 py-2 text-sm w-full sm:w-auto">
-            <option value="all">All Jobs</option>
-            <option value="interested">Interested</option>
-            <option value="applied">Applied</option>
-            <option value="rejected">Not Interested</option>
-          </select>
-          <button class="bg-primary text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-teal-700 transition-colors w-full sm:w-auto">
-            Refresh Matches
-          </button>
+  <!-- Filtering Controls -->
+  <div class="flex flex-col sm:flex-row gap-4 mb-8">
+    <select class="bg-slate-700 text-white border-slate-600 rounded-md px-3 py-2 text-sm w-full sm:w-auto">
+      <option value="all">All Jobs</option>
+      <option value="interested">Interested</option>
+      <option value="applied">Applied</option>
+      <option value="rejected">Not Interested</option>
+    </select>
+    <button class="bg-primary text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-teal-700 transition-colors w-full sm:w-auto">
+      Refresh Matches
+    </button>
+  </div>
+
+  <!-- Job Cards -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Job 1 -->
+    <div class="bg-slate-800 rounded-lg shadow-lg overflow-hidden">
+      <div class="px-4 md:px-6 py-4 md:py-5 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+        <div>
+          <h3 class="text-lg font-semibold text-white">Senior Go Developer</h3>
+          <p class="text-gray-400 text-sm">TechCorp Inc.</p>
+        </div>
+        <div class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+          92% Match
         </div>
       </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="px-4 py-6 sm:px-6 lg:px-8">
-      <!-- Stats -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5 mb-8">
-        <div class="bg-slate-800 rounded-lg shadow-lg p-4 md:p-5">
-          <div class="flex items-center">
-            <div class="p-2 md:p-3 rounded-full bg-blue-500 bg-opacity-10">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:h-8 md:w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-            </div>
-            <div class="ml-5">
-              <p class="text-gray-400 text-xs md:text-sm">Total Jobs</p>
-              <p class="text-2xl md:text-3xl font-semibold text-white">12</p>
-            </div>
-          </div>
+      <div class="px-4 md:px-6 py-4">
+        <p class="text-gray-300 mb-4 text-sm md:text-base">
+          Looking for a skilled Go developer with 5+ years of experience in building scalable microservices and
+          distributed systems. Knowledge of Kubernetes and event-driven architecture is a plus.
+        </p>
+        <div class="flex flex-wrap gap-2 mb-4">
+          <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Go</span>
+          <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Microservices</span>
+          <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Kubernetes</span>
+          <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Docker</span>
         </div>
-        
-        <div class="bg-slate-800 rounded-lg shadow-lg p-4 md:p-5">
-          <div class="flex items-center">
-            <div class="p-2 md:p-3 rounded-full bg-green-500 bg-opacity-10">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:h-8 md:w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+        <div class="mt-2 border-t border-slate-700 pt-4">
+          <div class="flex flex-col sm:flex-row justify-between gap-4">
+            <div class="w-full sm:w-auto">
+              <select class="bg-slate-700 text-white border-slate-600 rounded-md px-2 py-1 text-sm w-full">
+                <option value="">Set Status</option>
+                <option value="interested">Interested</option>
+                <option value="applied">Applied</option>
+                <option value="rejected">Not Interested</option>
+              </select>
             </div>
-            <div class="ml-5">
-              <p class="text-gray-400 text-xs md:text-sm">Applied</p>
-              <p class="text-2xl md:text-3xl font-semibold text-white">4</p>
-            </div>
-          </div>
-        </div>
-        
-        <div class="bg-slate-800 rounded-lg shadow-lg p-4 md:p-5">
-          <div class="flex items-center">
-            <div class="p-2 md:p-3 rounded-full bg-yellow-500 bg-opacity-10">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:h-8 md:w-8 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-              </svg>
-            </div>
-            <div class="ml-5">
-              <p class="text-gray-400 text-xs md:text-sm">High Match</p>
-              <p class="text-2xl md:text-3xl font-semibold text-white">7</p>
+            <div class="flex gap-2 w-full sm:w-auto">
+              <a href="/dashboard/jobs/1/details" class="flex-1 sm:flex-auto text-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors">
+                View Details
+              </a>
+              <a href="#" class="flex-1 sm:flex-auto text-center px-3 py-1 bg-primary hover:bg-teal-700 text-white rounded-md text-sm transition-colors">
+                Get Cover Letter
+              </a>
+              <button type="button" class="flex-1 sm:flex-auto text-center px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm transition-colors">
+                Delete
+              </button>
             </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Job Cards -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Job 1 -->
-        <div class="bg-slate-800 rounded-lg shadow-lg overflow-hidden">
-          <div class="px-4 md:px-6 py-4 md:py-5 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-            <div>
-              <h3 class="text-lg font-semibold text-white">Senior Go Developer</h3>
-              <p class="text-gray-400 text-sm">TechCorp Inc.</p>
-            </div>
-            <div class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-              92% Match
-            </div>
-          </div>
-          <div class="px-4 md:px-6 py-4">
-            <p class="text-gray-300 mb-4 text-sm md:text-base">
-              Looking for a skilled Go developer with 5+ years of experience in building scalable microservices and 
-              distributed systems. Knowledge of Kubernetes and event-driven architecture is a plus.
-            </p>
-            <div class="flex flex-wrap gap-2 mb-4">
-              <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Go</span>
-              <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Microservices</span>
-              <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Kubernetes</span>
-              <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Docker</span>
-            </div>
-            <div class="mt-2 border-t border-slate-700 pt-4">
-              <div class="flex flex-col sm:flex-row justify-between gap-4">
-                <div class="w-full sm:w-auto">
-                  <select class="bg-slate-700 text-white border-slate-600 rounded-md px-2 py-1 text-sm w-full">
-                    <option value="">Set Status</option>
-                    <option value="interested">Interested</option>
-                    <option value="applied">Applied</option>
-                    <option value="rejected">Not Interested</option>
-                  </select>
-                </div>
-                <div class="flex gap-2 w-full sm:w-auto">
-                  <a href="#" class="flex-1 sm:flex-auto text-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors">
-                    View Details
-                  </a>
-                  <a href="#" class="flex-1 sm:flex-auto text-center px-3 py-1 bg-primary hover:bg-teal-700 text-white rounded-md text-sm transition-colors">
-                    Get Cover Letter
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
+    <!-- Job 2 -->
+    <div class="bg-slate-800 rounded-lg shadow-lg overflow-hidden">
+      <div class="px-4 md:px-6 py-4 md:py-5 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+        <div>
+          <h3 class="text-lg font-semibold text-white">Backend Engineer</h3>
+          <p class="text-gray-400 text-sm">Innovative Solutions Ltd.</p>
         </div>
-
-        <!-- Job 2 -->
-        <div class="bg-slate-800 rounded-lg shadow-lg overflow-hidden">
-          <div class="px-4 md:px-6 py-4 md:py-5 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-            <div>
-              <h3 class="text-lg font-semibold text-white">Backend Engineer</h3>
-              <p class="text-gray-400 text-sm">Innovative Solutions Ltd.</p>
-            </div>
-            <div class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
-              78% Match
-            </div>
-          </div>
-          <div class="px-4 md:px-6 py-4">
-            <p class="text-gray-300 mb-4 text-sm md:text-base">
-              We're seeking a backend engineer with strong experience in Go. You'll work on our core API 
-              services and help scale our infrastructure. Experience with PostgreSQL and message queues required.
-            </p>
-            <div class="flex flex-wrap gap-2 mb-4">
-              <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Go</span>
-              <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">API Design</span>
-              <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">PostgreSQL</span>
-              <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Kafka</span>
-            </div>
-            <div class="mt-2 border-t border-slate-700 pt-4">
-              <div class="flex flex-col sm:flex-row justify-between gap-4">
-                <div class="w-full sm:w-auto">
-                  <select class="bg-slate-700 text-white border-slate-600 rounded-md px-2 py-1 text-sm w-full">
-                    <option value="">Set Status</option>
-                    <option value="interested">Interested</option>
-                    <option value="applied">Applied</option>
-                    <option value="rejected">Not Interested</option>
-                  </select>
-                </div>
-                <div class="flex gap-2 w-full sm:w-auto">
-                  <a href="#" class="flex-1 sm:flex-auto text-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors">
-                    View Details
-                  </a>
-                  <a href="#" class="flex-1 sm:flex-auto text-center px-3 py-1 bg-primary hover:bg-teal-700 text-white rounded-md text-sm transition-colors">
-                    Get Cover Letter
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+          78% Match
         </div>
-
-        <!-- Job 3 -->
-        <div class="bg-slate-800 rounded-lg shadow-lg overflow-hidden">
-          <div class="px-4 md:px-6 py-4 md:py-5 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-            <div>
-              <h3 class="text-lg font-semibold text-white">Full Stack Developer</h3>
-              <p class="text-gray-400 text-sm">WebTech Startup</p>
-            </div>
-            <div class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
-              65% Match
-            </div>
-          </div>
-          <div class="px-4 md:px-6 py-4">
-            <p class="text-gray-300 mb-4 text-sm md:text-base">
-              Seeking a full stack developer comfortable with Go backend and React frontend. 
-              You'll help build our SaaS platform from the ground up. Experience with CI/CD and AWS a plus.
-            </p>
-            <div class="flex flex-wrap gap-2 mb-4">
-              <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Go</span>
-              <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">React</span>
-              <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">AWS</span>
-              <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">CI/CD</span>
-            </div>
-            <div class="mt-2 border-t border-slate-700 pt-4">
-              <div class="flex flex-col sm:flex-row justify-between gap-4">
-                <div class="w-full sm:w-auto">
-                  <select class="bg-slate-700 text-white border-slate-600 rounded-md px-2 py-1 text-sm w-full">
-                    <option value="">Set Status</option>
-                    <option value="interested">Interested</option>
-                    <option value="applied">Applied</option>
-                    <option value="rejected">Not Interested</option>
-                  </select>
-                </div>
-                <div class="flex gap-2 w-full sm:w-auto">
-                  <a href="#" class="flex-1 sm:flex-auto text-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors">
-                    View Details
-                  </a>
-                  <a href="#" class="flex-1 sm:flex-auto text-center px-3 py-1 bg-primary hover:bg-teal-700 text-white rounded-md text-sm transition-colors">
-                    Get Cover Letter
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
+      </div>
+      <div class="px-4 md:px-6 py-4">
+        <p class="text-gray-300 mb-4 text-sm md:text-base">
+          We're seeking a backend engineer with strong experience in Go. You'll work on our core API
+          services and help scale our infrastructure. Experience with PostgreSQL and message queues required.
+        </p>
+        <div class="flex flex-wrap gap-2 mb-4">
+          <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Go</span>
+          <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">API Design</span>
+          <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">PostgreSQL</span>
+          <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Kafka</span>
         </div>
-
-        <!-- Job 4 -->
-        <div class="bg-slate-800 rounded-lg shadow-lg overflow-hidden">
-          <div class="px-4 md:px-6 py-4 md:py-5 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-            <div>
-              <h3 class="text-lg font-semibold text-white">DevOps Engineer</h3>
-              <p class="text-gray-400 text-sm">CloudOps Solutions</p>
+        <div class="mt-2 border-t border-slate-700 pt-4">
+          <div class="flex flex-col sm:flex-row justify-between gap-4">
+            <div class="w-full sm:w-auto">
+              <select class="bg-slate-700 text-white border-slate-600 rounded-md px-2 py-1 text-sm w-full">
+                <option value="">Set Status</option>
+                <option value="interested">Interested</option>
+                <option value="applied">Applied</option>
+                <option value="rejected">Not Interested</option>
+              </select>
             </div>
-            <div class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-              87% Match
-            </div>
-          </div>
-          <div class="px-4 md:px-6 py-4">
-            <p class="text-gray-300 mb-4 text-sm md:text-base">
-              Looking for a DevOps engineer to help manage our Kubernetes infrastructure and CI/CD pipelines.
-              Experience with Go services deployment and monitoring tools is essential.
-            </p>
-            <div class="flex flex-wrap gap-2 mb-4">
-              <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Kubernetes</span>
-              <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Docker</span>
-              <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">CI/CD</span>
-              <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">Go</span>
-            </div>
-            <div class="mt-2 border-t border-slate-700 pt-4">
-              <div class="flex flex-col sm:flex-row justify-between gap-4">
-                <div class="w-full sm:w-auto">
-                  <select class="bg-slate-700 text-white border-slate-600 rounded-md px-2 py-1 text-sm w-full">
-                    <option value="">Set Status</option>
-                    <option value="interested">Interested</option>
-                    <option value="applied">Applied</option>
-                    <option value="rejected">Not Interested</option>
-                  </select>
-                </div>
-                <div class="flex gap-2 w-full sm:w-auto">
-                  <a href="#" class="flex-1 sm:flex-auto text-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors">
-                    View Details
-                  </a>
-                  <a href="#" class="flex-1 sm:flex-auto text-center px-3 py-1 bg-primary hover:bg-teal-700 text-white rounded-md text-sm transition-colors">
-                    Get Cover Letter
-                  </a>
-                </div>
-              </div>
+            <div class="flex gap-2 w-full sm:w-auto">
+              <a href="/dashboard/jobs/1/details" class="flex-1 sm:flex-auto text-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors">
+                View Details
+              </a>
+              <a href="#" class="flex-1 sm:flex-auto text-center px-3 py-1 bg-primary hover:bg-teal-700 text-white rounded-md text-sm transition-colors">
+                Get Cover Letter
+              </a>
+              <button type="button" class="flex-1 sm:flex-auto text-center px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm transition-colors">
+                Delete
+              </button>
             </div>
           </div>
         </div>
       </div>
-    </main>
+    </div>
   </div>
 </div>
+{{end}}
 
-<!-- Mobile Menu JavaScript -->
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const mobileMenuButton = document.getElementById('mobile-menu-button');
-    const closeSidebarButton = document.getElementById('close-sidebar');
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.createElement('div');
-    
-    // Setup overlay
-    overlay.classList.add('fixed', 'inset-0', 'bg-black', 'bg-opacity-50', 'z-10', 'hidden');
-    document.body.appendChild(overlay);
-    
-    // Open sidebar
-    mobileMenuButton.addEventListener('click', function() {
-      sidebar.classList.remove('hidden', '-translate-x-full');
-      sidebar.classList.add('flex', 'translate-x-0');
-      overlay.classList.remove('hidden');
-      document.body.classList.add('overflow-hidden');
-    });
-    
-    // Close sidebar function
-    function closeSidebar() {
-      sidebar.classList.add('-translate-x-full');
-      overlay.classList.add('hidden');
-      document.body.classList.remove('overflow-hidden');
-      // Add a small delay before hiding completely to allow for animation
-      setTimeout(() => {
-        if (window.innerWidth < 768) { // Only hide on mobile
-          sidebar.classList.add('hidden');
-          sidebar.classList.remove('flex');
-        }
-      }, 300);
-    }
-    
-    // Close sidebar events
-    closeSidebarButton.addEventListener('click', closeSidebar);
-    overlay.addEventListener('click', closeSidebar);
-    
-    // Handle window resize
-    window.addEventListener('resize', function() {
-      if (window.innerWidth >= 768) {
-        sidebar.classList.remove('hidden', '-translate-x-full');
-        sidebar.classList.add('flex', 'translate-x-0');
-        overlay.classList.add('hidden');
-        document.body.classList.remove('overflow-hidden');
-      } else if (!sidebar.classList.contains('flex')) {
-        sidebar.classList.add('hidden', '-translate-x-full');
-      }
-    });
-  });
-</script>
+{{define "main-content"}}
+  {{template "dashboard-jobs-content" .}}
 {{end}}
