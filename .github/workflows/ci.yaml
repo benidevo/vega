@@ -34,16 +34,19 @@ jobs:
       - name: Build Docker image
         run: docker compose build app
 
+      - name: Create app container
+        run: docker compose up -d app
+
       - name: Check code formatting
         run: |
-          if ! docker compose run --rm app sh -c "test -z \$(gofmt -l .)"; then
+          if ! docker compose exec app sh -c "test -z \$(gofmt -l .)"; then
             echo "Code formatting issues detected:"
-            docker compose run --rm app sh -c "gofmt -l ."
+            docker compose exec app sh -c "gofmt -l ."
             exit 1
           fi
 
       - name: Run go vet
-        run: docker compose run --rm app go vet ./...
+        run: docker compose exec app go vet ./...
 
   test-and-coverage:
     name: Test and Coverage
@@ -59,9 +62,10 @@ jobs:
       - name: Build Docker image
         run: docker compose build app
 
-      - name: Copy coverage script to container
+      - name: Create app container and copy coverage script
         run: |
-          docker compose run --rm app sh -c "mkdir -p /app/scripts"
+          docker compose up -d app
+          docker compose exec app sh -c "mkdir -p /app/scripts"
           cat > scripts/coverage.sh << 'EOF'
           #!/bin/sh
 
@@ -83,7 +87,7 @@ jobs:
 
       - name: Run tests with coverage (excluding handlers)
         run: |
-          docker compose run --rm app sh -c "chmod +x /app/scripts/coverage.sh && /app/scripts/coverage.sh verbose"
+          docker compose exec app sh -c "chmod +x /app/scripts/coverage.sh && /app/scripts/coverage.sh verbose"
           docker compose cp app:/app/coverage.filtered.out ./coverage.filtered.out
 
       - name: Upload coverage to Codecov
@@ -97,7 +101,7 @@ jobs:
           MIN_COVERAGE=65.0
 
           # Run coverage check directly in the container
-          COVERAGE=$(docker compose run --rm app sh -c "go tool cover -func=coverage.filtered.out | grep total: | awk '{print \$3}'" | tr -d '%')
+          COVERAGE=$(docker compose exec app sh -c "go tool cover -func=coverage.filtered.out | grep total: | awk '{print \$3}'" | tr -d '%')
           echo "Code coverage (excluding handlers): $COVERAGE%"
 
           if (( $(echo "$COVERAGE < $MIN_COVERAGE" | bc -l) )); then
@@ -105,6 +109,10 @@ jobs:
             exit 1
           fi
           echo "✅ Coverage threshold met: $COVERAGE% ≥ $MIN_COVERAGE%"
+
+      - name: Clean up Docker resources
+        if: always()
+        run: docker compose down -v
 
   summary:
     name: CI Summary
