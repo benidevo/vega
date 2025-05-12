@@ -26,7 +26,9 @@ func NewJobHandler(service *JobService, cfg *config.Settings) *JobHandler {
 	}
 }
 
-// GetDashboardPage renders the dashboard page template.
+// ListJobsPage handles the HTTP request to display the jobs dashboard page.
+// It retrieves the current user's jobs, applies optional status filtering,
+// gathers job statistics, and renders the dashboard template with the results.
 func (h *JobHandler) ListJobsPage(c *gin.Context) {
 	username, _ := c.Get("username")
 	statusParam := c.Query("status")
@@ -107,20 +109,12 @@ func (h *JobHandler) CreateJob(c *gin.Context) {
 	}
 
 	jobTypeStr := c.PostForm("job_type")
-	var jobType models.JobType
-	switch jobTypeStr {
-	case "full_time":
-		jobType = models.FULL_TIME
-	case "part_time":
-		jobType = models.PART_TIME
-	case "contract":
-		jobType = models.CONTRACT
-	case "freelance":
-		jobType = models.FREELANCE
-	case "internship":
-		jobType = models.INTERN
-	default:
-		jobType = models.OTHER
+	jobType, err := models.JobTypeFromString(jobTypeStr)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": err.Error(),
+		})
+		return
 	}
 
 	expLevelStr := c.PostForm("experience_level")

@@ -71,21 +71,21 @@ const (
 )
 
 // FromString converts a string representation of a job type to its corresponding JobType constant.
-func (j JobType) FromString(jobType string) (JobType, error) {
-	switch jobType {
-	case "Full Time":
+func JobTypeFromString(jobType string) (JobType, error) {
+	switch strings.ToLower(jobType) {
+	case "full_time":
 		return FULL_TIME, nil
-	case "Part Time":
+	case "part_time":
 		return PART_TIME, nil
-	case "Contract":
+	case "contract":
 		return CONTRACT, nil
-	case "Intern":
+	case "intern":
 		return INTERN, nil
-	case "Remote":
+	case "remote":
 		return REMOTE, nil
-	case "Freelance":
+	case "freelance":
 		return FREELANCE, nil
-	case "Other":
+	case "other":
 		return OTHER, nil
 	default:
 		return OTHER, ErrInvalidJobType

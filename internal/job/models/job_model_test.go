@@ -66,20 +66,19 @@ func TestJobType_FromString(t *testing.T) {
 		want    JobType
 		wantErr bool
 	}{
-		{"Full Time", "Full Time", FULL_TIME, false},
-		{"Part Time", "Part Time", PART_TIME, false},
-		{"Contract", "Contract", CONTRACT, false},
-		{"Intern", "Intern", INTERN, false},
-		{"Remote", "Remote", REMOTE, false},
-		{"Freelance", "Freelance", FREELANCE, false},
-		{"Other", "Other", OTHER, false},
+		{"Full Time", "full_time", FULL_TIME, false},
+		{"Part Time", "part_time", PART_TIME, false},
+		{"Contract", "contract", CONTRACT, false},
+		{"Intern", "intern", INTERN, false},
+		{"Remote", "remote", REMOTE, false},
+		{"Freelance", "freelance", FREELANCE, false},
+		{"Other", "other", OTHER, false},
 		{"Invalid", "Invalid", OTHER, true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var j JobType
-			got, err := j.FromString(tt.str)
+			got, err := JobTypeFromString(tt.str)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {

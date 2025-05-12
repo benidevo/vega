@@ -9,11 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/benidevo/prospector/internal/auth"
 	"github.com/benidevo/prospector/internal/config"
 	"github.com/benidevo/prospector/internal/db"
-	"github.com/benidevo/prospector/internal/home"
-	"github.com/benidevo/prospector/internal/job"
 	"github.com/benidevo/prospector/internal/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -60,7 +57,7 @@ func (a *App) Setup() error {
 		log.Error().Err(err).Msg("Failed to setup dependencies")
 		return err
 	}
-	a.setupRoutes()
+	SetupRoutes(a)
 
 	log.Info().Msg("Application setup completed successfully")
 	return nil
@@ -127,40 +124,6 @@ func (a *App) Shutdown(ctx context.Context) error {
 	a.db = nil
 
 	return err
-}
-
-func (a *App) setupRoutes() {
-	authHandler := auth.SetupAuth(a.db, &a.config)
-	homeHandler := home.Setup(&a.config)
-	jobHandler := job.Setup(a.db, &a.config)
-
-	a.router.GET("/", homeHandler.GetHomePage)
-
-	authGroup := a.router.Group("/auth")
-	{
-		authGroup.GET("/login", authHandler.GetLoginPage)
-		authGroup.POST("/login", authHandler.Login)
-		authGroup.POST("/logout", authHandler.AuthMiddleware(), authHandler.Logout)
-	}
-
-	// Job routes
-	jobGroup := a.router.Group("/jobs", authHandler.AuthMiddleware())
-	{
-		jobGroup.GET("", jobHandler.ListJobsPage)
-		jobGroup.GET("/new", jobHandler.GetNewJobForm)
-		jobGroup.POST("/new", jobHandler.CreateJob)
-		jobGroup.GET("/:id/details", jobHandler.GetJobDetails)
-		jobGroup.PUT("/:id/:field", jobHandler.UpdateJobField)
-		jobGroup.POST("/:id/:field", jobHandler.UpdateJobField) // Supports POST with X-HTTP-Method-Override header
-		jobGroup.DELETE("/:id", jobHandler.DeleteJob)
-	}
-	a.router.NoRoute(func(c *gin.Context) {
-		c.HTML(http.StatusNotFound, "layouts/base.html", gin.H{
-			"title":       "Page Not Found",
-			"page":        "404",
-			"currentYear": time.Now().Year(),
-		})
-	})
 }
 
 func (a *App) setupDependencies() error {
