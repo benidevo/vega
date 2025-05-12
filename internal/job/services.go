@@ -2,6 +2,9 @@ package job
 
 import (
 	"context"
+	"net/url"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/benidevo/prospector/internal/config"
@@ -25,6 +28,83 @@ func NewJobService(jobRepo interfaces.JobRepository, cfg *config.Settings) *JobS
 		cfg:     cfg,
 		log:     logger.GetLogger("job"),
 	}
+}
+
+// ValidateFieldName checks if a field name is valid for job updates.
+// It returns an error if the field is empty or not one of the allowed values.
+func (s *JobService) ValidateFieldName(field string) error {
+	if field == "" {
+		s.log.Error().Msg("Field parameter is required")
+		return models.ErrFieldRequired
+	}
+
+	validFields := map[string]bool{
+		"status": true,
+		"notes":  true,
+		"skills": true,
+		"basic":  true,
+	}
+
+	if !validFields[field] {
+		s.log.Error().Str("field", field).Msg("Invalid field parameter")
+		return models.ErrInvalidFieldParam
+	}
+
+	return nil
+}
+
+// ValidateJobIDFormat validates that a job ID string can be parsed as an integer.
+func (s *JobService) ValidateJobIDFormat(jobIDStr string) (int, error) {
+	jobID, err := strconv.Atoi(jobIDStr)
+	if err != nil {
+		s.log.Error().Str("job_id", jobIDStr).Msg("Invalid job ID format")
+		return 0, models.ErrInvalidJobIDFormat
+	}
+	return jobID, nil
+}
+
+// ValidateAndFilterSkills processes a comma-separated string of skills
+// and returns only the non-empty skills after trimming whitespace.
+// It returns an error if no valid skills are found.
+func (s *JobService) ValidateAndFilterSkills(skillsStr string) ([]string, error) {
+	if skillsStr == "" {
+		s.log.Error().Msg("Empty skills string provided")
+		return nil, models.ErrSkillsRequired
+	}
+
+	// Split and clean up skills
+	rawSkills := strings.Split(skillsStr, ",")
+	skills := make([]string, 0, len(rawSkills))
+
+	// Only add non-empty skills
+	for _, skill := range rawSkills {
+		trimmedSkill := strings.TrimSpace(skill)
+		if trimmedSkill != "" {
+			skills = append(skills, trimmedSkill)
+		}
+	}
+
+	if len(skills) == 0 {
+		s.log.Error().Msg("No valid skills found after processing")
+		return nil, models.ErrSkillsRequired
+	}
+
+	return skills, nil
+}
+
+// ValidateURL checks if a URL string is valid
+func (s *JobService) ValidateURL(urlStr string) error {
+	if urlStr == "" {
+		return nil // Empty URL is allowed
+	}
+
+	_, err := url.ParseRequestURI(urlStr)
+	if err != nil {
+		s.log.Error().Str("url", urlStr).Msg("Invalid URL format")
+		return models.ErrInvalidURLFormat
+	}
+
+	return nil
 }
 
 // CreateJob creates a new job with the given title, description, and company name.

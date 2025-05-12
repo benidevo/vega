@@ -373,7 +373,7 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, job *models.Job) error
 
 	skillsJSON, err := json.Marshal(job.RequiredSkills)
 	if err != nil {
-		return models.ErrFailedToUpdateJob
+		return models.WrapError(models.ErrFailedToUpdateJob, err)
 	}
 
 	query := `
@@ -418,7 +418,7 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, job *models.Job) error
 		job.ID,
 	)
 	if err != nil {
-		return models.ErrFailedToUpdateJob
+		return models.WrapError(models.ErrFailedToUpdateJob, err)
 	}
 
 	rowsAffected, err := result.RowsAffected()
@@ -451,12 +451,12 @@ func (r *SQLiteJobRepository) Delete(ctx context.Context, id int) error {
 
 	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
-		return models.ErrFailedToDeleteJob
+		return models.WrapError(models.ErrFailedToDeleteJob, err)
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return models.ErrFailedToDeleteJob
+		return models.WrapError(models.ErrFailedToDeleteJob, err)
 	}
 
 	if rowsAffected == 0 {
@@ -481,12 +481,12 @@ func (r *SQLiteJobRepository) UpdateStatus(ctx context.Context, id int, status m
 	now := time.Now()
 	result, err := r.db.ExecContext(ctx, query, int(status), now, id)
 	if err != nil {
-		return models.ErrFailedToUpdateJob
+		return models.WrapError(models.ErrFailedToUpdateJob, err)
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return models.ErrFailedToUpdateJob
+		return models.WrapError(models.ErrFailedToUpdateJob, err)
 	}
 
 	if rowsAffected == 0 {
@@ -507,19 +507,19 @@ func (r *SQLiteJobRepository) GetStats(ctx context.Context) (*models.JobStats, e
     `
 	rows, err := r.db.QueryContext(ctx, query, int(models.APPLIED))
 	if err != nil {
-		return nil, models.ErrFailedToGetJobStats
+		return nil, models.WrapError(models.ErrFailedToGetJobStats, err)
 	}
 	defer rows.Close()
 
 	var stats models.JobStats
 	if rows.Next() {
 		if err := rows.Scan(&stats.TotalJobs, &stats.TotalApplied); err != nil {
-			return nil, models.ErrFailedToGetJobStats
+			return nil, models.WrapError(models.ErrFailedToGetJobStats, err)
 		}
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, models.ErrFailedToGetJobStats
+		return nil, models.WrapError(models.ErrFailedToGetJobStats, err)
 	}
 	return &stats, nil
 }

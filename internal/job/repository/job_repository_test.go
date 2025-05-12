@@ -208,7 +208,7 @@ func TestSQLiteJobRepository_Create(t *testing.T) {
 		createdJob, err := repo.Create(ctx, j)
 
 		assert.Error(t, err)
-		assert.Equal(t, models.ErrJobTitleRequired, err)
+		assert.True(t, errors.Is(err, models.ErrJobTitleRequired))
 		assert.Nil(t, createdJob)
 
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -312,7 +312,7 @@ func TestSQLiteJobRepository_GetByID(t *testing.T) {
 		j, err := repo.GetByID(ctx, jobID)
 
 		assert.Error(t, err)
-		assert.Equal(t, models.ErrJobNotFound, err)
+		assert.True(t, errors.Is(err, models.ErrJobNotFound))
 		assert.Nil(t, j)
 
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -355,7 +355,7 @@ func TestSQLiteJobRepository_UpdateStatus(t *testing.T) {
 		err := repo.UpdateStatus(ctx, jobID, newStatus)
 
 		assert.Error(t, err)
-		assert.Equal(t, models.ErrJobNotFound, err)
+		assert.True(t, errors.Is(err, models.ErrJobNotFound))
 
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})

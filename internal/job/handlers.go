@@ -92,20 +92,28 @@ func (h *JobHandler) GetNewJobForm(c *gin.Context) {
 
 // CreateJob handles form submission for creating a new job
 func (h *JobHandler) CreateJob(c *gin.Context) {
-	title := c.PostForm("title")
-	description := c.PostForm("description")
-	companyName := c.PostForm("company_name")
-	location := c.PostForm("location")
-	sourceURL := c.PostForm("url")
-	notes := c.PostForm("notes")
+	title := strings.TrimSpace(c.PostForm("title"))
+	description := strings.TrimSpace(c.PostForm("description"))
+	companyName := strings.TrimSpace(c.PostForm("company_name"))
+	location := strings.TrimSpace(c.PostForm("location"))
+	sourceURL := strings.TrimSpace(c.PostForm("url"))
+	notes := strings.TrimSpace(c.PostForm("notes"))
+
+	err := h.service.ValidateURL(sourceURL)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
 
 	skillsStr := c.PostForm("skills")
-	var skills []string
-	if skillsStr != "" {
-		skills = strings.Split(skillsStr, ",")
-		for i := range skills {
-			skills[i] = strings.TrimSpace(skills[i])
-		}
+	skills, err := h.service.ValidateAndFilterSkills(skillsStr)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": err.Error(),
+		})
+		return
 	}
 
 	jobTypeStr := c.PostForm("job_type")
@@ -162,8 +170,9 @@ func (h *JobHandler) CreateJob(c *gin.Context) {
 
 	job, err := h.service.CreateJob(c.Request.Context(), title, description, companyName, options...)
 	if err != nil {
+		sentinelErr := models.GetSentinelError(err)
 		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-			"message": "Something went wrong",
+			"message": sentinelErr.Error(),
 		})
 		return
 	}
@@ -184,10 +193,10 @@ func (h *JobHandler) GetJobDetails(c *gin.Context) {
 	}
 
 	jobIDStr := c.Param("id")
-	jobID, err := strconv.Atoi(jobIDStr)
+	jobID, err := h.service.ValidateJobIDFormat(jobIDStr)
 	if err != nil {
 		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-			"message": "Invalid job ID format",
+			"message": models.ErrInvalidJobIDFormat.Error(),
 		})
 		return
 	}
@@ -202,8 +211,9 @@ func (h *JobHandler) GetJobDetails(c *gin.Context) {
 			})
 			return
 		}
+		sentinelErr := models.GetSentinelError(err)
 		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
-			"message": "Error retrieving job details: " + err.Error(),
+			"message": "Error retrieving job details: " + sentinelErr.Error(),
 		})
 		return
 	}
@@ -224,26 +234,28 @@ func (h *JobHandler) GetJobDetails(c *gin.Context) {
 // UpdateJobField handles the request to update a specific job field
 func (h *JobHandler) UpdateJobField(c *gin.Context) {
 	jobIDStr := c.Param("id")
-	jobID, err := strconv.Atoi(jobIDStr)
+	jobID, err := h.service.ValidateJobIDFormat(jobIDStr)
 	if err != nil {
 		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-			"message": "Invalid job ID format",
+			"message": models.ErrInvalidJobIDFormat.Error(),
 		})
 		return
 	}
 
 	field := c.Param("field")
-	if field == "" {
+	err = h.service.ValidateFieldName(field)
+	if err != nil {
 		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-			"message": "Field parameter is required",
+			"message": err.Error(),
 		})
 		return
 	}
 
 	job, err := h.service.GetJob(c.Request.Context(), jobID)
 	if err != nil {
+		sentinelErr := models.GetSentinelError(err)
 		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
-			"message": "Error retrieving job: " + err.Error(),
+			"message": "Error retrieving job: " + sentinelErr.Error(),
 		})
 		return
 	}
@@ -255,7 +267,7 @@ func (h *JobHandler) UpdateJobField(c *gin.Context) {
 		statusStr := c.PostForm("status")
 		if statusStr == "" {
 			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-				"message": "Status is required",
+				"message": models.ErrStatusRequired.Error(),
 			})
 			return
 		}
@@ -263,7 +275,7 @@ func (h *JobHandler) UpdateJobField(c *gin.Context) {
 		status, err := models.JobStatusFromString(statusStr)
 		if err != nil {
 			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-				"message": "Invalid status value",
+				"message": models.ErrInvalidJobStatus.Error(),
 			})
 			return
 		}
@@ -272,59 +284,61 @@ func (h *JobHandler) UpdateJobField(c *gin.Context) {
 		successMessage = "Job status updated to " + status.String()
 
 	case "notes":
-		notes := c.PostForm("notes")
+		notes := strings.TrimSpace(c.PostForm("notes"))
+		// Notes can be empty - no validation needed
 		job.Notes = notes
 		successMessage = "Notes updated successfully"
 
 	case "skills":
 		skillsStr := c.PostForm("skills")
-
-		var skills []string
-		if skillsStr != "" {
-			skills = strings.Split(skillsStr, ",")
-			for i := range skills {
-				skills[i] = strings.TrimSpace(skills[i])
-			}
+		skills, err := h.service.ValidateAndFilterSkills(skillsStr)
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+				"message": err.Error(),
+			})
+			return
 		}
 
 		job.RequiredSkills = skills
 		successMessage = "Skills updated successfully"
 
 	case "basic":
-		title := c.PostForm("title")
+		title := strings.TrimSpace(c.PostForm("title"))
 		if title == "" {
 			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-				"message": "Job title is required",
+				"message": models.ErrJobTitleRequired.Error(),
 			})
 			return
 		}
 		job.Title = title
 
-		companyName := c.PostForm("company_name")
+		companyName := strings.TrimSpace(c.PostForm("company_name"))
 		if companyName == "" {
 			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-				"message": "Company name is required",
+				"message": models.ErrCompanyNameRequired.Error(),
 			})
 			return
 		}
 		job.Company.Name = companyName
 
-		location := c.PostForm("location")
+		location := strings.TrimSpace(c.PostForm("location"))
 		job.Location = location
 
 		successMessage = "Job details updated successfully"
 
 	default:
+		// This should never happen since I validate field parameter above
 		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-			"message": "Unsupported field: " + field,
+			"message": models.ErrInvalidFieldParam.Error(),
 		})
 		return
 	}
 
 	err = h.service.UpdateJob(c.Request.Context(), job)
 	if err != nil {
+		sentinelErr := models.GetSentinelError(err)
 		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
-			"message": "Error updating job: " + err.Error(),
+			"message": "Error updating job: " + sentinelErr.Error(),
 		})
 		return
 	}
@@ -345,18 +359,19 @@ func (h *JobHandler) UpdateJobField(c *gin.Context) {
 // DeleteJob handles the request to delete a job
 func (h *JobHandler) DeleteJob(c *gin.Context) {
 	jobIDStr := c.Param("id")
-	jobID, err := strconv.Atoi(jobIDStr)
+	jobID, err := h.service.ValidateJobIDFormat(jobIDStr)
 	if err != nil {
 		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-			"message": "Invalid job ID format",
+			"message": models.ErrInvalidJobIDFormat.Error(),
 		})
 		return
 	}
 
 	err = h.service.DeleteJob(c.Request.Context(), jobID)
 	if err != nil {
+		sentinelErr := models.GetSentinelError(err)
 		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
-			"message": "Error deleting job: " + err.Error(),
+			"message": "Error deleting job: " + sentinelErr.Error(),
 		})
 		return
 	}

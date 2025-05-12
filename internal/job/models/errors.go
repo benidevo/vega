@@ -13,6 +13,12 @@ var (
 	ErrJobTitleRequired       = errors.New("job title is required")
 	ErrJobDescriptionRequired = errors.New("job description is required")
 	ErrCompanyRequired        = errors.New("job company is required")
+	ErrInvalidFieldParam      = errors.New("invalid field parameter")
+	ErrFieldRequired          = errors.New("field parameter is required")
+	ErrInvalidURLFormat       = errors.New("invalid URL format")
+	ErrSkillsRequired         = errors.New("at least one valid skill is required")
+	ErrStatusRequired         = errors.New("status is required")
+	ErrInvalidJobIDFormat     = errors.New("invalid job ID format")
 
 	// Repository errors
 	ErrJobNotFound           = errors.New("job not found")
