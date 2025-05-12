@@ -51,7 +51,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	c.SetCookie("token", token, 3600, "/", "", false, true)
-	c.Header("HX-Redirect", "/dashboard")
+	c.Header("HX-Redirect", "/jobs")
 	c.Status(http.StatusOK)
 }
 

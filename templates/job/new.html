@@ -16,7 +16,7 @@
 
   <!-- Form container -->
   <div class="relative p-6 bg-slate-800 bg-opacity-70 backdrop-blur-xl rounded-xl shadow-2xl border border-white border-opacity-10">
-    <form id="job-form" hx-post="/dashboard/jobs/new" hx-target="#form-response" hx-target-4*="#form-response" hx-target-5*="#form-response" hx-swap="innerHTML" hx-indicator="#spinner" hx-on::after-request="if(event.detail.successful && event.detail.xhr.responseText.includes('successfully')) { this.reset(); }">
+    <form id="job-form" hx-post="/jobs/new" hx-target="#form-response" hx-target-4*="#form-response" hx-target-5*="#form-response" hx-swap="innerHTML" hx-indicator="#spinner" hx-on::after-request="if(event.detail.successful && event.detail.xhr.responseText.includes('successfully')) { this.reset(); }">
 
       <!-- Form sections -->
       <div class="space-y-8">
@@ -205,7 +205,7 @@
         <!-- Submit Button -->
         <div class="pt-6 border-t border-slate-700">
           <div class="flex flex-col sm:flex-row justify-end gap-4">
-            <a href="/dashboard" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-md text-sm transition-colors text-center">
+            <a href="/jobs" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-md text-sm transition-colors text-center">
               Cancel
             </a>
             <button type="submit" class="px-6 py-2.5 relative overflow-hidden rounded-lg">

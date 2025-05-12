@@ -495,3 +495,31 @@ func (r *SQLiteJobRepository) UpdateStatus(ctx context.Context, id int, status m
 
 	return nil
 }
+
+// GetStats returns aggregate statistics about jobs in the database.
+// It currently returns the total number of jobs and the number of jobs with status APPLIED.
+func (r *SQLiteJobRepository) GetStats(ctx context.Context) (*models.JobStats, error) {
+	query := `
+        SELECT
+            COUNT(*) AS total_jobs,
+            SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS applied
+        FROM jobs
+    `
+	rows, err := r.db.QueryContext(ctx, query, int(models.APPLIED))
+	if err != nil {
+		return nil, models.ErrFailedToGetJobStats
+	}
+	defer rows.Close()
+
+	var stats models.JobStats
+	if rows.Next() {
+		if err := rows.Scan(&stats.TotalJobs, &stats.TotalApplied); err != nil {
+			return nil, models.ErrFailedToGetJobStats
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, models.ErrFailedToGetJobStats
+	}
+	return &stats, nil
+}

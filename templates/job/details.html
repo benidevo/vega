@@ -58,7 +58,7 @@
           <div class="flex gap-2">
             <button
               class="px-3 py-1 bg-primary hover:bg-teal-700 text-white text-sm rounded-md"
-              hx-post="/dashboard/jobs/{{.jobID}}/basic"
+              hx-post="/jobs/{{.jobID}}/basic"
               hx-headers='{"X-HTTP-Method-Override": "PUT"}'
               hx-include="#job-title-input, #job-company-input, #job-location-input"
               hx-target="#header-response"
@@ -134,7 +134,7 @@
             <div class="flex gap-2">
               <button
                 class="px-3 py-1 bg-primary hover:bg-teal-700 text-white text-sm rounded-md"
-                hx-post="/dashboard/jobs/{{.jobID}}/skills"
+                hx-post="/jobs/{{.jobID}}/skills"
                 hx-headers='{"X-HTTP-Method-Override": "PUT"}'
                 hx-include="#skills-input"
                 hx-target="#skills-response"
@@ -213,7 +213,7 @@
             <h3 class="text-lg font-medium text-primary">Your Notes</h3>
             <button id="save-notes-btn"
               class="px-3 py-1 bg-primary hover:bg-teal-700 text-white text-sm rounded-md hidden"
-              hx-post="/dashboard/jobs/{{.jobID}}/notes"
+              hx-post="/jobs/{{.jobID}}/notes"
               hx-headers='{"X-HTTP-Method-Override": "PUT"}'
               hx-include="#job-notes"
               hx-target="#notes-response"
@@ -270,7 +270,7 @@
           <h3 class="text-lg font-medium text-white mb-3">Application Status</h3>
           <select
             class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors mb-4"
-            hx-post="/dashboard/jobs/{{.jobID}}/status"
+            hx-post="/jobs/{{.jobID}}/status"
             hx-headers='{"X-HTTP-Method-Override": "PUT"}'
             hx-target="#status-response"
             hx-trigger="change"
@@ -486,7 +486,7 @@
     closeDeleteModal();
 
     // Create a fetch request to delete the job
-    fetch('/dashboard/jobs/{{.jobID}}', {
+    fetch('/jobs/{{.jobID}}', {
       method: 'DELETE',
       headers: {
         'X-Requested-With': 'XMLHttpRequest'
@@ -494,11 +494,11 @@
     })
     .then(response => {
       // Redirect to dashboard regardless of response
-      window.location.href = '/dashboard';
+      window.location.href = '/jobs';
     })
     .catch(error => {
       // Even if there's an error, redirect to dashboard
-      window.location.href = '/dashboard';
+      window.location.href = '/jobs';
     });
   }
 

@@ -92,29 +92,32 @@ func (s *JobService) GetJob(ctx context.Context, id int) (*models.Job, error) {
 	return job, nil
 }
 
+// GetJobStats retrieves job statistics from the repository.
+//
+// If an error occurs during retrieval, it logs the error and returns an empty JobStats struct.
+func (s *JobService) GetJobStats(ctx context.Context) *models.JobStats {
+	s.log.Debug().Msg("Getting job statistics")
+
+	stats, err := s.jobRepo.GetStats(ctx)
+	if err != nil {
+		s.log.Error().
+			Err(err).
+			Msg("Failed to get job statistics")
+
+		return &models.JobStats{}
+	}
+
+	s.log.Debug().
+		Int("total_jobs", stats.TotalJobs).
+		Int("applied_jobs", stats.TotalApplied).
+		Int("high_match", stats.HighMatch).
+		Msg("Job statistics retrieved successfully")
+
+	return stats
+}
+
 // GetJobs retrieves jobs based on the provided filter.
 func (s *JobService) GetJobs(ctx context.Context, filter models.JobFilter) ([]*models.Job, error) {
-	logEvent := s.log.Debug()
-	if filter.Search != "" {
-		logEvent = logEvent.Str("search", filter.Search)
-	}
-	if filter.CompanyID != nil {
-		logEvent = logEvent.Int("company_id", *filter.CompanyID)
-	}
-	if filter.Status != nil {
-		logEvent = logEvent.Str("status", (*filter.Status).String())
-	}
-	if filter.JobType != nil {
-		logEvent = logEvent.Str("job_type", (*filter.JobType).String())
-	}
-	if filter.Limit > 0 {
-		logEvent = logEvent.Int("limit", filter.Limit)
-	}
-	if filter.Offset > 0 {
-		logEvent = logEvent.Int("offset", filter.Offset)
-	}
-	logEvent.Msg("Getting jobs with filter")
-
 	jobs, err := s.jobRepo.GetAll(ctx, filter)
 	if err != nil {
 		s.log.Error().

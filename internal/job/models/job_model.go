@@ -327,3 +327,9 @@ type JobFilter struct {
 	Limit     int
 	Offset    int
 }
+
+type JobStats struct {
+	TotalJobs    int `json:"total_jobs"`
+	TotalApplied int `json:"total_applied"`
+	HighMatch    int `json:"high_match"`
+}

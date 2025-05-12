@@ -26,6 +26,54 @@ func NewJobHandler(service *JobService, cfg *config.Settings) *JobHandler {
 	}
 }
 
+// GetDashboardPage renders the dashboard page template.
+func (h *JobHandler) ListJobsPage(c *gin.Context) {
+	username, _ := c.Get("username")
+	statusParam := c.Query("status")
+
+	filter := models.JobFilter{
+		Limit: 50,
+	}
+
+	if statusParam != "" && statusParam != "all" {
+		jobStatus, err := models.JobStatusFromString(statusParam)
+		if err == nil {
+			filter.Status = &jobStatus
+		}
+	}
+
+	jobs, err := h.service.GetJobs(c.Request.Context(), filter)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
+			"title":        "Dashboard",
+			"page":         "dashboard",
+			"activeNav":    "jobs",
+			"pageTitle":    "Job Matches",
+			"currentYear":  time.Now().Year(),
+			"username":     username,
+			"jobs":         []*models.Job{},
+			"statusFilter": statusParam,
+		})
+		return
+	}
+
+	stats := h.service.GetJobStats(c.Request.Context())
+
+	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
+		"title":        "Dashboard",
+		"page":         "dashboard",
+		"activeNav":    "jobs",
+		"pageTitle":    "Job Matches",
+		"currentYear":  time.Now().Year(),
+		"username":     username,
+		"jobs":         jobs,
+		"totalJobs":    stats.TotalJobs,
+		"applied":      stats.TotalApplied,
+		"highMatch":    1, // Keeping this dummy data for now
+		"statusFilter": statusParam,
+	})
+}
+
 // GetNewJobForm renders the form for adding a new job.
 // It populates the template with user and page information.
 func (h *JobHandler) GetNewJobForm(c *gin.Context) {
@@ -321,10 +369,10 @@ func (h *JobHandler) DeleteJob(c *gin.Context) {
 
 	if c.GetHeader("HX-Request") == "true" {
 		// This will immediately redirect the browser without showing any intermediate content
-		c.Header("HX-Redirect", "/dashboard")
+		c.Header("HX-Redirect", "/jobs")
 		c.String(http.StatusOK, "")
 		return
 	}
 
-	c.Redirect(http.StatusFound, "/dashboard")
+	c.Redirect(http.StatusFound, "/jobs")
 }

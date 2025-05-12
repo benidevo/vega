@@ -28,6 +28,7 @@ var (
 	ErrFailedToCreateCompany = errors.New("failed to create company")
 	ErrFailedToUpdateCompany = errors.New("failed to update company")
 	ErrFailedToDeleteCompany = errors.New("failed to delete company")
+	ErrFailedToGetJobStats   = errors.New("failed to get job stats")
 )
 
 // RepositoryError wraps a sentinel error with the underlying error details

@@ -62,6 +62,14 @@ func (m *MockJobRepository) UpdateStatus(ctx context.Context, id int, status mod
 	return args.Error(0)
 }
 
+func (m *MockJobRepository) GetStats(ctx context.Context) (*models.JobStats, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.JobStats), args.Error(1)
+}
+
 func setupTestConfig() *config.Settings {
 	return &config.Settings{
 		IsTest:   true,

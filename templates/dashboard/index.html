@@ -63,7 +63,7 @@
     <select
       id="status-filter"
       class="bg-slate-700 text-white border-slate-600 rounded-md px-3 py-2 text-sm w-full sm:w-auto"
-      hx-get="/dashboard"
+      hx-get="/jobs"
       hx-trigger="change"
       hx-target="body"
       hx-push-url="true"
@@ -79,7 +79,7 @@
     </select>
     <button
       class="bg-primary text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-teal-700 transition-colors w-full sm:w-auto"
-      hx-get="/dashboard"
+      hx-get="/jobs"
       hx-target="body"
     >
       Refresh Matches
@@ -130,7 +130,7 @@
                 <div>
                   <select
                     class="bg-slate-700 text-white border-slate-600 rounded-md px-2 py-1 text-sm w-full"
-                    hx-post="/dashboard/jobs/{{.ID}}/status"
+                    hx-post="/jobs/{{.ID}}/status"
                     hx-headers='{"X-HTTP-Method-Override": "PUT"}'
                     hx-trigger="change"
                     hx-target="#status-response-{{.ID}}"
@@ -148,7 +148,7 @@
                 <div id="status-response-{{.ID}}" class="text-xs text-green-400 mt-2 ml-2"></div>
               </div>
               <div class="flex items-center gap-2 w-full sm:w-auto mt-4 sm:mt-0">
-                <a href="/dashboard/jobs/{{.ID}}/details" class="inline-flex items-center justify-center text-xs px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded">
+                <a href="/jobs/{{.ID}}/details" class="inline-flex items-center justify-center text-xs px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded">
                   View Details
                 </a>
                 <button
@@ -166,7 +166,7 @@
       {{end}}
     {{else}}
       <div class="col-span-2 text-center py-8">
-        <p class="text-gray-400">No jobs found. <a href="/dashboard/jobs/new" class="text-primary hover:text-teal-400">Add your first job</a>.</p>
+        <p class="text-gray-400">No jobs found. <a href="/jobs/new" class="text-primary hover:text-teal-400">Add your first job</a>.</p>
       </div>
     {{end}}
   </div>
@@ -251,7 +251,7 @@
       closeDeleteModalDashboard();
 
       // Create a fetch request to delete the job
-      fetch('/dashboard/jobs/' + jobToDelete, {
+      fetch('/jobs/' + jobToDelete, {
         method: 'DELETE',
         headers: {
           'X-Requested-With': 'XMLHttpRequest'
