@@ -27,3 +27,4 @@ go.work.sum
 
 *.db
 tmp/
+.DS_Store

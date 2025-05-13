@@ -1,0 +1,117 @@
+{{define "settings-security-content"}}
+<div class="max-w-6xl mx-auto relative">
+  <!-- Glow effect -->
+  <div class="absolute -inset-1 rounded-xl bg-gradient-to-r from-primary via-secondary to-primary opacity-20 blur-xl"></div>
+
+  <!-- Alert container for form responses -->
+  <div id="form-alert-container" class="mb-6" hx-swap-oob="true"></div>
+
+  <!-- Content container -->
+  <div class="relative p-6 bg-slate-800 bg-opacity-70 backdrop-blur-xl rounded-xl shadow-2xl border border-white border-opacity-10">
+    <h2 class="text-2xl font-bold mb-6 text-white">Security Settings</h2>
+    
+    <!-- Change Password Section -->
+    <div class="mb-10">
+      <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Change Password</h3>
+      
+      <form class="space-y-6" hx-post="/settings/security/password" hx-target="#form-alert-container" hx-swap="innerHTML">
+        <div>
+          <label for="current_password" class="block text-sm font-medium text-gray-300 mb-1">Current Password</label>
+          <input type="password" id="current_password" name="current_password" 
+                class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+        </div>
+        
+        <div>
+          <label for="new_password" class="block text-sm font-medium text-gray-300 mb-1">New Password</label>
+          <input type="password" id="new_password" name="new_password" 
+                class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+          <p class="mt-1 text-sm text-gray-400">Password must be at least 8 characters long.</p>
+        </div>
+        
+        <div>
+          <label for="confirm_new_password" class="block text-sm font-medium text-gray-300 mb-1">Confirm New Password</label>
+          <input type="password" id="confirm_new_password" name="confirm_new_password" 
+                class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+        </div>
+        
+        <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-slate-700">
+          <button type="submit" class="px-6 py-2.5 relative overflow-hidden rounded-lg">
+            <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-80 hover:opacity-100 transition-opacity duration-300"></div>
+            <span class="relative z-10 font-semibold text-white flex items-center justify-center">
+              <span class="htmx-indicator mr-2">
+                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </span>
+              Change Password
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+    
+    <!-- Two-Factor Authentication Section -->
+    <div class="mb-10">
+      <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Two-Factor Authentication</h3>
+      
+      <div class="bg-slate-700 bg-opacity-40 rounded-lg p-6 mb-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h4 class="text-lg font-medium text-white">Enable Two-Factor Authentication</h4>
+            <p class="text-gray-300 mt-1">Add an extra layer of security to your account by enabling two-factor authentication.</p>
+          </div>
+          <div class="flex items-center">
+            <span class="mr-3 text-sm font-medium text-gray-300">{{if .security.TwoFactorEnabled}}Enabled{{else}}Disabled{{end}}</span>
+            <button type="button" 
+                  class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary {{if .security.TwoFactorEnabled}}bg-primary{{else}}bg-gray-700{{end}}"
+                  hx-post="/settings/security/two-factor/{{if .security.TwoFactorEnabled}}disable{{else}}enable{{end}}"
+                  hx-target="#form-alert-container"
+                  hx-swap="innerHTML">
+              <span aria-hidden="true" class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 {{if .security.TwoFactorEnabled}}translate-x-5{{else}}translate-x-0{{end}}"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-yellow-800 bg-opacity-30 text-yellow-100 p-4 rounded-lg">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-yellow-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-yellow-200">Coming Soon</h3>
+            <div class="mt-2 text-sm text-yellow-100">
+              <p>Two-factor authentication is currently under development and will be available soon.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Account Activity Section -->
+    <div>
+      <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Account Activity</h3>
+      
+      <div class="bg-slate-700 bg-opacity-40 rounded-lg p-6">
+        <div class="space-y-4">
+          <div>
+            <h4 class="text-md font-medium text-white">Last Login</h4>
+            <p class="text-gray-300 mt-1">{{if .security.LastLogin.IsZero}}Never{{else}}{{.security.LastLogin.Format "January 2, 2006 at 3:04 PM"}}{{end}}</p>
+          </div>
+          
+          <div>
+            <h4 class="text-md font-medium text-white">Last Password Change</h4>
+            <p class="text-gray-300 mt-1">{{if .security.LastPasswordChange.IsZero}}Never{{else}}{{.security.LastPasswordChange.Format "January 2, 2006 at 3:04 PM"}}{{end}}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Include modal component at the end of the template -->
+{{template "modal" .}}
+{{end}}

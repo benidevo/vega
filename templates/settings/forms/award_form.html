@@ -1,0 +1,48 @@
+<!-- Award Form Template - This would be rendered in the modal -->
+<form class="space-y-4" hx-post="{{if .award}}/settings/profile/award/{{.award.ID}}{{else}}/settings/profile/award{{end}}" hx-target="#award-list" hx-swap="outerHTML">
+  <!-- Hidden ID field for edit mode -->
+  {{if .award}}
+  <input type="hidden" name="id" value="{{.award.ID}}">
+  {{end}}
+
+  <div>
+    <label for="title" class="block text-sm font-medium text-gray-300 mb-1">Award Title *</label>
+    <input type="text" id="title" name="title" value="{{if .award}}{{.award.Title}}{{end}}" required
+            class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+  </div>
+
+  <div>
+    <label for="issuer" class="block text-sm font-medium text-gray-300 mb-1">Issuing Organization *</label>
+    <input type="text" id="issuer" name="issuer" value="{{if .award}}{{.award.Issuer}}{{end}}" required
+            class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+  </div>
+
+  <div>
+    <label for="issue_date" class="block text-sm font-medium text-gray-300 mb-1">Date Received *</label>
+    <input type="month" id="issue_date" name="issue_date" value="{{if .award}}{{.award.IssueDate.Format "2006-01"}}{{end}}" required
+            class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+  </div>
+
+  <div>
+    <label for="description" class="block text-sm font-medium text-gray-300 mb-1">Description</label>
+    <textarea id="description" name="description" rows="3"
+              class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">{{if .award}}{{.award.Description}}{{end}}</textarea>
+    <p class="mt-1 text-xs text-gray-400">Briefly describe what this award recognizes</p>
+  </div>
+
+  <div class="flex justify-end space-x-3 pt-4">
+    <button type="button" class="px-4 py-2 border border-gray-500 rounded-md shadow-sm text-sm font-medium text-gray-300 bg-transparent hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            onclick="closeModal()">
+      Cancel
+    </button>
+    <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+      <span class="htmx-indicator inline-block mr-2">
+        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </span>
+      {{if .award}}Update{{else}}Add{{end}} Award
+    </button>
+  </div>
+</form>

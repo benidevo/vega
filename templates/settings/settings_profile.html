@@ -1,0 +1,638 @@
+{{define "settings-profile-content"}}
+<div class="max-w-6xl mx-auto relative">
+  <!-- Glow effect -->
+  <div class="absolute -inset-1 rounded-xl bg-gradient-to-r from-primary via-secondary to-primary opacity-20 blur-xl"></div>
+
+  <!-- Alert container for form responses -->
+  <div id="form-alert-container" class="mb-6" hx-swap-oob="true"></div>
+
+  <!-- Content container -->
+  <div class="relative p-6 bg-slate-800 bg-opacity-70 backdrop-blur-xl rounded-xl shadow-2xl border border-white border-opacity-10">
+    <h2 class="text-2xl font-bold mb-6 text-white">Profile Settings</h2>
+    
+    <!-- Personal Information Section -->
+    <div class="mb-10">
+      <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Personal Information</h3>
+      
+      <form class="space-y-6" hx-post="/settings/profile/personal" hx-target="#form-alert-container" hx-swap="innerHTML">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="first_name" class="block text-sm font-medium text-gray-300 mb-1">First Name</label>
+            <input type="text" id="first_name" name="first_name" value="{{.profile.FirstName}}"
+                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+          </div>
+
+          <div>
+            <label for="last_name" class="block text-sm font-medium text-gray-300 mb-1">Last Name</label>
+            <input type="text" id="last_name" name="last_name" value="{{.profile.LastName}}"
+                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+          </div>
+          
+          <div>
+            <label for="title" class="block text-sm font-medium text-gray-300 mb-1">Professional Title</label>
+            <input type="text" id="title" name="title" value="{{.profile.Title}}" 
+                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+          </div>
+          
+          <div>
+            <label for="industry" class="block text-sm font-medium text-gray-300 mb-1">Industry</label>
+            <input type="text" id="industry" name="industry" value="{{.profile.Industry}}" 
+                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+          </div>
+          
+          <div>
+            <label for="location" class="block text-sm font-medium text-gray-300 mb-1">Location</label>
+            <input type="text" id="location" name="location" value="{{.profile.Location}}" 
+                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+          </div>
+          
+          <div>
+            <label for="phone_number" class="block text-sm font-medium text-gray-300 mb-1">Phone Number</label>
+            <input type="tel" id="phone_number" name="phone_number" value="{{.profile.PhoneNumber}}" 
+                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+          </div>
+        </div>
+        
+        <div>
+          <label for="career_summary" class="block text-sm font-medium text-gray-300 mb-1">Career Summary</label>
+          <textarea id="career_summary" name="career_summary" rows="4" 
+                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">{{.profile.CareerSummary}}</textarea>
+        </div>
+        
+        <div>
+          <label for="skills" class="block text-sm font-medium text-gray-300 mb-1">Skills (comma separated)</label>
+          <textarea id="skills" name="skills" rows="2" 
+                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">{{range $index, $skill := .profile.Skills}}{{if $index}}, {{end}}{{$skill}}{{end}}</textarea>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-slate-700">
+          <button type="submit" class="px-6 py-2.5 relative overflow-hidden rounded-lg">
+            <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-80 hover:opacity-100 transition-opacity duration-300"></div>
+            <span class="relative z-10 font-semibold text-white flex items-center justify-center">
+              <span class="htmx-indicator mr-2">
+                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </span>
+              Save Personal Information
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+    
+    <!-- Online Presence Section -->
+    <div class="mb-10">
+      <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Online Presence</h3>
+      
+      <form class="space-y-6" hx-post="/settings/profile/online" hx-target="#form-alert-container" hx-swap="innerHTML">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="linkedin_profile" class="block text-sm font-medium text-gray-300 mb-1">LinkedIn Profile</label>
+            <input type="url" id="linkedin_profile" name="linkedin_profile" value="{{.profile.LinkedInProfile}}" 
+                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+          </div>
+          
+          <div>
+            <label for="github_profile" class="block text-sm font-medium text-gray-300 mb-1">GitHub Profile</label>
+            <input type="url" id="github_profile" name="github_profile" value="{{.profile.GitHubProfile}}" 
+                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+          </div>
+          
+          <div>
+            <label for="website" class="block text-sm font-medium text-gray-300 mb-1">Personal Website</label>
+            <input type="url" id="website" name="website" value="{{.profile.Website}}" 
+                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+          </div>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-slate-700">
+          <button type="submit" class="px-6 py-2.5 relative overflow-hidden rounded-lg">
+            <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-80 hover:opacity-100 transition-opacity duration-300"></div>
+            <span class="relative z-10 font-semibold text-white flex items-center justify-center">
+              <span class="htmx-indicator mr-2">
+                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </span>
+              Save Online Profiles
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+    
+    <!-- Work Experience Section -->
+    <div class="mb-10">
+      <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Work Experience</h3>
+      
+      <div id="work-experience-list">
+        {{if eq (len .experiences) 0}}
+        <div class="bg-slate-700 bg-opacity-40 rounded-lg p-6 mb-6">
+          <p class="text-gray-300 text-center">You haven't added any work experience yet.</p>
+          <div class="flex justify-center mt-4">
+            <button type="button"
+                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                    data-modal-trigger
+                    data-modal-title="Add Work Experience"
+                    data-modal-content-id="experience-form-template">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add Work Experience
+            </button>
+          </div>
+        </div>
+        {{else}}
+          {{range .experiences}}
+            <div class="experience-entry bg-slate-700 bg-opacity-40 rounded-lg p-4 mb-4">
+              <!-- Each experience entry would be rendered here -->
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="text-lg font-medium text-white">{{.Title}}</h4>
+                  <p class="text-gray-300">{{.Company}}{{if .Location}} · {{.Location}}{{end}}</p>
+                  <p class="text-gray-400 text-sm">
+                    {{.StartDate.Format "Jan 2006"}} – {{if .Current}}Present{{else}}{{.EndDate.Format "Jan 2006"}}{{end}}
+                  </p>
+                  {{if .Description}}
+                    <p class="text-gray-300 mt-2">{{.Description}}</p>
+                  {{end}}
+                </div>
+                <div class="flex space-x-2">
+                  <button class="text-gray-400 hover:text-primary"
+                          data-modal-trigger
+                          data-modal-title="Edit Work Experience"
+                          data-modal-url="/settings/profile/experience/{{.ID}}/edit">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button class="text-gray-400 hover:text-red-500"
+                          hx-delete="/settings/profile/experience/{{.ID}}"
+                          hx-confirm="Are you sure you want to delete this experience?"
+                          hx-target="#work-experience-list">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          {{end}}
+          <div class="flex justify-end mt-4">
+            <button type="button"
+                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                    data-modal-trigger
+                    data-modal-title="Add Work Experience"
+                    data-modal-content-id="experience-form-template">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add Another Experience
+            </button>
+          </div>
+        {{end}}
+      </div>
+    </div>
+    
+    <!-- Education Section -->
+    <div class="mb-10">
+      <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Education</h3>
+
+      <div id="education-list">
+        <div class="bg-slate-700 bg-opacity-40 rounded-lg p-6 mb-6">
+          <p class="text-gray-300 text-center">You haven't added any education yet.</p>
+          <div class="flex justify-center mt-4">
+            <button type="button"
+                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                    data-modal-trigger
+                    data-modal-title="Add Education"
+                    data-modal-content-id="education-form-template">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add Education
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Certifications Section -->
+    <div class="mb-10">
+      <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Certifications</h3>
+
+      <div id="certification-list">
+        <div class="bg-slate-700 bg-opacity-40 rounded-lg p-6 mb-6">
+          <p class="text-gray-300 text-center">You haven't added any certifications yet.</p>
+          <div class="flex justify-center mt-4">
+            <button type="button"
+                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                    data-modal-trigger
+                    data-modal-title="Add Certification"
+                    data-modal-content-id="certification-form-template">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add Certification
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Awards Section -->
+    <div>
+      <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Awards & Recognition</h3>
+
+      <div id="award-list">
+        <div class="bg-slate-700 bg-opacity-40 rounded-lg p-6 mb-6">
+          <p class="text-gray-300 text-center">You haven't added any awards or recognition yet.</p>
+          <div class="flex justify-center mt-4">
+            <button type="button"
+                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                    data-modal-trigger
+                    data-modal-title="Add Award"
+                    data-modal-content-id="award-form-template">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add Award
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Include modal functionality -->
+{{template "modal" .}}
+
+<!-- Inline form templates -->
+<!-- Template for the work experience form -->
+<template id="experience-form-template">
+  <form class="space-y-8" hx-post="/settings/profile/experience" hx-target="#work-experience-list" hx-swap="outerHTML">
+    <div>
+      <!-- Job Details Section -->
+      <div class="mb-6">
+        <h2 class="text-lg font-medium text-white mb-5 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          Position Details
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <!-- Job Title -->
+          <div>
+            <label for="title" class="block text-sm font-medium text-gray-300 mb-1">Job Title *</label>
+            <input type="text" id="title" name="title" required
+                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+          </div>
+          
+          <!-- Company -->
+          <div>
+            <label for="company" class="block text-sm font-medium text-gray-300 mb-1">Company *</label>
+            <input type="text" id="company" name="company" required
+                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Location -->
+          <div>
+            <label for="location" class="block text-sm font-medium text-gray-300 mb-1">Location</label>
+            <input type="text" id="location" name="location"
+                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" 
+                  placeholder="e.g., Remote, San Francisco, CA">
+          </div>
+          
+          <!-- Dates -->
+          <div>
+            <label for="start_date" class="block text-sm font-medium text-gray-300 mb-1">Start Date *</label>
+            <input type="month" id="start_date" name="start_date" required
+                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+          </div>
+          
+          <div>
+            <label for="end_date" class="block text-sm font-medium text-gray-300 mb-1">End Date</label>
+            <input type="month" id="end_date" name="end_date"
+                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+            <div class="mt-1">
+              <label class="inline-flex items-center text-sm text-gray-300">
+                <input type="checkbox" name="current" id="current_role" class="rounded border-gray-400 text-primary focus:ring-primary bg-slate-600" onchange="document.getElementById('end_date').disabled = this.checked">
+                <span class="ml-2">I currently work here</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Responsibilities Section -->
+      <div class="mb-6">
+        <h2 class="text-lg font-medium text-white mb-5 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Responsibilities & Achievements
+        </h2>
+        
+        <div id="responsibilities-container">
+          <div class="space-y-2 mb-4">
+            <input type="hidden" id="responsibility-count" name="responsibility-count" value="1">
+            
+            <div id="responsibility-item-1" class="flex items-start gap-2">
+              <div class="flex-grow">
+                <input type="text" name="responsibility-1" class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" placeholder="Add a responsibility or achievement...">
+              </div>
+              <button type="button" onclick="removeResponsibility(1)" class="mt-2 text-gray-400 hover:text-red-500 focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <button type="button" onclick="addResponsibility()" class="text-sm font-medium text-primary hover:text-primary-dark focus:outline-none flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Add Another Point
+          </button>
+        </div>
+        
+        <div class="mt-4">
+          <label for="description" class="block text-sm font-medium text-gray-300 mb-1">Additional Notes</label>
+          <textarea id="description" name="description" rows="3"
+                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                  placeholder="Any additional details about your role..."></textarea>
+        </div>
+      </div>
+      
+      <!-- Form Controls -->
+      <div class="pt-6 border-t border-slate-700">
+        <div class="flex flex-col sm:flex-row justify-end gap-4">
+          <button type="button" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-md text-sm transition-colors text-center"
+                onclick="closeModal()">
+            Cancel
+          </button>
+          <button type="submit" class="px-6 py-2.5 relative overflow-hidden rounded-lg">
+            <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-80 hover:opacity-100 transition-opacity duration-300"></div>
+            <span class="relative z-10 font-semibold text-white flex items-center justify-center">
+              <span class="htmx-indicator inline-block mr-2">
+                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </span>
+              Save Experience
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+  
+  <script>
+    let responsibilityCounter = 1;
+    
+    function addResponsibility() {
+      responsibilityCounter++;
+      const container = document.getElementById('responsibilities-container');
+      const countField = document.getElementById('responsibility-count');
+      
+      const newItemDiv = document.createElement('div');
+      newItemDiv.id = `responsibility-item-${responsibilityCounter}`;
+      newItemDiv.className = 'flex items-start gap-2 mt-2';
+      
+      newItemDiv.innerHTML = `
+        <div class="flex-grow">
+          <input type="text" name="responsibility-${responsibilityCounter}" class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" placeholder="Add a responsibility or achievement...">
+        </div>
+        <button type="button" onclick="removeResponsibility(${responsibilityCounter})" class="mt-2 text-gray-400 hover:text-red-500 focus:outline-none">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </button>
+      `;
+      
+      container.firstElementChild.appendChild(newItemDiv);
+      countField.value = responsibilityCounter;
+    }
+    
+    function removeResponsibility(id) {
+      if (responsibilityCounter <= 1) return; // Keep at least one field
+      
+      const item = document.getElementById(`responsibility-item-${id}`);
+      if (item) {
+        item.remove();
+        
+        // Re-number remaining responsibilities if needed
+        // This is optional but helps keep the data clean
+        const countField = document.getElementById('responsibility-count');
+        countField.value = --responsibilityCounter;
+      }
+    }
+    
+    // When the modal opens, ensure the current checkbox disables the end date if checked
+    document.addEventListener('htmx:afterSwap', function(evt) {
+      const currentCheckbox = document.getElementById('current_role');
+      const endDateInput = document.getElementById('end_date');
+      
+      if (currentCheckbox && endDateInput) {
+        endDateInput.disabled = currentCheckbox.checked;
+      }
+    });
+  </script>
+</template>
+
+<!-- Template for the award form - this will be inlined and not loaded remotely -->
+<template id="award-form-template">
+  <form class="space-y-8" hx-post="/settings/profile/award" hx-target="#award-list" hx-swap="outerHTML">
+    <div>
+      <label for="title" class="block text-sm font-medium text-gray-300 mb-1">Award Title *</label>
+      <input type="text" id="title" name="title" required
+              class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+    </div>
+
+    <div>
+      <label for="issuer" class="block text-sm font-medium text-gray-300 mb-1">Issuing Organization *</label>
+      <input type="text" id="issuer" name="issuer" required
+              class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+    </div>
+
+    <div>
+      <label for="issue_date" class="block text-sm font-medium text-gray-300 mb-1">Date Received *</label>
+      <input type="month" id="issue_date" name="issue_date" required
+              class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+    </div>
+
+    <div>
+      <label for="description" class="block text-sm font-medium text-gray-300 mb-1">Description</label>
+      <textarea id="description" name="description" rows="3"
+                class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"></textarea>
+      <p class="mt-1 text-xs text-gray-400">Briefly describe what this award recognizes</p>
+    </div>
+
+    <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-slate-700">
+      <button type="button" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-md text-sm transition-colors text-center"
+              onclick="closeModal()">
+        Cancel
+      </button>
+      <button type="submit" class="px-6 py-2.5 relative overflow-hidden rounded-lg">
+        <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-80 hover:opacity-100 transition-opacity duration-300"></div>
+        <span class="relative z-10 font-semibold text-white flex items-center justify-center">
+          <span class="htmx-indicator inline-block mr-2">
+            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </span>
+          Add Award
+        </span>
+      </button>
+    </div>
+  </form>
+</template>
+
+<!-- Template for the education form -->
+<template id="education-form-template">
+  <form class="space-y-8" hx-post="/settings/profile/education" hx-target="#education-list" hx-swap="outerHTML">
+    <div>
+      <label for="institution" class="block text-sm font-medium text-gray-300 mb-1">Institution *</label>
+      <input type="text" id="institution" name="institution" required
+              class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+    </div>
+
+    <div>
+      <label for="degree" class="block text-sm font-medium text-gray-300 mb-1">Degree *</label>
+      <input type="text" id="degree" name="degree" required
+              class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+    </div>
+
+    <div>
+      <label for="field_of_study" class="block text-sm font-medium text-gray-300 mb-1">Field of Study</label>
+      <input type="text" id="field_of_study" name="field_of_study"
+              class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label for="start_date" class="block text-sm font-medium text-gray-300 mb-1">Start Date *</label>
+        <input type="month" id="start_date" name="start_date" required
+                class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+      </div>
+
+      <div>
+        <label for="end_date" class="block text-sm font-medium text-gray-300 mb-1">End Date</label>
+        <input type="month" id="end_date" name="end_date"
+                class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+        <div class="mt-1">
+          <label class="inline-flex items-center text-sm text-gray-300">
+            <input type="checkbox" name="current" class="rounded border-gray-400 text-primary focus:ring-primary bg-slate-600" onchange="document.getElementById('end_date').disabled = this.checked">
+            <span class="ml-2">I'm currently studying here</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <label for="education_description" class="block text-sm font-medium text-gray-300 mb-1">Description</label>
+      <textarea id="education_description" name="description" rows="3"
+                class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"></textarea>
+      <p class="mt-1 text-xs text-gray-400">Additional information about your studies, achievements, etc.</p>
+    </div>
+
+    <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-slate-700">
+      <button type="button" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-md text-sm transition-colors text-center"
+              onclick="closeModal()">
+        Cancel
+      </button>
+      <button type="submit" class="px-6 py-2.5 relative overflow-hidden rounded-lg">
+        <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-80 hover:opacity-100 transition-opacity duration-300"></div>
+        <span class="relative z-10 font-semibold text-white flex items-center justify-center">
+          <span class="htmx-indicator inline-block mr-2">
+            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </span>
+          Add Education
+        </span>
+      </button>
+    </div>
+  </form>
+</template>
+
+<!-- Template for the certification form -->
+<template id="certification-form-template">
+  <form class="space-y-8" hx-post="/settings/profile/certification" hx-target="#certification-list" hx-swap="outerHTML">
+    <div>
+      <label for="certification_name" class="block text-sm font-medium text-gray-300 mb-1">Certification Name *</label>
+      <input type="text" id="certification_name" name="name" required
+              class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+    </div>
+
+    <div>
+      <label for="issuing_org" class="block text-sm font-medium text-gray-300 mb-1">Issuing Organization *</label>
+      <input type="text" id="issuing_org" name="issuing_org" required
+              class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label for="cert_issue_date" class="block text-sm font-medium text-gray-300 mb-1">Issue Date *</label>
+        <input type="month" id="cert_issue_date" name="issue_date" required
+                class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+      </div>
+
+      <div>
+        <label for="expiry_date" class="block text-sm font-medium text-gray-300 mb-1">Expiry Date</label>
+        <input type="month" id="expiry_date" name="expiry_date"
+                class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+        <div class="mt-1">
+          <label class="inline-flex items-center text-sm text-gray-300">
+            <input type="checkbox" name="no_expiry" class="rounded border-gray-400 text-primary focus:ring-primary bg-slate-600" onchange="document.getElementById('expiry_date').disabled = this.checked">
+            <span class="ml-2">This certification does not expire</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <label for="credential_id" class="block text-sm font-medium text-gray-300 mb-1">Credential ID</label>
+      <input type="text" id="credential_id" name="credential_id"
+              class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+    </div>
+
+    <div>
+      <label for="credential_url" class="block text-sm font-medium text-gray-300 mb-1">Credential URL</label>
+      <input type="url" id="credential_url" name="credential_url"
+              class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+      <p class="mt-1 text-xs text-gray-400">URL where this certification can be verified</p>
+    </div>
+
+    <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-slate-700">
+      <button type="button" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-md text-sm transition-colors text-center"
+              onclick="closeModal()">
+        Cancel
+      </button>
+      <button type="submit" class="px-6 py-2.5 relative overflow-hidden rounded-lg">
+        <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-80 hover:opacity-100 transition-opacity duration-300"></div>
+        <span class="relative z-10 font-semibold text-white flex items-center justify-center">
+          <span class="htmx-indicator inline-block mr-2">
+            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </span>
+          Add Certification
+        </span>
+      </button>
+    </div>
+  </form>
+</template>
+{{end}}

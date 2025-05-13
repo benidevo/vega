@@ -111,6 +111,26 @@
   {{else if eq .page "404"}}
     <!-- 404 Not Found page -->
     {{template "404-content" .}}
+  {{else if eq .page "settings-home" }}
+    <!-- Settings home page -->
+    <div class="min-h-screen bg-slate-900">
+      {{template "settings-layout" .}}
+    </div>
+  {{else if eq .page "settings-profile" }}
+    <!-- Settings profile page -->
+    <div class="min-h-screen bg-slate-900">
+      {{template "settings-layout" .}}
+    </div>
+  {{else if eq .page "settings-security" }}
+    <!-- Settings security page -->
+    <div class="min-h-screen bg-slate-900">
+      {{template "settings-layout" .}}
+    </div>
+  {{else if eq .page "settings-notifications" }}
+    <!-- Settings notifications page -->
+    <div class="min-h-screen bg-slate-900">
+      {{template "settings-layout" .}}
+    </div>
   {{else}}
     <!-- Standard centered layout for home and login pages -->
     <div class="min-h-screen flex {{if eq .page "home"}}flex-col{{end}} items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
@@ -129,6 +149,9 @@
       {{end}}
     </div>
   {{end}}
+
+  <!-- Modal Component -->
+  {{template "modal" .}}
 
   <!-- Global scripts -->
   <script>
@@ -242,9 +265,9 @@
 
       // Handle HTMX events for any page using HTMX
       if (typeof htmx !== 'undefined') {
-        // Handle 401 response - allow swap and hide spinner
+        // Handle 401 and 400 responses - allow swap and hide spinner
         document.body.addEventListener('htmx:beforeSwap', function(event) {
-          if (event.detail.xhr.status === 401) {
+          if (event.detail.xhr.status === 401 || event.detail.xhr.status === 400) {
             event.detail.shouldSwap = true;
             event.detail.isError = false;
           }
@@ -260,22 +283,29 @@
 
         // Style and handle error messages
         document.body.addEventListener('htmx:afterSwap', function(event) {
-          if (event.detail.xhr.status === 401) {
-            const errorDiv = document.getElementById('form-response');
-            if (errorDiv) {
-              // Add styling classes
-              errorDiv.classList.remove('hidden');
-              errorDiv.classList.add('animate-fade-in', 'mb-4', 'p-3', 'bg-red-900', 'bg-opacity-50', 'text-white', 'rounded-lg', 'border', 'border-red-800');
+          if (event.detail.xhr.status === 401 || event.detail.xhr.status === 400) {
+            const errorDiv = event.detail.xhr.status === 401
+              ? document.getElementById('form-response')
+              : document.getElementById('status-response');
 
-              // Auto-hide after 5 seconds
-              setTimeout(function() {
-                errorDiv.classList.add('animate-fade-out');
-                // Hide again after animation completes
+            if (errorDiv) {
+              // Add styling classes if they're not already part of the template
+              if (!errorDiv.classList.contains('auto-dismiss-alert')) {
+                errorDiv.classList.remove('hidden');
+                errorDiv.classList.add('animate-fade-in', 'mb-4', 'p-3', 'bg-red-900', 'bg-opacity-50', 'text-white', 'rounded-lg', 'border', 'border-red-800');
+              }
+
+              // Auto-hide after 5 seconds (if not already set up as auto-dismiss-alert)
+              if (!errorDiv.classList.contains('auto-dismiss-alert')) {
                 setTimeout(function() {
-                  errorDiv.classList.add('hidden');
-                  errorDiv.classList.remove('animate-fade-out');
-                }, 300); // match animation duration
-              }, 5000);
+                  errorDiv.classList.add('animate-fade-out');
+                  // Hide again after animation completes
+                  setTimeout(function() {
+                    errorDiv.classList.add('hidden');
+                    errorDiv.classList.remove('animate-fade-out');
+                  }, 300); // match animation duration
+                }, 5000);
+              }
             }
           }
         });

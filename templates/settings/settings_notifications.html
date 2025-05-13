@@ -1,0 +1,106 @@
+{{define "settings-notifications-content"}}
+<div class="max-w-6xl mx-auto relative">
+  <!-- Glow effect -->
+  <div class="absolute -inset-1 rounded-xl bg-gradient-to-r from-primary via-secondary to-primary opacity-20 blur-xl"></div>
+
+  <!-- Alert container for form responses -->
+  <div id="form-alert-container" class="mb-6" hx-swap-oob="true"></div>
+
+  <!-- Content container -->
+  <div class="relative p-6 bg-slate-800 bg-opacity-70 backdrop-blur-xl rounded-xl shadow-2xl border border-white border-opacity-10">
+    <h2 class="text-2xl font-bold mb-6 text-white">Notification Settings</h2>
+    
+    <form hx-post="/settings/notifications" hx-target="#form-alert-container" hx-swap="innerHTML">
+      <!-- Email Notification Settings -->
+      <div class="mb-10">
+        <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Email Notifications</h3>
+        
+        <div class="space-y-4">
+          <div class="flex items-start">
+            <div class="flex items-center h-5">
+              <input id="email_notifications" name="email_notifications" type="checkbox" {{if .notifications.EmailNotifications}}checked{{end}}
+                    class="focus:ring-primary h-4 w-4 text-primary border-gray-600 rounded bg-slate-700">
+            </div>
+            <div class="ml-3 text-sm">
+              <label for="email_notifications" class="font-medium text-white">Enable Email Notifications</label>
+              <p class="text-gray-400">Receive notifications via email for important updates.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Job Alert Settings -->
+      <div class="mb-10">
+        <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Job Alerts</h3>
+        
+        <div class="space-y-4">
+          <div class="flex items-start">
+            <div class="flex items-center h-5">
+              <input id="job_alerts" name="job_alerts" type="checkbox" {{if .notifications.JobAlerts}}checked{{end}}
+                    class="focus:ring-primary h-4 w-4 text-primary border-gray-600 rounded bg-slate-700">
+            </div>
+            <div class="ml-3 text-sm">
+              <label for="job_alerts" class="font-medium text-white">Job Match Alerts</label>
+              <p class="text-gray-400">Receive notifications when new job matches are found.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Application Update Settings -->
+      <div class="mb-10">
+        <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Application Updates</h3>
+        
+        <div class="space-y-4">
+          <div class="flex items-start">
+            <div class="flex items-center h-5">
+              <input id="application_updates" name="application_updates" type="checkbox" {{if .notifications.ApplicationUpdates}}checked{{end}}
+                    class="focus:ring-primary h-4 w-4 text-primary border-gray-600 rounded bg-slate-700">
+            </div>
+            <div class="ml-3 text-sm">
+              <label for="application_updates" class="font-medium text-white">Application Status Updates</label>
+              <p class="text-gray-400">Receive notifications when there are updates to your job applications.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Digest Settings -->
+      <div class="mb-10">
+        <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Digest Emails</h3>
+        
+        <div class="space-y-4">
+          <div class="flex items-start">
+            <div class="flex items-center h-5">
+              <input id="weekly_digest" name="weekly_digest" type="checkbox" {{if .notifications.WeeklyDigest}}checked{{end}}
+                    class="focus:ring-primary h-4 w-4 text-primary border-gray-600 rounded bg-slate-700">
+            </div>
+            <div class="ml-3 text-sm">
+              <label for="weekly_digest" class="font-medium text-white">Weekly Digest</label>
+              <p class="text-gray-400">Receive a weekly summary of your job search activities and recommendations.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-slate-700">
+        <button type="submit" class="px-6 py-2.5 relative overflow-hidden rounded-lg">
+          <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-80 hover:opacity-100 transition-opacity duration-300"></div>
+          <span class="relative z-10 font-semibold text-white flex items-center justify-center">
+            <span class="htmx-indicator mr-2">
+              <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </span>
+            Save Notification Settings
+          </span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Include modal component at the end of the template -->
+{{template "modal" .}}
+{{end}}
