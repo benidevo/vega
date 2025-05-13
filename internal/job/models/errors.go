@@ -7,18 +7,19 @@ import (
 
 var (
 	// Model validation errors
-	ErrInvalidJobType         = errors.New("invalid job type")
-	ErrInvalidJobStatus       = errors.New("invalid job status")
-	ErrInvalidExperienceLevel = errors.New("invalid experience level")
-	ErrJobTitleRequired       = errors.New("job title is required")
-	ErrJobDescriptionRequired = errors.New("job description is required")
-	ErrCompanyRequired        = errors.New("job company is required")
-	ErrInvalidFieldParam      = errors.New("invalid field parameter")
-	ErrFieldRequired          = errors.New("field parameter is required")
-	ErrInvalidURLFormat       = errors.New("invalid URL format")
-	ErrSkillsRequired         = errors.New("at least one valid skill is required")
-	ErrStatusRequired         = errors.New("status is required")
-	ErrInvalidJobIDFormat     = errors.New("invalid job ID format")
+	ErrInvalidJobType          = errors.New("invalid job type")
+	ErrInvalidJobStatus        = errors.New("invalid job status")
+	ErrInvalidStatusTransition = errors.New("job status can only move forward")
+	ErrInvalidExperienceLevel  = errors.New("invalid experience level")
+	ErrJobTitleRequired        = errors.New("job title is required")
+	ErrJobDescriptionRequired  = errors.New("job description is required")
+	ErrCompanyRequired         = errors.New("job company is required")
+	ErrInvalidFieldParam       = errors.New("invalid field parameter")
+	ErrFieldRequired           = errors.New("field parameter is required")
+	ErrInvalidURLFormat        = errors.New("invalid URL format")
+	ErrSkillsRequired          = errors.New("at least one valid skill is required")
+	ErrStatusRequired          = errors.New("status is required")
+	ErrInvalidJobIDFormat      = errors.New("invalid job ID format")
 
 	// Repository errors
 	ErrJobNotFound           = errors.New("job not found")

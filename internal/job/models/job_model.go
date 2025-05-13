@@ -57,6 +57,35 @@ func (j JobStatus) String() string {
 	}
 }
 
+// IsValidTransition checks if a change from current status to new status is valid.
+// Job status should only move forward in the application process, or to terminal states.
+func IsValidTransition(currentStatus, newStatus JobStatus) bool {
+	if currentStatus == newStatus {
+		return true
+	}
+
+	// Terminal states can't transition except to themselves (handled above)
+	if currentStatus == REJECTED || currentStatus == NOT_INTERESTED {
+		return false
+	}
+
+	// Special case: OFFER_RECEIVED can transition to REJECTED
+	if currentStatus == OFFER_RECEIVED && newStatus == REJECTED {
+		return true
+	}
+
+	if newStatus > currentStatus {
+		return true
+	}
+
+	// Special case: Any state can transition to NOT_INTERESTED
+	if newStatus == NOT_INTERESTED {
+		return true
+	}
+
+	return false
+}
+
 // JobType represents the type of job (e.g., full-time, part-time, etc.).
 type JobType int
 

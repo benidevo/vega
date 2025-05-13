@@ -266,7 +266,7 @@ func (h *JobHandler) UpdateJobField(c *gin.Context) {
 	case "status":
 		statusStr := c.PostForm("status")
 		if statusStr == "" {
-			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			c.HTML(http.StatusBadRequest, "partials/alert-error-dashboard.html", gin.H{
 				"message": models.ErrStatusRequired.Error(),
 			})
 			return
@@ -274,7 +274,7 @@ func (h *JobHandler) UpdateJobField(c *gin.Context) {
 
 		status, err := models.JobStatusFromString(statusStr)
 		if err != nil {
-			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			c.HTML(http.StatusBadRequest, "partials/alert-error-dashboard.html", gin.H{
 				"message": models.ErrInvalidJobStatus.Error(),
 			})
 			return
@@ -337,9 +337,26 @@ func (h *JobHandler) UpdateJobField(c *gin.Context) {
 	err = h.service.UpdateJob(c.Request.Context(), job)
 	if err != nil {
 		sentinelErr := models.GetSentinelError(err)
-		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
-			"message": "Error updating job: " + sentinelErr.Error(),
-		})
+		statusCode := http.StatusInternalServerError
+
+		if errors.Is(err, models.ErrInvalidStatusTransition) ||
+			errors.Is(err, models.ErrInvalidJobStatus) ||
+			errors.Is(err, models.ErrJobTitleRequired) ||
+			errors.Is(err, models.ErrJobDescriptionRequired) ||
+			errors.Is(err, models.ErrCompanyRequired) {
+			statusCode = http.StatusBadRequest
+		}
+
+		// Use dashboard-specific error format for status updates
+		if field == "status" {
+			c.HTML(statusCode, "partials/alert-error-dashboard.html", gin.H{
+				"message": sentinelErr.Error(),
+			})
+		} else {
+			c.HTML(statusCode, "partials/alert-error.html", gin.H{
+				"message": sentinelErr.Error(),
+			})
+		}
 		return
 	}
 
