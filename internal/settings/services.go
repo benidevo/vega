@@ -3,6 +3,7 @@ package settings
 import (
 	"context"
 
+	"github.com/benidevo/prospector/internal/auth"
 	"github.com/benidevo/prospector/internal/config"
 	"github.com/benidevo/prospector/internal/logger"
 	"github.com/benidevo/prospector/internal/settings/interfaces"
@@ -12,14 +13,16 @@ import (
 
 // SettingsService provides business logic for user settings management
 type SettingsService struct {
+	userRepo     auth.UserRepository
 	settingsRepo interfaces.SettingsRepository
 	cfg          *config.Settings
 	log          zerolog.Logger
 }
 
 // NewSettingsService creates a new SettingsService instance
-func NewSettingsService(settingsRepo interfaces.SettingsRepository, cfg *config.Settings) *SettingsService {
+func NewSettingsService(settingsRepo interfaces.SettingsRepository, cfg *config.Settings, userRepo auth.UserRepository) *SettingsService {
 	return &SettingsService{
+		userRepo:     userRepo,
 		settingsRepo: settingsRepo,
 		cfg:          cfg,
 		log:          logger.GetLogger("settings"),
@@ -67,25 +70,13 @@ func (s *SettingsService) GetAwards(ctx context.Context, profileID int) ([]*mode
 }
 
 // GetSecuritySettings retrieves a user's security settings
-func (s *SettingsService) GetSecuritySettings(ctx context.Context, userID int) (*models.SecuritySettings, error) {
+func (s *SettingsService) GetSecuritySettings(ctx context.Context, username string) (*models.SecuritySettings, error) {
+	user, err := s.userRepo.FindByUsername(ctx, username)
+	if err != nil {
+		return nil, err
+	}
 
-	return &models.SecuritySettings{
-		ID:               1,
-		UserID:           userID,
-		TwoFactorEnabled: false,
-		TwoFactorMethod:  "",
-	}, nil
-}
+	activity := models.NewAccountActivity(user.LastLogin, user.CreatedAt)
+	return models.NewSecuritySettings(activity), nil
 
-// GetNotificationSettings retrieves a user's notification settings
-func (s *SettingsService) GetNotificationSettings(ctx context.Context, userID int) (*models.NotificationSettings, error) {
-
-	return &models.NotificationSettings{
-		ID:                 1,
-		UserID:             userID,
-		EmailNotifications: true,
-		JobAlerts:          true,
-		ApplicationUpdates: true,
-		WeeklyDigest:       true,
-	}, nil
 }

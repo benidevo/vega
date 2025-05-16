@@ -14,7 +14,7 @@ type Company struct {
 
 // NewCompany creates a new Company instance with the given name.
 func NewCompany(name string) *Company {
-	now := time.Now()
+	now := time.Now().UTC()
 	return &Company{
 		Name:      name,
 		CreatedAt: now,

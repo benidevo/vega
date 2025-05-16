@@ -72,12 +72,14 @@ func (h *SettingsHandler) GetProfileSettingsPage(c *gin.Context) {
 // GetSecuritySettings handles the request to display the security settings page
 func (h *SettingsHandler) GetSecuritySettingsPage(c *gin.Context) {
 	username, _ := c.Get("username")
-	userID := 1 // For now, hardcode userID
+	usernameStr, _ := username.(string)
 
-	security, err := h.service.GetSecuritySettings(c.Request.Context(), userID)
+	security, err := h.service.GetSecuritySettings(c.Request.Context(), usernameStr)
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
-			"message": "Failed to load security settings",
+		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
+			"title":       "Something Went Wrong",
+			"page":        "500",
+			"currentYear": time.Now().Year(),
 		})
 		return
 	}
@@ -97,15 +99,6 @@ func (h *SettingsHandler) GetSecuritySettingsPage(c *gin.Context) {
 // GetNotificationSettings handles the request to display the notification settings page
 func (h *SettingsHandler) GetNotificationSettingsPage(c *gin.Context) {
 	username, _ := c.Get("username")
-	userID := 1 // For now, hardcode userID
-
-	notifications, err := h.service.GetNotificationSettings(c.Request.Context(), userID)
-	if err != nil {
-		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
-			"message": "Failed to load notification settings",
-		})
-		return
-	}
 
 	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
 		"title":          "Notification Settings",
@@ -115,7 +108,7 @@ func (h *SettingsHandler) GetNotificationSettingsPage(c *gin.Context) {
 		"pageTitle":      "Notification Settings",
 		"currentYear":    time.Now().Year(),
 		"username":       username,
-		"notifications":  notifications,
+		"notifications":  "notifications", // Dummy data for notifications
 	})
 }
 

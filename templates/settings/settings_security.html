@@ -236,12 +236,28 @@
         <div class="space-y-4">
           <div>
             <h4 class="text-md font-medium text-white">Last Login</h4>
-            <p class="text-gray-300 mt-1">{{if .security.LastLogin.IsZero}}Never{{else}}{{.security.LastLogin.Format "January 2, 2006 at 3:04 PM"}}{{end}}</p>
+            <p class="text-gray-300 mt-1">
+              {{if .security.Activity.LastLogin.IsZero}}
+                Never
+              {{else}}
+                <span class="utc-time" data-utc="{{.security.Activity.LastLogin.Format "2006-01-02T15:04:05Z"}}" data-format="full">
+                  {{.security.Activity.LastLogin.Format "January 2, 2006 at 3:04 PM"}}
+                </span>
+              {{end}}
+            </p>
           </div>
 
           <div>
             <h4 class="text-md font-medium text-white">Account Created</h4>
-            <p class="text-gray-300 mt-1">{{if .user.CreatedAt.IsZero}}Unknown{{else}}{{.user.CreatedAt.Format "January 2, 2006"}}{{end}}</p>
+            <p class="text-gray-300 mt-1">
+              {{if .security.Activity.CreatedAt.IsZero}}
+                Unknown
+              {{else}}
+                <span class="utc-time" data-utc="{{.security.Activity.CreatedAt.Format "2006-01-02T15:04:05Z"}}" data-format="date">
+                  {{.security.Activity.CreatedAt.Format "January 2, 2006"}}
+                </span>
+              {{end}}
+            </p>
           </div>
         </div>
       </div>

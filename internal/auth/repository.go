@@ -137,11 +137,22 @@ func (r *SQLiteUserRepository) FindByUsername(ctx context.Context, username stri
 
 // UpdateUser updates an existing user's details in the database and returns the updated user.
 func (r *SQLiteUserRepository) UpdateUser(ctx context.Context, user *User) (*User, error) {
-	query := "UPDATE users SET username = ?, password = ?, role = ?, updated_at = ? WHERE id = ?"
-
 	user.UpdatedAt = time.Now().UTC()
 
-	result, err := r.db.ExecContext(ctx, query, user.Username, user.Password, user.Role, user.UpdatedAt, user.ID)
+	var (
+		query string
+		args  []interface{}
+	)
+
+	if !user.LastLogin.IsZero() {
+		query = "UPDATE users SET username = ?, password = ?, role = ?, updated_at = ?, last_login = ? WHERE id = ?"
+		args = []any{user.Username, user.Password, user.Role, user.UpdatedAt, user.LastLogin, user.ID}
+	} else {
+		query = "UPDATE users SET username = ?, password = ?, role = ?, updated_at = ? WHERE id = ?"
+		args = []any{user.Username, user.Password, user.Role, user.UpdatedAt, user.ID}
+	}
+
+	result, err := r.db.ExecContext(ctx, query, args...)
 	if err != nil {
 		return nil, ErrUserUpdateFailed
 	}

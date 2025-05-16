@@ -302,7 +302,7 @@ func WithPostedAt(postedAt time.Time) JobOption {
 // NewJob creates a new Job instance with the required fields and applies the provided options.
 // Only title, description, and company are required. All other fields can be set using options.
 func NewJob(title, description string, company Company, options ...JobOption) *Job {
-	now := time.Now()
+	now := time.Now().UTC()
 
 	job := &Job{
 		Title:          title,
@@ -344,7 +344,7 @@ func (j *Job) IsActive() bool {
 		return true
 	}
 
-	return j.ApplicationDeadline.After(time.Now())
+	return j.ApplicationDeadline.After(time.Now().UTC())
 }
 
 // JobFilter defines filters for querying jobs

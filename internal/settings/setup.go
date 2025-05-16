@@ -1,13 +1,18 @@
 package settings
 
 import (
+	"database/sql"
+
 	"github.com/benidevo/prospector/internal/config"
+
+	"github.com/benidevo/prospector/internal/auth"
 	"github.com/gin-gonic/gin"
 )
 
 // Setup creates a new settings handler and returns it without registering routes
-func Setup(cfg *config.Settings) *SettingsHandler {
-	service := NewSettingsService(nil, cfg) // I will implement the service later
+func Setup(cfg *config.Settings, db *sql.DB) *SettingsHandler {
+	userRepo := auth.NewSQLiteUserRepository(db)
+	service := NewSettingsService(nil, cfg, userRepo)
 	return NewSettingsHandler(service, cfg)
 }
 

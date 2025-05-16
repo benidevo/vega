@@ -48,7 +48,7 @@ func (r *SQLiteCompanyRepository) GetOrCreate(ctx context.Context, name string) 
 	).Scan(&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt)
 
 	if err == sql.ErrNoRows {
-		now := time.Now()
+		now := time.Now().UTC()
 		result, err := tx.ExecContext(
 			ctx,
 			"INSERT INTO companies (name, created_at, updated_at) VALUES (?, ?, ?)",
@@ -232,7 +232,7 @@ func (r *SQLiteCompanyRepository) Update(ctx context.Context, company *models.Co
 		return err
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	query := "UPDATE companies SET name = ?, updated_at = ? WHERE id = ?"
 
 	result, err := r.db.ExecContext(ctx, query, normalizedName, now, company.ID)

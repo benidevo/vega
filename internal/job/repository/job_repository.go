@@ -55,7 +55,7 @@ func (r *SQLiteJobRepository) Create(ctx context.Context, jobModel *models.Job) 
 		}
 	}()
 
-	now := time.Now()
+	now := time.Now().UTC()
 	if jobModel.CreatedAt.IsZero() {
 		jobModel.CreatedAt = now
 	}
@@ -369,7 +369,7 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, job *models.Job) error
 		}
 	}()
 
-	job.UpdatedAt = time.Now()
+	job.UpdatedAt = time.Now().UTC()
 
 	skillsJSON, err := json.Marshal(job.RequiredSkills)
 	if err != nil {
@@ -478,7 +478,7 @@ func (r *SQLiteJobRepository) UpdateStatus(ctx context.Context, id int, status m
 
 	query := "UPDATE jobs SET status = ?, updated_at = ? WHERE id = ?"
 
-	now := time.Now()
+	now := time.Now().UTC()
 	result, err := r.db.ExecContext(ctx, query, int(status), now, id)
 	if err != nil {
 		return models.WrapError(models.ErrFailedToUpdateJob, err)

@@ -8,6 +8,8 @@ import (
 
 // SettingsRepository defines the interface for settings data access
 type SettingsRepository interface {
+	GetSecuritySettings(ctx context.Context, username string) (*models.SecuritySettings, error)
+
 	GetProfileSettings(ctx context.Context, userID int) (*models.ProfileSettings, error)
 	UpdateProfileSettings(ctx context.Context, profile *models.ProfileSettings) error
 
@@ -30,10 +32,4 @@ type SettingsRepository interface {
 	AddAward(ctx context.Context, award *models.Award) error
 	UpdateAward(ctx context.Context, award *models.Award) error
 	DeleteAward(ctx context.Context, id int) error
-
-	GetSecuritySettings(ctx context.Context, userID int) (*models.SecuritySettings, error)
-	UpdateSecuritySettings(ctx context.Context, security *models.SecuritySettings) error
-
-	GetNotificationSettings(ctx context.Context, userID int) (*models.NotificationSettings, error)
-	UpdateNotificationSettings(ctx context.Context, notifications *models.NotificationSettings) error
 }

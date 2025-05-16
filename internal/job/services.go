@@ -258,7 +258,7 @@ func (s *JobService) UpdateJob(ctx context.Context, job *models.Job) error {
 		}
 	}
 
-	job.UpdatedAt = time.Now()
+	job.UpdatedAt = time.Now().UTC()
 
 	err = s.jobRepo.Update(ctx, job)
 	if err != nil {

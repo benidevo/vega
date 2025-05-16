@@ -112,6 +112,9 @@
   {{else if eq .page "404"}}
     <!-- 404 Not Found page -->
     {{template "404-content" .}}
+  {{else if eq .page "500"}}
+    <!-- 500 Server Error page -->
+    {{template "500-content" .}}
   {{else if eq .page "settings-home" }}
     <!-- Settings home page -->
     <div class="min-h-screen bg-slate-900">
@@ -178,10 +181,70 @@
       });
     }
 
+    // Format UTC dates to local browser timezone
+    function formatUTCDates() {
+      const timeElements = document.querySelectorAll('.utc-time');
+
+      timeElements.forEach(element => {
+        const utcDate = element.getAttribute('data-utc');
+        const format = element.getAttribute('data-format') || 'full';
+
+        if (utcDate) {
+          const date = new Date(utcDate);
+
+          // Skip invalid dates
+          if (isNaN(date)) return;
+
+          let formattedDate = '';
+
+          // Format based on the format attribute
+          if (format === 'full') {
+            // Format parts separately to ensure consistent output
+            const datePart = date.toLocaleDateString(undefined, {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            });
+
+            const timePart = date.toLocaleTimeString(undefined, {
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true
+            });
+
+            // Combine with "at" between date and time
+            formattedDate = `${datePart} at ${timePart}`;
+          } else if (format === 'date') {
+            // Date only: January 2, 2023
+            formattedDate = date.toLocaleDateString(undefined, {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            });
+          } else if (format === 'time') {
+            // Time only: 3:04 PM
+            formattedDate = date.toLocaleTimeString(undefined, {
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true
+            });
+          }
+
+          element.textContent = formattedDate;
+        }
+      });
+    }
+
     // Run the auto-dismiss setup whenever the DOM content changes
     // This handles both initial page load and HTMX swaps
-    document.addEventListener('DOMContentLoaded', setupAutoDismissAlerts);
-    document.body.addEventListener('htmx:afterSwap', setupAutoDismissAlerts);
+    document.addEventListener('DOMContentLoaded', function() {
+      setupAutoDismissAlerts();
+      formatUTCDates();
+    });
+    document.body.addEventListener('htmx:afterSwap', function() {
+      setupAutoDismissAlerts();
+      formatUTCDates();
+    });
 
     // Initialize particles.js on all pages that have a particles-js element
     document.addEventListener('DOMContentLoaded', function() {

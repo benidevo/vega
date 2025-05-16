@@ -74,7 +74,7 @@ func (s *AuthService) Login(ctx context.Context, username, password string) (str
 		return "", ErrInvalidCredentials
 	}
 
-	user.LastLogin = time.Now()
+	user.LastLogin = time.Now().UTC()
 	_, err = s.repo.UpdateUser(ctx, user)
 	if err != nil {
 		s.log.Warn().Err(err).Msg("Failed to update user last login")
@@ -101,7 +101,7 @@ func (s *AuthService) GetUserByID(ctx context.Context, userID int) (*User, error
 // The token is signed using the HS256 algorithm
 // and a secret key from the service configuration.
 func (s *AuthService) GenerateToken(user *User) (string, error) {
-	expirationTime := time.Now().Add(s.config.TokenExpiration)
+	expirationTime := time.Now().UTC().Add(s.config.TokenExpiration)
 	role, _ := user.Role.String()
 
 	claims := &Claims{
@@ -111,7 +111,7 @@ func (s *AuthService) GenerateToken(user *User) (string, error) {
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "prospector",
 			Subject:   user.Username,
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 		},
 	}
