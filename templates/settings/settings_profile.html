@@ -15,60 +15,58 @@
       <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Personal Information</h3>
       
       <form class="space-y-6" hx-post="/settings/profile/personal" hx-target="#form-alert-container" hx-swap="innerHTML">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label for="first_name" class="block text-sm font-medium text-gray-300 mb-1">First Name</label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div class="space-y-1">
+            <label for="first_name" class="block text-sm font-medium text-gray-300">First Name</label>
             <input type="text" id="first_name" name="first_name" value="{{.profile.FirstName}}"
                   class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
           </div>
 
-          <div>
-            <label for="last_name" class="block text-sm font-medium text-gray-300 mb-1">Last Name</label>
+          <div class="space-y-1">
+            <label for="last_name" class="block text-sm font-medium text-gray-300">Last Name</label>
             <input type="text" id="last_name" name="last_name" value="{{.profile.LastName}}"
                   class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
           </div>
-          
-          <div>
-            <label for="title" class="block text-sm font-medium text-gray-300 mb-1">Professional Title</label>
-            <input type="text" id="title" name="title" value="{{.profile.Title}}" 
+
+          <div class="space-y-1">
+            <label for="title" class="block text-sm font-medium text-gray-300">Professional Title</label>
+            <input type="text" id="title" name="title" value="{{.profile.Title}}"
                   class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
           </div>
-          
-          <div>
-            <label for="industry" class="block text-sm font-medium text-gray-300 mb-1">Industry</label>
-            <input type="text" id="industry" name="industry" value="{{.profile.Industry}}" 
+
+          <div class="space-y-1">
+            <label for="industry" class="block text-sm font-medium text-gray-300">Industry</label>
+            <input type="text" id="industry" name="industry" value="{{.profile.Industry}}"
                   class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
           </div>
-          
-          <div>
-            <label for="location" class="block text-sm font-medium text-gray-300 mb-1">Location</label>
-            <input type="text" id="location" name="location" value="{{.profile.Location}}" 
+
+          <div class="space-y-1">
+            <label for="location" class="block text-sm font-medium text-gray-300">Location</label>
+            <input type="text" id="location" name="location" value="{{.profile.Location}}"
                   class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
           </div>
-          
-          <div>
-            <label for="phone_number" class="block text-sm font-medium text-gray-300 mb-1">Phone Number</label>
-            <input type="tel" id="phone_number" name="phone_number" value="{{.profile.PhoneNumber}}" 
+
+          <div class="space-y-1">
+            <label for="phone_number" class="block text-sm font-medium text-gray-300">Phone Number</label>
+            <input type="tel" id="phone_number" name="phone_number" value="{{.profile.PhoneNumber}}"
                   class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
           </div>
         </div>
         
-        <div>
-          <label for="career_summary" class="block text-sm font-medium text-gray-300 mb-1">Career Summary</label>
-          <textarea id="career_summary" name="career_summary" rows="4" 
+        <div class="space-y-1">
+          <label for="career_summary" class="block text-sm font-medium text-gray-300">Career Summary</label>
+          <textarea id="career_summary" name="career_summary" rows="4"
                   class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">{{.profile.CareerSummary}}</textarea>
         </div>
-        
-        <div>
-          <label for="skills" class="block text-sm font-medium text-gray-300 mb-1">Skills (comma separated)</label>
-          <textarea id="skills" name="skills" rows="2" 
+
+        <div class="space-y-1">
+          <label for="skills" class="block text-sm font-medium text-gray-300">Skills (comma separated)</label>
+          <textarea id="skills" name="skills" rows="2"
                   class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">{{range $index, $skill := .profile.Skills}}{{if $index}}, {{end}}{{$skill}}{{end}}</textarea>
         </div>
         
         <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-slate-700">
-          <button type="submit" class="px-6 py-2.5 relative overflow-hidden rounded-lg">
-            <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-80 hover:opacity-100 transition-opacity duration-300"></div>
-            <span class="relative z-10 font-semibold text-white flex items-center justify-center">
+          <button type="submit" class="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors duration-300 flex items-center justify-center">
               <span class="htmx-indicator mr-2">
                 <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -76,7 +74,6 @@
                 </svg>
               </span>
               Save Personal Information
-            </span>
           </button>
         </div>
       </form>
@@ -87,30 +84,28 @@
       <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Online Presence</h3>
       
       <form class="space-y-6" hx-post="/settings/profile/online" hx-target="#form-alert-container" hx-swap="innerHTML">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label for="linkedin_profile" class="block text-sm font-medium text-gray-300 mb-1">LinkedIn Profile</label>
-            <input type="url" id="linkedin_profile" name="linkedin_profile" value="{{.profile.LinkedInProfile}}" 
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div class="space-y-1">
+            <label for="linkedin_profile" class="block text-sm font-medium text-gray-300">LinkedIn Profile</label>
+            <input type="url" id="linkedin_profile" name="linkedin_profile" value="{{.profile.LinkedInProfile}}"
                   class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
           </div>
-          
-          <div>
-            <label for="github_profile" class="block text-sm font-medium text-gray-300 mb-1">GitHub Profile</label>
-            <input type="url" id="github_profile" name="github_profile" value="{{.profile.GitHubProfile}}" 
+
+          <div class="space-y-1">
+            <label for="github_profile" class="block text-sm font-medium text-gray-300">GitHub Profile</label>
+            <input type="url" id="github_profile" name="github_profile" value="{{.profile.GitHubProfile}}"
                   class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
           </div>
-          
-          <div>
-            <label for="website" class="block text-sm font-medium text-gray-300 mb-1">Personal Website</label>
-            <input type="url" id="website" name="website" value="{{.profile.Website}}" 
+
+          <div class="space-y-1 sm:col-span-2">
+            <label for="website" class="block text-sm font-medium text-gray-300">Personal Website</label>
+            <input type="url" id="website" name="website" value="{{.profile.Website}}"
                   class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
           </div>
         </div>
         
         <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-slate-700">
-          <button type="submit" class="px-6 py-2.5 relative overflow-hidden rounded-lg">
-            <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-80 hover:opacity-100 transition-opacity duration-300"></div>
-            <span class="relative z-10 font-semibold text-white flex items-center justify-center">
+          <button type="submit" class="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors duration-300 flex items-center justify-center">
               <span class="htmx-indicator mr-2">
                 <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -118,7 +113,6 @@
                 </svg>
               </span>
               Save Online Profiles
-            </span>
           </button>
         </div>
       </form>
@@ -285,43 +279,43 @@
           Position Details
         </h2>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
           <!-- Job Title -->
-          <div>
-            <label for="title" class="block text-sm font-medium text-gray-300 mb-1">Job Title *</label>
+          <div class="space-y-1">
+            <label for="title" class="block text-sm font-medium text-gray-300">Job Title *</label>
             <input type="text" id="title" name="title" required
                   class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
           </div>
-          
+
           <!-- Company -->
-          <div>
-            <label for="company" class="block text-sm font-medium text-gray-300 mb-1">Company *</label>
+          <div class="space-y-1">
+            <label for="company" class="block text-sm font-medium text-gray-300">Company *</label>
             <input type="text" id="company" name="company" required
                   class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
           </div>
         </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           <!-- Location -->
-          <div>
-            <label for="location" class="block text-sm font-medium text-gray-300 mb-1">Location</label>
+          <div class="space-y-1">
+            <label for="location" class="block text-sm font-medium text-gray-300">Location</label>
             <input type="text" id="location" name="location"
-                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" 
+                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                   placeholder="e.g., Remote, San Francisco, CA">
           </div>
-          
+
           <!-- Dates -->
-          <div>
-            <label for="start_date" class="block text-sm font-medium text-gray-300 mb-1">Start Date *</label>
+          <div class="space-y-1">
+            <label for="start_date" class="block text-sm font-medium text-gray-300">Start Date *</label>
             <input type="month" id="start_date" name="start_date" required
                   class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
           </div>
-          
-          <div>
-            <label for="end_date" class="block text-sm font-medium text-gray-300 mb-1">End Date</label>
+
+          <div class="space-y-1">
+            <label for="end_date" class="block text-sm font-medium text-gray-300">End Date</label>
             <input type="month" id="end_date" name="end_date"
                   class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
-            <div class="mt-1">
+            <div class="mt-2">
               <label class="inline-flex items-center text-sm text-gray-300">
                 <input type="checkbox" name="current" id="current_role" class="rounded border-gray-400 text-primary focus:ring-primary bg-slate-600" onchange="document.getElementById('end_date').disabled = this.checked">
                 <span class="ml-2">I currently work here</span>
@@ -365,7 +359,7 @@
         </div>
         
         <div class="mt-4">
-          <label for="description" class="block text-sm font-medium text-gray-300 mb-1">Additional Notes</label>
+          <label for="description" class="block text-sm font-medium text-gray-300 mb-2">Additional Notes</label>
           <textarea id="description" name="description" rows="3"
                   class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                   placeholder="Any additional details about your role..."></textarea>
@@ -379,9 +373,7 @@
                 onclick="closeModal()">
             Cancel
           </button>
-          <button type="submit" class="px-6 py-2.5 relative overflow-hidden rounded-lg">
-            <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-80 hover:opacity-100 transition-opacity duration-300"></div>
-            <span class="relative z-10 font-semibold text-white flex items-center justify-center">
+          <button type="submit" class="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors duration-300 flex items-center justify-center">
               <span class="htmx-indicator inline-block mr-2">
                 <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -389,7 +381,6 @@
                 </svg>
               </span>
               Save Experience
-            </span>
           </button>
         </div>
       </div>
@@ -452,26 +443,26 @@
 <!-- Template for the award form - this will be inlined and not loaded remotely -->
 <template id="award-form-template">
   <form class="space-y-8" hx-post="/settings/profile/award" hx-target="#award-list" hx-swap="outerHTML">
-    <div>
-      <label for="title" class="block text-sm font-medium text-gray-300 mb-1">Award Title *</label>
+    <div class="space-y-1">
+      <label for="title" class="block text-sm font-medium text-gray-300">Award Title *</label>
       <input type="text" id="title" name="title" required
               class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
     </div>
 
-    <div>
-      <label for="issuer" class="block text-sm font-medium text-gray-300 mb-1">Issuing Organization *</label>
+    <div class="space-y-1">
+      <label for="issuer" class="block text-sm font-medium text-gray-300">Issuing Organization *</label>
       <input type="text" id="issuer" name="issuer" required
               class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
     </div>
 
-    <div>
-      <label for="issue_date" class="block text-sm font-medium text-gray-300 mb-1">Date Received *</label>
+    <div class="space-y-1">
+      <label for="issue_date" class="block text-sm font-medium text-gray-300">Date Received *</label>
       <input type="month" id="issue_date" name="issue_date" required
               class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
     </div>
 
-    <div>
-      <label for="description" class="block text-sm font-medium text-gray-300 mb-1">Description</label>
+    <div class="space-y-1">
+      <label for="description" class="block text-sm font-medium text-gray-300">Description</label>
       <textarea id="description" name="description" rows="3"
                 class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"></textarea>
       <p class="mt-1 text-xs text-gray-400">Briefly describe what this award recognizes</p>
@@ -482,9 +473,7 @@
               onclick="closeModal()">
         Cancel
       </button>
-      <button type="submit" class="px-6 py-2.5 relative overflow-hidden rounded-lg">
-        <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-80 hover:opacity-100 transition-opacity duration-300"></div>
-        <span class="relative z-10 font-semibold text-white flex items-center justify-center">
+      <button type="submit" class="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors duration-300 flex items-center justify-center">
           <span class="htmx-indicator inline-block mr-2">
             <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -492,7 +481,6 @@
             </svg>
           </span>
           Add Award
-        </span>
       </button>
     </div>
   </form>
@@ -501,36 +489,36 @@
 <!-- Template for the education form -->
 <template id="education-form-template">
   <form class="space-y-8" hx-post="/settings/profile/education" hx-target="#education-list" hx-swap="outerHTML">
-    <div>
-      <label for="institution" class="block text-sm font-medium text-gray-300 mb-1">Institution *</label>
+    <div class="space-y-1">
+      <label for="institution" class="block text-sm font-medium text-gray-300">Institution *</label>
       <input type="text" id="institution" name="institution" required
               class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
     </div>
 
-    <div>
-      <label for="degree" class="block text-sm font-medium text-gray-300 mb-1">Degree *</label>
+    <div class="space-y-1">
+      <label for="degree" class="block text-sm font-medium text-gray-300">Degree *</label>
       <input type="text" id="degree" name="degree" required
               class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
     </div>
 
-    <div>
-      <label for="field_of_study" class="block text-sm font-medium text-gray-300 mb-1">Field of Study</label>
+    <div class="space-y-1">
+      <label for="field_of_study" class="block text-sm font-medium text-gray-300">Field of Study</label>
       <input type="text" id="field_of_study" name="field_of_study"
               class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
     </div>
 
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <label for="start_date" class="block text-sm font-medium text-gray-300 mb-1">Start Date *</label>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div class="space-y-1">
+        <label for="start_date" class="block text-sm font-medium text-gray-300">Start Date *</label>
         <input type="month" id="start_date" name="start_date" required
                 class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
       </div>
 
-      <div>
-        <label for="end_date" class="block text-sm font-medium text-gray-300 mb-1">End Date</label>
+      <div class="space-y-1">
+        <label for="end_date" class="block text-sm font-medium text-gray-300">End Date</label>
         <input type="month" id="end_date" name="end_date"
                 class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
-        <div class="mt-1">
+        <div class="mt-2">
           <label class="inline-flex items-center text-sm text-gray-300">
             <input type="checkbox" name="current" class="rounded border-gray-400 text-primary focus:ring-primary bg-slate-600" onchange="document.getElementById('end_date').disabled = this.checked">
             <span class="ml-2">I'm currently studying here</span>
@@ -539,8 +527,8 @@
       </div>
     </div>
 
-    <div>
-      <label for="education_description" class="block text-sm font-medium text-gray-300 mb-1">Description</label>
+    <div class="space-y-1">
+      <label for="education_description" class="block text-sm font-medium text-gray-300">Description</label>
       <textarea id="education_description" name="description" rows="3"
                 class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"></textarea>
       <p class="mt-1 text-xs text-gray-400">Additional information about your studies, achievements, etc.</p>
@@ -551,9 +539,7 @@
               onclick="closeModal()">
         Cancel
       </button>
-      <button type="submit" class="px-6 py-2.5 relative overflow-hidden rounded-lg">
-        <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-80 hover:opacity-100 transition-opacity duration-300"></div>
-        <span class="relative z-10 font-semibold text-white flex items-center justify-center">
+      <button type="submit" class="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors duration-300 flex items-center justify-center">
           <span class="htmx-indicator inline-block mr-2">
             <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -561,7 +547,6 @@
             </svg>
           </span>
           Add Education
-        </span>
       </button>
     </div>
   </form>
@@ -570,30 +555,30 @@
 <!-- Template for the certification form -->
 <template id="certification-form-template">
   <form class="space-y-8" hx-post="/settings/profile/certification" hx-target="#certification-list" hx-swap="outerHTML">
-    <div>
-      <label for="certification_name" class="block text-sm font-medium text-gray-300 mb-1">Certification Name *</label>
+    <div class="space-y-1">
+      <label for="certification_name" class="block text-sm font-medium text-gray-300">Certification Name *</label>
       <input type="text" id="certification_name" name="name" required
               class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
     </div>
 
-    <div>
-      <label for="issuing_org" class="block text-sm font-medium text-gray-300 mb-1">Issuing Organization *</label>
+    <div class="space-y-1">
+      <label for="issuing_org" class="block text-sm font-medium text-gray-300">Issuing Organization *</label>
       <input type="text" id="issuing_org" name="issuing_org" required
               class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
     </div>
 
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <label for="cert_issue_date" class="block text-sm font-medium text-gray-300 mb-1">Issue Date *</label>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div class="space-y-1">
+        <label for="cert_issue_date" class="block text-sm font-medium text-gray-300">Issue Date *</label>
         <input type="month" id="cert_issue_date" name="issue_date" required
                 class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
       </div>
 
-      <div>
-        <label for="expiry_date" class="block text-sm font-medium text-gray-300 mb-1">Expiry Date</label>
+      <div class="space-y-1">
+        <label for="expiry_date" class="block text-sm font-medium text-gray-300">Expiry Date</label>
         <input type="month" id="expiry_date" name="expiry_date"
                 class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
-        <div class="mt-1">
+        <div class="mt-2">
           <label class="inline-flex items-center text-sm text-gray-300">
             <input type="checkbox" name="no_expiry" class="rounded border-gray-400 text-primary focus:ring-primary bg-slate-600" onchange="document.getElementById('expiry_date').disabled = this.checked">
             <span class="ml-2">This certification does not expire</span>
@@ -602,14 +587,14 @@
       </div>
     </div>
 
-    <div>
-      <label for="credential_id" class="block text-sm font-medium text-gray-300 mb-1">Credential ID</label>
+    <div class="space-y-1">
+      <label for="credential_id" class="block text-sm font-medium text-gray-300">Credential ID</label>
       <input type="text" id="credential_id" name="credential_id"
               class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
     </div>
 
-    <div>
-      <label for="credential_url" class="block text-sm font-medium text-gray-300 mb-1">Credential URL</label>
+    <div class="space-y-1">
+      <label for="credential_url" class="block text-sm font-medium text-gray-300">Credential URL</label>
       <input type="url" id="credential_url" name="credential_url"
               class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
       <p class="mt-1 text-xs text-gray-400">URL where this certification can be verified</p>
@@ -620,9 +605,7 @@
               onclick="closeModal()">
         Cancel
       </button>
-      <button type="submit" class="px-6 py-2.5 relative overflow-hidden rounded-lg">
-        <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-80 hover:opacity-100 transition-opacity duration-300"></div>
-        <span class="relative z-10 font-semibold text-white flex items-center justify-center">
+      <button type="submit" class="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors duration-300 flex items-center justify-center">
           <span class="htmx-indicator inline-block mr-2">
             <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -630,7 +613,6 @@
             </svg>
           </span>
           Add Certification
-        </span>
       </button>
     </div>
   </form>

@@ -78,7 +78,7 @@
       <option value="not interested" {{if eq .statusFilter "not interested"}}selected{{end}}>Not Interested</option>
     </select>
     <button
-      class="bg-primary text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-teal-700 transition-colors w-full sm:w-auto"
+      class="bg-primary text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-primary-dark transition-colors w-full sm:w-auto"
       hx-get="/jobs"
       hx-target="body"
     >
@@ -99,7 +99,7 @@
 
     {{if and .jobs (gt (len .jobs) 0)}}
       {{range .jobs}}
-      <div class="bg-slate-800 rounded-lg shadow-lg overflow-hidden">
+      <div class="bg-slate-800 rounded-lg shadow-lg overflow-hidden flex flex-col">
         <div class="px-4 md:px-6 py-4 md:py-5 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
             <h3 class="text-lg font-semibold text-white">{{.Title}}</h3>
@@ -109,7 +109,7 @@
             92% Match <!-- Keeping match percentage as dummy data -->
           </div>
         </div>
-        <div class="px-4 md:px-6 py-4">
+        <div class="px-4 md:px-6 py-4 flex-1 flex flex-col">
           <p class="text-gray-300 mb-4 text-sm md:text-base h-[60px] overflow-hidden">
             {{if gt (len .Description) 150}}
               {{slice .Description 0 150}}...
@@ -117,14 +117,24 @@
               {{.Description}}
             {{end}}
           </p>
-          <div class="flex flex-wrap gap-2 mb-4">
-            {{range .RequiredSkills}}
-              <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">{{.}}</span>
+          <div class="flex flex-wrap gap-2 mb-4 overflow-hidden">
+            {{if .RequiredSkills}}
+              <!-- Always display a maximum of 5 skills -->
+              {{range $index, $skill := .RequiredSkills}}
+                {{if lt $index 5}}
+                  <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">{{$skill}}</span>
+                {{end}}
+              {{end}}
+
+              <!-- Display "more" indicator if more than 5 skills exist -->
+              {{if gt (len .RequiredSkills) 5}}
+                <span class="px-2 py-1 bg-slate-600 rounded-md text-xs text-gray-300">+more</span>
+              {{end}}
             {{else}}
               <span class="text-gray-400 text-xs">No skills listed</span>
             {{end}}
           </div>
-          <div class="mt-2 border-t border-slate-700 pt-4">
+          <div class="mt-auto border-t border-slate-700 pt-4">
             <div class="flex flex-col sm:flex-row justify-between gap-4">
               <div class="w-full sm:w-auto">
                 <div>

@@ -15,7 +15,7 @@
         <div id="job-header-display">
           <div class="flex items-center">
             <h2 class="text-xl md:text-2xl font-semibold text-white mr-2">{{.job.Title}}</h2>
-            <button onclick="toggleJobHeaderEdit()" class="text-gray-400 hover:text-white">
+            <button onclick="toggleJobHeaderEdit()" class="text-gray-400 hover:text-white flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
               </svg>
@@ -57,7 +57,7 @@
           </div>
           <div class="flex gap-2">
             <button
-              class="px-3 py-1 bg-primary hover:bg-teal-700 text-white text-sm rounded-md"
+              class="px-3 py-1 bg-primary hover:bg-primary-dark text-white text-sm rounded-md"
               hx-post="/jobs/{{.jobID}}/basic"
               hx-headers='{"X-HTTP-Method-Override": "PUT"}'
               hx-include="#job-title-input, #job-company-input, #job-location-input"
@@ -103,8 +103,11 @@
           <div class="flex justify-between items-center mb-3">
             <h3 class="text-lg font-medium text-primary">Skills</h3>
             <button id="edit-skills-btn"
-              class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md"
+              class="px-3 py-1 bg-primary hover:bg-primary-dark text-white text-sm rounded-md flex items-center gap-2"
               onclick="toggleSkillsEdit()">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
               Edit Skills
             </button>
           </div>
@@ -133,7 +136,7 @@
             </div>
             <div class="flex gap-2">
               <button
-                class="px-3 py-1 bg-primary hover:bg-teal-700 text-white text-sm rounded-md"
+                class="px-3 py-1 bg-primary hover:bg-primary-dark text-white text-sm rounded-md"
                 hx-post="/jobs/{{.jobID}}/skills"
                 hx-headers='{"X-HTTP-Method-Override": "PUT"}'
                 hx-include="#skills-input"
@@ -212,7 +215,7 @@
           <div class="flex justify-between items-center mb-3">
             <h3 class="text-lg font-medium text-primary">Your Notes</h3>
             <button id="save-notes-btn"
-              class="px-3 py-1 bg-primary hover:bg-teal-700 text-white text-sm rounded-md hidden"
+              class="px-3 py-1 bg-primary hover:bg-primary-dark text-white text-sm rounded-md hidden"
               hx-post="/jobs/{{.jobID}}/notes"
               hx-headers='{"X-HTTP-Method-Override": "PUT"}'
               hx-include="#job-notes"
@@ -285,23 +288,23 @@
           </select>
           <div id="status-response"></div>
 
-          <button id="analyze-button" class="w-full mb-3 py-2.5 px-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <button id="analyze-button" class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
             Analyze Job Match
           </button>
 
-          <button class="w-full mb-3 py-2.5 px-4 bg-gradient-to-r from-primary to-teal-600 hover:from-primary hover:to-teal-700 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <button class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
             Generate Cover Letter
           </button>
 
           {{if .job.SourceURL}}
-          <a href="{{.job.SourceURL}}" target="_blank" class="w-full mb-3 py-2.5 px-4 bg-slate-600 hover:bg-slate-500 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <a href="{{.job.SourceURL}}" target="_blank" class="w-full mb-3 py-2.5 px-4 bg-slate-600 hover:bg-slate-500 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
             View Original Posting
@@ -310,10 +313,10 @@
 
           <button
             id="delete-job-btn"
-            class="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center"
+            class="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
             onclick="openDeleteModal()"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
             Delete Job
@@ -506,7 +509,10 @@
     const analyzeButton = document.getElementById('analyze-button');
     const aiAnalysis = document.getElementById('ai-analysis');
 
-    analyzeButton.addEventListener('click', function() {
+    // Add the gap class to the button for proper spacing
+analyzeButton.classList.add('gap-2');
+
+analyzeButton.addEventListener('click', function() {
       if (aiAnalysis.classList.contains('hidden')) {
         aiAnalysis.classList.remove('hidden');
 
@@ -517,20 +523,20 @@
 
         // Update button text
         analyzeButton.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
-          Hide Analysis
+          <span>Hide Analysis</span>
         `;
       } else {
         aiAnalysis.classList.add('hidden');
 
         // Update button text
         analyzeButton.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
-          Analyze Job Match
+          <span>Analyze Job Match</span>
         `;
       }
     });
