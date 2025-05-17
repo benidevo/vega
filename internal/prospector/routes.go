@@ -9,6 +9,7 @@ import (
 	"github.com/benidevo/prospector/internal/job"
 	"github.com/benidevo/prospector/internal/settings"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
 // SetupRoutes configures all application routes and middleware
@@ -52,6 +53,8 @@ func SetupRoutes(a *App) {
 func globalErrorHandler(c *gin.Context) {
 	defer func() {
 		if err := recover(); err != nil {
+			log.Error().Err(err.(error)).Msg("Recovered from panic")
+
 			c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
 				"title":       "Something Went Wrong",
 				"page":        "500",

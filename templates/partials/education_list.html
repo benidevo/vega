@@ -1,12 +1,12 @@
-{{if eq (len .education) 0}}
+{{if eq (len .profile.Education) 0}}
 <div class="bg-slate-700 bg-opacity-40 rounded-lg p-6 mb-6">
   <p class="text-gray-300 text-center">You haven't added any education yet.</p>
   <div class="flex justify-center mt-4">
-    <button type="button" 
+    <button type="button"
             class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
             data-modal-trigger
             data-modal-title="Add Education"
-            data-modal-url="/settings/profile/education/form">
+            data-modal-content-id="education-form-template">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
       </svg>
@@ -15,9 +15,8 @@
   </div>
 </div>
 {{else}}
-  {{range .education}}
+  {{range .profile.Education}}
     <div class="education-entry bg-slate-700 bg-opacity-40 rounded-lg p-4 mb-4">
-      <!-- Each education entry would be rendered here -->
       <div class="flex justify-between items-start">
         <div>
           <h4 class="text-lg font-medium text-white">{{.Degree}}</h4>
@@ -33,15 +32,17 @@
           <button class="text-gray-400 hover:text-primary"
                   data-modal-trigger
                   data-modal-title="Edit Education"
+                  data-modal-content-id="education-form-template"
                   data-modal-url="/settings/profile/education/{{.ID}}/edit">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
           </button>
-          <button class="text-gray-400 hover:text-red-500"
-                  hx-delete="/settings/profile/education/{{.ID}}"
-                  hx-confirm="Are you sure you want to delete this education entry?"
-                  hx-target="#education-list">
+          <button class="text-gray-400 hover:text-red-500 delete-education-btn"
+                  data-education-id="{{.ID}}"
+                  data-modal-trigger
+                  data-modal-title="Delete Education"
+                  data-modal-content-id="delete-education-modal-template">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
@@ -51,11 +52,11 @@
     </div>
   {{end}}
   <div class="flex justify-end mt-4">
-    <button type="button" 
+    <button type="button"
             class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
             data-modal-trigger
             data-modal-title="Add Education"
-            data-modal-url="/settings/profile/education/form">
+            data-modal-content-id="education-form-template">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
       </svg>

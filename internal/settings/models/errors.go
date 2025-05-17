@@ -10,13 +10,13 @@ var (
 	ErrInvalidSettingsType = errors.New("invalid settings type")
 	ErrFieldRequired       = errors.New("field is required")
 	ErrInvalidFieldParam   = errors.New("invalid field parameter")
-	ErrPasswordMismatch    = errors.New("passwords do not match")
-	ErrPasswordTooShort    = errors.New("password must be at least 8 characters")
 
 	// Repository errors
 	ErrSettingsNotFound       = errors.New("settings not found")
 	ErrFailedToGetSettings    = errors.New("failed to get settings")
 	ErrFailedToUpdateSettings = errors.New("failed to update settings")
+
+	ErrProfileNotFound = errors.New("profile not found")
 )
 
 // RepositoryError wraps a sentinel error with the underlying error details

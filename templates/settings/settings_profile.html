@@ -9,11 +9,11 @@
   <!-- Content container -->
   <div class="relative p-6 bg-slate-800 bg-opacity-70 backdrop-blur-xl rounded-xl shadow-2xl border border-white border-opacity-10">
     <h2 class="text-2xl font-bold mb-6 text-white">Profile Settings</h2>
-    
+
     <!-- Personal Information Section -->
     <div class="mb-10">
       <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Personal Information</h3>
-      
+
       <form class="space-y-6" hx-post="/settings/profile/personal" hx-target="#form-alert-container" hx-swap="innerHTML">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div class="space-y-1">
@@ -36,8 +36,26 @@
 
           <div class="space-y-1">
             <label for="industry" class="block text-sm font-medium text-gray-300">Industry</label>
-            <input type="text" id="industry" name="industry" value="{{.profile.Industry}}"
+            <select id="industry" name="industry"
                   class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+              <option value="">Select Industry</option>
+              <option value="Technology" {{if eq .profile.Industry.String "Technology"}}selected{{end}}>Technology</option>
+              <option value="Software Development" {{if eq .profile.Industry.String "Software Development"}}selected{{end}}>Software Development</option>
+              <option value="Information Technology" {{if eq .profile.Industry.String "Information Technology"}}selected{{end}}>Information Technology</option>
+              <option value="Data Science" {{if eq .profile.Industry.String "Data Science"}}selected{{end}}>Data Science</option>
+              <option value="Artificial Intelligence" {{if eq .profile.Industry.String "Artificial Intelligence"}}selected{{end}}>Artificial Intelligence</option>
+              <option value="Healthcare" {{if eq .profile.Industry.String "Healthcare"}}selected{{end}}>Healthcare</option>
+              <option value="Finance" {{if eq .profile.Industry.String "Finance"}}selected{{end}}>Finance</option>
+              <option value="Education" {{if eq .profile.Industry.String "Education"}}selected{{end}}>Education</option>
+              <option value="Marketing" {{if eq .profile.Industry.String "Marketing"}}selected{{end}}>Marketing</option>
+              <option value="Consulting" {{if eq .profile.Industry.String "Consulting"}}selected{{end}}>Consulting</option>
+              <option value="Legal" {{if eq .profile.Industry.String "Legal"}}selected{{end}}>Legal</option>
+              <option value="Government" {{if eq .profile.Industry.String "Government"}}selected{{end}}>Government</option>
+              <option value="Non-Profit" {{if eq .profile.Industry.String "Non-Profit"}}selected{{end}}>Non-Profit</option>
+              <option value="Retail" {{if eq .profile.Industry.String "Retail"}}selected{{end}}>Retail</option>
+              <option value="Manufacturing" {{if eq .profile.Industry.String "Manufacturing"}}selected{{end}}>Manufacturing</option>
+              <!-- Add more industry options here -->
+            </select>
           </div>
 
           <div class="space-y-1">
@@ -52,7 +70,7 @@
                   class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
           </div>
         </div>
-        
+
         <div class="space-y-1">
           <label for="career_summary" class="block text-sm font-medium text-gray-300">Career Summary</label>
           <textarea id="career_summary" name="career_summary" rows="4"
@@ -64,7 +82,7 @@
           <textarea id="skills" name="skills" rows="2"
                   class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">{{range $index, $skill := .profile.Skills}}{{if $index}}, {{end}}{{$skill}}{{end}}</textarea>
         </div>
-        
+
         <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-slate-700">
           <button type="submit" class="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors duration-300 flex items-center justify-center">
               <span class="htmx-indicator mr-2">
@@ -78,12 +96,12 @@
         </div>
       </form>
     </div>
-    
+
     <!-- Online Presence Section -->
     <div class="mb-10">
       <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Online Presence</h3>
-      
-      <form class="space-y-6" hx-post="/settings/profile/online" hx-target="#form-alert-container" hx-swap="innerHTML">
+
+      <form class="space-y-6" hx-post="/settings/profile/online" hx-target="#form-alert-container" hx-swap="innerHTML" hx-indicator=".htmx-indicator">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div class="space-y-1">
             <label for="linkedin_profile" class="block text-sm font-medium text-gray-300">LinkedIn Profile</label>
@@ -103,7 +121,7 @@
                   class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
           </div>
         </div>
-        
+
         <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-slate-700">
           <button type="submit" class="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors duration-300 flex items-center justify-center">
               <span class="htmx-indicator mr-2">
@@ -117,13 +135,13 @@
         </div>
       </form>
     </div>
-    
+
     <!-- Work Experience Section -->
     <div class="mb-10">
       <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Work Experience</h3>
-      
+
       <div id="work-experience-list">
-        {{if eq (len .experiences) 0}}
+        {{if eq (len .profile.WorkExperience) 0}}
         <div class="bg-slate-700 bg-opacity-40 rounded-lg p-6 mb-6">
           <p class="text-gray-300 text-center">You haven't added any work experience yet.</p>
           <div class="flex justify-center mt-4">
@@ -131,7 +149,8 @@
                     class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                     data-modal-trigger
                     data-modal-title="Add Work Experience"
-                    data-modal-content-id="experience-form-template">
+                    data-modal-content-id="experience-form-template"
+                    data-action="add">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
@@ -140,33 +159,127 @@
           </div>
         </div>
         {{else}}
-          {{range .experiences}}
-            <div class="experience-entry bg-slate-700 bg-opacity-40 rounded-lg p-4 mb-4">
+          {{range .profile.WorkExperience}}
+            <div class="experience-entry bg-slate-700 bg-opacity-40 rounded-lg p-4 mb-4"
+                 data-id="{{.ID}}"
+                 data-title="{{.Title}}"
+                 data-company="{{.Company}}"
+                 data-location="{{.Location}}"
+                 data-start-date="{{.StartDate.Format "2006-01"}}"
+                 data-end-date="{{if .EndDate}}{{.EndDate.Format "2006-01"}}{{end}}"
+                 data-description="{{.Description}}"
+                 data-current="{{.Current}}">
               <!-- Each experience entry would be rendered here -->
               <div class="flex justify-between items-start">
                 <div>
                   <h4 class="text-lg font-medium text-white">{{.Title}}</h4>
                   <p class="text-gray-300">{{.Company}}{{if .Location}} · {{.Location}}{{end}}</p>
                   <p class="text-gray-400 text-sm">
-                    {{.StartDate.Format "Jan 2006"}} – {{if .Current}}Present{{else}}{{.EndDate.Format "Jan 2006"}}{{end}}
+                    {{.StartDate.Format "Jan 2006"}} – {{if .Current}}Present{{else}}{{if .EndDate}}{{.EndDate.Format "Jan 2006"}}{{else}}Present{{end}}{{end}}
                   </p>
-                  {{if .Description}}
-                    <p class="text-gray-300 mt-2">{{.Description}}</p>
-                  {{end}}
                 </div>
                 <div class="flex space-x-2">
-                  <button class="text-gray-400 hover:text-primary"
+                  <button class="text-gray-400 hover:text-primary edit-experience-btn"
                           data-modal-trigger
                           data-modal-title="Edit Work Experience"
-                          data-modal-url="/settings/profile/experience/{{.ID}}/edit">
+                          data-modal-content-id="experience-form-template"
+                          data-experience-id="{{.ID}}"
+                          data-title="{{.Title}}"
+                          data-company="{{.Company}}"
+                          data-location="{{.Location}}"
+                          data-start-date="{{.StartDate.Format "2006-01"}}"
+                          data-end-date="{{if .EndDate}}{{.EndDate.Format "2006-01"}}{{end}}"
+                          data-description="{{.Description}}"
+                          data-current="{{.Current}}">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                   </button>
-                  <button class="text-gray-400 hover:text-red-500"
-                          hx-delete="/settings/profile/experience/{{.ID}}"
-                          hx-confirm="Are you sure you want to delete this experience?"
-                          hx-target="#work-experience-list">
+                  <button class="text-gray-400 hover:text-red-500 delete-experience-btn"
+                          data-modal-trigger
+                          data-modal-title="Delete Work Experience"
+                          data-modal-content-id="delete-experience-modal-template"
+                          data-experience-id="{{.ID}}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          {{end}}
+          <div class="flex justify-end mt-4">
+            <button type="button"
+                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                    data-modal-trigger
+                    data-modal-title="Add Work Experience"
+                    data-modal-content-id="experience-form-template"
+                    data-action="add">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add Another Experience
+            </button>
+          </div>
+        {{end}}
+      </div>
+    </div>
+
+    <!-- Education Section -->
+    <div class="mb-10">
+      <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Education</h3>
+
+      <div id="education-list">
+        {{if eq (len .profile.Education) 0}}
+        <div class="bg-slate-700 bg-opacity-40 rounded-lg p-6 mb-6">
+          <p class="text-gray-300 text-center">You haven't added any education yet.</p>
+          <div class="flex justify-center mt-4">
+            <button type="button"
+                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                    data-modal-trigger
+                    data-modal-title="Add Education"
+                    data-modal-url="/settings/profile/education/form">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add Education
+            </button>
+          </div>
+        </div>
+        {{else}}
+          {{range .profile.Education}}
+            <div class="education-entry bg-slate-700 bg-opacity-40 rounded-lg p-4 mb-4">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="text-lg font-medium text-white">{{.Degree}}</h4>
+                  <p class="text-gray-300">{{.Institution}}{{if .FieldOfStudy}} · {{.FieldOfStudy}}{{end}}</p>
+                  <p class="text-gray-400 text-sm">
+                    {{.StartDate.Format "Jan 2006"}} – {{if .EndDate}}{{.EndDate.Format "Jan 2006"}}{{else}}Present{{end}}
+                  </p>
+
+                </div>
+                <div class="flex space-x-2">
+                  <button class="text-gray-400 hover:text-primary edit-education-btn"
+                          data-modal-trigger
+                          data-modal-title="Edit Education"
+                          data-modal-content-id="education-form-template"
+                          data-education-id="{{.ID}}"
+                          data-institution="{{.Institution}}"
+                          data-degree="{{.Degree}}"
+                          data-field-of-study="{{.FieldOfStudy}}"
+                          data-start-date="{{.StartDate.Format "2006-01"}}"
+                          data-end-date="{{if .EndDate}}{{.EndDate.Format "2006-01"}}{{end}}"
+                          data-description="{{.Description}}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button class="text-gray-400 hover:text-red-500 delete-education-btn"
+                          data-education-id="{{.ID}}"
+                          data-modal-trigger
+                          data-modal-title="Delete Education"
+                          data-modal-content-id="delete-education-modal-template">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
@@ -179,46 +292,24 @@
             <button type="button"
                     class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                     data-modal-trigger
-                    data-modal-title="Add Work Experience"
-                    data-modal-content-id="experience-form-template">
+                    data-modal-title="Add Education"
+                    data-modal-url="/settings/profile/education/form">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
-              Add Another Experience
+              Add Another Education
             </button>
           </div>
         {{end}}
       </div>
     </div>
-    
-    <!-- Education Section -->
-    <div class="mb-10">
-      <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Education</h3>
 
-      <div id="education-list">
-        <div class="bg-slate-700 bg-opacity-40 rounded-lg p-6 mb-6">
-          <p class="text-gray-300 text-center">You haven't added any education yet.</p>
-          <div class="flex justify-center mt-4">
-            <button type="button"
-                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                    data-modal-trigger
-                    data-modal-title="Add Education"
-                    data-modal-content-id="education-form-template">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Add Education
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-    
     <!-- Certifications Section -->
     <div class="mb-10">
       <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Certifications</h3>
 
       <div id="certification-list">
+        {{if eq (len .profile.Certifications) 0}}
         <div class="bg-slate-700 bg-opacity-40 rounded-lg p-6 mb-6">
           <p class="text-gray-300 text-center">You haven't added any certifications yet.</p>
           <div class="flex justify-center mt-4">
@@ -226,7 +317,7 @@
                     class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                     data-modal-trigger
                     data-modal-title="Add Certification"
-                    data-modal-content-id="certification-form-template">
+                    data-modal-url="/settings/profile/certification/form">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
@@ -234,41 +325,356 @@
             </button>
           </div>
         </div>
-      </div>
-    </div>
-    
-    <!-- Awards Section -->
-    <div>
-      <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Awards & Recognition</h3>
-
-      <div id="award-list">
-        <div class="bg-slate-700 bg-opacity-40 rounded-lg p-6 mb-6">
-          <p class="text-gray-300 text-center">You haven't added any awards or recognition yet.</p>
-          <div class="flex justify-center mt-4">
+        {{else}}
+          {{range .profile.Certifications}}
+            <div class="certification-entry bg-slate-700 bg-opacity-40 rounded-lg p-4 mb-4">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="text-lg font-medium text-white">{{.Name}}</h4>
+                  <p class="text-gray-300">{{.IssuingOrg}}</p>
+                  <p class="text-gray-400 text-sm">
+                    Issued: {{.IssueDate.Format "Jan 2006"}}{{if .ExpiryDate}} · Expires: {{.ExpiryDate.Format "Jan 2006"}}{{end}}
+                  </p>
+                  {{if .CredentialID}}
+                    <p class="text-gray-300 mt-2">Credential ID: {{.CredentialID}}</p>
+                  {{end}}
+                  {{if .CredentialURL}}
+                    <p class="text-gray-300">
+                      <a href="{{.CredentialURL}}" target="_blank" class="text-primary hover:text-primary-light">View Credential</a>
+                    </p>
+                  {{end}}
+                </div>
+                <div class="flex space-x-2">
+                  <button class="text-gray-400 hover:text-primary edit-certification-btn"
+                          data-modal-trigger
+                          data-modal-title="Edit Certification"
+                          data-modal-content-id="certification-form-template"
+                          data-certification-id="{{.ID}}"
+                          data-name="{{.Name}}"
+                          data-issuing-org="{{.IssuingOrg}}"
+                          data-issue-date="{{.IssueDate.Format "2006-01"}}"
+                          data-expiry-date="{{if .ExpiryDate}}{{.ExpiryDate.Format "2006-01"}}{{end}}"
+                          data-credential-id="{{.CredentialID}}"
+                          data-credential-url="{{.CredentialURL}}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button class="text-gray-400 hover:text-red-500 delete-certification-btn"
+                          data-certification-id="{{.ID}}"
+                          data-modal-trigger
+                          data-modal-title="Delete Certification"
+                          data-modal-content-id="delete-certification-modal-template">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          {{end}}
+          <div class="flex justify-end mt-4">
             <button type="button"
                     class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                     data-modal-trigger
-                    data-modal-title="Add Award"
-                    data-modal-content-id="award-form-template">
+                    data-modal-title="Add Certification"
+                    data-modal-url="/settings/profile/certification/form">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
-              Add Award
+              Add Another Certification
             </button>
           </div>
-        </div>
+        {{end}}
       </div>
     </div>
+
   </div>
 </div>
 
 <!-- Include modal functionality -->
 {{template "modal" .}}
 
+<!-- Include auto-dismiss alerts script -->
+{{template "partials/auto-dismiss-alerts.html" .}}
+
+
+<!-- Form editing scripts -->
+<script>
+  // Add click event listeners for experience, education, and certification buttons
+  document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('click', function(e) {
+      // Get the clicked button or its closest button ancestor
+      const btn = e.target.closest('button');
+
+      if (btn) {
+        // Check if it's an add button
+        if (btn.getAttribute('data-action') === 'add') {
+          // Set up a one-time listener for when the modal is opened to reset the form
+          document.addEventListener('htmx:afterSwap', function resetAddForm() {
+            resetExperienceForm();
+            // Remove this one-time listener
+            document.removeEventListener('htmx:afterSwap', resetAddForm);
+          }, { once: true });
+        }
+        // Check if it's an edit experience button
+        else if (btn.classList.contains('edit-experience-btn')) {
+          const experienceId = btn.getAttribute('data-experience-id');
+
+          // Delay the prefill slightly to ensure the modal has rendered
+          setTimeout(function() {
+            prefillExperienceForm(experienceId);
+          }, 100);
+        }
+        // Check if it's an edit education button
+        else if (btn.classList.contains('edit-education-btn')) {
+          const educationId = btn.getAttribute('data-education-id');
+
+          // Delay the prefill slightly to ensure the modal has rendered
+          setTimeout(function() {
+            prefillEducationForm(educationId);
+          }, 100);
+        }
+        // Check if it's an edit certification button
+        else if (btn.classList.contains('edit-certification-btn')) {
+          const certificationId = btn.getAttribute('data-certification-id');
+
+          // Delay the prefill slightly to ensure the modal has rendered
+          setTimeout(function() {
+            prefillCertificationForm(certificationId);
+          }, 100);
+        }
+      }
+    });
+  });
+
+  // Function to reset the experience form for adding a new experience
+  function resetExperienceForm() {
+    const form = document.getElementById('experience-form');
+    if (form) {
+      // Reset the form to clear all fields
+      form.reset();
+
+      // Remove any ID input field that might have been added for editing
+      const idInput = form.querySelector('input[name="id"]');
+      if (idInput) {
+        idInput.remove();
+      }
+
+      // Reset the form action to the create URL
+      form.action = '/settings/profile/experience';
+
+      // Clear the form fields
+      form.reset();
+
+      // Clear the description field explicitly (in case reset doesn't work for all browsers)
+      const descriptionField = form.querySelector('#description');
+      if (descriptionField) {
+        descriptionField.value = '';
+      }
+
+      // Update the submit button text to "Add" instead of "Update"
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        // Find the text node and update it
+        for (let i = 0; i < submitBtn.childNodes.length; i++) {
+          if (submitBtn.childNodes[i].nodeType === 3) { // Text node
+            submitBtn.childNodes[i].nodeValue = 'Add Experience';
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // Function to prefill the experience form with data from the DOM
+  function prefillExperienceForm(experienceId) {
+    // Find the edit button with the data
+    const btn = document.querySelector(`.edit-experience-btn[data-experience-id="${experienceId}"]`);
+
+    if (btn) {
+      const form = document.getElementById('experience-form');
+
+      if (form) {
+        // Reset the form first
+        form.reset();
+
+        // Add the experience ID as a hidden field if not already present
+        let idInput = form.querySelector('input[name="id"]');
+        if (!idInput) {
+          idInput = document.createElement('input');
+          idInput.type = 'hidden';
+          idInput.name = 'id';
+          form.appendChild(idInput);
+        }
+        idInput.value = experienceId;
+
+        // Fill in the form fields from the data attributes
+        // Use querySelector on the form to ensure we're getting the right elements within the modal
+        const titleInput = form.querySelector('#title');
+        const companyInput = form.querySelector('#company');
+        const locationInput = form.querySelector('#location');
+        const startDateInput = form.querySelector('#start_date');
+        const endDateInput = form.querySelector('#end_date');
+        const descriptionInput = form.querySelector('#description');
+        const currentCheckbox = form.querySelector('#current_role');
+
+        if (titleInput) titleInput.value = btn.getAttribute('data-title') || '';
+        if (companyInput) companyInput.value = btn.getAttribute('data-company') || '';
+        if (locationInput) locationInput.value = btn.getAttribute('data-location') || '';
+        if (startDateInput) startDateInput.value = btn.getAttribute('data-start-date') || '';
+        if (endDateInput) endDateInput.value = btn.getAttribute('data-end-date') || '';
+
+        // Get the description
+        let description = btn.getAttribute('data-description') || '';
+        if (descriptionInput) descriptionInput.value = description;
+
+        // Handle current checkbox
+        const current = btn.getAttribute('data-current') === 'true';
+        if (currentCheckbox) {
+          currentCheckbox.checked = current;
+          if (endDateInput) {
+            endDateInput.disabled = current;
+          }
+        }
+
+        // Update the form's action URL to include the ID for editing
+        form.action = `/settings/profile/experience/${experienceId}`;
+
+        // Change the submit button text to "Update" instead of "Add"
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          // Create a text node with the new label
+          const textNodes = Array.from(submitBtn.childNodes)
+            .filter(node => node.nodeType === 3); // Get only text nodes
+
+          if (textNodes.length > 0) {
+            textNodes[textNodes.length - 1].nodeValue = 'Update Experience';
+          } else {
+            // If no text nodes found, try to find the button text span
+            const buttonTextSpan = submitBtn.querySelector('span:not(.htmx-indicator)');
+            if (buttonTextSpan) {
+              buttonTextSpan.textContent = 'Update Experience';
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Note: These checks have been moved inside the click handler above
+
+  // Function to prefill the education form
+  function prefillEducationForm(educationId) {
+    const btn = document.querySelector(`.edit-education-btn[data-education-id="${educationId}"]`);
+
+    if (btn) {
+      const form = document.querySelector('form[action^="/settings/profile/education"]');
+
+      if (form) {
+        // Reset the form first
+        form.reset();
+
+        // Add the education ID as a hidden field if not already present
+        let idInput = form.querySelector('input[name="id"]');
+        if (!idInput) {
+          idInput = document.createElement('input');
+          idInput.type = 'hidden';
+          idInput.name = 'id';
+          form.appendChild(idInput);
+        }
+        idInput.value = educationId;
+
+        // Fill in the form fields from the data attributes
+        const institutionInput = form.querySelector('#institution');
+        const degreeInput = form.querySelector('#degree');
+        const fieldOfStudyInput = form.querySelector('#field_of_study');
+        const startDateInput = form.querySelector('#start_date');
+        const endDateInput = form.querySelector('#end_date');
+        const descriptionInput = form.querySelector('#description');
+
+        if (institutionInput) institutionInput.value = btn.getAttribute('data-institution') || '';
+        if (degreeInput) degreeInput.value = btn.getAttribute('data-degree') || '';
+        if (fieldOfStudyInput) fieldOfStudyInput.value = btn.getAttribute('data-field-of-study') || '';
+        if (startDateInput) startDateInput.value = btn.getAttribute('data-start-date') || '';
+        if (endDateInput) endDateInput.value = btn.getAttribute('data-end-date') || '';
+        if (descriptionInput) descriptionInput.value = btn.getAttribute('data-description') || '';
+
+        // Update the form's action URL to include the ID for editing
+        form.action = `/settings/profile/education/${educationId}`;
+
+        // Change the submit button text to "Update" instead of "Add"
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          const textNodes = Array.from(submitBtn.childNodes)
+            .filter(node => node.nodeType === 3); // Get only text nodes
+
+          if (textNodes.length > 0) {
+            textNodes[textNodes.length - 1].nodeValue = 'Update Education';
+          }
+        }
+      }
+    }
+  }
+
+  // Function to prefill the certification form
+  function prefillCertificationForm(certificationId) {
+    const btn = document.querySelector(`.edit-certification-btn[data-certification-id="${certificationId}"]`);
+
+    if (btn) {
+      const form = document.querySelector('form[action^="/settings/profile/certification"]');
+
+      if (form) {
+        // Reset the form first
+        form.reset();
+
+        // Add the certification ID as a hidden field if not already present
+        let idInput = form.querySelector('input[name="id"]');
+        if (!idInput) {
+          idInput = document.createElement('input');
+          idInput.type = 'hidden';
+          idInput.name = 'id';
+          form.appendChild(idInput);
+        }
+        idInput.value = certificationId;
+
+        // Fill in the form fields from the data attributes
+        const nameInput = form.querySelector('#name');
+        const issuingOrgInput = form.querySelector('#issuing_org');
+        const issueDateInput = form.querySelector('#issue_date');
+        const expiryDateInput = form.querySelector('#expiry_date');
+        const credentialIdInput = form.querySelector('#credential_id');
+        const credentialUrlInput = form.querySelector('#credential_url');
+
+        if (nameInput) nameInput.value = btn.getAttribute('data-name') || '';
+        if (issuingOrgInput) issuingOrgInput.value = btn.getAttribute('data-issuing-org') || '';
+        if (issueDateInput) issueDateInput.value = btn.getAttribute('data-issue-date') || '';
+        if (expiryDateInput) expiryDateInput.value = btn.getAttribute('data-expiry-date') || '';
+        if (credentialIdInput) credentialIdInput.value = btn.getAttribute('data-credential-id') || '';
+        if (credentialUrlInput) credentialUrlInput.value = btn.getAttribute('data-credential-url') || '';
+
+        // Update the form's action URL to include the ID for editing
+        form.action = `/settings/profile/certification/${certificationId}`;
+
+        // Change the submit button text to "Update" instead of "Add"
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          const textNodes = Array.from(submitBtn.childNodes)
+            .filter(node => node.nodeType === 3); // Get only text nodes
+
+          if (textNodes.length > 0) {
+            textNodes[textNodes.length - 1].nodeValue = 'Update Certification';
+          }
+        }
+      }
+    }
+  }
+</script>
+
 <!-- Inline form templates -->
 <!-- Template for the work experience form -->
 <template id="experience-form-template">
-  <form class="space-y-8" hx-post="/settings/profile/experience" hx-target="#work-experience-list" hx-swap="outerHTML">
+  <form id="experience-form" class="space-y-8" action="/settings/profile/experience" method="post">
     <div>
       <!-- Job Details Section -->
       <div class="mb-6">
@@ -278,7 +684,7 @@
           </svg>
           Position Details
         </h2>
-        
+
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
           <!-- Job Title -->
           <div class="space-y-1">
@@ -324,7 +730,7 @@
           </div>
         </div>
       </div>
-      
+
       <!-- Responsibilities Section -->
       <div class="mb-6">
         <h2 class="text-lg font-medium text-white mb-5 flex items-center">
@@ -333,39 +739,13 @@
           </svg>
           Responsibilities & Achievements
         </h2>
-        
-        <div id="responsibilities-container">
-          <div class="space-y-2 mb-4">
-            <input type="hidden" id="responsibility-count" name="responsibility-count" value="1">
-            
-            <div id="responsibility-item-1" class="flex items-start gap-2">
-              <div class="flex-grow">
-                <input type="text" name="responsibility-1" class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" placeholder="Add a responsibility or achievement...">
-              </div>
-              <button type="button" onclick="removeResponsibility(1)" class="mt-2 text-gray-400 hover:text-red-500 focus:outline-none">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-            </div>
-          </div>
-          
-          <button type="button" onclick="addResponsibility()" class="text-sm font-medium text-primary hover:text-primary-dark focus:outline-none flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Add Another Point
-          </button>
-        </div>
-        
-        <div class="mt-4">
-          <label for="description" class="block text-sm font-medium text-gray-300 mb-2">Additional Notes</label>
-          <textarea id="description" name="description" rows="3"
-                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                  placeholder="Any additional details about your role..."></textarea>
+
+        <div>
+          <p class="text-xs text-gray-400 mb-2">Add your key responsibilities and achievements one per line. Use bullet points (•) for better formatting.</p>
+          <textarea id="description" name="description" rows="5" class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="• Managed team of 5 developers&#10;• Increased revenue by 20%&#10;• Implemented CI/CD pipeline"></textarea>
         </div>
       </div>
-      
+
       <!-- Form Controls -->
       <div class="pt-6 border-t border-slate-700">
         <div class="flex flex-col sm:flex-row justify-end gap-4">
@@ -382,57 +762,159 @@
               </span>
               Save Experience
           </button>
+          <script>
+            // We'll just use standard form submissions for consistency
+                    .then(response => {
+                      if (response.ok) {
+                        if (isEditMode) {
+                          // If we're editing, update the existing experience in the DOM
+                          const experienceId = form.action.split('/').pop();
+                          const experienceEntry = document.querySelector(`.experience-entry[data-id="${experienceId}"]`);
+
+                          if (experienceEntry) {
+                            // Get form values
+                            const title = formData.get('title');
+                            const company = formData.get('company');
+                            const location = formData.get('location');
+                            const startDate = formData.get('start_date');
+                            const endDate = formData.get('end_date');
+                            const description = formData.get('description');
+                            const current = formData.get('current') === 'on';
+
+                            // Update data attributes
+                            experienceEntry.setAttribute('data-title', title);
+                            experienceEntry.setAttribute('data-company', company);
+                            experienceEntry.setAttribute('data-location', location || '');
+                            experienceEntry.setAttribute('data-start-date', startDate);
+                            experienceEntry.setAttribute('data-end-date', current ? '' : (endDate || ''));
+                            experienceEntry.setAttribute('data-description', description || '');
+                            experienceEntry.setAttribute('data-current', current.toString());
+
+                            // Update visible content
+                            const titleEl = experienceEntry.querySelector('h4');
+                            if (titleEl) titleEl.textContent = title;
+
+                            const companyEl = experienceEntry.querySelector('p:nth-of-type(1)');
+                            if (companyEl) {
+                              companyEl.textContent = company;
+                              if (location) companyEl.textContent += ` · ${location}`;
+                            }
+
+                            const dateEl = experienceEntry.querySelector('p:nth-of-type(2)');
+                            if (dateEl) {
+                              // Convert YYYY-MM to Mon YYYY format
+                              const formatDate = (dateStr) => {
+                                if (!dateStr) return '';
+                                const date = new Date(dateStr);
+                                const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                                return `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+                              };
+
+                              const startDateFormatted = formatDate(startDate);
+                              const endDateText = current ? 'Present' : formatDate(endDate);
+                              dateEl.textContent = `${startDateFormatted} – ${endDateText}`;
+                            }
+
+                            const descEl = experienceEntry.querySelector('p:nth-of-type(3)');
+                            if (descEl && description) {
+                              // Format the description with line breaks for readability
+                              if (description.includes('\n')) {
+                                // Create a formatted div with preserved line breaks
+                                const formattedDesc = document.createElement('div');
+                                formattedDesc.className = 'text-gray-300 mt-2 whitespace-pre-line';
+                                formattedDesc.textContent = description;
+
+                                // Replace the original paragraph with our pre-formatted div
+                                descEl.parentNode.replaceChild(formattedDesc, descEl);
+                              } else {
+                                // Simple text without line breaks
+                                descEl.textContent = description;
+                              }
+                            } else if (descEl && !description) {
+                              descEl.remove();
+                            } else if (!descEl && description) {
+                              // Create a new element for the description
+                              if (description.includes('\n')) {
+                                // Create a formatted div with preserved line breaks
+                                const formattedDesc = document.createElement('div');
+                                formattedDesc.className = 'text-gray-300 mt-2 whitespace-pre-line';
+                                formattedDesc.textContent = description;
+                                experienceEntry.querySelector('div:first-of-type').appendChild(formattedDesc);
+                              } else {
+                                // Simple text without line breaks
+                                const newDescEl = document.createElement('p');
+                                newDescEl.className = 'text-gray-300 mt-2';
+                                newDescEl.textContent = description;
+                                experienceEntry.querySelector('div:first-of-type').appendChild(newDescEl);
+                              }
+                            }
+
+                            // Show a success message
+                            const alertContainer = document.getElementById('form-alert-container');
+                            if (alertContainer) {
+                              alertContainer.innerHTML = `
+                                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+                                  <span class="block sm:inline">Work experience updated successfully.</span>
+                                </div>
+                              `;
+
+                              // Auto-dismiss the alert after 3 seconds
+                              setTimeout(() => {
+                                alertContainer.innerHTML = '';
+                              }, 3000);
+                            }
+                          }
+                        } else {
+                          // For creating new experiences, we'll rely on the standard page reload
+                          // This keeps it simpler rather than trying to insert a new element with complex layout
+                          window.location.href = '/settings/profile';
+                          return;
+                        }
+
+                        // Clear form
+                        form.reset();
+                        // Close the modal
+                        closeModal();
+                      } else {
+                        // Handle error response
+                        return response.text().then(html => {
+                          const alertContainer = document.getElementById('form-alert-container');
+                          if (alertContainer) {
+                            alertContainer.innerHTML = html;
+                          }
+                        });
+                      }
+                    })
+                    .catch((error) => {
+                      console.error("Error submitting form:", error);
+                      const alertContainer = document.getElementById('form-alert-container');
+                      if (alertContainer) {
+                        alertContainer.innerHTML = `
+                          <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                            <span class="block sm:inline">Failed to update: ${error.message || 'Unknown error'}</span>
+                          </div>
+                        `;
+                      }
+                    })
+                    .finally(() => {
+                      if (loadingIndicator) loadingIndicator.style.display = 'none';
+                      submitBtn.disabled = false;
+                    });
+                }
+              });
+            });
+          </script>
         </div>
       </div>
     </div>
   </form>
-  
+
   <script>
-    let responsibilityCounter = 1;
-    
-    function addResponsibility() {
-      responsibilityCounter++;
-      const container = document.getElementById('responsibilities-container');
-      const countField = document.getElementById('responsibility-count');
-      
-      const newItemDiv = document.createElement('div');
-      newItemDiv.id = `responsibility-item-${responsibilityCounter}`;
-      newItemDiv.className = 'flex items-start gap-2 mt-2';
-      
-      newItemDiv.innerHTML = `
-        <div class="flex-grow">
-          <input type="text" name="responsibility-${responsibilityCounter}" class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" placeholder="Add a responsibility or achievement...">
-        </div>
-        <button type="button" onclick="removeResponsibility(${responsibilityCounter})" class="mt-2 text-gray-400 hover:text-red-500 focus:outline-none">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-        </button>
-      `;
-      
-      container.firstElementChild.appendChild(newItemDiv);
-      countField.value = responsibilityCounter;
-    }
-    
-    function removeResponsibility(id) {
-      if (responsibilityCounter <= 1) return; // Keep at least one field
-      
-      const item = document.getElementById(`responsibility-item-${id}`);
-      if (item) {
-        item.remove();
-        
-        // Re-number remaining responsibilities if needed
-        // This is optional but helps keep the data clean
-        const countField = document.getElementById('responsibility-count');
-        countField.value = --responsibilityCounter;
-      }
-    }
-    
     // When the modal opens, ensure the current checkbox disables the end date if checked
     document.addEventListener('htmx:afterSwap', function(evt) {
       const currentCheckbox = document.getElementById('current_role');
       const endDateInput = document.getElementById('end_date');
-      
+
       if (currentCheckbox && endDateInput) {
         endDateInput.disabled = currentCheckbox.checked;
       }
@@ -440,55 +922,10 @@
   </script>
 </template>
 
-<!-- Template for the award form - this will be inlined and not loaded remotely -->
-<template id="award-form-template">
-  <form class="space-y-8" hx-post="/settings/profile/award" hx-target="#award-list" hx-swap="outerHTML">
-    <div class="space-y-1">
-      <label for="title" class="block text-sm font-medium text-gray-300">Award Title *</label>
-      <input type="text" id="title" name="title" required
-              class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
-    </div>
-
-    <div class="space-y-1">
-      <label for="issuer" class="block text-sm font-medium text-gray-300">Issuing Organization *</label>
-      <input type="text" id="issuer" name="issuer" required
-              class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
-    </div>
-
-    <div class="space-y-1">
-      <label for="issue_date" class="block text-sm font-medium text-gray-300">Date Received *</label>
-      <input type="month" id="issue_date" name="issue_date" required
-              class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
-    </div>
-
-    <div class="space-y-1">
-      <label for="description" class="block text-sm font-medium text-gray-300">Description</label>
-      <textarea id="description" name="description" rows="3"
-                class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"></textarea>
-      <p class="mt-1 text-xs text-gray-400">Briefly describe what this award recognizes</p>
-    </div>
-
-    <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-slate-700">
-      <button type="button" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-md text-sm transition-colors text-center"
-              onclick="closeModal()">
-        Cancel
-      </button>
-      <button type="submit" class="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors duration-300 flex items-center justify-center">
-          <span class="htmx-indicator inline-block mr-2">
-            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </span>
-          Add Award
-      </button>
-    </div>
-  </form>
-</template>
 
 <!-- Template for the education form -->
 <template id="education-form-template">
-  <form class="space-y-8" hx-post="/settings/profile/education" hx-target="#education-list" hx-swap="outerHTML">
+  <form id="education-form" class="space-y-8" action="/settings/profile/education" method="post">
     <div class="space-y-1">
       <label for="institution" class="block text-sm font-medium text-gray-300">Institution *</label>
       <input type="text" id="institution" name="institution" required
@@ -546,15 +983,16 @@
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           </span>
-          Add Education
+          Save Education
       </button>
+      <!-- Form submission is now handled by standard form submit with page reload -->
     </div>
   </form>
 </template>
 
 <!-- Template for the certification form -->
 <template id="certification-form-template">
-  <form class="space-y-8" hx-post="/settings/profile/certification" hx-target="#certification-list" hx-swap="outerHTML">
+  <form id="certification-form" class="space-y-8" action="/settings/profile/certification" method="post">
     <div class="space-y-1">
       <label for="certification_name" class="block text-sm font-medium text-gray-300">Certification Name *</label>
       <input type="text" id="certification_name" name="name" required
@@ -612,9 +1050,923 @@
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           </span>
-          Add Certification
+          Save Certification
       </button>
+      <!-- Form submission is now handled by standard form submit with page reload -->
     </div>
   </form>
 </template>
+
+<!-- Template for the delete experience confirmation modal -->
+<template id="delete-experience-modal-template">
+  <div class="text-center">
+    <div class="mb-5">
+      <svg class="mx-auto h-12 w-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <div class="mt-4 text-gray-300">
+        <p>This action cannot be undone and will permanently delete this work experience.</p>
+      </div>
+    </div>
+    <div class="flex justify-center space-x-4">
+      <button id="cancel-delete-btn" type="button"
+              class="py-2 px-4 bg-slate-700 hover:bg-slate-600 text-white rounded-md transition-colors"
+              onclick="closeModal()">
+        Cancel
+      </button>
+      <button id="confirm-delete-btn" type="button"
+              class="py-2 px-4 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
+              onclick="confirmDeleteExperience()">
+        Delete
+      </button>
+    </div>
+  </div>
+</template>
+
+<!-- Template for the delete education confirmation modal -->
+<template id="delete-education-modal-template">
+  <div class="text-center">
+    <div class="mb-5">
+      <svg class="mx-auto h-12 w-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <div class="mt-4 text-gray-300">
+        <p>This action cannot be undone and will permanently delete this education entry.</p>
+      </div>
+    </div>
+    <div class="flex justify-center space-x-4">
+      <button id="cancel-delete-education-btn" type="button"
+              class="py-2 px-4 bg-slate-700 hover:bg-slate-600 text-white rounded-md transition-colors"
+              onclick="closeModal()">
+        Cancel
+      </button>
+      <button id="confirm-delete-education-btn" type="button"
+              class="py-2 px-4 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
+              onclick="confirmDeleteEducation()">
+        Delete
+      </button>
+    </div>
+  </div>
+</template>
+
+<!-- Template for the delete certification confirmation modal -->
+<template id="delete-certification-modal-template">
+  <div class="text-center">
+    <div class="mb-5">
+      <svg class="mx-auto h-12 w-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <div class="mt-4 text-gray-300">
+        <p>This action cannot be undone and will permanently delete this certification.</p>
+      </div>
+    </div>
+    <div class="flex justify-center space-x-4">
+      <button id="cancel-delete-certification-btn" type="button"
+              class="py-2 px-4 bg-slate-700 hover:bg-slate-600 text-white rounded-md transition-colors"
+              onclick="closeModal()">
+        Cancel
+      </button>
+      <button id="confirm-delete-certification-btn" type="button"
+              class="py-2 px-4 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
+              onclick="confirmDeleteCertification()">
+        Delete
+      </button>
+    </div>
+  </div>
+</template>
+
+<!-- Education & Certification scripts -->
+<script>
+  // Add click event listeners for education buttons
+  document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('click', function(e) {
+      // Get the clicked button or its closest button ancestor
+      const btn = e.target.closest('button');
+
+      if (btn) {
+        // Check if it's an education add/edit button
+        if (btn.getAttribute('data-modal-content-id') === 'education-form-template') {
+          // Get the edit URL if it exists
+          const modalUrl = btn.getAttribute('data-modal-url');
+
+          if (modalUrl && modalUrl.includes('/edit')) {
+            // This is an edit button for education
+            // Extract the ID from the URL
+            const educationId = modalUrl.split('/').slice(-2)[0];
+
+            // Set up a one-time listener for when the modal is opened
+            document.addEventListener('htmx:afterSwap', function prefillForm() {
+              setTimeout(function() {
+                prefillEducationForm(educationId);
+              }, 100);
+              document.removeEventListener('htmx:afterSwap', prefillForm);
+            }, { once: true });
+          } else {
+            // This is an add button
+            document.addEventListener('htmx:afterSwap', function resetForm() {
+              resetEducationForm();
+              document.removeEventListener('htmx:afterSwap', resetForm);
+            }, { once: true });
+          }
+        }
+
+        // Check if it's a certification add/edit button
+        else if (btn.getAttribute('data-modal-content-id') === 'certification-form-template') {
+          // Get the edit URL if it exists
+          const modalUrl = btn.getAttribute('data-modal-url');
+
+          if (modalUrl && modalUrl.includes('/edit')) {
+            // This is an edit button for certification
+            // Extract the ID from the URL
+            const certificationId = modalUrl.split('/').slice(-2)[0];
+
+            // Set up a one-time listener for when the modal is opened
+            document.addEventListener('htmx:afterSwap', function prefillForm() {
+              setTimeout(function() {
+                prefillCertificationForm(certificationId);
+              }, 100);
+              document.removeEventListener('htmx:afterSwap', prefillForm);
+            }, { once: true });
+          } else {
+            // This is an add button
+            document.addEventListener('htmx:afterSwap', function resetForm() {
+              resetCertificationForm();
+              document.removeEventListener('htmx:afterSwap', resetForm);
+            }, { once: true });
+          }
+        }
+      }
+    });
+  });
+
+  // Function to reset the education form for adding a new entry
+  function resetEducationForm() {
+    const form = document.getElementById('education-form');
+    if (form) {
+      // Reset the form to clear all fields
+      form.reset();
+
+      // Remove any ID input field that might have been added for editing
+      const idInput = form.querySelector('input[name="id"]');
+      if (idInput) {
+        idInput.remove();
+      }
+
+      // Reset the form action to the create URL
+      form.action = '/settings/profile/education';
+
+      // Clear the description field explicitly
+      const descriptionField = form.querySelector('#education_description');
+      if (descriptionField) {
+        descriptionField.value = '';
+      }
+
+      // Update the submit button text
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        const textNodes = Array.from(submitBtn.childNodes)
+          .filter(node => node.nodeType === 3); // Get only text nodes
+
+        if (textNodes.length > 0) {
+          textNodes[textNodes.length - 1].nodeValue = 'Save Education';
+        }
+      }
+    }
+  }
+
+  // Function to prefill the education form with data
+  function prefillEducationForm(educationId) {
+    fetch(`/settings/profile/education/${educationId}/edit`)
+      .then(response => response.text())
+      .then(html => {
+        // Create a temporary element to parse the HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+
+        // Extract data from the response
+        const education = {
+          id: educationId,
+          institution: tempDiv.querySelector('#institution')?.value || '',
+          degree: tempDiv.querySelector('#degree')?.value || '',
+          fieldOfStudy: tempDiv.querySelector('#field_of_study')?.value || '',
+          startDate: tempDiv.querySelector('#start_date')?.value || '',
+          endDate: tempDiv.querySelector('#end_date')?.value || '',
+          description: tempDiv.querySelector('#education_description')?.value || ''
+        };
+
+        // Find the form in the current modal
+        const form = document.getElementById('education-form');
+        if (form) {
+          // Add/update ID field
+          let idInput = form.querySelector('input[name="id"]');
+          if (!idInput) {
+            idInput = document.createElement('input');
+            idInput.type = 'hidden';
+            idInput.name = 'id';
+            form.appendChild(idInput);
+          }
+          idInput.value = educationId;
+
+          // Fill in the form fields
+          const institutionInput = form.querySelector('#institution');
+          const degreeInput = form.querySelector('#degree');
+          const fieldOfStudyInput = form.querySelector('#field_of_study');
+          const startDateInput = form.querySelector('#start_date');
+          const endDateInput = form.querySelector('#end_date');
+          const descriptionInput = form.querySelector('#education_description');
+
+          if (institutionInput) institutionInput.value = education.institution;
+          if (degreeInput) degreeInput.value = education.degree;
+          if (fieldOfStudyInput) fieldOfStudyInput.value = education.fieldOfStudy;
+          if (startDateInput) startDateInput.value = education.startDate;
+          if (endDateInput) endDateInput.value = education.endDate;
+          if (descriptionInput) descriptionInput.value = education.description;
+
+          // Update form action
+          form.action = `/settings/profile/education/${educationId}`;
+
+          // Update button text
+          const submitBtn = form.querySelector('button[type="submit"]');
+          if (submitBtn) {
+            const textNodes = Array.from(submitBtn.childNodes)
+              .filter(node => node.nodeType === 3);
+
+            if (textNodes.length > 0) {
+              textNodes[textNodes.length - 1].nodeValue = 'Update Education';
+            }
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching education data:', error);
+      });
+  }
+
+  // Function to reset the certification form for adding a new certification
+  function resetCertificationForm() {
+    const form = document.getElementById('certification-form');
+    if (form) {
+      // Reset the form to clear all fields
+      form.reset();
+
+      // Remove any ID input field that might have been added for editing
+      const idInput = form.querySelector('input[name="id"]');
+      if (idInput) {
+        idInput.remove();
+      }
+
+      // Reset the form action to the create URL
+      form.action = '/settings/profile/certification';
+
+      // Update the submit button text
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        const textNodes = Array.from(submitBtn.childNodes)
+          .filter(node => node.nodeType === 3); // Get only text nodes
+
+        if (textNodes.length > 0) {
+          textNodes[textNodes.length - 1].nodeValue = 'Save Certification';
+        }
+      }
+    }
+  }
+
+  // Function to prefill the certification form with data
+  function prefillCertificationForm(certificationId) {
+    fetch(`/settings/profile/certification/${certificationId}/edit`)
+      .then(response => response.text())
+      .then(html => {
+        // Create a temporary element to parse the HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+
+        // Extract data from the response
+        const certification = {
+          id: certificationId,
+          name: tempDiv.querySelector('#certification_name')?.value || '',
+          issuingOrg: tempDiv.querySelector('#issuing_org')?.value || '',
+          issueDate: tempDiv.querySelector('#cert_issue_date')?.value || '',
+          expiryDate: tempDiv.querySelector('#expiry_date')?.value || '',
+          credentialId: tempDiv.querySelector('#credential_id')?.value || '',
+          credentialUrl: tempDiv.querySelector('#credential_url')?.value || ''
+        };
+
+        // Find the form in the current modal
+        const form = document.getElementById('certification-form');
+        if (form) {
+          // Add/update ID field
+          let idInput = form.querySelector('input[name="id"]');
+          if (!idInput) {
+            idInput = document.createElement('input');
+            idInput.type = 'hidden';
+            idInput.name = 'id';
+            form.appendChild(idInput);
+          }
+          idInput.value = certificationId;
+
+          // Fill in the form fields
+          const nameInput = form.querySelector('#certification_name');
+          const issuingOrgInput = form.querySelector('#issuing_org');
+          const issueDateInput = form.querySelector('#cert_issue_date');
+          const expiryDateInput = form.querySelector('#expiry_date');
+          const credentialIdInput = form.querySelector('#credential_id');
+          const credentialUrlInput = form.querySelector('#credential_url');
+
+          if (nameInput) nameInput.value = certification.name;
+          if (issuingOrgInput) issuingOrgInput.value = certification.issuingOrg;
+          if (issueDateInput) issueDateInput.value = certification.issueDate;
+          if (expiryDateInput) expiryDateInput.value = certification.expiryDate;
+          if (credentialIdInput) credentialIdInput.value = certification.credentialId;
+          if (credentialUrlInput) credentialUrlInput.value = certification.credentialUrl;
+
+          // Handle no expiry checkbox
+          const noExpiryCheckbox = form.querySelector('input[name="no_expiry"]');
+          if (noExpiryCheckbox && expiryDateInput) {
+            noExpiryCheckbox.checked = certification.expiryDate === '';
+            expiryDateInput.disabled = noExpiryCheckbox.checked;
+          }
+
+          // Update form action
+          form.action = `/settings/profile/certification/${certificationId}`;
+
+          // Update button text
+          const submitBtn = form.querySelector('button[type="submit"]');
+          if (submitBtn) {
+            const textNodes = Array.from(submitBtn.childNodes)
+              .filter(node => node.nodeType === 3);
+
+            if (textNodes.length > 0) {
+              textNodes[textNodes.length - 1].nodeValue = 'Update Certification';
+            }
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching certification data:', error);
+      });
+  }
+</script>
+
+<!-- Global scripts for all functionality -->
+<script>
+  // Store the currently targeted IDs for deletion
+  let currentDeleteExperienceId = null;
+  let currentDeleteEducationId = null;
+  let currentDeleteCertificationId = null;
+
+  // Listen for clicks on delete buttons
+  document.addEventListener('DOMContentLoaded', function() {
+    // When a delete button is clicked, store the experience ID
+    document.body.addEventListener('click', function(e) {
+      // For work experience
+      const deleteExpBtn = e.target.closest('.delete-experience-btn');
+      if (deleteExpBtn) {
+        currentDeleteExperienceId = deleteExpBtn.getAttribute('data-experience-id');
+      }
+
+      // For education entries
+      const deleteEduBtn = e.target.closest('.delete-education-btn');
+      if (deleteEduBtn) {
+        currentDeleteEducationId = deleteEduBtn.getAttribute('data-education-id');
+      }
+
+      // For certification entries
+      const deleteCertBtn = e.target.closest('.delete-certification-btn');
+      if (deleteCertBtn) {
+        currentDeleteCertificationId = deleteCertBtn.getAttribute('data-certification-id');
+      }
+    });
+  });
+
+  // Delete functions for education and certification
+  function deleteEducation(educationId) {
+    if (!educationId) {
+      return;
+    }
+
+    // Show a loading state on the button
+    const buttonEl = document.querySelector(`.delete-education-btn[data-education-id="${educationId}"]`);
+    if (buttonEl) {
+      buttonEl.disabled = true;
+      buttonEl.innerHTML = `
+        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      `;
+    }
+
+    // Delete the education entry
+    fetch(`/settings/profile/education/${educationId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        // Reload the page to show the updated list
+        window.location.href = '/settings/profile';
+      } else {
+        // Display error
+        const alertContainer = document.getElementById('form-alert-container');
+        if (alertContainer) {
+          alertContainer.innerHTML = `
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+              <span class="block sm:inline">Failed to delete education entry.</span>
+            </div>
+          `;
+        }
+
+        // Re-enable the button
+        if (buttonEl) {
+          buttonEl.disabled = false;
+          buttonEl.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          `;
+        }
+      }
+    })
+    .catch(error => {
+      // Display error
+      const alertContainer = document.getElementById('form-alert-container');
+      if (alertContainer) {
+        alertContainer.innerHTML = `
+          <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">An error occurred: ${error.message || 'Unknown error'}</span>
+          </div>
+        `;
+      }
+
+      // Re-enable the button
+      if (buttonEl) {
+        buttonEl.disabled = false;
+        buttonEl.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        `;
+      }
+    });
+  }
+
+  function confirmDeleteExperience() {
+    // Get the ID from the stored variable
+    const experienceId = currentDeleteExperienceId;
+    if (!experienceId) {
+      closeModal();
+      return;
+    }
+
+    // Delete the experience
+    fetch(`/settings/profile/experience/${experienceId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        // Close the modal
+        closeModal();
+        // Reload the page to show the updated list
+        window.location.href = '/settings/profile';
+      } else {
+        // Display error in the modal
+        const modalContent = document.querySelector('.modal-content');
+        if (modalContent) {
+          modalContent.innerHTML = `
+            <div class="text-center p-6">
+              <div class="mb-4 text-red-500">
+                <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <p class="text-gray-300">Failed to delete the work experience.</p>
+              <button type="button" class="mt-4 px-4 py-2 bg-primary text-white rounded-md" onclick="closeModal()">Close</button>
+            </div>
+          `;
+        }
+      }
+    })
+    .catch(error => {
+      // Display error in the modal
+      const modalContent = document.querySelector('.modal-content');
+      if (modalContent) {
+        modalContent.innerHTML = `
+          <div class="text-center p-6">
+            <div class="mb-4 text-red-500">
+              <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <p class="text-gray-300">An error occurred: ${error.message || 'Unknown error'}</p>
+            <button type="button" class="mt-4 px-4 py-2 bg-primary text-white rounded-md" onclick="closeModal()">Close</button>
+          </div>
+        `;
+      }
+    });
+  }
+
+  function confirmDeleteEducation() {
+    // Get the ID from the stored variable
+    const educationId = currentDeleteEducationId;
+    if (!educationId) {
+      closeModal();
+      return;
+    }
+
+    // Delete the education entry
+    fetch(`/settings/profile/education/${educationId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        // Close the modal
+        closeModal();
+        // Reload the page to show the updated list
+        window.location.href = '/settings/profile';
+      } else {
+        // Display error in the modal
+        const modalContent = document.querySelector('.modal-content');
+        if (modalContent) {
+          modalContent.innerHTML = `
+            <div class="text-center p-6">
+              <div class="mb-4 text-red-500">
+                <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <p class="text-gray-300">Failed to delete the education entry.</p>
+              <button type="button" class="mt-4 px-4 py-2 bg-primary text-white rounded-md" onclick="closeModal()">Close</button>
+            </div>
+          `;
+        }
+      }
+    })
+    .catch(error => {
+      // Display error in the modal
+      const modalContent = document.querySelector('.modal-content');
+      if (modalContent) {
+        modalContent.innerHTML = `
+          <div class="text-center p-6">
+            <div class="mb-4 text-red-500">
+              <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <p class="text-gray-300">An error occurred: ${error.message || 'Unknown error'}</p>
+            <button type="button" class="mt-4 px-4 py-2 bg-primary text-white rounded-md" onclick="closeModal()">Close</button>
+          </div>
+        `;
+      }
+    });
+  }
+
+  function confirmDeleteCertification() {
+    // Get the ID from the stored variable
+    const certificationId = currentDeleteCertificationId;
+    if (!certificationId) {
+      closeModal();
+      return;
+    }
+
+    // Delete the certification
+    fetch(`/settings/profile/certification/${certificationId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        // Close the modal
+        closeModal();
+        // Reload the page to show the updated list
+        window.location.href = '/settings/profile';
+      } else {
+        // Display error in the modal
+        const modalContent = document.querySelector('.modal-content');
+        if (modalContent) {
+          modalContent.innerHTML = `
+            <div class="text-center p-6">
+              <div class="mb-4 text-red-500">
+                <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <p class="text-gray-300">Failed to delete the certification.</p>
+              <button type="button" class="mt-4 px-4 py-2 bg-primary text-white rounded-md" onclick="closeModal()">Close</button>
+            </div>
+          `;
+        }
+      }
+    })
+    .catch(error => {
+      // Display error in the modal
+      const modalContent = document.querySelector('.modal-content');
+      if (modalContent) {
+        modalContent.innerHTML = `
+          <div class="text-center p-6">
+            <div class="mb-4 text-red-500">
+              <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <p class="text-gray-300">An error occurred: ${error.message || 'Unknown error'}</p>
+            <button type="button" class="mt-4 px-4 py-2 bg-primary text-white rounded-md" onclick="closeModal()">Close</button>
+          </div>
+        `;
+      }
+    });
+  }
+
+  function deleteCertification(certificationId) {
+    if (!certificationId) {
+      return;
+    }
+
+    // Show a loading state on the button
+    const buttonEl = document.querySelector(`.delete-certification-btn[data-certification-id="${certificationId}"]`);
+    if (buttonEl) {
+      buttonEl.disabled = true;
+      buttonEl.innerHTML = `
+        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      `;
+    }
+
+    // Delete the certification
+    fetch(`/settings/profile/certification/${certificationId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        // Reload the page to show the updated list
+        window.location.href = '/settings/profile';
+      } else {
+        // Display error
+        const alertContainer = document.getElementById('form-alert-container');
+        if (alertContainer) {
+          alertContainer.innerHTML = `
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+              <span class="block sm:inline">Failed to delete certification.</span>
+            </div>
+          `;
+        }
+
+        // Re-enable the button
+        if (buttonEl) {
+          buttonEl.disabled = false;
+          buttonEl.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          `;
+        }
+      }
+    })
+    .catch(error => {
+      // Display error
+      const alertContainer = document.getElementById('form-alert-container');
+      if (alertContainer) {
+        alertContainer.innerHTML = `
+          <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">An error occurred: ${error.message || 'Unknown error'}</span>
+          </div>
+        `;
+      }
+
+      // Re-enable the button
+      if (buttonEl) {
+        buttonEl.disabled = false;
+        buttonEl.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        `;
+      }
+    });
+  }
+
+  // Function to confirm education deletion
+  function confirmDeleteEducation() {
+    if (!currentDeleteEducationId) {
+      console.error('No education ID found');
+      return;
+    }
+
+    // Show a loading state on the delete button
+    const confirmBtn = document.getElementById('confirm-delete-education-btn');
+    if (confirmBtn) {
+      confirmBtn.disabled = true;
+      confirmBtn.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Deleting...
+      `;
+    }
+
+    // Delete the education entry
+    fetch(`/settings/profile/education/${currentDeleteEducationId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        // Reload the page to show the updated list
+        window.location.href = '/settings/profile';
+      } else {
+        // Display error
+        const alertContainer = document.getElementById('form-alert-container');
+        if (alertContainer) {
+          alertContainer.innerHTML = `
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+              <span class="block sm:inline">Failed to delete education entry.</span>
+            </div>
+          `;
+        }
+
+        // Close the modal
+        closeModal();
+      }
+    })
+    .catch(error => {
+      // Display error
+      const alertContainer = document.getElementById('form-alert-container');
+      if (alertContainer) {
+        alertContainer.innerHTML = `
+          <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">An error occurred: ${error.message || 'Unknown error'}</span>
+          </div>
+        `;
+      }
+
+      // Close the modal
+      closeModal();
+    });
+  }
+
+  // Function to confirm certification deletion
+  function confirmDeleteCertification() {
+    if (!currentDeleteCertificationId) {
+      console.error('No certification ID found');
+      return;
+    }
+
+    // Show a loading state on the delete button
+    const confirmBtn = document.getElementById('confirm-delete-certification-btn');
+    if (confirmBtn) {
+      confirmBtn.disabled = true;
+      confirmBtn.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Deleting...
+      `;
+    }
+
+    // Delete the certification
+    fetch(`/settings/profile/certification/${currentDeleteCertificationId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        // Reload the page to show the updated list
+        window.location.href = '/settings/profile';
+      } else {
+        // Display error
+        const alertContainer = document.getElementById('form-alert-container');
+        if (alertContainer) {
+          alertContainer.innerHTML = `
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+              <span class="block sm:inline">Failed to delete certification.</span>
+            </div>
+          `;
+        }
+
+        // Close the modal
+        closeModal();
+      }
+    })
+    .catch(error => {
+      // Display error
+      const alertContainer = document.getElementById('form-alert-container');
+      if (alertContainer) {
+        alertContainer.innerHTML = `
+          <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">An error occurred: ${error.message || 'Unknown error'}</span>
+          </div>
+        `;
+      }
+
+      // Close the modal
+      closeModal();
+    });
+  }
+
+  // Function to handle the experience delete confirmation
+  function confirmDeleteExperience() {
+    if (!currentDeleteExperienceId) {
+      console.error('No experience ID found');
+      return;
+    }
+
+    // Find the experience element
+    const experienceElement = document.querySelector(`.experience-entry[data-id="${currentDeleteExperienceId}"]`);
+    if (!experienceElement) {
+      console.error('Experience element not found');
+      closeModal();
+      return;
+    }
+
+    // Show a loading state on the delete button
+    const confirmBtn = document.getElementById('confirm-delete-btn');
+    if (confirmBtn) {
+      confirmBtn.disabled = true;
+      confirmBtn.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Deleting...
+      `;
+    }
+
+    // Make the delete request
+    fetch(`/settings/profile/experience/${currentDeleteExperienceId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        // Remove the experience element from the DOM
+        experienceElement.remove();
+
+        // Show a success message
+        const alertContainer = document.getElementById('form-alert-container');
+        if (alertContainer) {
+          alertContainer.innerHTML = `
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+              <span class="block sm:inline">Work experience deleted successfully.</span>
+            </div>
+          `;
+
+          // Auto-dismiss the alert after 3 seconds
+          setTimeout(() => {
+            alertContainer.innerHTML = '';
+          }, 3000);
+        }
+
+        // Close the modal
+        closeModal();
+      } else {
+        // Show error message
+        response.text().then(text => {
+          const alertContainer = document.getElementById('form-alert-container');
+          if (alertContainer) {
+            alertContainer.innerHTML = text || `
+              <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <span class="block sm:inline">Failed to delete work experience.</span>
+              </div>
+            `;
+          }
+          closeModal();
+        });
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      const alertContainer = document.getElementById('form-alert-container');
+      if (alertContainer) {
+        alertContainer.innerHTML = `
+          <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">An error occurred: ${error.message}</span>
+          </div>
+        `;
+      }
+      closeModal();
+    });
+  }
+</script>
 {{end}}

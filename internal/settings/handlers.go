@@ -2,23 +2,23 @@ package settings
 
 import (
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
-	"github.com/benidevo/prospector/internal/config"
+	"github.com/benidevo/prospector/internal/settings/models"
 	"github.com/gin-gonic/gin"
 )
 
 // SettingsHandler manages settings-related HTTP requests
 type SettingsHandler struct {
 	service *SettingsService
-	cfg     *config.Settings
 }
 
 // NewSettingsHandler creates a new SettingsHandler instance
-func NewSettingsHandler(service *SettingsService, cfg *config.Settings) *SettingsHandler {
+func NewSettingsHandler(service *SettingsService) *SettingsHandler {
 	return &SettingsHandler{
 		service: service,
-		cfg:     cfg,
 	}
 }
 
@@ -38,20 +38,15 @@ func (h *SettingsHandler) GetSettingsHomePage(c *gin.Context) {
 // GetProfileSettings handles the request to display the profile settings page
 func (h *SettingsHandler) GetProfileSettingsPage(c *gin.Context) {
 	username, _ := c.Get("username")
-	userID := 1 // For now, hardcode userID
+	userID, _ := c.Get("userID")
 
-	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
+	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID.(int))
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
 			"message": "Failed to load profile settings",
 		})
 		return
 	}
-
-	workExperiences, _ := h.service.GetWorkExperiences(c.Request.Context(), profile.ID)
-	education, _ := h.service.GetEducation(c.Request.Context(), profile.ID)
-	certifications, _ := h.service.GetCertifications(c.Request.Context(), profile.ID)
-	awards, _ := h.service.GetAwards(c.Request.Context(), profile.ID)
 
 	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
 		"title":          "Profile Settings",
@@ -62,19 +57,104 @@ func (h *SettingsHandler) GetProfileSettingsPage(c *gin.Context) {
 		"currentYear":    time.Now().Year(),
 		"username":       username,
 		"profile":        profile,
-		"experiences":    workExperiences,
-		"education":      education,
-		"certifications": certifications,
-		"awards":         awards,
+	})
+}
+
+// HandleCreateProfile handles the creation or update of a user's profile settings.
+func (h *SettingsHandler) HandleCreateProfile(c *gin.Context) {
+	userID := c.GetInt("userID")
+
+	firstName := strings.TrimSpace(c.PostForm("first_name"))
+	lastName := strings.TrimSpace(c.PostForm("last_name"))
+	title := strings.TrimSpace(c.PostForm("title"))
+	industryStr := strings.TrimSpace(c.PostForm("industry"))
+	location := strings.TrimSpace(c.PostForm("location"))
+	phoneNumber := strings.TrimSpace(c.PostForm("phone_number"))
+	careerSummary := strings.TrimSpace(c.PostForm("career_summary"))
+	skillsStr := strings.TrimSpace(c.PostForm("skills"))
+
+	var skills []string
+	if skillsStr != "" {
+		skillsParts := strings.Split(skillsStr, ",")
+		for _, s := range skillsParts {
+			skill := strings.TrimSpace(s)
+			if skill != "" {
+				skills = append(skills, skill)
+			}
+		}
+	}
+
+	industry := models.IndustryFromString(industryStr)
+
+	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error-dashboard.html", gin.H{
+			"message": "Failed to load profile settings",
+		})
+		return
+	}
+
+	profile.FirstName = firstName
+	profile.LastName = lastName
+	profile.Title = title
+	profile.Industry = industry
+	profile.Location = location
+	profile.PhoneNumber = phoneNumber
+	profile.CareerSummary = careerSummary
+	profile.Skills = skills
+
+	err = h.service.UpdateProfile(c.Request.Context(), profile)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error-dashboard.html", gin.H{
+			"message": "Failed to update profile",
+		})
+		return
+	}
+
+	c.HTML(http.StatusOK, "partials/alert-success-dashboard.html", gin.H{
+		"message": "Personal information updated successfully",
+	})
+}
+
+// HandleUpdateOnlineProfile handles the HTTP request to update a user's online profile links
+// (LinkedIn, GitHub, and website).
+func (h *SettingsHandler) HandleUpdateOnlineProfile(c *gin.Context) {
+	userID := c.GetInt("userID")
+
+	linkedInProfile := strings.TrimSpace(c.PostForm("linkedin_profile"))
+	gitHubProfile := strings.TrimSpace(c.PostForm("github_profile"))
+	website := strings.TrimSpace(c.PostForm("website"))
+
+	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error-dashboard.html", gin.H{
+			"message": "Failed to load profile settings",
+		})
+		return
+	}
+
+	profile.LinkedInProfile = linkedInProfile
+	profile.GitHubProfile = gitHubProfile
+	profile.Website = website
+
+	err = h.service.UpdateProfile(c.Request.Context(), profile)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error-dashboard.html", gin.H{
+			"message": "Failed to update online profiles",
+		})
+		return
+	}
+
+	c.HTML(http.StatusOK, "partials/alert-success-dashboard.html", gin.H{
+		"message": "Online profiles updated successfully",
 	})
 }
 
 // GetSecuritySettings handles the request to display the security settings page
 func (h *SettingsHandler) GetSecuritySettingsPage(c *gin.Context) {
 	username, _ := c.Get("username")
-	usernameStr, _ := username.(string)
 
-	security, err := h.service.GetSecuritySettings(c.Request.Context(), usernameStr)
+	security, err := h.service.GetSecuritySettings(c.Request.Context(), username.(string))
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
 			"title":       "Something Went Wrong",
@@ -108,39 +188,72 @@ func (h *SettingsHandler) GetNotificationSettingsPage(c *gin.Context) {
 		"pageTitle":      "Notification Settings",
 		"currentYear":    time.Now().Year(),
 		"username":       username,
-		"notifications":  "notifications", // Dummy data for notifications
 	})
 }
 
 // GetExperienceForm returns the form to add a new work experience
 func (h *SettingsHandler) GetExperienceForm(c *gin.Context) {
-	// For a new entry, I just return the empty form
 	c.HTML(http.StatusOK, "settings/forms/experience_form.html", gin.H{})
 }
 
-// GetExperienceEditForm returns the form to edit an existing work experience
-func (h *SettingsHandler) GetExperienceEditForm(c *gin.Context) {
-	// For now I use dummy data
-	c.HTML(http.StatusOK, "settings/forms/experience_form.html", gin.H{
-		"experience": &struct {
-			ID          int        `json:"id"`
-			Title       string     `json:"title"`
-			Company     string     `json:"company"`
-			Location    string     `json:"location"`
-			StartDate   time.Time  `json:"start_date"`
-			EndDate     *time.Time `json:"end_date"`
-			Description string     `json:"description"`
-			Current     bool       `json:"current"`
-		}{
-			ID:          1,
-			Title:       "Software Engineer",
-			Company:     "Example Corp",
-			Location:    "San Francisco, CA",
-			StartDate:   time.Now().AddDate(-2, 0, 0),
-			Description: "Worked on various projects",
-			Current:     true,
-		},
+// HandleExperienceForm processes the submission of a work experience form,
+// validates input fields, parses dates, retrieves the user's profile settings,
+// creates a new work experience entry, and redirects to the profile settings page.
+func (h *SettingsHandler) HandleExperienceForm(c *gin.Context) {
+	userID := c.GetInt("userID")
+	var err error
+
+	jobTitle := strings.TrimSpace(c.PostForm("title"))
+	company := strings.TrimSpace(c.PostForm("company"))
+	location := strings.TrimSpace(c.PostForm("location"))
+	startDate := strings.TrimSpace(c.PostForm("start_date"))
+	endDate := strings.TrimSpace(c.PostForm("end_date"))
+	description := strings.TrimSpace(c.PostForm("description"))
+	current := strings.TrimSpace(c.PostForm("current")) == "on"
+
+	var parsedStartDate time.Time
+	if startDate != "" {
+		parsedStartDate, err = time.Parse("2006-01", startDate)
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+				"message": "Invalid start date format. Please use YYYY-MM.",
+			})
+			return
+		}
+	}
+
+	var parsedEndDate *time.Time
+	if endDate != "" {
+		t, err := time.Parse("2006-01", endDate)
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+				"message": "Invalid end date format. Please use YYYY-MM.",
+			})
+			return
+		}
+		parsedEndDate = &t
+	}
+
+	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Failed to load profile settings",
+		})
+		return
+	}
+
+	h.service.CreateWorkExperience(c.Request.Context(), &models.WorkExperience{
+		Title:       jobTitle,
+		ProfileID:   profile.ID,
+		Company:     company,
+		Location:    location,
+		StartDate:   parsedStartDate,
+		EndDate:     parsedEndDate,
+		Description: description,
+		Current:     current,
 	})
+
+	c.Redirect(http.StatusSeeOther, "/settings/profile")
 }
 
 // GetEducationForm returns the form to add a new education entry
@@ -148,198 +261,571 @@ func (h *SettingsHandler) GetEducationForm(c *gin.Context) {
 	c.HTML(http.StatusOK, "settings/forms/education_form.html", gin.H{})
 }
 
-// GetEducationEditForm returns the form to edit an existing education entry
-func (h *SettingsHandler) GetEducationEditForm(c *gin.Context) {
-	// For a real implementation, I would fetch the education by ID
-	// For now I'll use dummy data
-	c.HTML(http.StatusOK, "settings/forms/education_form.html", gin.H{
-		"education": &struct {
-			ID           int        `json:"id"`
-			Institution  string     `json:"institution"`
-			Degree       string     `json:"degree"`
-			FieldOfStudy string     `json:"field_of_study"`
-			StartDate    time.Time  `json:"start_date"`
-			EndDate      *time.Time `json:"end_date"`
-			Description  string     `json:"description"`
-		}{
-			ID:           1,
-			Institution:  "Stanford University",
-			Degree:       "Bachelor of Science",
-			FieldOfStudy: "Computer Science",
-			StartDate:    time.Now().AddDate(-4, 0, 0),
-			EndDate:      func() *time.Time { t := time.Now().AddDate(-1, 0, 0); return &t }(),
-			Description:  "Graduated with honors",
-		},
-	})
-}
-
 // GetCertificationForm returns the form to add a new certification
 func (h *SettingsHandler) GetCertificationForm(c *gin.Context) {
 	c.HTML(http.StatusOK, "settings/forms/certification_form.html", gin.H{})
 }
 
-// GetCertificationEditForm returns the form to edit an existing certification
-func (h *SettingsHandler) GetCertificationEditForm(c *gin.Context) {
-	// For a real implementation, I would fetch the certification by ID
-	// For now I'll use dummy data
-	c.HTML(http.StatusOK, "settings/forms/certification_form.html", gin.H{
-		"certification": &struct {
-			ID            int        `json:"id"`
-			Name          string     `json:"name"`
-			IssuingOrg    string     `json:"issuing_org"`
-			IssueDate     time.Time  `json:"issue_date"`
-			ExpiryDate    *time.Time `json:"expiry_date"`
-			CredentialID  string     `json:"credential_id"`
-			CredentialURL string     `json:"credential_url"`
-		}{
-			ID:            1,
-			Name:          "AWS Certified Developer",
-			IssuingOrg:    "Amazon Web Services",
-			IssueDate:     time.Now().AddDate(-1, 0, 0),
-			ExpiryDate:    func() *time.Time { t := time.Now().AddDate(2, 0, 0); return &t }(),
-			CredentialID:  "ABC123456",
-			CredentialURL: "https://example.com/credentials/abc123456",
-		},
-	})
-}
-
-// GetAwardForm returns the form to add a new award
-func (h *SettingsHandler) GetAwardForm(c *gin.Context) {
-	c.HTML(http.StatusOK, "settings/forms/award_form.html", gin.H{})
-}
-
-// GetAwardEditForm returns the form to edit an existing award
-func (h *SettingsHandler) GetAwardEditForm(c *gin.Context) {
-	// For a real implementation, I would fetch the award by ID
-	// For now I'll use dummy data
-	c.HTML(http.StatusOK, "settings/forms/award_form.html", gin.H{
-		"award": &struct {
-			ID          int       `json:"id"`
-			Title       string    `json:"title"`
-			Issuer      string    `json:"issuer"`
-			IssueDate   time.Time `json:"issue_date"`
-			Description string    `json:"description"`
-		}{
-			ID:          1,
-			Title:       "Employee of the Year",
-			Issuer:      "Example Corp",
-			IssueDate:   time.Now().AddDate(-1, 0, 0),
-			Description: "Recognized for outstanding contributions to the team",
-		},
-	})
-}
-
-// CreateExperience handles form submission for adding work experience
-func (h *SettingsHandler) CreateExperienceForm(c *gin.Context) {
-	// In a real implementation, I would process the form data and create a new experience
-	// For now, I'll just return a dummy updated list
-	workExperiences := []*struct {
-		ID          int        `json:"id"`
-		Title       string     `json:"title"`
-		Company     string     `json:"company"`
-		Location    string     `json:"location"`
-		StartDate   time.Time  `json:"start_date"`
-		EndDate     *time.Time `json:"end_date"`
-		Description string     `json:"description"`
-		Current     bool       `json:"current"`
-	}{
-		{
-			ID:          1,
-			Title:       c.PostForm("title"),
-			Company:     c.PostForm("company"),
-			Location:    c.PostForm("location"),
-			StartDate:   time.Now().AddDate(-2, 0, 0),
-			Description: c.PostForm("description"),
-			Current:     c.PostForm("current") == "on",
-		},
-	}
-
-	c.Header("HX-Trigger", "closeModal")
-	c.HTML(http.StatusOK, "partials/experience_list.html", gin.H{
-		"experiences": workExperiences,
-	})
-}
-
-// CreateEducation handles form submission for adding education
+// HandleEducationForm processes the submission of an education form,
+// validates input fields, parses dates, retrieves the user's profile settings,
+// creates a new education entry, and returns the updated education list.
 func (h *SettingsHandler) CreateEducationForm(c *gin.Context) {
-	// In a real implementation, I would process the form data and create a new education entry
-	// For now, I'll just return a dummy updated list
-	educationList := []*struct {
-		ID           int        `json:"id"`
-		Institution  string     `json:"institution"`
-		Degree       string     `json:"degree"`
-		FieldOfStudy string     `json:"field_of_study"`
-		StartDate    time.Time  `json:"start_date"`
-		EndDate      *time.Time `json:"end_date"`
-		Description  string     `json:"description"`
-	}{
-		{
-			ID:           1,
-			Institution:  c.PostForm("institution"),
-			Degree:       c.PostForm("degree"),
-			FieldOfStudy: c.PostForm("field_of_study"),
-			StartDate:    time.Now().AddDate(-4, 0, 0),
-			Description:  c.PostForm("description"),
-		},
+	userID := c.GetInt("userID")
+	var err error
+
+	institution := strings.TrimSpace(c.PostForm("institution"))
+	degree := strings.TrimSpace(c.PostForm("degree"))
+	fieldOfStudy := strings.TrimSpace(c.PostForm("field_of_study"))
+	startDate := strings.TrimSpace(c.PostForm("start_date"))
+	endDate := strings.TrimSpace(c.PostForm("end_date"))
+	description := strings.TrimSpace(c.PostForm("description"))
+	current := strings.TrimSpace(c.PostForm("current")) == "on"
+
+	// Validate required fields
+	if institution == "" || degree == "" {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Institution and degree are required",
+		})
+		return
+	}
+
+	// Parse dates
+	var parsedStartDate time.Time
+	if startDate != "" {
+		parsedStartDate, err = time.Parse("2006-01", startDate)
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+				"message": "Invalid start date format. Please use YYYY-MM.",
+			})
+			return
+		}
+	} else {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Start date is required",
+		})
+		return
+	}
+
+	var parsedEndDate *time.Time
+	if !current && endDate != "" {
+		t, err := time.Parse("2006-01", endDate)
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+				"message": "Invalid end date format. Please use YYYY-MM.",
+			})
+			return
+		}
+		parsedEndDate = &t
+	}
+
+	// Get user's profile
+	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Failed to load profile settings",
+		})
+		return
+	}
+
+	// Create education entry
+	education := &models.Education{
+		ProfileID:    profile.ID,
+		Institution:  institution,
+		Degree:       degree,
+		FieldOfStudy: fieldOfStudy,
+		StartDate:    parsedStartDate,
+		EndDate:      parsedEndDate,
+		Description:  description,
+	}
+
+	err = h.service.CreateEducation(c.Request.Context(), education)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
+			"message": "Failed to create education entry: " + err.Error(),
+		})
+		return
 	}
 
 	c.Header("HX-Trigger", "closeModal")
-	c.HTML(http.StatusOK, "partials/education_list.html", gin.H{
-		"education": educationList,
-	})
+	c.Redirect(http.StatusSeeOther, "/settings/profile")
 }
 
-// CreateCertification handles form submission for adding certification
+// HandleUpdateEducationForm processes a request to update an existing education entry.
+func (h *SettingsHandler) HandleUpdateEducationForm(c *gin.Context) {
+	userID := c.GetInt("userID")
+	educationIDStr := c.Param("id")
+	var err error
+
+	educationID, err := strconv.Atoi(educationIDStr)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Invalid education ID format",
+		})
+		return
+	}
+
+	institution := strings.TrimSpace(c.PostForm("institution"))
+	degree := strings.TrimSpace(c.PostForm("degree"))
+	fieldOfStudy := strings.TrimSpace(c.PostForm("field_of_study"))
+	startDate := strings.TrimSpace(c.PostForm("start_date"))
+	endDate := strings.TrimSpace(c.PostForm("end_date"))
+	description := strings.TrimSpace(c.PostForm("description"))
+	current := strings.TrimSpace(c.PostForm("current")) == "on"
+
+	// Validate required fields
+	if institution == "" || degree == "" {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Institution and degree are required",
+		})
+		return
+	}
+
+	// Parse dates
+	var parsedStartDate time.Time
+	if startDate != "" {
+		parsedStartDate, err = time.Parse("2006-01", startDate)
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+				"message": "Invalid start date format. Please use YYYY-MM.",
+			})
+			return
+		}
+	} else {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Start date is required",
+		})
+		return
+	}
+
+	var parsedEndDate *time.Time
+	if !current && endDate != "" {
+		t, err := time.Parse("2006-01", endDate)
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+				"message": "Invalid end date format. Please use YYYY-MM.",
+			})
+			return
+		}
+		parsedEndDate = &t
+	}
+
+	// Get user's profile
+	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Failed to load profile settings",
+		})
+		return
+	}
+
+	// Get the existing education entry to update
+	education, err := h.service.GetEducationByID(c.Request.Context(), educationID, profile.ID)
+	if err != nil {
+		c.HTML(http.StatusNotFound, "partials/alert-error.html", gin.H{
+			"message": "Education entry not found or you don't have permission to edit it",
+		})
+		return
+	}
+
+	// Update education fields
+	education.Institution = institution
+	education.Degree = degree
+	education.FieldOfStudy = fieldOfStudy
+	education.StartDate = parsedStartDate
+	education.EndDate = parsedEndDate
+	education.Description = description
+
+	if current {
+		education.EndDate = nil
+	}
+
+	// Update the education entry
+	err = h.service.UpdateEducation(c.Request.Context(), education)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
+			"message": "Failed to update education entry: " + err.Error(),
+		})
+		return
+	}
+
+	c.Header("HX-Trigger", "closeModal")
+	c.Redirect(http.StatusSeeOther, "/settings/profile")
+}
+
+// HandleDeleteEducation handles the HTTP request to delete a user's education entry.
+func (h *SettingsHandler) HandleDeleteEducation(c *gin.Context) {
+	userID := c.GetInt("userID")
+	educationIDStr := c.Param("id")
+
+	educationID, err := strconv.Atoi(educationIDStr)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Invalid education ID format",
+		})
+		return
+	}
+
+	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Failed to load profile settings",
+		})
+		return
+	}
+
+	err = h.service.DeleteEducation(c.Request.Context(), educationID, profile.ID)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
+			"message": "Failed to delete education entry: " + err.Error(),
+		})
+		return
+	}
+
+	c.String(http.StatusOK, "")
+}
+
+// CreateCertificationForm handles form submission for adding certification
 func (h *SettingsHandler) CreateCertificationForm(c *gin.Context) {
-	// In a real implementation, I would process the form data and create a new certification
-	// For now, I'll just return a dummy updated list
-	certifications := []*struct {
-		ID            int        `json:"id"`
-		Name          string     `json:"name"`
-		IssuingOrg    string     `json:"issuing_org"`
-		IssueDate     time.Time  `json:"issue_date"`
-		ExpiryDate    *time.Time `json:"expiry_date"`
-		CredentialID  string     `json:"credential_id"`
-		CredentialURL string     `json:"credential_url"`
-	}{
-		{
-			ID:            1,
-			Name:          c.PostForm("name"),
-			IssuingOrg:    c.PostForm("issuing_org"),
-			IssueDate:     time.Now().AddDate(-1, 0, 0),
-			CredentialID:  c.PostForm("credential_id"),
-			CredentialURL: c.PostForm("credential_url"),
-		},
+	userID := c.GetInt("userID")
+	var err error
+
+	name := strings.TrimSpace(c.PostForm("name"))
+	issuingOrg := strings.TrimSpace(c.PostForm("issuing_org"))
+	issueDate := strings.TrimSpace(c.PostForm("issue_date"))
+	expiryDate := strings.TrimSpace(c.PostForm("expiry_date"))
+	credentialID := strings.TrimSpace(c.PostForm("credential_id"))
+	credentialURL := strings.TrimSpace(c.PostForm("credential_url"))
+	noExpiry := strings.TrimSpace(c.PostForm("no_expiry")) == "on"
+
+	// Validate required fields
+	if name == "" || issuingOrg == "" {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Certification name and issuing organization are required",
+		})
+		return
+	}
+
+	// Parse dates
+	var parsedIssueDate time.Time
+	if issueDate != "" {
+		parsedIssueDate, err = time.Parse("2006-01", issueDate)
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+				"message": "Invalid issue date format. Please use YYYY-MM.",
+			})
+			return
+		}
+	} else {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Issue date is required",
+		})
+		return
+	}
+
+	var parsedExpiryDate *time.Time
+	if !noExpiry && expiryDate != "" {
+		t, err := time.Parse("2006-01", expiryDate)
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+				"message": "Invalid expiry date format. Please use YYYY-MM.",
+			})
+			return
+		}
+		parsedExpiryDate = &t
+	}
+
+	// Get user's profile
+	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Failed to load profile settings",
+		})
+		return
+	}
+
+	// Create certification
+	certification := &models.Certification{
+		ProfileID:     profile.ID,
+		Name:          name,
+		IssuingOrg:    issuingOrg,
+		IssueDate:     parsedIssueDate,
+		ExpiryDate:    parsedExpiryDate,
+		CredentialID:  credentialID,
+		CredentialURL: credentialURL,
+	}
+
+	err = h.service.CreateCertification(c.Request.Context(), certification)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
+			"message": "Failed to create certification: " + err.Error(),
+		})
+		return
 	}
 
 	c.Header("HX-Trigger", "closeModal")
-	c.HTML(http.StatusOK, "partials/certification_list.html", gin.H{
-		"certifications": certifications,
-	})
+	c.Redirect(http.StatusSeeOther, "/settings/profile")
 }
 
-// CreateAward handles form submission for adding an award
-func (h *SettingsHandler) CreateAwardForm(c *gin.Context) {
-	// In a real implementation, I would process the form data and create a new award
-	// For now, I'll just return a dummy updated list
-	awards := []*struct {
-		ID          int       `json:"id"`
-		Title       string    `json:"title"`
-		Issuer      string    `json:"issuer"`
-		IssueDate   time.Time `json:"issue_date"`
-		Description string    `json:"description"`
-	}{
-		{
-			ID:          1,
-			Title:       c.PostForm("title"),
-			Issuer:      c.PostForm("issuer"),
-			IssueDate:   time.Now().AddDate(-1, 0, 0),
-			Description: c.PostForm("description"),
-		},
+// HandleUpdateCertificationForm processes a request to update an existing certification.
+func (h *SettingsHandler) HandleUpdateCertificationForm(c *gin.Context) {
+	userID := c.GetInt("userID")
+	certificationIDStr := c.Param("id")
+	var err error
+
+	certificationID, err := strconv.Atoi(certificationIDStr)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Invalid certification ID format",
+		})
+		return
+	}
+
+	name := strings.TrimSpace(c.PostForm("name"))
+	issuingOrg := strings.TrimSpace(c.PostForm("issuing_org"))
+	issueDate := strings.TrimSpace(c.PostForm("issue_date"))
+	expiryDate := strings.TrimSpace(c.PostForm("expiry_date"))
+	credentialID := strings.TrimSpace(c.PostForm("credential_id"))
+	credentialURL := strings.TrimSpace(c.PostForm("credential_url"))
+	noExpiry := strings.TrimSpace(c.PostForm("no_expiry")) == "on"
+
+	// Validate required fields
+	if name == "" || issuingOrg == "" {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Certification name and issuing organization are required",
+		})
+		return
+	}
+
+	// Parse dates
+	var parsedIssueDate time.Time
+	if issueDate != "" {
+		parsedIssueDate, err = time.Parse("2006-01", issueDate)
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+				"message": "Invalid issue date format. Please use YYYY-MM.",
+			})
+			return
+		}
+	} else {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Issue date is required",
+		})
+		return
+	}
+
+	var parsedExpiryDate *time.Time
+	if !noExpiry && expiryDate != "" {
+		t, err := time.Parse("2006-01", expiryDate)
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+				"message": "Invalid expiry date format. Please use YYYY-MM.",
+			})
+			return
+		}
+		parsedExpiryDate = &t
+	}
+
+	// Get user's profile
+	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Failed to load profile settings",
+		})
+		return
+	}
+
+	// Get the existing certification to update
+	certification, err := h.service.GetCertificationByID(c.Request.Context(), certificationID, profile.ID)
+	if err != nil {
+		c.HTML(http.StatusNotFound, "partials/alert-error.html", gin.H{
+			"message": "Certification not found or you don't have permission to edit it",
+		})
+		return
+	}
+
+	// Update certification fields
+	certification.Name = name
+	certification.IssuingOrg = issuingOrg
+	certification.IssueDate = parsedIssueDate
+	certification.ExpiryDate = parsedExpiryDate
+	certification.CredentialID = credentialID
+	certification.CredentialURL = credentialURL
+
+	if noExpiry {
+		certification.ExpiryDate = nil
+	}
+
+	// Update the certification
+	err = h.service.UpdateCertification(c.Request.Context(), certification)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
+			"message": "Failed to update certification: " + err.Error(),
+		})
+		return
 	}
 
 	c.Header("HX-Trigger", "closeModal")
-	c.HTML(http.StatusOK, "partials/award_list.html", gin.H{
-		"awards": awards,
-	})
+	c.Redirect(http.StatusSeeOther, "/settings/profile")
+}
+
+// HandleDeleteCertification handles the HTTP request to delete a user's certification.
+func (h *SettingsHandler) HandleDeleteCertification(c *gin.Context) {
+	userID := c.GetInt("userID")
+	certificationIDStr := c.Param("id")
+
+	certificationID, err := strconv.Atoi(certificationIDStr)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Invalid certification ID format",
+		})
+		return
+	}
+
+	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Failed to load profile settings",
+		})
+		return
+	}
+
+	err = h.service.DeleteCertification(c.Request.Context(), certificationID, profile.ID)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
+			"message": "Failed to delete certification: " + err.Error(),
+		})
+		return
+	}
+
+	c.String(http.StatusOK, "")
+}
+
+// HandleUpdateExperienceForm processes a request to update an existing work experience.
+// It parses form data, validates inputs, updates the specified work experience,
+// and redirects back to the profile settings page.
+func (h *SettingsHandler) HandleUpdateExperienceForm(c *gin.Context) {
+	userID := c.GetInt("userID")
+	experienceIDStr := c.Param("id")
+	var err error
+
+	experienceID, err := strconv.Atoi(experienceIDStr)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Invalid experience ID format",
+		})
+		return
+	}
+
+	jobTitle := strings.TrimSpace(c.PostForm("title"))
+	company := strings.TrimSpace(c.PostForm("company"))
+	location := strings.TrimSpace(c.PostForm("location"))
+	startDate := strings.TrimSpace(c.PostForm("start_date"))
+	endDate := strings.TrimSpace(c.PostForm("end_date"))
+	description := strings.TrimSpace(c.PostForm("description"))
+	current := strings.TrimSpace(c.PostForm("current")) == "on"
+
+	if jobTitle == "" || company == "" {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Job title and company name are required",
+		})
+		return
+	}
+
+	var parsedStartDate time.Time
+	if startDate != "" {
+		parsedStartDate, err = time.Parse("2006-01", startDate)
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+				"message": "Invalid start date format. Please use YYYY-MM.",
+			})
+			return
+		}
+	} else {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Start date is required",
+		})
+		return
+	}
+
+	var parsedEndDate *time.Time
+	if !current && endDate != "" {
+		t, err := time.Parse("2006-01", endDate)
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+				"message": "Invalid end date format. Please use YYYY-MM.",
+			})
+			return
+		}
+		parsedEndDate = &t
+	}
+
+	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Failed to load profile settings",
+		})
+		return
+	}
+
+	experience, err := h.service.GetWorkExperienceByID(c.Request.Context(), experienceID, profile.ID)
+	if err != nil {
+		c.HTML(http.StatusNotFound, "partials/alert-error.html", gin.H{
+			"message": "Work experience not found or you don't have permission to edit it",
+		})
+		return
+	}
+	experience.Title = jobTitle
+	experience.Company = company
+	experience.Location = location
+	experience.StartDate = parsedStartDate
+	experience.EndDate = parsedEndDate
+	experience.Description = description
+	experience.Current = current
+
+	if current {
+		experience.EndDate = nil
+	}
+
+	err = h.service.UpdateWorkExperience(c.Request.Context(), experience)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
+			"message": "Failed to update work experience: " + err.Error(),
+		})
+		return
+	}
+	c.Redirect(http.StatusSeeOther, "/settings/profile")
+}
+
+// HandleDeleteWorkExperience handles the HTTP request to delete a user's work experience entry.
+// It validates the experience ID, retrieves the user's profile, and deletes the specified work experience.
+// On success, it redirects to the profile settings page; on failure, it renders an error alert.
+func (h *SettingsHandler) HandleDeleteWorkExperience(c *gin.Context) {
+	userID := c.GetInt("userID")
+	experienceIDStr := c.Param("id")
+
+	experienceID, err := strconv.Atoi(experienceIDStr)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Invalid experience ID format",
+		})
+		return
+	}
+
+	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Failed to load profile settings",
+		})
+		return
+	}
+
+	err = h.service.DeleteWorkExperience(c.Request.Context(), experienceID, profile.ID)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
+			"message": "Failed to delete work experience: " + err.Error(),
+		})
+		return
+	}
+
+	c.String(http.StatusOK, "")
 }
