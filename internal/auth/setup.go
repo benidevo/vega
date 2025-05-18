@@ -20,7 +20,7 @@ func SetupAuth(db *sql.DB, cfg *config.Settings) *AuthHandler {
 // SetupGoogleAuth initializes and returns a GoogleAuthHandler using the provided configuration settings.
 // It sets up the GoogleAuthService and handler dependencies.
 func SetupGoogleAuth(cfg *config.Settings, db *sql.DB) (*GoogleAuthHandler, error) {
-	repo := NewSQLiteUserRepository(db) // Assuming you have a way to get the DB connection
+	repo := NewSQLiteUserRepository(db)
 	service, err := NewGoogleAuthService(cfg, repo)
 	if err != nil {
 		return nil, err
@@ -35,6 +35,7 @@ func SetupGoogleAuth(cfg *config.Settings, db *sql.DB) (*GoogleAuthHandler, erro
 func RegisterPublicRoutes(router *gin.RouterGroup, handler *AuthHandler) {
 	router.GET("/login", handler.GetLoginPage)
 	router.POST("/login", handler.Login)
+	router.POST("/refresh", handler.RefreshToken)
 }
 
 // RegisterPrivateRoutes registers private authentication-related routes to the provided router group.

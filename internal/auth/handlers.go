@@ -3,6 +3,7 @@ package auth
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/benidevo/prospector/internal/config"
 	"github.com/gin-gonic/gin"
@@ -29,13 +30,13 @@ func (h *AuthHandler) GetLoginPage(c *gin.Context) {
 }
 
 // Login handles user authentication by validating credentials from the POST form.
-// On success, it sets a session cookie and redirects to the dashboard.
+// On success, it sets access and refresh token cookies and redirects to the dashboard.
 // On failure, it returns an unauthorized status and error message for HTMX response swapping.
 func (h *AuthHandler) Login(c *gin.Context) {
 	username := c.PostForm("username")
 	password := c.PostForm("password")
 
-	token, loginErr := h.service.Login(c.Request.Context(), username, password)
+	accessToken, refreshToken, loginErr := h.service.Login(c.Request.Context(), username, password)
 	if loginErr != nil {
 		c.Header("HX-Reswap", "innerHTML")
 		c.Header("HX-Retarget", "#form-response")
@@ -44,27 +45,113 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("token", token, 3600, "/", "", false, true)
+	sameSite := parseSameSiteMode(h.service.config.CookieSameSite)
+
+	// Set access token cookie (shorter-lived)
+	c.SetSameSite(sameSite)
+	c.SetCookie(
+		"token",
+		accessToken,
+		int(h.service.config.AccessTokenExpiry.Seconds()),
+		"/",
+		h.service.config.CookieDomain,
+		h.service.config.CookieSecure,
+		true,
+	)
+
+	// Set refresh token cookie (longer-lived)
+	c.SetCookie(
+		"refresh_token",
+		refreshToken,
+		int(h.service.config.RefreshTokenExpiry.Seconds()),
+		"/",
+		h.service.config.CookieDomain,
+		h.service.config.CookieSecure,
+		true,
+	)
+
 	c.Header("HX-Redirect", "/jobs")
 	c.Status(http.StatusOK)
 }
 
 // Logout logs out the current user by clearing the authentication cookie and redirecting to the home page.
 func (h *AuthHandler) Logout(c *gin.Context) {
-	c.SetCookie("token", "", -1, "/", "", false, true)
+	// Clear both access and refresh token cookies
+	sameSite := parseSameSiteMode(h.service.config.CookieSameSite)
+
+	c.SetSameSite(sameSite)
+	c.SetCookie("token", "", -1, "/", h.service.config.CookieDomain, h.service.config.CookieSecure, true)
+	c.SetCookie("refresh_token", "", -1, "/", h.service.config.CookieDomain, h.service.config.CookieSecure, true)
+
 	c.Redirect(http.StatusFound, "/")
+}
+
+// RefreshToken validates a refresh token and issues a new access token
+func (h *AuthHandler) RefreshToken(c *gin.Context) {
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing refresh token"})
+		return
+	}
+
+	accessToken, err := h.service.RefreshAccessToken(c.Request.Context(), refreshToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
+		return
+	}
+
+	sameSite := parseSameSiteMode(h.service.config.CookieSameSite)
+
+	// Set the new access token
+	c.SetSameSite(sameSite)
+	c.SetCookie(
+		"token",
+		accessToken,
+		int(h.service.config.AccessTokenExpiry.Seconds()),
+		"/",
+		h.service.config.CookieDomain,
+		h.service.config.CookieSecure,
+		true,
+	)
+
+	c.JSON(http.StatusOK, gin.H{"success": true})
 }
 
 // AuthMiddleware is a Gin middleware that checks for a valid JWT token in the "token" cookie.
 // If the token is valid, it sets user information (userID, username, role) in the context.
-// If the token is missing or invalid, it redirects the user to the login page.
+// If the token is missing or invalid, it attempts to use refresh token, or redirects to login.
 func (h *AuthHandler) AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString, err := c.Cookie("token")
-		if err != nil {
-			c.Redirect(http.StatusFound, "/auth/login")
-			c.Abort()
-			return
+
+		// If access token is missing or invalid, try to refresh it
+		if err != nil || tokenString == "" {
+			refreshToken, refreshErr := c.Cookie("refresh_token")
+			if refreshErr == nil && refreshToken != "" {
+				newAccessToken, refreshErr := h.service.RefreshAccessToken(c.Request.Context(), refreshToken)
+				if refreshErr == nil {
+					sameSite := parseSameSiteMode(h.service.config.CookieSameSite)
+					c.SetSameSite(sameSite)
+					c.SetCookie(
+						"token",
+						newAccessToken,
+						int(h.service.config.AccessTokenExpiry.Seconds()),
+						"/",
+						h.service.config.CookieDomain,
+						h.service.config.CookieSecure,
+						true,
+					)
+
+					tokenString = newAccessToken
+				}
+			}
+
+			// If still no valid token, redirect to login
+			if tokenString == "" {
+				c.Redirect(http.StatusFound, "/auth/login")
+				c.Abort()
+				return
+			}
 		}
 
 		claims, err := h.service.VerifyToken(tokenString)
@@ -117,7 +204,7 @@ func (h *GoogleAuthHandler) HandleCallback(c *gin.Context) {
 		return
 	}
 
-	token, err := h.service.Authenticate(c.Request.Context(), code)
+	accessToken, refreshToken, err := h.service.Authenticate(c.Request.Context(), code)
 	if err != nil {
 		h.service.LogError(err)
 
@@ -131,6 +218,41 @@ func (h *GoogleAuthHandler) HandleCallback(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("token", token, 3600, "/", "", false, true)
+	sameSite := parseSameSiteMode(h.service.cfg.CookieSameSite)
+
+	c.SetSameSite(sameSite)
+	c.SetCookie(
+		"token",
+		accessToken,
+		int(h.config.AccessTokenExpiry.Seconds()),
+		"/",
+		h.config.CookieDomain,
+		h.config.CookieSecure,
+		true,
+	)
+
+	// Set refresh token cookie
+	c.SetCookie(
+		"refresh_token",
+		refreshToken,
+		int(h.config.RefreshTokenExpiry.Seconds()),
+		"/",
+		h.config.CookieDomain,
+		h.config.CookieSecure,
+		true,
+	)
+
 	c.Redirect(http.StatusFound, "/jobs")
+}
+
+// Helper function to parse SameSite mode from string
+func parseSameSiteMode(sameSiteStr string) http.SameSite {
+	switch strings.ToLower(sameSiteStr) {
+	case "strict":
+		return http.SameSiteStrictMode
+	case "none":
+		return http.SameSiteNoneMode
+	default:
+		return http.SameSiteLaxMode
+	}
 }

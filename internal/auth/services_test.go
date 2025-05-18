@@ -64,8 +64,10 @@ func (m *MockUserRepository) FindAllUsers(ctx context.Context) ([]*User, error) 
 
 func setupTestConfig() *config.Settings {
 	return &config.Settings{
-		TokenSecret:     "test-secret-key",
-		TokenExpiration: time.Hour,
+		TokenSecret:        "test-secret-key",
+		TokenExpiration:    time.Hour,
+		AccessTokenExpiry:  15 * time.Minute,
+		RefreshTokenExpiry: 7 * 24 * time.Hour,
 	}
 }
 
@@ -133,10 +135,11 @@ func TestLogin(t *testing.T) {
 
 		authService := NewAuthService(mockRepo, cfg)
 
-		token, err := authService.Login(ctx, "testuser", "password123")
+		accessToken, refreshToken, err := authService.Login(ctx, "testuser", "password123")
 
 		require.NoError(t, err)
-		require.NotEmpty(t, token)
+		require.NotEmpty(t, accessToken)
+		require.NotEmpty(t, refreshToken)
 
 		mockRepo.AssertExpectations(t)
 	})
@@ -159,15 +162,17 @@ func TestLogin(t *testing.T) {
 
 		authService := NewAuthService(mockRepo, cfg)
 
-		token1, err1 := authService.Login(ctx, "nonexistent", "password123")
+		accessToken1, refreshToken1, err1 := authService.Login(ctx, "nonexistent", "password123")
 		require.Error(t, err1)
 		require.Equal(t, ErrInvalidCredentials, err1)
-		require.Empty(t, token1)
+		require.Empty(t, accessToken1)
+		require.Empty(t, refreshToken1)
 
-		token2, err2 := authService.Login(ctx, "testuser", "wrongpassword")
+		accessToken2, refreshToken2, err2 := authService.Login(ctx, "testuser", "wrongpassword")
 		require.Error(t, err2)
 		require.Equal(t, ErrInvalidCredentials, err2)
-		require.Empty(t, token2)
+		require.Empty(t, accessToken2)
+		require.Empty(t, refreshToken2)
 
 		mockRepo.AssertExpectations(t)
 	})
@@ -219,7 +224,7 @@ func TestVerifyToken(t *testing.T) {
 		Role:     ADMIN,
 	}
 
-	token, err := GenerateToken(user, cfg)
+	token, err := GenerateAccessToken(user, cfg)
 	require.NoError(t, err)
 
 	t.Run("should_verify_token_when_valid", func(t *testing.T) {

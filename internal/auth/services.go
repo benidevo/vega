@@ -13,9 +13,10 @@ import (
 
 // Claims represents the JWT claims for authentication, including user ID, username, role, and standard registered claims.
 type Claims struct {
-	UserID   int    `json:"user_id"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
+	UserID    int    `json:"user_id"`
+	Username  string `json:"username"`
+	Role      string `json:"role"`
+	TokenType string `json:"token_type,omitempty"` // "access" or "refresh"
 	jwt.RegisteredClaims
 }
 
@@ -42,7 +43,6 @@ func (s *AuthService) Register(ctx context.Context, username, password, role str
 
 	user, err := s.repo.CreateUser(ctx, username, hashedPassword, role)
 	if err != nil {
-		// Extract sentinel error for clean API
 		sentinelErr := GetSentinelError(err)
 
 		if sentinelErr == ErrUserAlreadyExists {
@@ -50,7 +50,6 @@ func (s *AuthService) Register(ctx context.Context, username, password, role str
 			return user, ErrUserAlreadyExists
 		}
 
-		// Log the detailed technical error but expose only the sentinel error
 		s.log.Error().Err(err).Str("username", username).Msg("Failed to create user")
 		return nil, sentinelErr
 	}
@@ -60,10 +59,8 @@ func (s *AuthService) Register(ctx context.Context, username, password, role str
 }
 
 // Login authenticates a user by verifying the provided username and password.
-//
-// If successful, it generates and returns a JWT token. It also updates the
-// user's last login timestamp.
-func (s *AuthService) Login(ctx context.Context, username, password string) (string, error) {
+// If successful, it generates and returns access and refresh tokens and updates the user's last login timestamp.
+func (s *AuthService) Login(ctx context.Context, username, password string) (string, string, error) {
 	user, err := s.repo.FindByUsername(ctx, username)
 	if err != nil {
 		sentinelErr := GetSentinelError(err)
@@ -73,23 +70,29 @@ func (s *AuthService) Login(ctx context.Context, username, password string) (str
 			s.log.Error().Err(err).Str("username", username).Msg("Error retrieving user during login")
 		}
 
-		return "", ErrInvalidCredentials
+		return "", "", ErrInvalidCredentials
 	}
 
 	if user.Password == "" {
 		s.log.Error().Str("username", username).Msg("User password is empty. Account was created using Google authentication")
-		return "", ErrInvalidCredentials
+		return "", "", ErrInvalidCredentials
 	}
 
 	if !verifyPassword(user.Password, password) {
 		s.log.Error().Str("username", username).Msg("Invalid password provided during login")
-		return "", ErrInvalidCredentials
+		return "", "", ErrInvalidCredentials
 	}
 
-	token, err := GenerateToken(user, s.config)
+	accessToken, err := GenerateAccessToken(user, s.config)
 	if err != nil {
-		s.log.Error().Err(err).Str("username", username).Msg("Failed to generate token")
-		return "", ErrInvalidCredentials
+		s.log.Error().Err(err).Str("username", username).Msg("Failed to generate access token")
+		return "", "", ErrTokenCreationFailed
+	}
+
+	refreshToken, err := GenerateRefreshToken(user, s.config)
+	if err != nil {
+		s.log.Error().Err(err).Str("username", username).Msg("Failed to generate refresh token")
+		return "", "", ErrTokenCreationFailed
 	}
 
 	user.LastLogin = time.Now().UTC()
@@ -100,7 +103,37 @@ func (s *AuthService) Login(ctx context.Context, username, password string) (str
 	}
 
 	s.log.Info().Str("username", username).Int("user_id", user.ID).Msg("User logged in successfully")
-	return token, nil
+	return accessToken, refreshToken, nil
+}
+
+// RefreshAccessToken validates a refresh token and generates a new access token if valid
+func (s *AuthService) RefreshAccessToken(ctx context.Context, refreshToken string) (string, error) {
+	claims, err := s.VerifyToken(refreshToken)
+	if err != nil {
+		s.log.Error().Err(err).Msg("Invalid refresh token")
+		return "", ErrInvalidToken
+	}
+
+	if claims.TokenType != "refresh" {
+		s.log.Error().Msg("Token provided is not a refresh token")
+		return "", ErrInvalidToken
+	}
+
+	user, err := s.repo.FindByID(ctx, claims.UserID)
+	if err != nil {
+		sentinelErr := GetSentinelError(err)
+		s.log.Error().Err(err).Int("user_id", claims.UserID).Str("error_type", sentinelErr.Error()).Msg("Failed to find user for token refresh")
+		return "", ErrInvalidToken
+	}
+
+	accessToken, err := GenerateAccessToken(user, s.config)
+	if err != nil {
+		s.log.Error().Err(err).Int("user_id", user.ID).Msg("Failed to generate new access token")
+		return "", ErrTokenCreationFailed
+	}
+
+	s.log.Info().Int("user_id", user.ID).Msg("Access token refreshed successfully")
+	return accessToken, nil
 }
 
 // GetUserByID retrieves a user by their unique ID from the repository.
@@ -177,17 +210,26 @@ func (s *AuthService) ChangePassword(ctx context.Context, userID int, newPasswor
 	return nil
 }
 
-// GenerateToken creates a JWT token for the given user using the provided configuration settings.
-// The token includes user ID, username, role, and standard claims such as issuer, subject, issued at, and expiration.
-// Returns the signed JWT token string or an error if signing fails.
-func GenerateToken(user *User, cfg *config.Settings) (string, error) {
-	expirationTime := time.Now().UTC().Add(cfg.TokenExpiration)
+// TokenType defines the type of JWT token
+type TokenType string
+
+const (
+	// AccessToken is a short-lived token used for authentication
+	AccessToken TokenType = "access"
+	// RefreshToken is a long-lived token used to refresh access tokens
+	RefreshToken TokenType = "refresh"
+)
+
+// GenerateToken creates a JWT token for the given user with the specified token type and expiration duration.
+func GenerateToken(user *User, cfg *config.Settings, tokenType TokenType, expiry time.Duration) (string, error) {
+	expirationTime := time.Now().UTC().Add(expiry)
 	role := user.Role.String()
 
 	claims := &Claims{
-		UserID:   user.ID,
-		Username: user.Username,
-		Role:     role,
+		UserID:    user.ID,
+		Username:  user.Username,
+		Role:      role,
+		TokenType: string(tokenType),
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    cfg.AppName,
 			Subject:   user.Username,
@@ -198,6 +240,16 @@ func GenerateToken(user *User, cfg *config.Settings) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(cfg.TokenSecret))
+}
+
+// GenerateAccessToken creates a short-lived access JWT token for the given user.
+func GenerateAccessToken(user *User, cfg *config.Settings) (string, error) {
+	return GenerateToken(user, cfg, AccessToken, cfg.AccessTokenExpiry)
+}
+
+// GenerateRefreshToken creates a long-lived refresh JWT token for the given user.
+func GenerateRefreshToken(user *User, cfg *config.Settings) (string, error) {
+	return GenerateToken(user, cfg, RefreshToken, cfg.RefreshTokenExpiry)
 }
 
 func hashPassword(password string) (string, error) {

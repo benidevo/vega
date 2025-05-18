@@ -2,7 +2,7 @@ package auth
 
 import (
 	"context"
-	crypto_rand "crypto/rand"
+	cryptorand "crypto/rand"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -104,18 +104,18 @@ func (s *GoogleAuthService) getUserInfo(ctx context.Context, token *oauth2.Token
 	return &userInfo, nil
 }
 
-func (s *GoogleAuthService) Authenticate(ctx context.Context, code string) (string, error) {
-	var user *User
-	var err error
-
+// Authenticate exchanges the provided Google OAuth code for access and refresh tokens.
+// It retrieves user info, creates or fetches the user in the database, generates authentication tokens,
+// updates the user's last login time, and returns the access and refresh tokens.
+func (s *GoogleAuthService) Authenticate(ctx context.Context, code string) (string, string, error) {
 	token, err := s.exchangeCode(ctx, code)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	userInfo, err := s.getUserInfo(ctx, token)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	s.log.Info().
@@ -123,32 +123,21 @@ func (s *GoogleAuthService) Authenticate(ctx context.Context, code string) (stri
 		Bool("verified_email", userInfo.VerifiedEmail).
 		Msg("Google user authenticated")
 
-	// First, check if user exists
-	user, err = s.repo.FindByUsername(ctx, userInfo.Email)
+	user, err := s.getOrCreateUser(ctx, userInfo)
 	if err != nil {
-		sentinelErr := GetSentinelError(err)
-
-		if sentinelErr != ErrUserNotFound {
-			// This is an unexpected error
-			s.log.Error().Err(err).Str("email", userInfo.Email).Str("error_type", sentinelErr.Error()).Msg("Error looking up Google user")
-			return "", ErrGoogleUserCreationFailed
-		}
-
-		// User doesn't exist, create a new one
-		s.log.Info().Str("email", userInfo.Email).Msg("Creating new user from Google account")
-		user, err = s.repo.CreateUser(ctx, userInfo.Email, "", STANDARD.String())
-		if err != nil {
-			sentinelErr := GetSentinelError(err)
-			s.log.Error().Err(err).Str("email", userInfo.Email).Str("error_type", sentinelErr.Error()).Msg("Failed to create user from Google account")
-			return "", ErrGoogleUserCreationFailed
-		}
-		s.log.Info().Str("email", userInfo.Email).Int("user_id", user.ID).Msg("New user created from Google account")
+		return "", "", err
 	}
 
-	tokenString, err := GenerateToken(user, s.cfg)
+	accessToken, err := GenerateAccessToken(user, s.cfg)
 	if err != nil {
-		s.log.Error().Err(err).Int("user_id", user.ID).Msg("Failed to generate auth token for Google user")
-		return "", ErrGoogleAuthTokenCreationFailed
+		s.log.Error().Err(err).Int("user_id", user.ID).Msg("Failed to generate access token for Google user")
+		return "", "", ErrGoogleAuthTokenCreationFailed
+	}
+
+	refreshToken, err := GenerateRefreshToken(user, s.cfg)
+	if err != nil {
+		s.log.Error().Err(err).Int("user_id", user.ID).Msg("Failed to generate refresh token for Google user")
+		return "", "", ErrGoogleAuthTokenCreationFailed
 	}
 
 	user.LastLogin = time.Now().UTC()
@@ -159,7 +148,37 @@ func (s *GoogleAuthService) Authenticate(ctx context.Context, code string) (stri
 	}
 
 	s.log.Info().Int("user_id", user.ID).Str("email", user.Username).Msg("Google user successfully logged in")
-	return tokenString, nil
+	return accessToken, refreshToken, nil
+}
+
+// getOrCreateUser retrieves a user by their Google account email or creates a new user if not found.
+// Returns the user or an error if the lookup or creation fails.
+func (s *GoogleAuthService) getOrCreateUser(ctx context.Context, userInfo *GoogleAuthUserInfo) (*User, error) {
+	var err error
+	var user *User
+
+	user, err = s.repo.FindByUsername(ctx, userInfo.Email)
+	if err != nil {
+		sentinelErr := GetSentinelError(err)
+
+		if sentinelErr != ErrUserNotFound {
+			// This is an unexpected error
+			s.log.Error().Err(err).Str("email", userInfo.Email).Str("error_type", sentinelErr.Error()).Msg("Error looking up Google user")
+			return nil, ErrGoogleUserCreationFailed
+		}
+
+		// User doesn't exist, create a new one
+		s.log.Info().Str("email", userInfo.Email).Msg("Creating new user from Google account")
+		user, err = s.repo.CreateUser(ctx, userInfo.Email, "", STANDARD.String())
+		if err != nil {
+			sentinelErr := GetSentinelError(err)
+			s.log.Error().Err(err).Str("email", userInfo.Email).Str("error_type", sentinelErr.Error()).Msg("Failed to create user from Google account")
+			return nil, ErrGoogleUserCreationFailed
+		}
+		s.log.Info().Str("email", userInfo.Email).Int("user_id", user.ID).Msg("New user created from Google account")
+	}
+
+	return user, nil
 }
 
 // CreateDriveService creates a new Google Drive service client using the provided OAuth2 token and context.
@@ -221,7 +240,7 @@ func generateRandomState(length int) string {
 	result := make([]byte, length)
 
 	randomBytes := make([]byte, length)
-	if _, err := crypto_rand.Read(randomBytes); err != nil {
+	if _, err := cryptorand.Read(randomBytes); err != nil {
 		// Fallback to a simple random string if crypto/rand fails
 		for i := range result {
 			result[i] = charset[rand.Intn(len(charset))]

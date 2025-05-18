@@ -14,10 +14,16 @@ type Settings struct {
 	DBDriver           string
 	LogLevel           string
 	IsDevelopment      bool
-	TokenExpiration    time.Duration
-	TokenSecret        string
 	IsTest             bool
 	MigrationsDir      string
+
+	TokenSecret        string
+	TokenExpiration    time.Duration
+	AccessTokenExpiry  time.Duration
+	RefreshTokenExpiry time.Duration
+	CookieDomain       string
+	CookieSecure       bool
+	CookieSameSite     string
 
 	GoogleClientConfigFile  string
 	GoogleClientRedirectURL string
@@ -34,17 +40,42 @@ func NewSettings() Settings {
 		tokenExpiration = 60 // Default to 60 minutes if conversion fails
 	}
 
+	accessTokenMins, err := strconv.Atoi(getEnv("ACCESS_TOKEN_EXPIRY", "15"))
+	if err != nil {
+		accessTokenMins = 15
+	}
+
+	refreshTokenHours, err := strconv.Atoi(getEnv("REFRESH_TOKEN_EXPIRY", "168"))
+	if err != nil {
+		refreshTokenHours = 168 // 7 days
+	}
+
+	cookieSecure := getEnv("COOKIE_SECURE", "") == "true"
+	isDevelopment := getEnv("IS_DEVELOPMENT", "false") == "true"
+
+	// In development mode, cookies are not secure by default
+	if isDevelopment && getEnv("COOKIE_SECURE", "") == "" {
+		cookieSecure = false
+	}
+
 	return Settings{
-		AppName:                 "Prospector",
-		ServerPort:              getEnv("SERVER_PORT", ":8080"),
-		DBConnectionString:      getEnv("DB_CONNECTION_STRING", "/app/data/prospector.db?_journal=WAL&_busy_timeout=5000"),
-		DBDriver:                getEnv("DB_DRIVER", "sqlite"),
-		LogLevel:                getEnv("LOG_LEVEL", "info"),
-		IsDevelopment:           getEnv("IS_DEVELOPMENT", "false") == "true",
-		TokenExpiration:         time.Duration(tokenExpiration) * time.Minute,
-		TokenSecret:             getEnv("TOKEN_SECRET", "default-secret"),
-		IsTest:                  getEnv("GO_ENV", "") == "test",
-		MigrationsDir:           getEnv("MIGRATIONS_DIR", "migrations/sqlite"),
+		AppName:            "Prospector",
+		ServerPort:         getEnv("SERVER_PORT", ":8080"),
+		DBConnectionString: getEnv("DB_CONNECTION_STRING", "/app/data/prospector.db?_journal=WAL&_busy_timeout=5000"),
+		DBDriver:           getEnv("DB_DRIVER", "sqlite"),
+		LogLevel:           getEnv("LOG_LEVEL", "info"),
+		IsDevelopment:      isDevelopment,
+		TokenExpiration:    time.Duration(tokenExpiration) * time.Minute,
+		TokenSecret:        getEnv("TOKEN_SECRET", "default-secret"),
+		IsTest:             getEnv("GO_ENV", "") == "test",
+		MigrationsDir:      getEnv("MIGRATIONS_DIR", "migrations/sqlite"),
+
+		AccessTokenExpiry:  time.Duration(accessTokenMins) * time.Minute,
+		RefreshTokenExpiry: time.Duration(refreshTokenHours) * time.Hour,
+		CookieDomain:       getEnv("COOKIE_DOMAIN", ""),
+		CookieSecure:       cookieSecure,
+		CookieSameSite:     getEnv("COOKIE_SAME_SITE", "lax"),
+
 		GoogleClientConfigFile:  getEnv("GOOGLE_CLIENT_CONFIG_FILE", "config/google_oauth_credentials.json"),
 		GoogleClientRedirectURL: getEnv("GOOGLE_CLIENT_REDIRECT_URL", "http://localhost:8000/auth/google/callback"),
 		GoogleAuthUserInfoURL:   getEnv("GOOGLE_AUTH_USER_INFO_URL", "https://www.googleapis.com/oauth2/v3/userinfo"),
