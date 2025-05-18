@@ -28,3 +28,5 @@ go.work.sum
 *.db
 tmp/
 .DS_Store
+
+*google_oauth_credentials.json

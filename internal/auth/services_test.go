@@ -217,7 +217,7 @@ func TestVerifyToken(t *testing.T) {
 		Role:     ADMIN,
 	}
 
-	token, err := authService.GenerateToken(user)
+	token, err := GenerateToken(user, cfg)
 	require.NoError(t, err)
 
 	t.Run("should_verify_token_when_valid", func(t *testing.T) {

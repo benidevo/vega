@@ -11,6 +11,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Claims represents the JWT claims for authentication, including user ID, username, role, and standard registered claims.
 type Claims struct {
 	UserID   int    `json:"user_id"`
 	Username string `json:"username"`
@@ -25,6 +26,7 @@ type AuthService struct {
 	log    zerolog.Logger
 }
 
+// NewAuthService creates and returns a new AuthService instance using the provided UserRepository and configuration settings.
 func NewAuthService(repo UserRepository, config *config.Settings) *AuthService {
 	return &AuthService{repo: repo, config: config, log: logger.GetLogger("auth")}
 }
@@ -40,12 +42,17 @@ func (s *AuthService) Register(ctx context.Context, username, password, role str
 
 	user, err := s.repo.CreateUser(ctx, username, hashedPassword, role)
 	if err != nil {
-		if err == ErrUserAlreadyExists {
+		// Extract sentinel error for clean API
+		sentinelErr := GetSentinelError(err)
+
+		if sentinelErr == ErrUserAlreadyExists {
 			s.log.Warn().Str("username", username).Msg("User already exists")
 			return user, ErrUserAlreadyExists
 		}
-		s.log.Error().Err(err).Msg("Failed to create user")
-		return nil, ErrUserCreationFailed
+
+		// Log the detailed technical error but expose only the sentinel error
+		s.log.Error().Err(err).Str("username", username).Msg("Failed to create user")
+		return nil, sentinelErr
 	}
 
 	s.log.Info().Str("username", username).Msg("User registered successfully")
@@ -59,28 +66,40 @@ func (s *AuthService) Register(ctx context.Context, username, password, role str
 func (s *AuthService) Login(ctx context.Context, username, password string) (string, error) {
 	user, err := s.repo.FindByUsername(ctx, username)
 	if err != nil {
-		s.log.Error().Err(err).Msg("User not found")
+		sentinelErr := GetSentinelError(err)
+		if sentinelErr == ErrUserNotFound {
+			s.log.Info().Str("username", username).Msg("Login attempt for non-existent user")
+		} else {
+			s.log.Error().Err(err).Str("username", username).Msg("Error retrieving user during login")
+		}
+
+		return "", ErrInvalidCredentials
+	}
+
+	if user.Password == "" {
+		s.log.Error().Str("username", username).Msg("User password is empty. Account was created using Google authentication")
 		return "", ErrInvalidCredentials
 	}
 
 	if !verifyPassword(user.Password, password) {
-		s.log.Error().Msg("Invalid credentials")
+		s.log.Error().Str("username", username).Msg("Invalid password provided during login")
 		return "", ErrInvalidCredentials
 	}
 
-	token, err := s.GenerateToken(user)
+	token, err := GenerateToken(user, s.config)
 	if err != nil {
-		s.log.Error().Err(err).Msg("Failed to generate token")
+		s.log.Error().Err(err).Str("username", username).Msg("Failed to generate token")
 		return "", ErrInvalidCredentials
 	}
 
 	user.LastLogin = time.Now().UTC()
 	_, err = s.repo.UpdateUser(ctx, user)
 	if err != nil {
-		s.log.Warn().Err(err).Msg("Failed to update user last login")
+		sentinelErr := GetSentinelError(err)
+		s.log.Warn().Err(err).Str("username", username).Str("error_type", sentinelErr.Error()).Msg("Failed to update user last login")
 	}
 
-	s.log.Info().Msgf("User %s logged in successfully", username)
+	s.log.Info().Str("username", username).Int("user_id", user.ID).Msg("User logged in successfully")
 	return token, nil
 }
 
@@ -88,36 +107,15 @@ func (s *AuthService) Login(ctx context.Context, username, password string) (str
 func (s *AuthService) GetUserByID(ctx context.Context, userID int) (*User, error) {
 	user, err := s.repo.FindByID(ctx, userID)
 	if err != nil {
-		s.log.Error().Err(err).Msg("Failed to find user by ID")
-		return nil, ErrUserNotFound
+		sentinelErr := GetSentinelError(err)
+		s.log.Error().Err(err).Int("user_id", userID).Str("error_type", sentinelErr.Error()).Msg("Failed to find user by ID")
+
+		if sentinelErr == ErrUserNotFound {
+			return nil, ErrUserNotFound
+		}
+		return nil, ErrUserRetrievalFailed
 	}
 	return user, nil
-}
-
-// GenerateToken generates a JWT token for the given user with claims including
-// user ID, username, role, and standard registered claims such as issuer, subject,
-// issued time, and expiration time.
-//
-// The token is signed using the HS256 algorithm
-// and a secret key from the service configuration.
-func (s *AuthService) GenerateToken(user *User) (string, error) {
-	expirationTime := time.Now().UTC().Add(s.config.TokenExpiration)
-	role, _ := user.Role.String()
-
-	claims := &Claims{
-		UserID:   user.ID,
-		Username: user.Username,
-		Role:     role,
-		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "prospector",
-			Subject:   user.Username,
-			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
-			ExpiresAt: jwt.NewNumericDate(expirationTime),
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(s.config.TokenSecret))
 }
 
 // VerifyToken validates a JWT token and extracts its claims.
@@ -153,23 +151,53 @@ func (s *AuthService) VerifyToken(token string) (*Claims, error) {
 func (s *AuthService) ChangePassword(ctx context.Context, userID int, newPassword string) error {
 	user, err := s.repo.FindByID(ctx, userID)
 	if err != nil {
-		return ErrUserNotFound
+		sentinelErr := GetSentinelError(err)
+		s.log.Error().Err(err).Int("user_id", userID).Str("error_type", sentinelErr.Error()).Msg("Failed to find user for password change")
+		if sentinelErr == ErrUserNotFound {
+			return ErrUserNotFound
+		}
+		return ErrUserPasswordChangeFailed
 	}
 
 	hashedPassword, err := hashPassword(newPassword)
 	if err != nil {
-		s.log.Error().Err(err).Msg("Failed to hash password")
+		s.log.Error().Err(err).Int("user_id", userID).Msg("Failed to hash password")
 		return ErrUserPasswordChangeFailed
 	}
 
 	user.Password = hashedPassword
 	_, err = s.repo.UpdateUser(ctx, user)
 	if err != nil {
-		s.log.Error().Err(err).Msg("Failed to update user password")
+		sentinelErr := GetSentinelError(err)
+		s.log.Error().Err(err).Int("user_id", userID).Str("error_type", sentinelErr.Error()).Msg("Failed to update user password")
 		return ErrUserPasswordChangeFailed
 	}
 
+	s.log.Info().Int("user_id", userID).Msg("User password changed successfully")
 	return nil
+}
+
+// GenerateToken creates a JWT token for the given user using the provided configuration settings.
+// The token includes user ID, username, role, and standard claims such as issuer, subject, issued at, and expiration.
+// Returns the signed JWT token string or an error if signing fails.
+func GenerateToken(user *User, cfg *config.Settings) (string, error) {
+	expirationTime := time.Now().UTC().Add(cfg.TokenExpiration)
+	role := user.Role.String()
+
+	claims := &Claims{
+		UserID:   user.ID,
+		Username: user.Username,
+		Role:     role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    cfg.AppName,
+			Subject:   user.Username,
+			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(cfg.TokenSecret))
 }
 
 func hashPassword(password string) (string, error) {

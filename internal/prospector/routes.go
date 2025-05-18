@@ -21,10 +21,22 @@ func SetupRoutes(a *App) {
 	jobHandler := job.Setup(a.db, &a.config)
 	settingsHandler := settings.Setup(&a.config, a.db)
 
+	// Setup Google Auth
+	googleAuthHandler, err := auth.SetupGoogleAuth(&a.config, a.db)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to setup Google Auth")
+	}
+
 	a.router.GET("/", homeHandler.GetHomePage)
 
 	authGroup := a.router.Group("/auth")
 	auth.RegisterPublicRoutes(authGroup, authHandler)
+
+	// Register Google Auth routes
+	if googleAuthHandler != nil {
+		auth.RegisterGoogleAuthRoutes(authGroup, googleAuthHandler)
+	}
+
 	authGroup.Use(authHandler.AuthMiddleware())
 	auth.RegisterPrivateRoutes(authGroup, authHandler)
 

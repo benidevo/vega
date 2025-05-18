@@ -1,6 +1,6 @@
 # ProspecTor
 
-![Build Status](https://github.com/benidevo/prospector/workflows/Go%20Docker%20CI/badge.svg)
+![Build Status](https://github.com/benidevo/prospector/workflows/CI/badge.svg)
 
 ## Overview
 

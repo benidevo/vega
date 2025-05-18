@@ -36,14 +36,14 @@ func RoleFromString(role string) (Role, error) {
 }
 
 // String returns the string representation of the Role.
-func (r Role) String() (string, error) {
+func (r Role) String() string {
 	switch r {
 	case ADMIN:
-		return "Admin", nil
+		return "Admin"
 	case STANDARD:
-		return "Standard", nil
+		return "Standard"
 	default:
-		return "", ErrInvalidRole
+		return "Standard"
 	}
 }
 

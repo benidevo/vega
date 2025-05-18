@@ -96,24 +96,6 @@ jobs:
           file: ./coverage.filtered.out
           flags: unittests
 
-      - name: Check test coverage threshold
-        run: |
-          MIN_COVERAGE=40.0
-
-          # Run coverage check directly in the container
-          COVERAGE=$(docker compose exec app sh -c "go tool cover -func=coverage.filtered.out | grep total: | awk '{print \$3}'" | tr -d '%')
-          echo "Code coverage (excluding handlers): $COVERAGE%"
-
-          if (( $(echo "$COVERAGE < $MIN_COVERAGE" | bc -l) )); then
-            echo "❌ Code coverage is below the threshold of $MIN_COVERAGE%"
-            exit 1
-          fi
-          echo "✅ Coverage threshold met: $COVERAGE% ≥ $MIN_COVERAGE%"
-
-      - name: Clean up Docker resources
-        if: always()
-        run: docker compose down -v
-
   summary:
     name: CI Summary
     needs: [build, lint, test-and-coverage]

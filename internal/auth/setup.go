@@ -17,6 +17,19 @@ func SetupAuth(db *sql.DB, cfg *config.Settings) *AuthHandler {
 	return handler
 }
 
+// SetupGoogleAuth initializes and returns a GoogleAuthHandler using the provided configuration settings.
+// It sets up the GoogleAuthService and handler dependencies.
+func SetupGoogleAuth(cfg *config.Settings, db *sql.DB) (*GoogleAuthHandler, error) {
+	repo := NewSQLiteUserRepository(db) // Assuming you have a way to get the DB connection
+	service, err := NewGoogleAuthService(cfg, repo)
+	if err != nil {
+		return nil, err
+	}
+	handler := NewGoogleAuthHandler(service, cfg)
+
+	return handler, nil
+}
+
 // RegisterPublicRoutes registers public authentication routes (login page and login action)
 // to the provided Gin router group using the specified AuthHandler.
 func RegisterPublicRoutes(router *gin.RouterGroup, handler *AuthHandler) {
@@ -28,4 +41,11 @@ func RegisterPublicRoutes(router *gin.RouterGroup, handler *AuthHandler) {
 // It attaches handler functions for endpoints that require authentication, such as logout.
 func RegisterPrivateRoutes(router *gin.RouterGroup, handler *AuthHandler) {
 	router.POST("/logout", handler.Logout)
+}
+
+// RegisterGoogleAuthRoutes registers Google authentication routes to the provided router group.
+// It attaches handler functions for Google login and callback endpoints.
+func RegisterGoogleAuthRoutes(router *gin.RouterGroup, handler *GoogleAuthHandler) {
+	router.GET("/google/login", handler.HandleLogin)
+	router.GET("/google/callback", handler.HandleCallback)
 }

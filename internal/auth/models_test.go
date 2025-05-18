@@ -40,22 +40,14 @@ func TestNewUserValidation(t *testing.T) {
 func TestRole(t *testing.T) {
 	t.Run("should return correct string for ADMIN role", func(t *testing.T) {
 		role := ADMIN
-		actual, err := role.String()
-		require.NoError(t, err, "Expected no error when getting role string")
+		actual := role.String()
 		assert.Equal(t, "Admin", actual, "Expected role string to be 'Admin'")
 	})
 
 	t.Run("should return correct string for STANDARD role", func(t *testing.T) {
 		role := STANDARD
-		actual, err := role.String()
-		require.NoError(t, err, "Expected no error when getting role string")
+		actual := role.String()
 		assert.Equal(t, "Standard", actual, "Expected role string to be 'Standard'")
-	})
-
-	t.Run("should return 'Unknown' for unknown role", func(t *testing.T) {
-		role := Role(999)
-		_, err := role.String()
-		require.Error(t, err, "Expected error when getting string for unknown role")
 	})
 
 	t.Run("should return correct role for valid strings", func(t *testing.T) {

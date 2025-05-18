@@ -55,6 +55,9 @@ func (r *SQLiteUserRepository) CreateUser(ctx context.Context, username, passwor
 	if err == nil {
 		return existingUser, ErrUserAlreadyExists
 	} else if err != ErrUserNotFound {
+		if _, ok := err.(*RepositoryError); !ok {
+			return nil, WrapError(ErrUserCreationFailed, err)
+		}
 		return nil, err
 	}
 
@@ -62,8 +65,9 @@ func (r *SQLiteUserRepository) CreateUser(ctx context.Context, username, passwor
 
 	roleValue, err := RoleFromString(role)
 	if err != nil {
-		return nil, err
+		return nil, WrapError(ErrInvalidRole, err)
 	}
+
 	result, err := r.db.ExecContext(ctx, query, username, password, roleValue)
 	if err != nil {
 		if err.Error() == "UNIQUE constraint failed: users.username" {
@@ -73,13 +77,14 @@ func (r *SQLiteUserRepository) CreateUser(ctx context.Context, username, passwor
 			}
 			return nil, ErrUserAlreadyExists
 		}
-		return nil, ErrUserCreationFailed
+		return nil, WrapError(ErrUserCreationFailed, err)
 	}
 
 	id, err := result.LastInsertId()
 	if err != nil {
-		return nil, ErrUserCreationFailed
+		return nil, WrapError(ErrUserCreationFailed, err)
 	}
+
 	return r.FindByID(ctx, int(id))
 }
 
@@ -104,7 +109,7 @@ func (r *SQLiteUserRepository) FindByID(ctx context.Context, id int) (*User, err
 		if err == sql.ErrNoRows {
 			return nil, ErrUserNotFound
 		}
-		return nil, err
+		return nil, WrapError(ErrUserRetrievalFailed, err)
 	}
 
 	if lastLogin.Valid {
@@ -125,7 +130,7 @@ func (r *SQLiteUserRepository) FindByUsername(ctx context.Context, username stri
 		if err == sql.ErrNoRows {
 			return nil, ErrUserNotFound
 		}
-		return nil, err
+		return nil, WrapError(ErrUserRetrievalFailed, err)
 	}
 
 	if lastLogin.Valid {
@@ -154,12 +159,12 @@ func (r *SQLiteUserRepository) UpdateUser(ctx context.Context, user *User) (*Use
 
 	result, err := r.db.ExecContext(ctx, query, args...)
 	if err != nil {
-		return nil, ErrUserUpdateFailed
+		return nil, WrapError(ErrUserUpdateFailed, err)
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return nil, ErrUserUpdateFailed
+		return nil, WrapError(ErrUserUpdateFailed, err)
 	}
 
 	if rowsAffected == 0 {
@@ -175,7 +180,7 @@ func (r *SQLiteUserRepository) DeleteUser(ctx context.Context, id int) error {
 
 	_, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
-		return ErrUserDeletionFailed
+		return WrapError(ErrUserDeletionFailed, err)
 	}
 	return nil
 }
@@ -186,7 +191,7 @@ func (r *SQLiteUserRepository) FindAllUsers(ctx context.Context) ([]*User, error
 
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
-		return nil, ErrUserListRetrievalFailed
+		return nil, WrapError(ErrUserListRetrievalFailed, err)
 	}
 	defer rows.Close()
 
@@ -197,7 +202,7 @@ func (r *SQLiteUserRepository) FindAllUsers(ctx context.Context) ([]*User, error
 
 		err := rows.Scan(&user.ID, &user.Username, &user.Password, &user.Role, &user.CreatedAt, &user.UpdatedAt, &lastLogin)
 		if err != nil {
-			return nil, ErrUserListRetrievalFailed
+			return nil, WrapError(ErrUserListRetrievalFailed, err)
 		}
 
 		if lastLogin.Valid {
@@ -206,7 +211,7 @@ func (r *SQLiteUserRepository) FindAllUsers(ctx context.Context) ([]*User, error
 		users = append(users, &user)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, ErrUserListRetrievalFailed
+		return nil, WrapError(ErrUserListRetrievalFailed, err)
 	}
 	return users, nil
 }
