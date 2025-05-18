@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	commonerrors "github.com/benidevo/prospector/internal/common/errors"
 	"github.com/benidevo/prospector/internal/job/models"
 )
 
@@ -28,7 +29,7 @@ func (r *SQLiteCompanyRepository) GetOrCreate(ctx context.Context, name string) 
 
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, &models.RepositoryError{
+		return nil, &commonerrors.RepositoryError{
 			SentinelError: models.ErrTransactionFailed,
 			InnerError:    err,
 		}
@@ -55,7 +56,7 @@ func (r *SQLiteCompanyRepository) GetOrCreate(ctx context.Context, name string) 
 			normalizedName, now, now,
 		)
 		if err != nil {
-			return nil, &models.RepositoryError{
+			return nil, &commonerrors.RepositoryError{
 				SentinelError: models.ErrFailedToCreateCompany,
 				InnerError:    err,
 			}
@@ -63,7 +64,7 @@ func (r *SQLiteCompanyRepository) GetOrCreate(ctx context.Context, name string) 
 
 		id, err := result.LastInsertId()
 		if err != nil {
-			return nil, &models.RepositoryError{
+			return nil, &commonerrors.RepositoryError{
 				SentinelError: models.ErrFailedToCreateCompany,
 				InnerError:    err,
 			}
@@ -71,7 +72,7 @@ func (r *SQLiteCompanyRepository) GetOrCreate(ctx context.Context, name string) 
 
 		err = tx.Commit()
 		if err != nil {
-			return nil, &models.RepositoryError{
+			return nil, &commonerrors.RepositoryError{
 				SentinelError: models.ErrTransactionFailed,
 				InnerError:    err,
 			}
@@ -87,7 +88,7 @@ func (r *SQLiteCompanyRepository) GetOrCreate(ctx context.Context, name string) 
 		}
 		return &company, nil
 	} else if err != nil {
-		return nil, &models.RepositoryError{
+		return nil, &commonerrors.RepositoryError{
 			SentinelError: models.ErrCompanyNotFound,
 			InnerError:    err,
 		}
@@ -95,7 +96,7 @@ func (r *SQLiteCompanyRepository) GetOrCreate(ctx context.Context, name string) 
 
 	err = tx.Commit()
 	if err != nil {
-		return nil, &models.RepositoryError{
+		return nil, &commonerrors.RepositoryError{
 			SentinelError: models.ErrTransactionFailed,
 			InnerError:    err,
 		}
@@ -107,7 +108,7 @@ func (r *SQLiteCompanyRepository) GetOrCreate(ctx context.Context, name string) 
 
 // wrapError is a helper function to create a repository error
 func wrapError(sentinel, inner error) error {
-	return &models.RepositoryError{
+	return &commonerrors.RepositoryError{
 		SentinelError: sentinel,
 		InnerError:    inner,
 	}

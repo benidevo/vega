@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	commonerrors "github.com/benidevo/prospector/internal/common/errors"
 	"github.com/benidevo/prospector/internal/job/interfaces"
 	"github.com/benidevo/prospector/internal/job/models"
 )
@@ -169,7 +170,7 @@ func (r *SQLiteJobRepository) GetByID(ctx context.Context, id int) (*models.Job,
 		if err == sql.ErrNoRows {
 			return nil, models.ErrJobNotFound
 		}
-		return nil, &models.RepositoryError{
+		return nil, &commonerrors.RepositoryError{
 			SentinelError: models.ErrJobNotFound,
 			InnerError:    err,
 		}

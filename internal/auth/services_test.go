@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	commonerrors "github.com/benidevo/prospector/internal/common/errors"
 	"github.com/benidevo/prospector/internal/config"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -97,7 +98,8 @@ func TestRegisterUser(t *testing.T) {
 		cfg := setupTestConfig()
 		ctx := context.Background()
 
-		mockRepo.On("CreateUser", ctx, "testuser", mock.AnythingOfType("string"), "admin").Return(nil, errors.New("repository error"))
+		repoErr := commonerrors.WrapError(ErrUserCreationFailed, errors.New("repository error"))
+		mockRepo.On("CreateUser", ctx, "testuser", mock.AnythingOfType("string"), "admin").Return(nil, repoErr)
 
 		authService := NewAuthService(mockRepo, cfg)
 
@@ -252,7 +254,8 @@ func TestChangePassword(t *testing.T) {
 	mockRepo.On("FindByID", ctx, 999).Return(nil, ErrUserNotFound)
 
 	mockRepo.On("UpdateUser", ctx, mock.AnythingOfType("*auth.User")).Return(&User{}, nil).Once()
-	mockRepo.On("UpdateUser", ctx, mock.AnythingOfType("*auth.User")).Return(nil, errors.New("update error")).Once()
+	updateErr := commonerrors.WrapError(ErrUserPasswordChangeFailed, errors.New("update error"))
+	mockRepo.On("UpdateUser", ctx, mock.AnythingOfType("*auth.User")).Return(nil, updateErr).Once()
 
 	authService := NewAuthService(mockRepo, cfg)
 

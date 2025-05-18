@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	commonerrors "github.com/benidevo/prospector/internal/common/errors"
 )
 
 // UserRepository defines the interface for user-related data operations.
@@ -55,7 +57,7 @@ func (r *SQLiteUserRepository) CreateUser(ctx context.Context, username, passwor
 	if err == nil {
 		return existingUser, ErrUserAlreadyExists
 	} else if err != ErrUserNotFound {
-		if _, ok := err.(*RepositoryError); !ok {
+		if _, ok := err.(*commonerrors.RepositoryError); !ok {
 			return nil, WrapError(ErrUserCreationFailed, err)
 		}
 		return nil, err
