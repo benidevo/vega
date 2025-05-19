@@ -3,10 +3,10 @@ package settings
 import (
 	"database/sql"
 
-	"github.com/benidevo/prospector/internal/config"
+	"github.com/benidevo/ascentio/internal/config"
 
-	authrepo "github.com/benidevo/prospector/internal/auth/repository"
-	"github.com/benidevo/prospector/internal/settings/repository"
+	authrepo "github.com/benidevo/ascentio/internal/auth/repository"
+	"github.com/benidevo/ascentio/internal/settings/repository"
 	"github.com/gin-gonic/gin"
 )
 

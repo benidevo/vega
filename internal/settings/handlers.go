@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/benidevo/prospector/internal/settings/models"
+	"github.com/benidevo/ascentio/internal/settings/models"
 	"github.com/gin-gonic/gin"
 )
 

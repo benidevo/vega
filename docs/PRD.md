@@ -1,8 +1,8 @@
-# Product Requirements Document for ProspecTor (MVP)
+# Product Requirements Document for Ascentio (MVP)
 
 ## 1. Product Overview
 
-ProspecTor is an automated system designed to streamline the job search process. It identifies relevant job opportunities matching a user's profile, evaluates the match quality using AI, and generates tailored cover letter drafts to aid the job application process. The MVP will focus on manual job entry, core matching functionality, and basic document generation. The system presents prioritized job matches and associated materials via a dashboard, allowing users to efficiently review opportunities and apply manually.
+Ascentio is an automated system designed to streamline the job search process. It identifies relevant job opportunities matching a user's profile, evaluates the match quality using AI, and generates tailored cover letter drafts to aid the job application process. The MVP will focus on manual job entry, core matching functionality, and basic document generation. The system presents prioritized job matches and associated materials via a dashboard, allowing users to efficiently review opportunities and apply manually.
 
 ## 2. Business Requirements
 

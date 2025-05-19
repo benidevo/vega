@@ -7,7 +7,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/benidevo/prospector/internal/settings/models"
+	"github.com/benidevo/ascentio/internal/settings/models"
 )
 
 type ProfileRepository struct {

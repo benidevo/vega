@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/benidevo/prospector/internal/auth/models"
-	commonerrors "github.com/benidevo/prospector/internal/common/errors"
+	"github.com/benidevo/ascentio/internal/auth/models"
+	commonerrors "github.com/benidevo/ascentio/internal/common/errors"
 )
 
 // UserRepository defines the interface for user-related data operations.

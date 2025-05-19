@@ -1,4 +1,4 @@
-# ProspecTor User Configuration
+# Ascentio User Configuration
 #
 # This file contains user account configurations that will be synchronized
 # with the application database when the scheduler runs the sync-users command.
@@ -24,4 +24,3 @@ users:
     email: demo@example.com
     role: standard
     reset_on_next_run: false
-    

@@ -3,9 +3,9 @@ package auth
 import (
 	"database/sql"
 
-	"github.com/benidevo/prospector/internal/auth/repository"
-	"github.com/benidevo/prospector/internal/auth/services"
-	"github.com/benidevo/prospector/internal/config"
+	"github.com/benidevo/ascentio/internal/auth/repository"
+	"github.com/benidevo/ascentio/internal/auth/services"
+	"github.com/benidevo/ascentio/internal/config"
 	"github.com/gin-gonic/gin"
 )
 

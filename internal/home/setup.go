@@ -1,6 +1,6 @@
 package home
 
-import "github.com/benidevo/prospector/internal/config"
+import "github.com/benidevo/ascentio/internal/config"
 
 // Setup initializes and returns a new home Handler.
 func Setup(cfg *config.Settings) *Handler {

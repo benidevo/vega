@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benidevo/prospector/internal/auth/models"
-	commonerrors "github.com/benidevo/prospector/internal/common/errors"
-	"github.com/benidevo/prospector/internal/config"
-	"github.com/benidevo/prospector/internal/logger"
+	"github.com/benidevo/ascentio/internal/auth/models"
+	commonerrors "github.com/benidevo/ascentio/internal/common/errors"
+	"github.com/benidevo/ascentio/internal/config"
+	"github.com/benidevo/ascentio/internal/logger"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 )

@@ -1,10 +1,10 @@
-# ProspecTor
+# Ascentio
 
-![Build Status](https://github.com/benidevo/prospector/workflows/CI/badge.svg)
+![Build Status](https://github.com/benidevo/ascentio/workflows/CI/badge.svg)
 
 ## Overview
 
-ProspecTor is an application designed for job prospecting. It utilizes a monolithic architecture, runs within Docker containers managed by Docker Compose, uses the Gin web framework, and persists data using SQLite.
+Ascentio is an application designed for job prospecting. It utilizes a monolithic architecture, runs within Docker containers managed by Docker Compose, uses the Gin web framework, and persists data using SQLite.
 
 ## Technology Stack
 
@@ -53,7 +53,7 @@ ProspecTor is an application designed for job prospecting. It utilizes a monolit
 
 ### Database Migrations
 
-ProspecTor uses [golang-migrate](https://github.com/golang-migrate/migrate) for database schema management. Migrations are automatically applied when the application starts.
+Ascentio uses [golang-migrate](https://github.com/golang-migrate/migrate) for database schema management. Migrations are automatically applied when the application starts.
 
 Migration files are stored in the `migrations/sqlite` directory and follow the naming convention:
 
@@ -62,6 +62,7 @@ Migration files are stored in the `migrations/sqlite` directory and follow the n
 ```
 
 For example:
+
 * `000001_create_users_table.up.sql`: Creates the users table
 * `000001_create_users_table.down.sql`: Drops the users table
 

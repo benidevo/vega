@@ -1,9 +1,10 @@
 package home
 
 import (
-	"github.com/benidevo/prospector/internal/config"
 	"net/http"
 	"time"
+
+	"github.com/benidevo/ascentio/internal/config"
 
 	"github.com/gin-gonic/gin"
 )

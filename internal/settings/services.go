@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 
-	authrepo "github.com/benidevo/prospector/internal/auth/repository"
-	"github.com/benidevo/prospector/internal/config"
-	"github.com/benidevo/prospector/internal/logger"
-	"github.com/benidevo/prospector/internal/settings/interfaces"
-	"github.com/benidevo/prospector/internal/settings/models"
+	authrepo "github.com/benidevo/ascentio/internal/auth/repository"
+	"github.com/benidevo/ascentio/internal/config"
+	"github.com/benidevo/ascentio/internal/logger"
+	"github.com/benidevo/ascentio/internal/settings/interfaces"
+	"github.com/benidevo/ascentio/internal/settings/models"
 	"github.com/rs/zerolog"
 )
 

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/benidevo/prospector/internal/config"
-	"github.com/benidevo/prospector/internal/logger"
-	"github.com/benidevo/prospector/internal/scheduler"
+	"github.com/benidevo/ascentio/internal/config"
+	"github.com/benidevo/ascentio/internal/logger"
+	"github.com/benidevo/ascentio/internal/scheduler"
 )
 
 func main() {

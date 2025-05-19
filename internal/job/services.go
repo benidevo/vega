@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/benidevo/prospector/internal/config"
-	"github.com/benidevo/prospector/internal/job/interfaces"
-	"github.com/benidevo/prospector/internal/job/models"
-	"github.com/benidevo/prospector/internal/logger"
+	"github.com/benidevo/ascentio/internal/config"
+	"github.com/benidevo/ascentio/internal/job/interfaces"
+	"github.com/benidevo/ascentio/internal/job/models"
+	"github.com/benidevo/ascentio/internal/logger"
 	"github.com/rs/zerolog"
 )
 

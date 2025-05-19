@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Run tests and generate coverage profile
-go test ./... -coverprofile=coverage.out -coverpkg='github.com/benidevo/prospector/internal/...' -covermode=set
+go test ./... -coverprofile=coverage.out -coverpkg='github.com/benidevo/ascentio/internal/...' -covermode=set
 
 # Filter out handlers from the coverage output
 grep -v '/handlers.go' coverage.out > coverage.filtered.out

@@ -1,9 +1,10 @@
 package config
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestNewSettings(t *testing.T) {
@@ -11,7 +12,7 @@ func TestNewSettings(t *testing.T) {
 
 	require.NotNil(t, settings, "Expected config to be initialized")
 	assert.Equal(t, ":8080", settings.ServerPort, "Expected default server port to be :8080")
-	assert.Equal(t, settings.DBConnectionString, "/app/data/prospector.db?_journal=WAL&_busy_timeout=5000", "Expected default DB connection string to be /app/data/prospector.db?_journal=WAL&_busy_timeout=5000")
+	assert.Equal(t, settings.DBConnectionString, "/app/data/ascentio.db?_journal=WAL&_busy_timeout=5000", "Expected default DB connection string to be /app/data/ascentio.db?_journal=WAL&_busy_timeout=5000")
 	assert.Equal(t, settings.DBDriver, "sqlite", "Expected default DB driver to be sqlite")
 }
 
@@ -27,7 +28,7 @@ func TestGetEnv(t *testing.T) {
 	})
 
 	t.Run("should return overridden DB_CONNECTION_STRING from environment variable", func(t *testing.T) {
-		value := getEnv("DB_CONNECTION_STRING", "/app/data/prospector.db?_journal=WAL&_busy_timeout=5000")
+		value := getEnv("DB_CONNECTION_STRING", "/app/data/ascentio.db?_journal=WAL&_busy_timeout=5000")
 		assert.Equal(t, "/app/data/test.db?_journal=WAL&_busy_timeout=5000", value, "Expected DB_CONNECTION_STRING to be /app/data/test.db?_journal=WAL&_busy_timeout=5000")
 	})
 

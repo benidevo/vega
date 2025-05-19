@@ -1,4 +1,4 @@
-module github.com/benidevo/prospector
+module github.com/benidevo/ascentio
 
 go 1.24.0
 

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/benidevo/prospector/internal/job/models"
+	"github.com/benidevo/ascentio/internal/job/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

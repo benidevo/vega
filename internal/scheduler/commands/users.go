@@ -8,11 +8,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/benidevo/prospector/internal/auth/models"
-	authrepo "github.com/benidevo/prospector/internal/auth/repository"
-	authservice "github.com/benidevo/prospector/internal/auth/services"
-	"github.com/benidevo/prospector/internal/config"
-	"github.com/benidevo/prospector/internal/logger"
+	"github.com/benidevo/ascentio/internal/auth/models"
+	authrepo "github.com/benidevo/ascentio/internal/auth/repository"
+	authservice "github.com/benidevo/ascentio/internal/auth/services"
+	"github.com/benidevo/ascentio/internal/config"
+	"github.com/benidevo/ascentio/internal/logger"
 	"github.com/rs/zerolog"
 	"gopkg.in/yaml.v2"
 )

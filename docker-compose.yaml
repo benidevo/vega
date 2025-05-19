@@ -5,14 +5,14 @@ services:
       dockerfile: docker/dev/Dockerfile
     container_name: app
     environment:
-      - DB_PATH=/app/data/prospector.db
+      - DB_PATH=/app/data/ascentio.db
     volumes:
       - .:/app
-      - prospector-data:/app/data
+      - ascentio-data:/app/data
     ports:
       - "8000:8080"
     networks:
-      - prospector
+      - ascentio
 
   scheduler:
     build:
@@ -20,7 +20,7 @@ services:
       dockerfile: docker/dev/Dockerfile
     container_name: scheduler
     environment:
-      - DB_PATH=/app/data/prospector.db
+      - DB_PATH=/app/data/ascentio.db
       - GO_ENV=development
     entrypoint: ["/bin/sh", "-c"]
     command: >
@@ -36,29 +36,29 @@ services:
       "
     volumes:
       - .:/app
-      - prospector-data:/app/data
+      - ascentio-data:/app/data
     depends_on:
       - app
     networks:
-      - prospector
+      - ascentio
 
   db-dashboard:
     image: coleifer/sqlite-web:latest
     container_name: db-dashboard
     volumes:
-      - prospector-data:/data
-    command: sqlite_web -H 0.0.0.0 -p 8080 /data/prospector.db
+      - ascentio-data:/data
+    command: sqlite_web -H 0.0.0.0 -p 8080 /data/ascentio.db
     depends_on:
       - app
     ports:
       - "8080:8080"
     networks:
-      - prospector
+      - ascentio
 
 
 networks:
-  prospector:
+  ascentio:
 
 
 volumes:
-  prospector-data:
+  ascentio-data:

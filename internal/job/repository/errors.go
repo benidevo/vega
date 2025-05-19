@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/benidevo/prospector/internal/job/models"
+	"github.com/benidevo/ascentio/internal/job/models"
 )
 
 var (

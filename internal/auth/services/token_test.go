@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benidevo/prospector/internal/auth/models"
-	"github.com/benidevo/prospector/internal/config"
+	"github.com/benidevo/ascentio/internal/auth/models"
+	"github.com/benidevo/ascentio/internal/config"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/benidevo/prospector/internal/auth/models"
-	"github.com/benidevo/prospector/internal/auth/services"
-	"github.com/benidevo/prospector/internal/config"
+	"github.com/benidevo/ascentio/internal/auth/models"
+	"github.com/benidevo/ascentio/internal/auth/services"
+	"github.com/benidevo/ascentio/internal/config"
 	"github.com/gin-gonic/gin"
 )
 

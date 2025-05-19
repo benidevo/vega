@@ -3,9 +3,9 @@ package job
 import (
 	"database/sql"
 
-	"github.com/benidevo/prospector/internal/config"
-	"github.com/benidevo/prospector/internal/job/interfaces"
-	"github.com/benidevo/prospector/internal/job/repository"
+	"github.com/benidevo/ascentio/internal/config"
+	"github.com/benidevo/ascentio/internal/job/interfaces"
+	"github.com/benidevo/ascentio/internal/job/repository"
 	"github.com/gin-gonic/gin"
 )
 

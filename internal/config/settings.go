@@ -59,9 +59,9 @@ func NewSettings() Settings {
 	}
 
 	return Settings{
-		AppName:            "Prospector",
+		AppName:            "ascentio",
 		ServerPort:         getEnv("SERVER_PORT", ":8080"),
-		DBConnectionString: getEnv("DB_CONNECTION_STRING", "/app/data/prospector.db?_journal=WAL&_busy_timeout=5000"),
+		DBConnectionString: getEnv("DB_CONNECTION_STRING", "/app/data/ascentio.db?_journal=WAL&_busy_timeout=5000"),
 		DBDriver:           getEnv("DB_DRIVER", "sqlite"),
 		LogLevel:           getEnv("LOG_LEVEL", "info"),
 		IsDevelopment:      isDevelopment,

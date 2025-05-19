@@ -1,7 +1,7 @@
 package models
 
 import (
-	commonerrors "github.com/benidevo/prospector/internal/common/errors"
+	commonerrors "github.com/benidevo/ascentio/internal/common/errors"
 )
 
 var (

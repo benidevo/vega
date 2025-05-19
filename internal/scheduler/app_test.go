@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/benidevo/prospector/internal/config"
+	"github.com/benidevo/ascentio/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"

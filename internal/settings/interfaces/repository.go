@@ -3,7 +3,7 @@ package interfaces
 import (
 	"context"
 
-	"github.com/benidevo/prospector/internal/settings/models"
+	"github.com/benidevo/ascentio/internal/settings/models"
 )
 
 // SettingsRepository defines the interface for settings data access

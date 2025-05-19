@@ -1,8 +1,8 @@
-# Technical Design Document for ProspecTor
+# Technical Design Document for Ascentio
 
 ## 1. System Architecture Overview
 
-ProspecTor uses a **monolithic architecture** implemented entirely in Go, with a SQLite database for persistence. The application is containerized using Docker and configured via environment variables and mounted files.
+Ascentio uses a **monolithic architecture** implemented entirely in Go, with a SQLite database for persistence. The application is containerized using Docker and configured via environment variables and mounted files.
 
 ### 1.1 High-Level Architecture Diagram
 
@@ -155,7 +155,7 @@ POST /api/processes/generate
 
 ```
 # Database
-DB_PATH=/app/data/prospecTor.db
+DB_PATH=/app/data/ascentio.db
 
 # Authentication
 ADMIN_USERNAME=admin

@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/benidevo/prospector/internal/auth/models"
-	"github.com/benidevo/prospector/internal/config"
+	"github.com/benidevo/ascentio/internal/auth/models"
+	"github.com/benidevo/ascentio/internal/config"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

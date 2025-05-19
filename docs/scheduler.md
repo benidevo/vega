@@ -1,6 +1,6 @@
-# ProspecTor Scheduler
+# Ascentio Scheduler
 
-The ProspecTor Scheduler is a command-line tool for managing administrative tasks and scheduled operations in the ProspecTor system.
+The Ascentio Scheduler is a command-line tool for managing administrative tasks and scheduled operations in the Ascentio system.
 
 ## Overview
 
@@ -112,7 +112,7 @@ To run the scheduler as a cron job:
 
 ```bash
 # Example crontab entry (runs user sync daily at 2 AM)
-0 2 * * * /path/to/prospector/scheduler sync-users /path/to/config/users.yaml >> /var/log/prospector/scheduler.log 2>&1
+0 2 * * * /path/to/ascentio/scheduler sync-users /path/to/config/users.yaml >> /var/log/ascentio/scheduler.log 2>&1
 ```
 
 For Docker environments, you can use the provided cron configuration in the Docker Compose setup.
