@@ -1,4 +1,4 @@
-package auth
+package repository
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benidevo/prospector/internal/auth/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
@@ -41,13 +42,13 @@ func TestUserRepository(t *testing.T) {
 	createdUser, err := repo.CreateUser(ctx, "testuser", "password123", "admin")
 	require.NoError(t, err)
 	assert.Equal(t, "testuser", createdUser.Username)
-	assert.Equal(t, ADMIN, createdUser.Role)
+	assert.Equal(t, models.ADMIN, createdUser.Role)
 	assert.NotZero(t, createdUser.ID)
 
 	t.Run("should_return_error_when_creating_duplicate_username", func(t *testing.T) {
 		user, err := repo.CreateUser(ctx, "testuser", "anotherpassword", "standard")
 		assert.Error(t, err)
-		assert.Equal(t, ErrUserAlreadyExists, err)
+		assert.Equal(t, models.ErrUserAlreadyExists, err)
 		assert.NotNil(t, user)
 		assert.Equal(t, createdUser.ID, user.ID)
 	})
@@ -57,7 +58,7 @@ func TestUserRepository(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotNil(t, newUser)
 		assert.Equal(t, "testuser2", newUser.Username)
-		assert.Equal(t, STANDARD, newUser.Role)
+		assert.Equal(t, models.STANDARD, newUser.Role)
 		assert.NotEqual(t, createdUser.ID, newUser.ID)
 	})
 
@@ -72,7 +73,7 @@ func TestUserRepository(t *testing.T) {
 	t.Run("should_return_error_when_id_does_not_exist", func(t *testing.T) {
 		user, err := repo.FindByID(ctx, 9999)
 		assert.Error(t, err)
-		assert.Equal(t, ErrUserNotFound, err)
+		assert.Equal(t, models.ErrUserNotFound, err)
 		assert.Nil(t, user)
 	})
 
@@ -87,14 +88,14 @@ func TestUserRepository(t *testing.T) {
 	t.Run("should_return_error_when_username_does_not_exist", func(t *testing.T) {
 		user, err := repo.FindByUsername(ctx, "nonexistentuser")
 		assert.Error(t, err)
-		assert.Equal(t, ErrUserNotFound, err)
+		assert.Equal(t, models.ErrUserNotFound, err)
 		assert.Nil(t, user)
 	})
 
 	t.Run("should_update_user_when_it_exists", func(t *testing.T) {
 		createdUser.Username = "updateduser"
 		createdUser.Password = "newpassword"
-		createdUser.Role = STANDARD
+		createdUser.Role = models.STANDARD
 		createdUser.UpdatedAt = time.Now().UTC()
 
 		updatedUser, err := repo.UpdateUser(ctx, createdUser)
@@ -102,7 +103,7 @@ func TestUserRepository(t *testing.T) {
 		assert.NotNil(t, updatedUser)
 		assert.Equal(t, "updateduser", updatedUser.Username)
 		assert.Equal(t, "newpassword", updatedUser.Password)
-		assert.Equal(t, STANDARD, updatedUser.Role)
+		assert.Equal(t, models.STANDARD, updatedUser.Role)
 
 		fetchedUser, err := repo.FindByID(ctx, createdUser.ID)
 		require.NoError(t, err)
@@ -110,11 +111,11 @@ func TestUserRepository(t *testing.T) {
 	})
 
 	t.Run("should_return_error_when_updating_nonexistent_user", func(t *testing.T) {
-		nonExistentUser := &User{
+		nonExistentUser := &models.User{
 			ID:        9999,
 			Username:  "nonexistent",
 			Password:  "password123",
-			Role:      STANDARD,
+			Role:      models.STANDARD,
 			UpdatedAt: time.Now().UTC(),
 		}
 
@@ -152,7 +153,7 @@ func TestUserRepository(t *testing.T) {
 
 		deletedUser, err := repo.FindByID(ctx, createdUser.ID)
 		assert.Error(t, err)
-		assert.Equal(t, ErrUserNotFound, err)
+		assert.Equal(t, models.ErrUserNotFound, err)
 		assert.Nil(t, deletedUser)
 	})
 

@@ -5,19 +5,23 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/benidevo/prospector/internal/auth/models"
+	"github.com/benidevo/prospector/internal/auth/services"
 	"github.com/benidevo/prospector/internal/config"
 	"github.com/gin-gonic/gin"
 )
 
 // AuthHandler handles authentication-related HTTP requests.
 type AuthHandler struct {
-	service *AuthService
+	service *services.AuthService
+	cfg     *config.Settings
 }
 
 // NewAuthHandler creates and returns a new AuthHandler with the provided AuthService.
-func NewAuthHandler(service *AuthService) *AuthHandler {
+func NewAuthHandler(service *services.AuthService, cfg *config.Settings) *AuthHandler {
 	return &AuthHandler{
 		service: service,
+		cfg:     cfg,
 	}
 }
 
@@ -29,33 +33,40 @@ func (h *AuthHandler) GetLoginPage(c *gin.Context) {
 	})
 }
 
-// Login handles user authentication by validating credentials from the POST form.
+// Login handles user authentication by validating credentials from the request.
 // On success, it sets access and refresh token cookies and redirects to the dashboard.
 // On failure, it returns an unauthorized status and error message for HTMX response swapping.
 func (h *AuthHandler) Login(c *gin.Context) {
-	username := c.PostForm("username")
-	password := c.PostForm("password")
-
-	accessToken, refreshToken, loginErr := h.service.Login(c.Request.Context(), username, password)
-	if loginErr != nil {
-		c.Header("HX-Reswap", "innerHTML")
-		c.Header("HX-Retarget", "#form-response")
-
-		c.String(http.StatusUnauthorized, loginErr.Error())
+	var req models.LoginRequest
+	if err := c.ShouldBind(&req); err != nil {
+		h.service.LogError(err)
+		c.HTML(http.StatusUnauthorized, "partials/form-error.html", gin.H{
+			"message": models.ErrInvalidCredentials.Error(),
+		})
 		return
 	}
 
-	sameSite := parseSameSiteMode(h.service.config.CookieSameSite)
+	accessToken, refreshToken, loginErr := h.service.Login(c.Request.Context(), req.Username, req.Password)
+	if loginErr != nil {
+		h.service.LogError(loginErr)
+		c.HTML(http.StatusUnauthorized, "partials/form-error.html", gin.H{
+			"message": loginErr.Error(),
+		})
+
+		return
+	}
+
+	sameSite := parseSameSiteMode(h.cfg.CookieSameSite)
 
 	// Set access token cookie (shorter-lived)
 	c.SetSameSite(sameSite)
 	c.SetCookie(
 		"token",
 		accessToken,
-		int(h.service.config.AccessTokenExpiry.Seconds()),
+		int(h.cfg.AccessTokenExpiry.Seconds()),
 		"/",
-		h.service.config.CookieDomain,
-		h.service.config.CookieSecure,
+		h.cfg.CookieDomain,
+		h.cfg.CookieSecure,
 		true,
 	)
 
@@ -63,10 +74,10 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	c.SetCookie(
 		"refresh_token",
 		refreshToken,
-		int(h.service.config.RefreshTokenExpiry.Seconds()),
+		int(h.cfg.RefreshTokenExpiry.Seconds()),
 		"/",
-		h.service.config.CookieDomain,
-		h.service.config.CookieSecure,
+		h.cfg.CookieDomain,
+		h.cfg.CookieSecure,
 		true,
 	)
 
@@ -77,11 +88,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
 // Logout logs out the current user by clearing the authentication cookie and redirecting to the home page.
 func (h *AuthHandler) Logout(c *gin.Context) {
 	// Clear both access and refresh token cookies
-	sameSite := parseSameSiteMode(h.service.config.CookieSameSite)
+	sameSite := parseSameSiteMode(h.cfg.CookieSameSite)
 
 	c.SetSameSite(sameSite)
-	c.SetCookie("token", "", -1, "/", h.service.config.CookieDomain, h.service.config.CookieSecure, true)
-	c.SetCookie("refresh_token", "", -1, "/", h.service.config.CookieDomain, h.service.config.CookieSecure, true)
+	c.SetCookie("token", "", -1, "/", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
+	c.SetCookie("refresh_token", "", -1, "/", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
 
 	c.Redirect(http.StatusFound, "/")
 }
@@ -100,17 +111,17 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	sameSite := parseSameSiteMode(h.service.config.CookieSameSite)
+	sameSite := parseSameSiteMode(h.cfg.CookieSameSite)
 
 	// Set the new access token
 	c.SetSameSite(sameSite)
 	c.SetCookie(
 		"token",
 		accessToken,
-		int(h.service.config.AccessTokenExpiry.Seconds()),
+		int(h.cfg.AccessTokenExpiry.Seconds()),
 		"/",
-		h.service.config.CookieDomain,
-		h.service.config.CookieSecure,
+		h.cfg.CookieDomain,
+		h.cfg.CookieSecure,
 		true,
 	)
 
@@ -130,15 +141,15 @@ func (h *AuthHandler) AuthMiddleware() gin.HandlerFunc {
 			if refreshErr == nil && refreshToken != "" {
 				newAccessToken, refreshErr := h.service.RefreshAccessToken(c.Request.Context(), refreshToken)
 				if refreshErr == nil {
-					sameSite := parseSameSiteMode(h.service.config.CookieSameSite)
+					sameSite := parseSameSiteMode(h.cfg.CookieSameSite)
 					c.SetSameSite(sameSite)
 					c.SetCookie(
 						"token",
 						newAccessToken,
-						int(h.service.config.AccessTokenExpiry.Seconds()),
+						int(h.cfg.AccessTokenExpiry.Seconds()),
 						"/",
-						h.service.config.CookieDomain,
-						h.service.config.CookieSecure,
+						h.cfg.CookieDomain,
+						h.cfg.CookieSecure,
 						true,
 					)
 
@@ -170,15 +181,15 @@ func (h *AuthHandler) AuthMiddleware() gin.HandlerFunc {
 
 // GoogleAuthHandler handles authentication requests using Google OAuth.
 type GoogleAuthHandler struct {
-	service *GoogleAuthService
-	config  *config.Settings
+	service *services.GoogleAuthService
+	cfg     *config.Settings
 }
 
 // NewGoogleAuthHandler creates and returns a new GoogleAuthHandler with the provided service
-func NewGoogleAuthHandler(service *GoogleAuthService, cfg *config.Settings) *GoogleAuthHandler {
+func NewGoogleAuthHandler(service *services.GoogleAuthService, cfg *config.Settings) *GoogleAuthHandler {
 	return &GoogleAuthHandler{
 		service: service,
-		config:  cfg,
+		cfg:     cfg,
 	}
 }
 
@@ -218,16 +229,16 @@ func (h *GoogleAuthHandler) HandleCallback(c *gin.Context) {
 		return
 	}
 
-	sameSite := parseSameSiteMode(h.service.cfg.CookieSameSite)
+	sameSite := parseSameSiteMode(h.cfg.CookieSameSite)
 
 	c.SetSameSite(sameSite)
 	c.SetCookie(
 		"token",
 		accessToken,
-		int(h.config.AccessTokenExpiry.Seconds()),
+		int(h.cfg.AccessTokenExpiry.Seconds()),
 		"/",
-		h.config.CookieDomain,
-		h.config.CookieSecure,
+		h.cfg.CookieDomain,
+		h.cfg.CookieSecure,
 		true,
 	)
 
@@ -235,10 +246,10 @@ func (h *GoogleAuthHandler) HandleCallback(c *gin.Context) {
 	c.SetCookie(
 		"refresh_token",
 		refreshToken,
-		int(h.config.RefreshTokenExpiry.Seconds()),
+		int(h.cfg.RefreshTokenExpiry.Seconds()),
 		"/",
-		h.config.CookieDomain,
-		h.config.CookieSecure,
+		h.cfg.CookieDomain,
+		h.cfg.CookieSecure,
 		true,
 	)
 

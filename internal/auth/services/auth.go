@@ -1,9 +1,11 @@
-package auth
+package services
 
 import (
 	"context"
 	"time"
 
+	"github.com/benidevo/prospector/internal/auth/models"
+	"github.com/benidevo/prospector/internal/auth/repository"
 	"github.com/benidevo/prospector/internal/config"
 	"github.com/benidevo/prospector/internal/logger"
 	"github.com/golang-jwt/jwt/v5"
@@ -22,32 +24,37 @@ type Claims struct {
 
 // AuthService provides authentication and user management functionality
 type AuthService struct {
-	repo   UserRepository
+	repo   repository.UserRepository
 	config *config.Settings
 	log    zerolog.Logger
 }
 
 // NewAuthService creates and returns a new AuthService instance using the provided UserRepository and configuration settings.
-func NewAuthService(repo UserRepository, config *config.Settings) *AuthService {
+func NewAuthService(repo repository.UserRepository, config *config.Settings) *AuthService {
 	return &AuthService{repo: repo, config: config, log: logger.GetLogger("auth")}
 }
 
+// LogError logs an authentication error using the service's logger.
+func (s *AuthService) LogError(err error) {
+	s.log.Error().Err(err).Msg("Authentication error")
+}
+
 // Register creates a new user with the provided username, password, and role.
-// It returns the user and ErrUserAlreadyExists if a user with that username already exists.
-func (s *AuthService) Register(ctx context.Context, username, password, role string) (*User, error) {
+// It returns the user and models.ErrUserAlreadyExists if a user with that username already exists.
+func (s *AuthService) Register(ctx context.Context, username, password, role string) (*models.User, error) {
 	hashedPassword, err := hashPassword(password)
 	if err != nil {
 		s.log.Error().Err(err).Msg("Failed to hash password")
-		return nil, ErrUserCreationFailed
+		return nil, models.ErrUserCreationFailed
 	}
 
 	user, err := s.repo.CreateUser(ctx, username, hashedPassword, role)
 	if err != nil {
-		sentinelErr := GetSentinelError(err)
+		sentinelErr := models.GetSentinelError(err)
 
-		if sentinelErr == ErrUserAlreadyExists {
+		if sentinelErr == models.ErrUserAlreadyExists {
 			s.log.Warn().Str("username", username).Msg("User already exists")
-			return user, ErrUserAlreadyExists
+			return user, models.ErrUserAlreadyExists
 		}
 
 		s.log.Error().Err(err).Str("username", username).Msg("Failed to create user")
@@ -63,42 +70,42 @@ func (s *AuthService) Register(ctx context.Context, username, password, role str
 func (s *AuthService) Login(ctx context.Context, username, password string) (string, string, error) {
 	user, err := s.repo.FindByUsername(ctx, username)
 	if err != nil {
-		sentinelErr := GetSentinelError(err)
-		if sentinelErr == ErrUserNotFound {
+		sentinelErr := models.GetSentinelError(err)
+		if sentinelErr == models.ErrUserNotFound {
 			s.log.Info().Str("username", username).Msg("Login attempt for non-existent user")
 		} else {
 			s.log.Error().Err(err).Str("username", username).Msg("Error retrieving user during login")
 		}
 
-		return "", "", ErrInvalidCredentials
+		return "", "", models.ErrInvalidCredentials
 	}
 
 	if user.Password == "" {
 		s.log.Error().Str("username", username).Msg("User password is empty. Account was created using Google authentication")
-		return "", "", ErrInvalidCredentials
+		return "", "", models.ErrInvalidCredentials
 	}
 
 	if !verifyPassword(user.Password, password) {
 		s.log.Error().Str("username", username).Msg("Invalid password provided during login")
-		return "", "", ErrInvalidCredentials
+		return "", "", models.ErrInvalidCredentials
 	}
 
 	accessToken, err := GenerateAccessToken(user, s.config)
 	if err != nil {
 		s.log.Error().Err(err).Str("username", username).Msg("Failed to generate access token")
-		return "", "", ErrTokenCreationFailed
+		return "", "", models.ErrInvalidCredentials
 	}
 
 	refreshToken, err := GenerateRefreshToken(user, s.config)
 	if err != nil {
 		s.log.Error().Err(err).Str("username", username).Msg("Failed to generate refresh token")
-		return "", "", ErrTokenCreationFailed
+		return "", "", models.ErrInvalidCredentials
 	}
 
 	user.LastLogin = time.Now().UTC()
 	_, err = s.repo.UpdateUser(ctx, user)
 	if err != nil {
-		sentinelErr := GetSentinelError(err)
+		sentinelErr := models.GetSentinelError(err)
 		s.log.Warn().Err(err).Str("username", username).Str("error_type", sentinelErr.Error()).Msg("Failed to update user last login")
 	}
 
@@ -111,25 +118,25 @@ func (s *AuthService) RefreshAccessToken(ctx context.Context, refreshToken strin
 	claims, err := s.VerifyToken(refreshToken)
 	if err != nil {
 		s.log.Error().Err(err).Msg("Invalid refresh token")
-		return "", ErrInvalidToken
+		return "", models.ErrInvalidToken
 	}
 
 	if claims.TokenType != "refresh" {
 		s.log.Error().Msg("Token provided is not a refresh token")
-		return "", ErrInvalidToken
+		return "", models.ErrInvalidToken
 	}
 
 	user, err := s.repo.FindByID(ctx, claims.UserID)
 	if err != nil {
-		sentinelErr := GetSentinelError(err)
+		sentinelErr := models.GetSentinelError(err)
 		s.log.Error().Err(err).Int("user_id", claims.UserID).Str("error_type", sentinelErr.Error()).Msg("Failed to find user for token refresh")
-		return "", ErrInvalidToken
+		return "", models.ErrInvalidToken
 	}
 
 	accessToken, err := GenerateAccessToken(user, s.config)
 	if err != nil {
 		s.log.Error().Err(err).Int("user_id", user.ID).Msg("Failed to generate new access token")
-		return "", ErrTokenCreationFailed
+		return "", models.ErrTokenCreationFailed
 	}
 
 	s.log.Info().Int("user_id", user.ID).Msg("Access token refreshed successfully")
@@ -137,16 +144,16 @@ func (s *AuthService) RefreshAccessToken(ctx context.Context, refreshToken strin
 }
 
 // GetUserByID retrieves a user by their unique ID from the repository.
-func (s *AuthService) GetUserByID(ctx context.Context, userID int) (*User, error) {
+func (s *AuthService) GetUserByID(ctx context.Context, userID int) (*models.User, error) {
 	user, err := s.repo.FindByID(ctx, userID)
 	if err != nil {
-		sentinelErr := GetSentinelError(err)
+		sentinelErr := models.GetSentinelError(err)
 		s.log.Error().Err(err).Int("user_id", userID).Str("error_type", sentinelErr.Error()).Msg("Failed to find user by ID")
 
-		if sentinelErr == ErrUserNotFound {
-			return nil, ErrUserNotFound
+		if sentinelErr == models.ErrUserNotFound {
+			return nil, models.ErrUserNotFound
 		}
-		return nil, ErrUserRetrievalFailed
+		return nil, models.ErrUserRetrievalFailed
 	}
 	return user, nil
 }
@@ -160,19 +167,19 @@ func (s *AuthService) VerifyToken(token string) (*Claims, error) {
 	parsedToken, err := jwt.ParseWithClaims(token, claims, func(jwtToken *jwt.Token) (interface{}, error) {
 		if jwtToken.Method != jwt.SigningMethodHS256 {
 			s.log.Error().Msg("Unexpected signing method")
-			return nil, ErrInvalidToken
+			return nil, models.ErrInvalidToken
 		}
 		return []byte(s.config.TokenSecret), nil
 	})
 
 	if err != nil {
 		s.log.Error().Err(err).Msg("Failed to parse token")
-		return nil, ErrInvalidToken
+		return nil, models.ErrInvalidToken
 	}
 
 	if !parsedToken.Valid {
 		s.log.Error().Msg("Token is not valid")
-		return nil, ErrInvalidToken
+		return nil, models.ErrInvalidToken
 	}
 
 	return claims, nil
@@ -184,26 +191,26 @@ func (s *AuthService) VerifyToken(token string) (*Claims, error) {
 func (s *AuthService) ChangePassword(ctx context.Context, userID int, newPassword string) error {
 	user, err := s.repo.FindByID(ctx, userID)
 	if err != nil {
-		sentinelErr := GetSentinelError(err)
+		sentinelErr := models.GetSentinelError(err)
 		s.log.Error().Err(err).Int("user_id", userID).Str("error_type", sentinelErr.Error()).Msg("Failed to find user for password change")
-		if sentinelErr == ErrUserNotFound {
-			return ErrUserNotFound
+		if sentinelErr == models.ErrUserNotFound {
+			return models.ErrUserNotFound
 		}
-		return ErrUserPasswordChangeFailed
+		return models.ErrUserPasswordChangeFailed
 	}
 
 	hashedPassword, err := hashPassword(newPassword)
 	if err != nil {
 		s.log.Error().Err(err).Int("user_id", userID).Msg("Failed to hash password")
-		return ErrUserPasswordChangeFailed
+		return models.ErrUserPasswordChangeFailed
 	}
 
 	user.Password = hashedPassword
 	_, err = s.repo.UpdateUser(ctx, user)
 	if err != nil {
-		sentinelErr := GetSentinelError(err)
+		sentinelErr := models.GetSentinelError(err)
 		s.log.Error().Err(err).Int("user_id", userID).Str("error_type", sentinelErr.Error()).Msg("Failed to update user password")
-		return ErrUserPasswordChangeFailed
+		return models.ErrUserPasswordChangeFailed
 	}
 
 	s.log.Info().Int("user_id", userID).Msg("User password changed successfully")
@@ -221,7 +228,7 @@ const (
 )
 
 // GenerateToken creates a JWT token for the given user with the specified token type and expiration duration.
-func GenerateToken(user *User, cfg *config.Settings, tokenType TokenType, expiry time.Duration) (string, error) {
+func GenerateToken(user *models.User, cfg *config.Settings, tokenType TokenType, expiry time.Duration) (string, error) {
 	expirationTime := time.Now().UTC().Add(expiry)
 	role := user.Role.String()
 
@@ -243,12 +250,12 @@ func GenerateToken(user *User, cfg *config.Settings, tokenType TokenType, expiry
 }
 
 // GenerateAccessToken creates a short-lived access JWT token for the given user.
-func GenerateAccessToken(user *User, cfg *config.Settings) (string, error) {
+func GenerateAccessToken(user *models.User, cfg *config.Settings) (string, error) {
 	return GenerateToken(user, cfg, AccessToken, cfg.AccessTokenExpiry)
 }
 
 // GenerateRefreshToken creates a long-lived refresh JWT token for the given user.
-func GenerateRefreshToken(user *User, cfg *config.Settings) (string, error) {
+func GenerateRefreshToken(user *models.User, cfg *config.Settings) (string, error) {
 	return GenerateToken(user, cfg, RefreshToken, cfg.RefreshTokenExpiry)
 }
 

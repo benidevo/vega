@@ -1,4 +1,4 @@
-package auth
+package services
 
 import (
 	"context"
@@ -10,6 +10,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/benidevo/prospector/internal/auth/models"
+	"github.com/benidevo/prospector/internal/auth/repository"
 	"github.com/benidevo/prospector/internal/config"
 	"github.com/benidevo/prospector/internal/logger"
 	"github.com/rs/zerolog"
@@ -31,7 +33,7 @@ type GoogleAuthService struct {
 	cfg      *config.Settings
 	oauthCfg *oauth2.Config
 	log      zerolog.Logger
-	repo     UserRepository
+	repo     repository.UserRepository
 }
 
 // LogError logs an error from the Google authentication service
@@ -41,10 +43,10 @@ func (s *GoogleAuthService) LogError(err error) {
 
 // NewGoogleAuthService creates a new instance of GoogleAuthService using the provided configuration settings.
 // It initializes the OAuth configuration and returns an error if credentials cannot be loaded.
-func NewGoogleAuthService(cfg *config.Settings, repo UserRepository) (*GoogleAuthService, error) {
+func NewGoogleAuthService(cfg *config.Settings, repo repository.UserRepository) (*GoogleAuthService, error) {
 	oauthCfg, err := getGoogleCredentials(cfg.GoogleClientConfigFile, cfg.GoogleClientRedirectURL, cfg.GoogleAuthUserInfoScope)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrGoogleCredentialsReadFailed, err)
+		return nil, fmt.Errorf("%w: %v", models.ErrGoogleCredentialsReadFailed, err)
 	}
 
 	return &GoogleAuthService{
@@ -70,7 +72,7 @@ func (s *GoogleAuthService) exchangeCode(ctx context.Context, code string) (*oau
 	token, err := s.oauthCfg.Exchange(ctx, code)
 	if err != nil {
 		s.log.Error().Err(err).Str("code_length", fmt.Sprintf("%d", len(code))).Msg("Failed to exchange Google auth code")
-		return nil, fmt.Errorf("%w: %v", ErrGoogleCodeExchangeFailed, err)
+		return nil, fmt.Errorf("%w: %v", models.ErrGoogleCodeExchangeFailed, err)
 	}
 	return token, nil
 }
@@ -82,19 +84,19 @@ func (s *GoogleAuthService) getUserInfo(ctx context.Context, token *oauth2.Token
 	resp, err := client.Get(s.cfg.GoogleAuthUserInfoURL)
 	if err != nil {
 		s.log.Error().Err(err).Str("url", s.cfg.GoogleAuthUserInfoURL).Msg("Failed to call Google UserInfo API")
-		return nil, fmt.Errorf("%w: %v", ErrGoogleUserInfoFailed, err)
+		return nil, fmt.Errorf("%w: %v", models.ErrGoogleUserInfoFailed, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		s.log.Error().Int("status_code", resp.StatusCode).Str("status", resp.Status).Msg("Google UserInfo API returned non-OK status")
-		return nil, fmt.Errorf("%w: %s", ErrGoogleUserInfoFailed, resp.Status)
+		return nil, fmt.Errorf("%w: %s", models.ErrGoogleUserInfoFailed, resp.Status)
 	}
 
 	var userInfo GoogleAuthUserInfo
 	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
 		s.log.Error().Err(err).Msg("Failed to decode Google UserInfo response")
-		return nil, fmt.Errorf("%w: %v", ErrGoogleUserInfoFailed, err)
+		return nil, fmt.Errorf("%w: %v", models.ErrGoogleUserInfoFailed, err)
 	}
 
 	if userInfo.Email == "" {
@@ -131,19 +133,19 @@ func (s *GoogleAuthService) Authenticate(ctx context.Context, code string) (stri
 	accessToken, err := GenerateAccessToken(user, s.cfg)
 	if err != nil {
 		s.log.Error().Err(err).Int("user_id", user.ID).Msg("Failed to generate access token for Google user")
-		return "", "", ErrGoogleAuthTokenCreationFailed
+		return "", "", models.ErrGoogleAuthTokenCreationFailed
 	}
 
 	refreshToken, err := GenerateRefreshToken(user, s.cfg)
 	if err != nil {
 		s.log.Error().Err(err).Int("user_id", user.ID).Msg("Failed to generate refresh token for Google user")
-		return "", "", ErrGoogleAuthTokenCreationFailed
+		return "", "", models.ErrGoogleAuthTokenCreationFailed
 	}
 
 	user.LastLogin = time.Now().UTC()
 	_, err = s.repo.UpdateUser(ctx, user)
 	if err != nil {
-		sentinelErr := GetSentinelError(err)
+		sentinelErr := models.GetSentinelError(err)
 		s.log.Warn().Err(err).Int("user_id", user.ID).Str("error_type", sentinelErr.Error()).Msg("Failed to update user last login time")
 	}
 
@@ -153,27 +155,27 @@ func (s *GoogleAuthService) Authenticate(ctx context.Context, code string) (stri
 
 // getOrCreateUser retrieves a user by their Google account email or creates a new user if not found.
 // Returns the user or an error if the lookup or creation fails.
-func (s *GoogleAuthService) getOrCreateUser(ctx context.Context, userInfo *GoogleAuthUserInfo) (*User, error) {
+func (s *GoogleAuthService) getOrCreateUser(ctx context.Context, userInfo *GoogleAuthUserInfo) (*models.User, error) {
 	var err error
-	var user *User
+	var user *models.User
 
 	user, err = s.repo.FindByUsername(ctx, userInfo.Email)
 	if err != nil {
-		sentinelErr := GetSentinelError(err)
+		sentinelErr := models.GetSentinelError(err)
 
-		if sentinelErr != ErrUserNotFound {
+		if sentinelErr != models.ErrUserNotFound {
 			// This is an unexpected error
 			s.log.Error().Err(err).Str("email", userInfo.Email).Str("error_type", sentinelErr.Error()).Msg("Error looking up Google user")
-			return nil, ErrGoogleUserCreationFailed
+			return nil, models.ErrGoogleUserCreationFailed
 		}
 
 		// User doesn't exist, create a new one
 		s.log.Info().Str("email", userInfo.Email).Msg("Creating new user from Google account")
-		user, err = s.repo.CreateUser(ctx, userInfo.Email, "", STANDARD.String())
+		user, err = s.repo.CreateUser(ctx, userInfo.Email, "", models.STANDARD.String())
 		if err != nil {
-			sentinelErr := GetSentinelError(err)
+			sentinelErr := models.GetSentinelError(err)
 			s.log.Error().Err(err).Str("email", userInfo.Email).Str("error_type", sentinelErr.Error()).Msg("Failed to create user from Google account")
-			return nil, ErrGoogleUserCreationFailed
+			return nil, models.ErrGoogleUserCreationFailed
 		}
 		s.log.Info().Str("email", userInfo.Email).Int("user_id", user.ID).Msg("New user created from Google account")
 	}
@@ -188,7 +190,7 @@ func (s *GoogleAuthService) CreateDriveService(ctx context.Context, token *oauth
 	driveService, err := drive.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		s.log.Error().Err(err).Msg("Failed to create Google Drive service")
-		return nil, fmt.Errorf("%w: %v", ErrGoogleDriveServiceFailed, err)
+		return nil, fmt.Errorf("%w: %v", models.ErrGoogleDriveServiceFailed, err)
 	}
 
 	s.log.Debug().Msg("Google Drive service created successfully")
@@ -202,7 +204,7 @@ func (s *GoogleAuthService) CreateDriveService(ctx context.Context, token *oauth
 func getGoogleCredentials(configPath, redirectURL, userInfoScope string) (*oauth2.Config, error) {
 	data, err := os.ReadFile(configPath)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrGoogleCredentialsReadFailed, err)
+		return nil, fmt.Errorf("%w: %v", models.ErrGoogleCredentialsReadFailed, err)
 	}
 	var creds struct {
 		Web struct {
@@ -213,11 +215,11 @@ func getGoogleCredentials(configPath, redirectURL, userInfoScope string) (*oauth
 	}
 
 	if err := json.Unmarshal(data, &creds); err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrGoogleCredentialsInvalid, err)
+		return nil, fmt.Errorf("%w: %v", models.ErrGoogleCredentialsInvalid, err)
 	}
 
 	if creds.Web.ClientID == "" || creds.Web.ClientSecret == "" {
-		return nil, ErrGoogleCredentialsInvalid
+		return nil, models.ErrGoogleCredentialsInvalid
 	}
 
 	oauthCfg := &oauth2.Config{

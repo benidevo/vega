@@ -1,4 +1,4 @@
-package auth
+package services
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benidevo/prospector/internal/auth/models"
 	commonerrors "github.com/benidevo/prospector/internal/common/errors"
 	"github.com/benidevo/prospector/internal/config"
 	"github.com/benidevo/prospector/internal/logger"
@@ -44,10 +45,10 @@ func TestGetOrCreateUser(t *testing.T) {
 	}
 
 	t.Run("should_return_existing_user", func(t *testing.T) {
-		existingUser := &User{
+		existingUser := &models.User{
 			ID:       1,
 			Username: "test@example.com",
-			Role:     STANDARD,
+			Role:     models.STANDARD,
 		}
 		mockRepo.On("FindByUsername", ctx, "test@example.com").Return(existingUser, nil).Once()
 
@@ -61,12 +62,12 @@ func TestGetOrCreateUser(t *testing.T) {
 	})
 
 	t.Run("should_create_new_user_when_not_found", func(t *testing.T) {
-		mockRepo.On("FindByUsername", ctx, "test@example.com").Return(nil, ErrUserNotFound).Once()
+		mockRepo.On("FindByUsername", ctx, "test@example.com").Return(nil, models.ErrUserNotFound).Once()
 
-		newUser := &User{
+		newUser := &models.User{
 			ID:       2,
 			Username: "test@example.com",
-			Role:     STANDARD,
+			Role:     models.STANDARD,
 		}
 		mockRepo.On("CreateUser", ctx, "test@example.com", "", "Standard").Return(newUser, nil).Once()
 
@@ -80,27 +81,27 @@ func TestGetOrCreateUser(t *testing.T) {
 	})
 
 	t.Run("should_return_error_when_user_lookup_fails", func(t *testing.T) {
-		repoErr := commonerrors.WrapError(ErrUserRetrievalFailed, errors.New("database error"))
+		repoErr := commonerrors.WrapError(models.ErrUserRetrievalFailed, errors.New("database error"))
 		mockRepo.On("FindByUsername", ctx, "test@example.com").Return(nil, repoErr).Once()
 
 		user, err := service.getOrCreateUser(ctx, userInfo)
 
 		require.Error(t, err)
-		require.Equal(t, ErrGoogleUserCreationFailed, err)
+		require.Equal(t, models.ErrGoogleUserCreationFailed, err)
 		require.Nil(t, user)
 		mockRepo.AssertExpectations(t)
 	})
 
 	t.Run("should_return_error_when_user_creation_fails", func(t *testing.T) {
-		mockRepo.On("FindByUsername", ctx, "test@example.com").Return(nil, ErrUserNotFound).Once()
+		mockRepo.On("FindByUsername", ctx, "test@example.com").Return(nil, models.ErrUserNotFound).Once()
 
-		repoErr := commonerrors.WrapError(ErrUserCreationFailed, errors.New("database error"))
+		repoErr := commonerrors.WrapError(models.ErrUserCreationFailed, errors.New("database error"))
 		mockRepo.On("CreateUser", ctx, "test@example.com", "", "Standard").Return(nil, repoErr).Once()
 
 		user, err := service.getOrCreateUser(ctx, userInfo)
 
 		require.Error(t, err)
-		require.Equal(t, ErrGoogleUserCreationFailed, err)
+		require.Equal(t, models.ErrGoogleUserCreationFailed, err)
 		require.Nil(t, user)
 		mockRepo.AssertExpectations(t)
 	})

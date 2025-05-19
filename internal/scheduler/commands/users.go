@@ -8,7 +8,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/benidevo/prospector/internal/auth"
+	"github.com/benidevo/prospector/internal/auth/models"
+	authrepo "github.com/benidevo/prospector/internal/auth/repository"
+	authservice "github.com/benidevo/prospector/internal/auth/services"
 	"github.com/benidevo/prospector/internal/config"
 	"github.com/benidevo/prospector/internal/logger"
 	"github.com/rs/zerolog"
@@ -34,7 +36,7 @@ type UserSyncCommand struct {
 	db      *sql.DB
 	config  *config.Settings
 	log     zerolog.Logger
-	authSvc *auth.AuthService
+	authSvc *authservice.AuthService
 }
 
 // NewUserSyncCommand creates a new user sync command
@@ -43,7 +45,7 @@ func NewUserSyncCommand(db *sql.DB, cfg *config.Settings) *UserSyncCommand {
 		db:      db,
 		config:  cfg,
 		log:     logger.GetLogger("user-sync"),
-		authSvc: auth.NewAuthService(auth.NewSQLiteUserRepository(db), cfg),
+		authSvc: authservice.NewAuthService(authrepo.NewSQLiteUserRepository(db), cfg),
 	}
 }
 
@@ -119,7 +121,7 @@ func (c *UserSyncCommand) processUser(entry UserEntry) error {
 	}
 
 	user, err := c.authSvc.Register(ctx, entry.Username, entry.Password, role)
-	if err != nil && err != auth.ErrUserAlreadyExists {
+	if err != nil && err != models.ErrUserAlreadyExists {
 		return fmt.Errorf("failed to create user: %w", err)
 	}
 

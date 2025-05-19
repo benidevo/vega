@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/benidevo/prospector/internal/auth"
+	"github.com/benidevo/prospector/internal/auth/models"
 	"github.com/benidevo/prospector/internal/config"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -16,9 +16,9 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-// AuthServiceInterface captures the methods from auth.AuthService needed for testing
+// AuthServiceInterface captures the methods from models.AuthService needed for testing
 type AuthServiceInterface interface {
-	Register(ctx context.Context, username, password, role string) (*auth.User, error)
+	Register(ctx context.Context, username, password, role string) (*models.User, error)
 	ChangePassword(ctx context.Context, userID int, newPassword string) error
 }
 
@@ -27,12 +27,12 @@ type MockAuthService struct {
 	mock.Mock
 }
 
-func (m *MockAuthService) Register(ctx context.Context, username, password, role string) (*auth.User, error) {
+func (m *MockAuthService) Register(ctx context.Context, username, password, role string) (*models.User, error) {
 	args := m.Called(ctx, username, password, role)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*auth.User), args.Error(1)
+	return args.Get(0).(*models.User), args.Error(1)
 }
 
 func (m *MockAuthService) ChangePassword(ctx context.Context, userID int, newPassword string) error {
@@ -55,7 +55,7 @@ func (c *TestUserSyncCommandWrapper) processUser(entry UserEntry) error {
 	}
 
 	user, err := c.mockAuthSvc.Register(ctx, entry.Username, entry.Password, role)
-	if err != nil && err != auth.ErrUserAlreadyExists {
+	if err != nil && err != models.ErrUserAlreadyExists {
 		return err
 	}
 
@@ -159,10 +159,10 @@ func TestUserSyncOperations(t *testing.T) {
 		mockService, command, _ := setupTest(t)
 		ctx := context.Background()
 
-		mockService.On("Register", ctx, "newuser", "password123", "standard").Return(&auth.User{
+		mockService.On("Register", ctx, "newuser", "password123", "standard").Return(&models.User{
 			ID:       1,
 			Username: "newuser",
-			Role:     auth.STANDARD,
+			Role:     models.STANDARD,
 		}, nil).Once()
 
 		err := command.processUser(UserEntry{
@@ -179,13 +179,13 @@ func TestUserSyncOperations(t *testing.T) {
 		mockService, command, _ := setupTest(t)
 		ctx := context.Background()
 
-		existingUser := &auth.User{
+		existingUser := &models.User{
 			ID:       3,
 			Username: "resetuser",
-			Role:     auth.STANDARD,
+			Role:     models.STANDARD,
 		}
 		mockService.On("Register", ctx, "resetuser", "oldpassword", "standard").Return(
-			existingUser, auth.ErrUserAlreadyExists).Once()
+			existingUser, models.ErrUserAlreadyExists).Once()
 		mockService.On("ChangePassword", ctx, 3, "oldpassword").Return(nil).Once()
 
 		err := command.processUser(UserEntry{
@@ -204,7 +204,7 @@ func TestUserSyncOperations(t *testing.T) {
 		ctx := context.Background()
 
 		mockService.On("Register", ctx, "failuser", "password", "standard").Return(
-			nil, auth.ErrUserCreationFailed).Once()
+			nil, models.ErrUserCreationFailed).Once()
 
 		err := command.processUser(UserEntry{
 			Username: "failuser",

@@ -3,6 +3,8 @@ package auth
 import (
 	"database/sql"
 
+	"github.com/benidevo/prospector/internal/auth/repository"
+	"github.com/benidevo/prospector/internal/auth/services"
 	"github.com/benidevo/prospector/internal/config"
 	"github.com/gin-gonic/gin"
 )
@@ -10,9 +12,9 @@ import (
 // SetupAuth initializes and returns an AuthHandler using the provided database connection and configuration settings.
 // It sets up the user repository, authentication service, and handler dependencies.
 func SetupAuth(db *sql.DB, cfg *config.Settings) *AuthHandler {
-	repo := NewSQLiteUserRepository(db)
-	service := NewAuthService(repo, cfg)
-	handler := NewAuthHandler(service)
+	repo := repository.NewSQLiteUserRepository(db)
+	service := services.NewAuthService(repo, cfg)
+	handler := NewAuthHandler(service, cfg)
 
 	return handler
 }
@@ -20,8 +22,8 @@ func SetupAuth(db *sql.DB, cfg *config.Settings) *AuthHandler {
 // SetupGoogleAuth initializes and returns a GoogleAuthHandler using the provided configuration settings.
 // It sets up the GoogleAuthService and handler dependencies.
 func SetupGoogleAuth(cfg *config.Settings, db *sql.DB) (*GoogleAuthHandler, error) {
-	repo := NewSQLiteUserRepository(db)
-	service, err := NewGoogleAuthService(cfg, repo)
+	repo := repository.NewSQLiteUserRepository(db)
+	service, err := services.NewGoogleAuthService(cfg, repo)
 	if err != nil {
 		return nil, err
 	}

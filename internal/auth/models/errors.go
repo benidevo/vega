@@ -1,4 +1,4 @@
-package auth
+package models
 
 import (
 	commonerrors "github.com/benidevo/prospector/internal/common/errors"

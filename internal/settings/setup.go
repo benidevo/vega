@@ -5,14 +5,14 @@ import (
 
 	"github.com/benidevo/prospector/internal/config"
 
-	"github.com/benidevo/prospector/internal/auth"
+	authrepo "github.com/benidevo/prospector/internal/auth/repository"
 	"github.com/benidevo/prospector/internal/settings/repository"
 	"github.com/gin-gonic/gin"
 )
 
 // Setup creates a new settings handler and returns it without registering routes
 func Setup(cfg *config.Settings, db *sql.DB) *SettingsHandler {
-	userRepo := auth.NewSQLiteUserRepository(db)
+	userRepo := authrepo.NewSQLiteUserRepository(db)
 	settingsRepo := repository.NewProfileRepository(db)
 	service := NewSettingsService(settingsRepo, cfg, userRepo)
 	return NewSettingsHandler(service)

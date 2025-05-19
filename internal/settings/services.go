@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/benidevo/prospector/internal/auth"
+	authrepo "github.com/benidevo/prospector/internal/auth/repository"
 	"github.com/benidevo/prospector/internal/config"
 	"github.com/benidevo/prospector/internal/logger"
 	"github.com/benidevo/prospector/internal/settings/interfaces"
@@ -14,14 +14,14 @@ import (
 
 // SettingsService provides business logic for user settings management
 type SettingsService struct {
-	userRepo     auth.UserRepository
+	userRepo     authrepo.UserRepository
 	settingsRepo interfaces.SettingsRepository
 	cfg          *config.Settings
 	log          zerolog.Logger
 }
 
 // NewSettingsService creates a new SettingsService instance
-func NewSettingsService(settingsRepo interfaces.SettingsRepository, cfg *config.Settings, userRepo auth.UserRepository) *SettingsService {
+func NewSettingsService(settingsRepo interfaces.SettingsRepository, cfg *config.Settings, userRepo authrepo.UserRepository) *SettingsService {
 	return &SettingsService{
 		userRepo:     userRepo,
 		settingsRepo: settingsRepo,

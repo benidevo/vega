@@ -1,10 +1,11 @@
-package auth
+package repository
 
 import (
 	"context"
 	"database/sql"
 	"time"
 
+	"github.com/benidevo/prospector/internal/auth/models"
 	commonerrors "github.com/benidevo/prospector/internal/common/errors"
 )
 
@@ -13,19 +14,19 @@ type UserRepository interface {
 	// CreateUser inserts a new user into the database with the specified username,
 	// password, and role, and returns the created User object.
 	// It returns an error if the user creation fails.
-	CreateUser(ctx context.Context, username, password, role string) (*User, error)
+	CreateUser(ctx context.Context, username, password, role string) (*models.User, error)
 
 	// FindByUsername retrieves a user by their username.
 	// It returns ErrUserNotFound if no user is found.
-	FindByUsername(ctx context.Context, username string) (*User, error)
+	FindByUsername(ctx context.Context, username string) (*models.User, error)
 
 	// FindByID retrieves a user by their ID.
 	// It returns ErrUserNotFound if no user is found.
-	FindByID(ctx context.Context, id int) (*User, error)
+	FindByID(ctx context.Context, id int) (*models.User, error)
 
 	// UpdateUser updates the details of an existing user.
 	// It returns ErrUserNotFound if the user does not exist.
-	UpdateUser(ctx context.Context, user *User) (*User, error)
+	UpdateUser(ctx context.Context, user *models.User) (*models.User, error)
 
 	// DeleteUser deletes a user by their ID.
 	// It returns an error if the deletion fails.
@@ -33,7 +34,7 @@ type UserRepository interface {
 
 	// FindAllUsers retrieves all users from the database.
 	// It returns an empty slice if no users are found.
-	FindAllUsers(ctx context.Context) ([]*User, error)
+	FindAllUsers(ctx context.Context) ([]*models.User, error)
 }
 
 // SQLiteUserRepository provides methods to interact with the user data
@@ -52,22 +53,22 @@ func NewSQLiteUserRepository(db *sql.DB) *SQLiteUserRepository {
 // password, and role, and returns the created User object.
 // If a user with the given username already exists, it returns the existing user
 // along with ErrUserAlreadyExists.
-func (r *SQLiteUserRepository) CreateUser(ctx context.Context, username, password, role string) (*User, error) {
+func (r *SQLiteUserRepository) CreateUser(ctx context.Context, username, password, role string) (*models.User, error) {
 	existingUser, err := r.FindByUsername(ctx, username)
 	if err == nil {
-		return existingUser, ErrUserAlreadyExists
-	} else if err != ErrUserNotFound {
+		return existingUser, models.ErrUserAlreadyExists
+	} else if err != models.ErrUserNotFound {
 		if _, ok := err.(*commonerrors.RepositoryError); !ok {
-			return nil, WrapError(ErrUserCreationFailed, err)
+			return nil, models.WrapError(models.ErrUserCreationFailed, err)
 		}
 		return nil, err
 	}
 
 	query := "INSERT INTO users (username, password, role) VALUES (?, ?, ?)"
 
-	roleValue, err := RoleFromString(role)
+	roleValue, err := models.RoleFromString(role)
 	if err != nil {
-		return nil, WrapError(ErrInvalidRole, err)
+		return nil, models.WrapError(models.ErrInvalidRole, err)
 	}
 
 	result, err := r.db.ExecContext(ctx, query, username, password, roleValue)
@@ -75,26 +76,26 @@ func (r *SQLiteUserRepository) CreateUser(ctx context.Context, username, passwor
 		if err.Error() == "UNIQUE constraint failed: users.username" {
 			existingUser, findErr := r.FindByUsername(ctx, username)
 			if findErr == nil {
-				return existingUser, ErrUserAlreadyExists
+				return existingUser, models.ErrUserAlreadyExists
 			}
-			return nil, ErrUserAlreadyExists
+			return nil, models.ErrUserAlreadyExists
 		}
-		return nil, WrapError(ErrUserCreationFailed, err)
+		return nil, models.WrapError(models.ErrUserCreationFailed, err)
 	}
 
 	id, err := result.LastInsertId()
 	if err != nil {
-		return nil, WrapError(ErrUserCreationFailed, err)
+		return nil, models.WrapError(models.ErrUserCreationFailed, err)
 	}
 
 	return r.FindByID(ctx, int(id))
 }
 
 // FindByID retrieves a user by their ID from the SQLite database.
-func (r *SQLiteUserRepository) FindByID(ctx context.Context, id int) (*User, error) {
+func (r *SQLiteUserRepository) FindByID(ctx context.Context, id int) (*models.User, error) {
 	query := "SELECT id, username, password, role, created_at, updated_at, last_login FROM users WHERE id = ?"
 
-	var user User
+	var user models.User
 	var lastLogin sql.NullTime
 
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
@@ -109,9 +110,9 @@ func (r *SQLiteUserRepository) FindByID(ctx context.Context, id int) (*User, err
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, ErrUserNotFound
+			return nil, models.ErrUserNotFound
 		}
-		return nil, WrapError(ErrUserRetrievalFailed, err)
+		return nil, models.WrapError(models.ErrUserRetrievalFailed, err)
 	}
 
 	if lastLogin.Valid {
@@ -122,17 +123,17 @@ func (r *SQLiteUserRepository) FindByID(ctx context.Context, id int) (*User, err
 }
 
 // FindByUsername retrieves a user from the database by their username.
-func (r *SQLiteUserRepository) FindByUsername(ctx context.Context, username string) (*User, error) {
+func (r *SQLiteUserRepository) FindByUsername(ctx context.Context, username string) (*models.User, error) {
 	query := "SELECT id, username, password, role, created_at, updated_at, last_login FROM users WHERE username = ?"
 
-	var user User
+	var user models.User
 	var lastLogin sql.NullTime
 	err := r.db.QueryRowContext(ctx, query, username).Scan(&user.ID, &user.Username, &user.Password, &user.Role, &user.CreatedAt, &user.UpdatedAt, &lastLogin)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, ErrUserNotFound
+			return nil, models.ErrUserNotFound
 		}
-		return nil, WrapError(ErrUserRetrievalFailed, err)
+		return nil, models.WrapError(models.ErrUserRetrievalFailed, err)
 	}
 
 	if lastLogin.Valid {
@@ -143,7 +144,7 @@ func (r *SQLiteUserRepository) FindByUsername(ctx context.Context, username stri
 }
 
 // UpdateUser updates an existing user's details in the database and returns the updated user.
-func (r *SQLiteUserRepository) UpdateUser(ctx context.Context, user *User) (*User, error) {
+func (r *SQLiteUserRepository) UpdateUser(ctx context.Context, user *models.User) (*models.User, error) {
 	user.UpdatedAt = time.Now().UTC()
 
 	var (
@@ -161,16 +162,16 @@ func (r *SQLiteUserRepository) UpdateUser(ctx context.Context, user *User) (*Use
 
 	result, err := r.db.ExecContext(ctx, query, args...)
 	if err != nil {
-		return nil, WrapError(ErrUserUpdateFailed, err)
+		return nil, models.WrapError(models.ErrUserUpdateFailed, err)
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return nil, WrapError(ErrUserUpdateFailed, err)
+		return nil, models.WrapError(models.ErrUserUpdateFailed, err)
 	}
 
 	if rowsAffected == 0 {
-		return nil, ErrUserNotFound
+		return nil, models.ErrUserNotFound
 	}
 
 	return r.FindByID(ctx, user.ID)
@@ -182,29 +183,29 @@ func (r *SQLiteUserRepository) DeleteUser(ctx context.Context, id int) error {
 
 	_, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
-		return WrapError(ErrUserDeletionFailed, err)
+		return models.WrapError(models.ErrUserDeletionFailed, err)
 	}
 	return nil
 }
 
 // FindAllUsers retrieves all users from the database.
-func (r *SQLiteUserRepository) FindAllUsers(ctx context.Context) ([]*User, error) {
+func (r *SQLiteUserRepository) FindAllUsers(ctx context.Context) ([]*models.User, error) {
 	query := "SELECT id, username, password, role, created_at, updated_at, last_login FROM users"
 
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
-		return nil, WrapError(ErrUserListRetrievalFailed, err)
+		return nil, models.WrapError(models.ErrUserListRetrievalFailed, err)
 	}
 	defer rows.Close()
 
-	var users []*User
+	var users []*models.User
 	for rows.Next() {
-		var user User
+		var user models.User
 		var lastLogin sql.NullTime
 
 		err := rows.Scan(&user.ID, &user.Username, &user.Password, &user.Role, &user.CreatedAt, &user.UpdatedAt, &lastLogin)
 		if err != nil {
-			return nil, WrapError(ErrUserListRetrievalFailed, err)
+			return nil, models.WrapError(models.ErrUserListRetrievalFailed, err)
 		}
 
 		if lastLogin.Valid {
@@ -213,7 +214,7 @@ func (r *SQLiteUserRepository) FindAllUsers(ctx context.Context) ([]*User, error
 		users = append(users, &user)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, WrapError(ErrUserListRetrievalFailed, err)
+		return nil, models.WrapError(models.ErrUserListRetrievalFailed, err)
 	}
 	return users, nil
 }

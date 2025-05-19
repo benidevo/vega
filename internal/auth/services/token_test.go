@@ -1,10 +1,11 @@
-package auth
+package services
 
 import (
 	"context"
 	"testing"
 	"time"
 
+	"github.com/benidevo/prospector/internal/auth/models"
 	"github.com/benidevo/prospector/internal/config"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -19,10 +20,10 @@ func TestTokenTypes(t *testing.T) {
 		AppName:            "TestApp",
 	}
 
-	user := &User{
+	user := &models.User{
 		ID:       1,
 		Username: "testuser",
-		Role:     ADMIN,
+		Role:     models.ADMIN,
 	}
 
 	t.Run("access_token_should_have_correct_type_and_expiry", func(t *testing.T) {
@@ -76,14 +77,14 @@ func TestTokenTypes(t *testing.T) {
 		hashedPassword, err := hashPassword("password123")
 		require.NoError(t, err)
 
-		mockRepo.On("FindByUsername", ctx, "testuser").Return(&User{
+		mockRepo.On("FindByUsername", ctx, "testuser").Return(&models.User{
 			ID:       1,
 			Username: "testuser",
 			Password: hashedPassword,
-			Role:     ADMIN,
+			Role:     models.ADMIN,
 		}, nil)
 
-		mockRepo.On("UpdateUser", ctx, mock.AnythingOfType("*auth.User")).Return(&User{}, nil)
+		mockRepo.On("UpdateUser", ctx, mock.AnythingOfType("*auth.User")).Return(&models.User{}, nil)
 
 		authService := NewAuthService(mockRepo, cfg)
 
