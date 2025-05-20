@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/benidevo/ascentio/internal/logger"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -20,7 +19,7 @@ func MigrateDatabase(dbPath, migrationsDir string) error {
 		Str("migrationsDir", migrationsDir).
 		Msg("Starting database migration")
 
-	driver, err := sqlite.WithInstance(logger.SqlDBFromPath(dbPath), &sqlite.Config{})
+	driver, err := sqlite.WithInstance(SqlDBFromPath(dbPath), &sqlite.Config{})
 	if err != nil {
 		return fmt.Errorf("failed to create database driver instance: %w", err)
 	}
