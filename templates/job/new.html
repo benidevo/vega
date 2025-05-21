@@ -53,39 +53,29 @@
 
             <!-- URL -->
             <div class="col-span-1 md:col-span-3">
-              <label for="url" class="block text-sm font-medium text-gray-300 mb-1">Job URL</label>
+              <label for="url" class="block text-sm font-medium text-gray-300 mb-1">Source URL *</label>
               <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                   </svg>
                 </div>
-                <input type="url" id="url" name="url"
+                <input type="url" id="url" name="source_url"
                        class="w-full pl-10 pr-4 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                       placeholder="https://example.com/job-posting">
+                       placeholder="https://example.com/job-posting" required>
               </div>
             </div>
-
-            <!-- Salary Range -->
-            <div>
-              <label for="salary_min" class="block text-sm font-medium text-gray-300 mb-1">Salary Range Min</label>
+            <div class="col-span-1 md:col-span-3">
+              <label for="url" class="block text-sm font-medium text-gray-300 mb-1">Application URL</label>
               <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span class="text-gray-400">$</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
                 </div>
-                <input type="number" id="salary_min" name="salary_min"
-                       class="w-full pl-8 pr-4 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
-              </div>
-            </div>
-
-            <div>
-              <label for="salary_max" class="block text-sm font-medium text-gray-300 mb-1">Salary Range Max</label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span class="text-gray-400">$</span>
-                </div>
-                <input type="number" id="salary_max" name="salary_max"
-                       class="w-full pl-8 pr-4 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                <input type="url" id="url" name="application_url"
+                       class="w-full pl-10 pr-4 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                       placeholder="https://example.com/job-application">
               </div>
             </div>
           </div>
@@ -121,8 +111,8 @@
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- Skills -->
             <div class="col-span-1 md:col-span-3">
-              <label for="skills" class="block text-sm font-medium text-gray-300 mb-1">Skills (comma separated) *</label>
-              <input type="text" id="skills" name="skills" required
+              <label for="skills" class="block text-sm font-medium text-gray-300 mb-1">Skills (comma separated)</label>
+              <input type="text" id="skills" name="skills"
                      class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                      placeholder="e.g., Go, Docker, Kubernetes, SQL, API Design">
               <p class="mt-1 text-sm text-gray-400">List the required technical skills for this position</p>

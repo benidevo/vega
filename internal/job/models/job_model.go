@@ -100,24 +100,22 @@ const (
 )
 
 // FromString converts a string representation of a job type to its corresponding JobType constant.
-func JobTypeFromString(jobType string) (JobType, error) {
+func JobTypeFromString(jobType string) JobType {
 	switch strings.ToLower(jobType) {
 	case "full_time":
-		return FULL_TIME, nil
+		return FULL_TIME
 	case "part_time":
-		return PART_TIME, nil
+		return PART_TIME
 	case "contract":
-		return CONTRACT, nil
+		return CONTRACT
 	case "intern":
-		return INTERN, nil
+		return INTERN
 	case "remote":
-		return REMOTE, nil
+		return REMOTE
 	case "freelance":
-		return FREELANCE, nil
-	case "other":
-		return OTHER, nil
+		return FREELANCE
 	default:
-		return OTHER, ErrInvalidJobType
+		return OTHER
 	}
 }
 
@@ -187,26 +185,23 @@ func (e ExperienceLevel) String() string {
 	}
 }
 
-// Job represents a job posting with details such as title, description, location, company, and application information.
+// Job represents a job posting.
+// It includes metadata for database mapping and JSON serialization.
 type Job struct {
-	ID                  int             `json:"id" db:"id" sql:"primary_key;auto_increment"`
-	Title               string          `json:"title" db:"title" sql:"type:text;not null;index"`
-	Description         string          `json:"description" db:"description" sql:"type:text;not null"`
-	Location            string          `json:"location" db:"location" sql:"type:text"`
-	JobType             JobType         `json:"job_type" db:"job_type" sql:"type:integer;not null;default:0"`
-	SourceURL           string          `json:"source_url" db:"source_url" sql:"type:text;unique;index"`
-	SalaryRange         string          `json:"salary_range" db:"salary_range" sql:"type:text"`
-	RequiredSkills      []string        `json:"required_skills" db:"required_skills" sql:"type:text"` // Stored as JSON
-	ApplicationDeadline *time.Time      `json:"application_deadline,omitempty" db:"application_deadline" sql:"type:timestamp"`
-	ApplicationURL      string          `json:"application_url" db:"application_url" sql:"type:text"`
-	Company             Company         `json:"company" sql:"-"` // Not stored directly, company_id is used instead
-	Status              JobStatus       `json:"status" db:"status" sql:"type:integer;not null;default:0;index"`
-	ExperienceLevel     ExperienceLevel `json:"experience_level" db:"experience_level" sql:"type:integer;not null;default:0"`
-	ContactPerson       string          `json:"contact_person,omitempty" db:"contact_person" sql:"type:text"`
-	Notes               string          `json:"notes,omitempty" db:"notes" sql:"type:text"`
-	PostedAt            *time.Time      `json:"posted_at,omitempty" db:"posted_at" sql:"type:timestamp"`
-	CreatedAt           time.Time       `json:"created_at" db:"created_at" sql:"type:timestamp;not null;default:current_timestamp"`
-	UpdatedAt           time.Time       `json:"updated_at" db:"updated_at" sql:"type:timestamp;not null;default:current_timestamp"`
+	ID              int             `json:"id" db:"id" sql:"primary_key;auto_increment"`
+	Title           string          `json:"title" db:"title" sql:"type:text;not null;index"`
+	Description     string          `json:"description" db:"description" sql:"type:text;not null"`
+	Location        string          `json:"location" db:"location" sql:"type:text"`
+	JobType         JobType         `json:"job_type" db:"job_type" sql:"type:integer;not null;default:0"`
+	SourceURL       string          `json:"source_url" db:"source_url" sql:"type:text;unique;index"`
+	RequiredSkills  []string        `json:"required_skills" db:"required_skills" sql:"type:text"` // Stored as JSON
+	ApplicationURL  string          `json:"application_url" db:"application_url" sql:"type:text"`
+	Company         Company         `json:"company" sql:"-"` // Not stored directly, company_id is used instead
+	Status          JobStatus       `json:"status" db:"status" sql:"type:integer;not null;default:0;index"`
+	ExperienceLevel ExperienceLevel `json:"experience_level" db:"experience_level" sql:"type:integer;not null;default:0"`
+	Notes           string          `json:"notes,omitempty" db:"notes" sql:"type:text"`
+	CreatedAt       time.Time       `json:"created_at" db:"created_at" sql:"type:timestamp;not null;default:current_timestamp"`
+	UpdatedAt       time.Time       `json:"updated_at" db:"updated_at" sql:"type:timestamp;not null;default:current_timestamp"`
 
 	// SQL-only fields
 	CompanyID int `json:"-" db:"company_id" sql:"type:integer;not null;index;references:companies(id)"`
@@ -236,24 +231,10 @@ func WithSourceURL(url string) JobOption {
 	}
 }
 
-// WithSalaryRange sets the job salary range
-func WithSalaryRange(salaryRange string) JobOption {
-	return func(j *Job) {
-		j.SalaryRange = salaryRange
-	}
-}
-
 // WithRequiredSkills sets the required skills for the job
 func WithRequiredSkills(skills []string) JobOption {
 	return func(j *Job) {
 		j.RequiredSkills = skills
-	}
-}
-
-// WithApplicationDeadline sets the application deadline
-func WithApplicationDeadline(deadline time.Time) JobOption {
-	return func(j *Job) {
-		j.ApplicationDeadline = &deadline
 	}
 }
 
@@ -278,13 +259,6 @@ func WithExperienceLevel(level ExperienceLevel) JobOption {
 	}
 }
 
-// WithContactPerson sets the contact person
-func WithContactPerson(contact string) JobOption {
-	return func(j *Job) {
-		j.ContactPerson = contact
-	}
-}
-
 // WithNotes sets the notes for the job
 func WithNotes(notes string) JobOption {
 	return func(j *Job) {
@@ -292,18 +266,10 @@ func WithNotes(notes string) JobOption {
 	}
 }
 
-// WithPostedAt sets when the job was posted
-func WithPostedAt(postedAt time.Time) JobOption {
-	return func(j *Job) {
-		j.PostedAt = &postedAt
-	}
-}
-
 // NewJob creates a new Job instance with the required fields and applies the provided options.
 // Only title, description, and company are required. All other fields can be set using options.
 func NewJob(title, description string, company Company, options ...JobOption) *Job {
 	now := time.Now().UTC()
-
 	job := &Job{
 		Title:          title,
 		Description:    description,
@@ -336,15 +302,6 @@ func (j *Job) Validate() error {
 	}
 
 	return nil
-}
-
-// IsActive checks if the job application is still active based on deadline
-func (j *Job) IsActive() bool {
-	if j.ApplicationDeadline == nil {
-		return true
-	}
-
-	return j.ApplicationDeadline.After(time.Now().UTC())
 }
 
 // JobFilter defines filters for querying jobs

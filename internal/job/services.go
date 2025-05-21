@@ -66,10 +66,10 @@ func (s *JobService) ValidateJobIDFormat(jobIDStr string) (int, error) {
 // ValidateAndFilterSkills processes a comma-separated string of skills
 // and returns only the non-empty skills after trimming whitespace.
 // It returns an error if no valid skills are found.
-func (s *JobService) ValidateAndFilterSkills(skillsStr string) ([]string, error) {
+func (s *JobService) ValidateAndFilterSkills(skillsStr string) []string {
 	if skillsStr == "" {
 		s.log.Error().Msg("Empty skills string provided")
-		return nil, models.ErrSkillsRequired
+		return make([]string, 0)
 	}
 
 	// Split and clean up skills
@@ -86,10 +86,10 @@ func (s *JobService) ValidateAndFilterSkills(skillsStr string) ([]string, error)
 
 	if len(skills) == 0 {
 		s.log.Error().Msg("No valid skills found after processing")
-		return nil, models.ErrSkillsRequired
+		return make([]string, 0)
 	}
 
-	return skills, nil
+	return skills
 }
 
 // ValidateURL checks if a URL string is valid

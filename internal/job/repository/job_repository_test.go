@@ -135,7 +135,6 @@ func TestSQLiteJobRepository_Create(t *testing.T) {
 			Description:    "Build awesome software",
 			Location:       "Remote",
 			JobType:        models.FULL_TIME,
-			SalaryRange:    "$100k-150k",
 			RequiredSkills: []string{"Go", "SQL"},
 			Company: models.Company{
 				Name: "Acme Corp",
@@ -161,16 +160,12 @@ func TestSQLiteJobRepository_Create(t *testing.T) {
 				j.Location,
 				int(j.JobType),
 				j.SourceURL,
-				j.SalaryRange,
 				skillsJSON,
-				nil, // ApplicationDeadline
 				j.ApplicationURL,
 				expectedCompany.ID,
 				int(j.Status),
 				int(j.ExperienceLevel),
-				j.ContactPerson,
 				j.Notes,
-				nil,              // PostedAt
 				sqlmock.AnyArg(), // CreatedAt
 				sqlmock.AnyArg(), // UpdatedAt
 			).
@@ -256,7 +251,7 @@ func TestSQLiteJobRepository_GetByID(t *testing.T) {
 			"j.id", "j.title", "j.description", "j.location", "j.job_type",
 			"j.source_url", "j.salary_range", "j.required_skills", "j.application_deadline",
 			"j.application_url", "j.company_id", "j.status", "j.experience_level",
-			"j.contact_person", "j.notes", "j.posted_at", "j.created_at", "j.updated_at",
+			"j.notes", "j.created_at", "j.updated_at",
 			"c.id", "c.name", "c.created_at", "c.updated_at",
 		}).
 			AddRow(
@@ -282,15 +277,11 @@ func TestSQLiteJobRepository_GetByID(t *testing.T) {
 		assert.Equal(t, "Remote", j.Location)
 		assert.Equal(t, models.FULL_TIME, j.JobType)
 		assert.Equal(t, "https://example.com", j.SourceURL)
-		assert.Equal(t, "$100k-150k", j.SalaryRange)
 		assert.Equal(t, []string{"Go", "SQL"}, j.RequiredSkills)
 		assert.Equal(t, "https://apply.example.com", j.ApplicationURL)
 		assert.Equal(t, models.INTERESTED, j.Status)
 		assert.Equal(t, models.SENIOR, j.ExperienceLevel)
-		assert.Equal(t, "John Doe", j.ContactPerson)
 		assert.Equal(t, "Great company", j.Notes)
-		assert.NotNil(t, j.ApplicationDeadline)
-		assert.NotNil(t, j.PostedAt)
 		assert.Equal(t, companyID, j.Company.ID)
 		assert.Equal(t, "Acme Corp", j.Company.Name)
 
@@ -393,7 +384,7 @@ func TestSQLiteJobRepository_GetAll(t *testing.T) {
 			"j.id", "j.title", "j.description", "j.location", "j.job_type",
 			"j.source_url", "j.salary_range", "j.required_skills", "j.application_deadline",
 			"j.application_url", "j.company_id", "j.status", "j.experience_level",
-			"j.contact_person", "j.notes", "j.posted_at", "j.created_at", "j.updated_at",
+			"j.notes", "j.created_at", "j.updated_at",
 			"c.id", "c.name", "c.created_at", "c.updated_at",
 		})
 
@@ -452,7 +443,7 @@ func TestSQLiteJobRepository_GetAll(t *testing.T) {
 			"j.id", "j.title", "j.description", "j.location", "j.job_type",
 			"j.source_url", "j.salary_range", "j.required_skills", "j.application_deadline",
 			"j.application_url", "j.company_id", "j.status", "j.experience_level",
-			"j.contact_person", "j.notes", "j.posted_at", "j.created_at", "j.updated_at",
+			"j.notes", "j.created_at", "j.updated_at",
 			"c.id", "c.name", "c.created_at", "c.updated_at",
 		}).
 			AddRow(

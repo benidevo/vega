@@ -96,11 +96,18 @@ func (h *JobHandler) CreateJob(c *gin.Context) {
 	description := strings.TrimSpace(c.PostForm("description"))
 	companyName := strings.TrimSpace(c.PostForm("company_name"))
 	location := strings.TrimSpace(c.PostForm("location"))
-	sourceURL := strings.TrimSpace(c.PostForm("url"))
+	sourceURL := strings.TrimSpace(c.PostForm("source_url"))
+	applicationURL := strings.TrimSpace(c.PostForm("application_url"))
 	notes := strings.TrimSpace(c.PostForm("notes"))
 
-	err := h.service.ValidateURL(sourceURL)
-	if err != nil {
+	if err := h.service.ValidateURL(sourceURL); err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	if err := h.service.ValidateURL(applicationURL); err != nil {
 		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
 			"message": err.Error(),
 		})
@@ -108,22 +115,10 @@ func (h *JobHandler) CreateJob(c *gin.Context) {
 	}
 
 	skillsStr := c.PostForm("skills")
-	skills, err := h.service.ValidateAndFilterSkills(skillsStr)
-	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-			"message": err.Error(),
-		})
-		return
-	}
+	skills := h.service.ValidateAndFilterSkills(skillsStr)
 
 	jobTypeStr := c.PostForm("job_type")
-	jobType, err := models.JobTypeFromString(jobTypeStr)
-	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-			"message": err.Error(),
-		})
-		return
-	}
+	jobType := models.JobTypeFromString(jobTypeStr)
 
 	expLevelStr := c.PostForm("experience_level")
 	expLevel := models.ExperienceLevelFromString(expLevelStr)
@@ -135,17 +130,6 @@ func (h *JobHandler) CreateJob(c *gin.Context) {
 			"message": err.Error(),
 		})
 		return
-	}
-
-	salaryMin := c.PostForm("salary_min")
-	salaryMax := c.PostForm("salary_max")
-	salaryRange := ""
-	if salaryMin != "" && salaryMax != "" {
-		salaryRange = salaryMin + "-" + salaryMax
-	} else if salaryMin != "" {
-		salaryRange = salaryMin + "+"
-	} else if salaryMax != "" {
-		salaryRange = "Up to " + salaryMax
 	}
 
 	options := []models.JobOption{
@@ -161,8 +145,8 @@ func (h *JobHandler) CreateJob(c *gin.Context) {
 	if sourceURL != "" {
 		options = append(options, models.WithSourceURL(sourceURL))
 	}
-	if salaryRange != "" {
-		options = append(options, models.WithSalaryRange(salaryRange))
+	if applicationURL != "" {
+		options = append(options, models.WithApplicationURL(applicationURL))
 	}
 	if notes != "" {
 		options = append(options, models.WithNotes(notes))
@@ -291,13 +275,7 @@ func (h *JobHandler) UpdateJobField(c *gin.Context) {
 
 	case "skills":
 		skillsStr := c.PostForm("skills")
-		skills, err := h.service.ValidateAndFilterSkills(skillsStr)
-		if err != nil {
-			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-				"message": err.Error(),
-			})
-			return
-		}
+		skills := h.service.ValidateAndFilterSkills(skillsStr)
 
 		job.RequiredSkills = skills
 		successMessage = "Skills updated successfully"

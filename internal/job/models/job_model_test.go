@@ -3,7 +3,6 @@ package models
 import (
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -78,12 +77,7 @@ func TestJobType_FromString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := JobTypeFromString(tt.str)
-			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-			}
+			got := JobTypeFromString(tt.str)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -121,8 +115,6 @@ func TestNewJob_WithOptions(t *testing.T) {
 	title := "Software Engineer"
 	description := "Build awesome software"
 	company := Company{Name: "Acme Corp"}
-	deadline := time.Now().Add(7 * 24 * time.Hour)
-	postedAt := time.Now().Add(-24 * time.Hour)
 	requiredSkills := []string{"Go", "SQL", "AWS"}
 
 	// Create job with all options
@@ -133,15 +125,11 @@ func TestNewJob_WithOptions(t *testing.T) {
 		WithJobType(FULL_TIME),
 		WithLocation("Remote"),
 		WithSourceURL("https://example.com"),
-		WithSalaryRange("$100k-150k"),
 		WithRequiredSkills(requiredSkills),
-		WithApplicationDeadline(deadline),
 		WithApplicationURL("https://apply.example.com"),
 		WithStatus(APPLIED),
 		WithExperienceLevel(SENIOR),
-		WithContactPerson("John Doe"),
 		WithNotes("Great opportunity"),
-		WithPostedAt(postedAt),
 	)
 
 	assert.Equal(t, title, job.Title)
@@ -150,15 +138,11 @@ func TestNewJob_WithOptions(t *testing.T) {
 	assert.Equal(t, FULL_TIME, job.JobType)
 	assert.Equal(t, "Remote", job.Location)
 	assert.Equal(t, "https://example.com", job.SourceURL)
-	assert.Equal(t, "$100k-150k", job.SalaryRange)
 	assert.Equal(t, requiredSkills, job.RequiredSkills)
-	assert.Equal(t, deadline.Unix(), job.ApplicationDeadline.Unix())
 	assert.Equal(t, "https://apply.example.com", job.ApplicationURL)
 	assert.Equal(t, APPLIED, job.Status)
 	assert.Equal(t, SENIOR, job.ExperienceLevel)
-	assert.Equal(t, "John Doe", job.ContactPerson)
 	assert.Equal(t, "Great opportunity", job.Notes)
-	assert.Equal(t, postedAt.Unix(), job.PostedAt.Unix())
 	assert.NotZero(t, job.CreatedAt)
 	assert.NotZero(t, job.UpdatedAt)
 }
@@ -178,14 +162,10 @@ func TestNewJob_DefaultValues(t *testing.T) {
 	assert.Equal(t, INTERESTED, job.Status)
 	assert.Empty(t, job.Location)
 	assert.Empty(t, job.SourceURL)
-	assert.Empty(t, job.SalaryRange)
 	assert.Empty(t, job.RequiredSkills)
-	assert.Nil(t, job.ApplicationDeadline)
 	assert.Empty(t, job.ApplicationURL)
 	assert.Zero(t, job.ExperienceLevel)
-	assert.Empty(t, job.ContactPerson)
 	assert.Empty(t, job.Notes)
-	assert.Nil(t, job.PostedAt)
 	assert.NotZero(t, job.CreatedAt)
 	assert.NotZero(t, job.UpdatedAt)
 }
@@ -249,34 +229,6 @@ func TestJob_Validate(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
-		})
-	}
-}
-
-func TestJob_IsActive(t *testing.T) {
-	future := time.Now().Add(24 * time.Hour)
-	past := time.Now().Add(-24 * time.Hour)
-
-	tests := []struct {
-		name     string
-		deadline *time.Time
-		want     bool
-	}{
-		{"No deadline", nil, true},
-		{"Future deadline", &future, true},
-		{"Past deadline", &past, false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			job := &Job{
-				Title:               "Software Engineer",
-				Description:         "Build awesome software",
-				Company:             Company{Name: "Acme Corp"},
-				ApplicationDeadline: tt.deadline,
-			}
-			got := job.IsActive()
-			assert.Equal(t, tt.want, got)
 		})
 	}
 }

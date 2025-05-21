@@ -73,21 +73,11 @@ func (r *SQLiteJobRepository) Create(ctx context.Context, jobModel *models.Job) 
 	query := `
 		INSERT INTO jobs (
 			title, description, location, job_type, source_url,
-			salary_range, required_skills, application_deadline, application_url,
-			company_id, status, experience_level, contact_person, notes,
-			posted_at, created_at, updated_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			required_skills, application_url,
+			company_id, status, experience_level, notes,
+			created_at, updated_at
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
-
-	var postedAt *time.Time
-	if jobModel.PostedAt != nil {
-		postedAt = jobModel.PostedAt
-	}
-
-	var deadline *time.Time
-	if jobModel.ApplicationDeadline != nil {
-		deadline = jobModel.ApplicationDeadline
-	}
 
 	result, err := tx.ExecContext(
 		ctx,
@@ -97,16 +87,12 @@ func (r *SQLiteJobRepository) Create(ctx context.Context, jobModel *models.Job) 
 		jobModel.Location,
 		int(jobModel.JobType),
 		jobModel.SourceURL,
-		jobModel.SalaryRange,
 		skillsJSON,
-		deadline,
 		jobModel.ApplicationURL,
 		company.ID,
 		int(jobModel.Status),
 		int(jobModel.ExperienceLevel),
-		jobModel.ContactPerson,
 		jobModel.Notes,
-		postedAt,
 		jobModel.CreatedAt,
 		jobModel.UpdatedAt,
 	)
@@ -140,9 +126,9 @@ func (r *SQLiteJobRepository) GetByID(ctx context.Context, id int) (*models.Job,
 	query := `
 		SELECT
 			j.id, j.title, j.description, j.location, j.job_type,
-			j.source_url, j.salary_range, j.required_skills, j.application_deadline,
+			j.source_url, j.required_skills,
 			j.application_url, j.company_id, j.status, j.experience_level,
-			j.contact_person, j.notes, j.posted_at, j.created_at, j.updated_at,
+			j.notes, j.created_at, j.updated_at,
 			c.id, c.name, c.created_at, c.updated_at
 		FROM jobs j
 		JOIN companies c ON j.company_id = c.id
@@ -155,14 +141,13 @@ func (r *SQLiteJobRepository) GetByID(ctx context.Context, id int) (*models.Job,
 	var company models.Company
 	var skillsJSON string
 	var jobType, status, experienceLevel int
-	var applicationDeadline, postedAt sql.NullTime
-	var contactPerson, notes, sourceURL, applicationURL, salaryRange, location sql.NullString
+	var notes, sourceURL, applicationURL, location sql.NullString
 
 	err := row.Scan(
 		&j.ID, &j.Title, &j.Description, &location, &jobType,
-		&sourceURL, &salaryRange, &skillsJSON, &applicationDeadline,
+		&sourceURL, &skillsJSON,
 		&applicationURL, &company.ID, &status, &experienceLevel,
-		&contactPerson, &notes, &postedAt, &j.CreatedAt, &j.UpdatedAt,
+		&notes, &j.CreatedAt, &j.UpdatedAt,
 		&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt,
 	)
 
@@ -182,23 +167,11 @@ func (r *SQLiteJobRepository) GetByID(ctx context.Context, id int) (*models.Job,
 	if sourceURL.Valid {
 		j.SourceURL = sourceURL.String
 	}
-	if salaryRange.Valid {
-		j.SalaryRange = salaryRange.String
-	}
 	if applicationURL.Valid {
 		j.ApplicationURL = applicationURL.String
 	}
-	if contactPerson.Valid {
-		j.ContactPerson = contactPerson.String
-	}
 	if notes.Valid {
 		j.Notes = notes.String
-	}
-	if applicationDeadline.Valid {
-		j.ApplicationDeadline = &applicationDeadline.Time
-	}
-	if postedAt.Valid {
-		j.PostedAt = &postedAt.Time
 	}
 
 	if err := json.Unmarshal([]byte(skillsJSON), &j.RequiredSkills); err != nil {
@@ -219,9 +192,9 @@ func (r *SQLiteJobRepository) GetAll(ctx context.Context, filter models.JobFilte
 	query := `
 		SELECT
 			j.id, j.title, j.description, j.location, j.job_type,
-			j.source_url, j.salary_range, j.required_skills, j.application_deadline,
+			j.source_url, j.required_skills,
 			j.application_url, j.company_id, j.status, j.experience_level,
-			j.contact_person, j.notes, j.posted_at, j.created_at, j.updated_at,
+			j.notes, j.created_at, j.updated_at,
 			c.id, c.name, c.created_at, c.updated_at
 		FROM jobs j
 		JOIN companies c ON j.company_id = c.id
@@ -280,14 +253,13 @@ func (r *SQLiteJobRepository) GetAll(ctx context.Context, filter models.JobFilte
 		var company models.Company
 		var skillsJSON string
 		var jobType, status, experienceLevel int
-		var applicationDeadline, postedAt sql.NullTime
-		var contactPerson, notes, sourceURL, applicationURL, salaryRange, location sql.NullString
+		var notes, sourceURL, applicationURL, location sql.NullString
 
 		err := rows.Scan(
 			&j.ID, &j.Title, &j.Description, &location, &jobType,
-			&sourceURL, &salaryRange, &skillsJSON, &applicationDeadline,
+			&sourceURL, &skillsJSON,
 			&applicationURL, &company.ID, &status, &experienceLevel,
-			&contactPerson, &notes, &postedAt, &j.CreatedAt, &j.UpdatedAt,
+			&notes, &j.CreatedAt, &j.UpdatedAt,
 			&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt,
 		)
 
@@ -301,23 +273,11 @@ func (r *SQLiteJobRepository) GetAll(ctx context.Context, filter models.JobFilte
 		if sourceURL.Valid {
 			j.SourceURL = sourceURL.String
 		}
-		if salaryRange.Valid {
-			j.SalaryRange = salaryRange.String
-		}
 		if applicationURL.Valid {
 			j.ApplicationURL = applicationURL.String
 		}
-		if contactPerson.Valid {
-			j.ContactPerson = contactPerson.String
-		}
 		if notes.Valid {
 			j.Notes = notes.String
-		}
-		if applicationDeadline.Valid {
-			j.ApplicationDeadline = &applicationDeadline.Time
-		}
-		if postedAt.Valid {
-			j.PostedAt = &postedAt.Time
 		}
 
 		if err := json.Unmarshal([]byte(skillsJSON), &j.RequiredSkills); err != nil {
@@ -380,22 +340,12 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, job *models.Job) error
 	query := `
 		UPDATE jobs SET
 			title = ?, description = ?, location = ?, job_type = ?,
-			source_url = ?, salary_range = ?, required_skills = ?,
-			application_deadline = ?, application_url = ?, company_id = ?,
-			status = ?, experience_level = ?, contact_person = ?,
-			notes = ?, posted_at = ?, updated_at = ?
+			source_url = ?, required_skills = ?,
+			application_url = ?, company_id = ?,
+			status = ?, experience_level = ?,
+			notes = ?, updated_at = ?
 		WHERE id = ?
 	`
-
-	var postedAt *time.Time
-	if job.PostedAt != nil {
-		postedAt = job.PostedAt
-	}
-
-	var deadline *time.Time
-	if job.ApplicationDeadline != nil {
-		deadline = job.ApplicationDeadline
-	}
 
 	result, err := tx.ExecContext(
 		ctx,
@@ -405,16 +355,12 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, job *models.Job) error
 		job.Location,
 		int(job.JobType),
 		job.SourceURL,
-		job.SalaryRange,
 		skillsJSON,
-		deadline,
 		job.ApplicationURL,
 		company.ID,
 		int(job.Status),
 		int(job.ExperienceLevel),
-		job.ContactPerson,
 		job.Notes,
-		postedAt,
 		job.UpdatedAt,
 		job.ID,
 	)

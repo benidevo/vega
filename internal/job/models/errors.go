@@ -6,7 +6,6 @@ import (
 
 var (
 	// Model validation errors
-	ErrInvalidJobType          = commonerrors.New("invalid job type")
 	ErrInvalidJobStatus        = commonerrors.New("invalid job status")
 	ErrInvalidStatusTransition = commonerrors.New("job status can only move forward")
 	ErrInvalidExperienceLevel  = commonerrors.New("invalid experience level")

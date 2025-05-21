@@ -6,16 +6,12 @@ CREATE TABLE IF NOT EXISTS jobs (
     location TEXT,
     job_type INTEGER NOT NULL DEFAULT 0,
     source_url TEXT UNIQUE,
-    salary_range TEXT,
     required_skills TEXT,  -- Stored as JSON string
-    application_deadline TIMESTAMP,
     application_url TEXT,
     company_id INTEGER NOT NULL,
     status INTEGER NOT NULL DEFAULT 0,
     experience_level INTEGER NOT NULL DEFAULT 0,
-    contact_person TEXT,
     notes TEXT,
-    posted_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (company_id) REFERENCES companies(id)
