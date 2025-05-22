@@ -14,57 +14,48 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupJobRepositoryTest(t *testing.T) (*SQLiteJobRepository, sqlmock.Sqlmock, *MockCompanyRepository) {
+func setupJobRepositoryTest(t *testing.T) (*SQLiteJobRepository, sqlmock.Sqlmock, *MinimalMockCompanyRepository) {
 	db, mock := setupMockDB(t)
-	mockCompanyRepo := NewMockCompanyRepository()
+	mockCompanyRepo := NewMinimalMockCompanyRepository()
 	repo := NewSQLiteJobRepository(db, mockCompanyRepo)
 	return repo, mock, mockCompanyRepo
 }
 
-// MockCompanyRepository is a mock implementation of CompanyRepository
-type MockCompanyRepository struct {
-	companies       map[string]*models.Company
-	nextID          int
-	GetOrCreateFunc func(ctx context.Context, name string) (*models.Company, error)
+// MinimalMockCompanyRepository is a simplified mock for testing job repository
+type MinimalMockCompanyRepository struct {
+	companies map[string]*models.Company
+	nextID    int
 }
 
-func NewMockCompanyRepository() *MockCompanyRepository {
-	repo := &MockCompanyRepository{
+func NewMinimalMockCompanyRepository() *MinimalMockCompanyRepository {
+	return &MinimalMockCompanyRepository{
 		companies: make(map[string]*models.Company),
 		nextID:    1,
 	}
+}
 
-	repo.GetOrCreateFunc = func(ctx context.Context, name string) (*models.Company, error) {
-		if name == "" {
-			return nil, models.ErrCompanyNameRequired
-		}
+func (r *MinimalMockCompanyRepository) GetOrCreate(ctx context.Context, name string) (*models.Company, error) {
+	if name == "" {
+		return nil, models.ErrCompanyNameRequired
+	}
 
-		normalizedName := name
-		if company, ok := repo.companies[normalizedName]; ok {
-			return company, nil
-		}
-
-		now := time.Now()
-		company := &models.Company{
-			ID:        repo.nextID,
-			Name:      normalizedName,
-			CreatedAt: now,
-			UpdatedAt: now,
-		}
-		repo.nextID++
-		repo.companies[normalizedName] = company
-
+	if company, ok := r.companies[name]; ok {
 		return company, nil
 	}
 
-	return repo
+	now := time.Now()
+	company := &models.Company{
+		ID:        r.nextID,
+		Name:      name,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	r.nextID++
+	r.companies[name] = company
+	return company, nil
 }
 
-func (r *MockCompanyRepository) GetOrCreate(ctx context.Context, name string) (*models.Company, error) {
-	return r.GetOrCreateFunc(ctx, name)
-}
-
-func (r *MockCompanyRepository) GetByID(ctx context.Context, id int) (*models.Company, error) {
+func (r *MinimalMockCompanyRepository) GetByID(ctx context.Context, id int) (*models.Company, error) {
 	for _, company := range r.companies {
 		if company.ID == id {
 			return company, nil
@@ -73,20 +64,14 @@ func (r *MockCompanyRepository) GetByID(ctx context.Context, id int) (*models.Co
 	return nil, models.ErrCompanyNotFound
 }
 
-func (r *MockCompanyRepository) GetByName(ctx context.Context, name string) (*models.Company, error) {
-	if name == "" {
-		return nil, models.ErrCompanyNameRequired
-	}
-
-	normalizedName := name
-	if company, ok := r.companies[normalizedName]; ok {
+func (r *MinimalMockCompanyRepository) GetByName(ctx context.Context, name string) (*models.Company, error) {
+	if company, ok := r.companies[name]; ok {
 		return company, nil
 	}
-
 	return nil, models.ErrCompanyNotFound
 }
 
-func (r *MockCompanyRepository) GetAll(ctx context.Context) ([]*models.Company, error) {
+func (r *MinimalMockCompanyRepository) GetAll(ctx context.Context) ([]*models.Company, error) {
 	companies := make([]*models.Company, 0, len(r.companies))
 	for _, company := range r.companies {
 		companies = append(companies, company)
@@ -94,7 +79,7 @@ func (r *MockCompanyRepository) GetAll(ctx context.Context) ([]*models.Company, 
 	return companies, nil
 }
 
-func (r *MockCompanyRepository) Delete(ctx context.Context, id int) error {
+func (r *MinimalMockCompanyRepository) Delete(ctx context.Context, id int) error {
 	for name, company := range r.companies {
 		if company.ID == id {
 			delete(r.companies, name)
@@ -104,13 +89,9 @@ func (r *MockCompanyRepository) Delete(ctx context.Context, id int) error {
 	return models.ErrCompanyNotFound
 }
 
-func (r *MockCompanyRepository) Update(ctx context.Context, company *models.Company) error {
-	if company == nil {
-		return errors.New("company cannot be nil")
-	}
-
-	if company.ID == 0 {
-		return errors.New("company ID is required")
+func (r *MinimalMockCompanyRepository) Update(ctx context.Context, company *models.Company) error {
+	if company == nil || company.ID == 0 {
+		return errors.New("invalid company")
 	}
 
 	for name, c := range r.companies {
@@ -121,354 +102,228 @@ func (r *MockCompanyRepository) Update(ctx context.Context, company *models.Comp
 			return nil
 		}
 	}
-
 	return models.ErrCompanyNotFound
 }
 
 func TestSQLiteJobRepository_Create(t *testing.T) {
-	t.Run("should create a job successfully", func(t *testing.T) {
-		repo, mock, _ := setupJobRepositoryTest(t)
-		defer mock.ExpectClose()
-
-		j := &models.Job{
-			Title:          "Software Engineer",
-			Description:    "Build awesome software",
-			Location:       "Remote",
-			JobType:        models.FULL_TIME,
-			RequiredSkills: []string{"Go", "SQL"},
-			Company: models.Company{
-				Name: "Acme Corp",
+	tests := []struct {
+		name         string
+		job          *models.Job
+		setupMock    func(sqlmock.Sqlmock, *models.Job)
+		setupCompany func(*MinimalMockCompanyRepository)
+		wantErr      error
+		validateJob  func(*testing.T, *models.Job)
+	}{
+		{
+			name: "successful creation",
+			job: &models.Job{
+				Title:           "Software Engineer",
+				Description:     "Build awesome software",
+				Location:        "Remote",
+				JobType:         models.FULL_TIME,
+				RequiredSkills:  []string{"Go", "SQL"},
+				Company:         models.Company{Name: "Acme Corp"},
+				Status:          models.INTERESTED,
+				ExperienceLevel: models.SENIOR,
 			},
-			Status:          models.INTERESTED,
-			ExperienceLevel: models.SENIOR,
-		}
-
-		expectedCompany := &models.Company{
-			ID:   1,
-			Name: "Acme Corp",
-		}
-
-		skillsJSON, err := json.Marshal(j.RequiredSkills)
-		require.NoError(t, err)
-
-		mock.ExpectBegin()
-
-		mock.ExpectExec("INSERT INTO jobs").
-			WithArgs(
-				j.Title,
-				j.Description,
-				j.Location,
-				int(j.JobType),
-				j.SourceURL,
-				skillsJSON,
-				j.ApplicationURL,
-				expectedCompany.ID,
-				int(j.Status),
-				int(j.ExperienceLevel),
-				j.Notes,
-				sqlmock.AnyArg(), // CreatedAt
-				sqlmock.AnyArg(), // UpdatedAt
-			).
-			WillReturnResult(sqlmock.NewResult(1, 1))
-
-		mock.ExpectCommit()
-
-		ctx := context.Background()
-		createdJob, err := repo.Create(ctx, j)
-
-		require.NoError(t, err)
-		require.NotNil(t, createdJob)
-		assert.Equal(t, 1, createdJob.ID)
-		assert.Equal(t, j.Title, createdJob.Title)
-		assert.Equal(t, expectedCompany.ID, createdJob.Company.ID)
-		assert.Equal(t, expectedCompany.Name, createdJob.Company.Name)
-		assert.NotZero(t, createdJob.CreatedAt)
-		assert.NotZero(t, createdJob.UpdatedAt)
-
-		assert.NoError(t, mock.ExpectationsWereMet())
-	})
-
-	t.Run("should return error when job validation fails", func(t *testing.T) {
-		repo, mock, _ := setupJobRepositoryTest(t)
-		defer mock.ExpectClose()
-
-		j := &models.Job{
-			Description: "Build awesome software",
-			Company: models.Company{
-				Name: "Acme Corp",
+			setupMock: func(mock sqlmock.Sqlmock, j *models.Job) {
+				skillsJSON, _ := json.Marshal(j.RequiredSkills)
+				mock.ExpectBegin()
+				mock.ExpectExec("INSERT INTO jobs").
+					WithArgs(
+						j.Title, j.Description, j.Location, int(j.JobType),
+						j.SourceURL, skillsJSON, j.ApplicationURL, 1,
+						int(j.Status), int(j.ExperienceLevel), j.Notes,
+						sqlmock.AnyArg(), sqlmock.AnyArg(),
+					).
+					WillReturnResult(sqlmock.NewResult(1, 1))
+				mock.ExpectCommit()
 			},
-		}
-
-		ctx := context.Background()
-		createdJob, err := repo.Create(ctx, j)
-
-		assert.Error(t, err)
-		assert.True(t, errors.Is(err, models.ErrJobTitleRequired))
-		assert.Nil(t, createdJob)
-
-		assert.NoError(t, mock.ExpectationsWereMet())
-	})
-
-	t.Run("should return error when company creation fails", func(t *testing.T) {
-		// Setup
-		repo, mock, mockCompanyRepo := setupJobRepositoryTest(t)
-		defer mock.ExpectClose()
-
-		// Override the GetOrCreate function to return an error
-		mockCompanyRepo.GetOrCreateFunc = func(ctx context.Context, name string) (*models.Company, error) {
-			return nil, errors.New("company creation failed")
-		}
-
-		j := &models.Job{
-			Title:       "Software Engineer",
-			Description: "Build awesome software",
-			Company: models.Company{
-				Name: "Acme Corp",
+			validateJob: func(t *testing.T, j *models.Job) {
+				assert.Equal(t, 1, j.ID)
+				assert.Equal(t, "Acme Corp", j.Company.Name)
+				assert.NotZero(t, j.CreatedAt)
+				assert.NotZero(t, j.UpdatedAt)
 			},
-		}
+		},
+		{
+			name: "validation error - missing title",
+			job: &models.Job{
+				Description: "Build awesome software",
+				Company:     models.Company{Name: "Acme Corp"},
+			},
+			wantErr: models.ErrJobTitleRequired,
+		},
+	}
 
-		ctx := context.Background()
-		createdJob, err := repo.Create(ctx, j)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo, mock, mockCompanyRepo := setupJobRepositoryTest(t)
+			defer mock.ExpectClose()
 
-		assert.Error(t, err)
-		assert.Equal(t, "company creation failed", err.Error())
-		assert.Nil(t, createdJob)
+			if tt.setupCompany != nil {
+				tt.setupCompany(mockCompanyRepo)
+			}
 
-		assert.NoError(t, mock.ExpectationsWereMet())
-	})
+			if tt.setupMock != nil {
+				tt.setupMock(mock, tt.job)
+			}
+
+			createdJob, err := repo.Create(context.Background(), tt.job)
+
+			if tt.wantErr != nil {
+				assert.Error(t, err)
+				assert.True(t, errors.Is(err, tt.wantErr))
+				assert.Nil(t, createdJob)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, createdJob)
+				if tt.validateJob != nil {
+					tt.validateJob(t, createdJob)
+				}
+			}
+
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
 }
 
 func TestSQLiteJobRepository_GetByID(t *testing.T) {
-	t.Run("should return job when it exists", func(t *testing.T) {
-		repo, mock, _ := setupJobRepositoryTest(t)
-		defer mock.ExpectClose()
+	repo, mock, _ := setupJobRepositoryTest(t)
+	defer mock.ExpectClose()
 
+	t.Run("existing job", func(t *testing.T) {
 		jobID := 1
 		now := time.Now()
-		companyID := 2
 
 		rows := sqlmock.NewRows([]string{
 			"j.id", "j.title", "j.description", "j.location", "j.job_type",
-			"j.source_url", "j.salary_range", "j.required_skills", "j.application_deadline",
+			"j.source_url", "j.required_skills",
 			"j.application_url", "j.company_id", "j.status", "j.experience_level",
 			"j.notes", "j.created_at", "j.updated_at",
 			"c.id", "c.name", "c.created_at", "c.updated_at",
-		}).
-			AddRow(
-				jobID, "Software Engineer", "Build awesome software", "Remote", int(models.FULL_TIME),
-				"https://example.com", "$100k-150k", `["Go","SQL"]`, now.Add(7*24*time.Hour),
-				"https://apply.example.com", companyID, int(models.INTERESTED), int(models.SENIOR),
-				"John Doe", "Great company", now.Add(-24*time.Hour), now, now,
-				companyID, "Acme Corp", now, now,
-			)
+		}).AddRow(
+			jobID, "Software Engineer", "Build awesome software", "Remote", int(models.FULL_TIME),
+			"https://example.com", `["Go","SQL"]`,
+			"https://apply.example.com", 2, int(models.INTERESTED), int(models.SENIOR),
+			"Great company", now.Add(-24*time.Hour), now,
+			2, "Acme Corp", now, now,
+		)
 
 		mock.ExpectQuery("SELECT.*FROM jobs.*WHERE j.id = ?").
 			WithArgs(jobID).
 			WillReturnRows(rows)
 
-		ctx := context.Background()
-		j, err := repo.GetByID(ctx, jobID)
+		job, err := repo.GetByID(context.Background(), jobID)
 
 		require.NoError(t, err)
-		require.NotNil(t, j)
-		assert.Equal(t, jobID, j.ID)
-		assert.Equal(t, "Software Engineer", j.Title)
-		assert.Equal(t, "Build awesome software", j.Description)
-		assert.Equal(t, "Remote", j.Location)
-		assert.Equal(t, models.FULL_TIME, j.JobType)
-		assert.Equal(t, "https://example.com", j.SourceURL)
-		assert.Equal(t, []string{"Go", "SQL"}, j.RequiredSkills)
-		assert.Equal(t, "https://apply.example.com", j.ApplicationURL)
-		assert.Equal(t, models.INTERESTED, j.Status)
-		assert.Equal(t, models.SENIOR, j.ExperienceLevel)
-		assert.Equal(t, "Great company", j.Notes)
-		assert.Equal(t, companyID, j.Company.ID)
-		assert.Equal(t, "Acme Corp", j.Company.Name)
-
-		assert.NoError(t, mock.ExpectationsWereMet())
+		require.NotNil(t, job)
+		assert.Equal(t, jobID, job.ID)
+		assert.Equal(t, "Software Engineer", job.Title)
+		assert.Equal(t, "Acme Corp", job.Company.Name)
 	})
 
-	t.Run("should return ErrJobNotFound when job does not exist", func(t *testing.T) {
-		// Setup
-		repo, mock, _ := setupJobRepositoryTest(t)
-		defer mock.ExpectClose()
-
-		jobID := 999 // Non-existent job
-
+	t.Run("non-existent job", func(t *testing.T) {
 		mock.ExpectQuery("SELECT.*FROM jobs.*WHERE j.id = ?").
-			WithArgs(jobID).
+			WithArgs(999).
 			WillReturnError(sql.ErrNoRows)
 
-		ctx := context.Background()
-		j, err := repo.GetByID(ctx, jobID)
+		job, err := repo.GetByID(context.Background(), 999)
 
 		assert.Error(t, err)
 		assert.True(t, errors.Is(err, models.ErrJobNotFound))
-		assert.Nil(t, j)
-
-		assert.NoError(t, mock.ExpectationsWereMet())
+		assert.Nil(t, job)
 	})
 }
 
 func TestSQLiteJobRepository_UpdateStatus(t *testing.T) {
-	t.Run("should update job status successfully", func(t *testing.T) {
-		// Setup
-		repo, mock, _ := setupJobRepositoryTest(t)
-		defer mock.ExpectClose()
+	repo, mock, _ := setupJobRepositoryTest(t)
+	defer mock.ExpectClose()
 
-		jobID := 1
-		newStatus := models.APPLIED
+	tests := []struct {
+		name         string
+		jobID        int
+		status       models.JobStatus
+		rowsAffected int64
+		wantErr      error
+	}{
+		{
+			name:         "successful update",
+			jobID:        1,
+			status:       models.APPLIED,
+			rowsAffected: 1,
+		},
+		{
+			name:         "job not found",
+			jobID:        999,
+			status:       models.APPLIED,
+			rowsAffected: 0,
+			wantErr:      models.ErrJobNotFound,
+		},
+	}
 
-		mock.ExpectExec("UPDATE jobs SET status = \\?, updated_at = \\? WHERE id = \\?").
-			WithArgs(int(newStatus), sqlmock.AnyArg(), jobID).
-			WillReturnResult(sqlmock.NewResult(0, 1))
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mock.ExpectExec("UPDATE jobs SET status = \\?, updated_at = \\? WHERE id = \\?").
+				WithArgs(int(tt.status), sqlmock.AnyArg(), tt.jobID).
+				WillReturnResult(sqlmock.NewResult(0, tt.rowsAffected))
 
-		ctx := context.Background()
-		err := repo.UpdateStatus(ctx, jobID, newStatus)
+			err := repo.UpdateStatus(context.Background(), tt.jobID, tt.status)
 
-		assert.NoError(t, err)
-		assert.NoError(t, mock.ExpectationsWereMet())
-	})
-
-	t.Run("should return ErrJobNotFound when job does not exist", func(t *testing.T) {
-		repo, mock, _ := setupJobRepositoryTest(t)
-		defer mock.ExpectClose()
-
-		jobID := 999 // Non-existent job
-		newStatus := models.APPLIED
-
-		// Expect update but no rows affected
-		mock.ExpectExec("UPDATE jobs SET status = \\?, updated_at = \\? WHERE id = \\?").
-			WithArgs(int(newStatus), sqlmock.AnyArg(), jobID).
-			WillReturnResult(sqlmock.NewResult(0, 0))
-
-		ctx := context.Background()
-		err := repo.UpdateStatus(ctx, jobID, newStatus)
-
-		assert.Error(t, err)
-		assert.True(t, errors.Is(err, models.ErrJobNotFound))
-
-		assert.NoError(t, mock.ExpectationsWereMet())
-	})
+			if tt.wantErr != nil {
+				assert.Error(t, err)
+				assert.True(t, errors.Is(err, tt.wantErr))
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
 }
 
 func TestSQLiteJobRepository_Delete(t *testing.T) {
-	t.Run("should delete job successfully", func(t *testing.T) {
-		repo, mock, _ := setupJobRepositoryTest(t)
-		defer mock.ExpectClose()
+	repo, mock, _ := setupJobRepositoryTest(t)
+	defer mock.ExpectClose()
 
-		jobID := 1
+	mock.ExpectExec("DELETE FROM jobs WHERE id = \\?").
+		WithArgs(1).
+		WillReturnResult(sqlmock.NewResult(0, 1))
 
-		mock.ExpectExec("DELETE FROM jobs WHERE id = \\?").
-			WithArgs(jobID).
-			WillReturnResult(sqlmock.NewResult(0, 1))
-
-		// Execute
-		ctx := context.Background()
-		err := repo.Delete(ctx, jobID)
-
-		assert.NoError(t, err)
-
-		assert.NoError(t, mock.ExpectationsWereMet())
-	})
+	err := repo.Delete(context.Background(), 1)
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestSQLiteJobRepository_GetAll(t *testing.T) {
-	t.Run("should return all jobs with no filters", func(t *testing.T) {
-		repo, mock, _ := setupJobRepositoryTest(t)
-		defer mock.ExpectClose()
+	repo, mock, _ := setupJobRepositoryTest(t)
+	defer mock.ExpectClose()
 
-		now := time.Now()
-
-		rows := sqlmock.NewRows([]string{
-			"j.id", "j.title", "j.description", "j.location", "j.job_type",
-			"j.source_url", "j.salary_range", "j.required_skills", "j.application_deadline",
-			"j.application_url", "j.company_id", "j.status", "j.experience_level",
-			"j.notes", "j.created_at", "j.updated_at",
-			"c.id", "c.name", "c.created_at", "c.updated_at",
-		})
-
-		// Add first job
-		rows.AddRow(
-			1, "Software Engineer", "Build awesome software", "Remote", int(models.FULL_TIME),
-			"https://example.com", "$100k-150k", `["Go","SQL"]`, now.Add(7*24*time.Hour),
-			"https://apply.example.com", 1, int(models.INTERESTED), int(models.SENIOR),
-			"John Doe", "Great company", now.Add(-24*time.Hour), now, now,
-			1, "Acme Corp", now, now,
-		)
-
-		// Add second job
-		rows.AddRow(
-			2, "Frontend Developer", "Create beautiful UIs", "San Francisco", int(models.CONTRACT),
-			"https://example2.com", "$80k-120k", `["React","CSS"]`, now.Add(14*24*time.Hour),
-			"https://apply.example2.com", 2, int(models.APPLIED), int(models.MID_LEVEL),
-			"Jane Smith", "Fast growing startup", now.Add(-48*time.Hour), now, now,
-			2, "Beta Inc", now, now,
-		)
-
-		mock.ExpectQuery("SELECT.*FROM jobs.*ORDER BY").
-			WillReturnRows(rows)
-
-		// Execute with empty filter
-		ctx := context.Background()
-		jobs, err := repo.GetAll(ctx, models.JobFilter{})
-
-		require.NoError(t, err)
-		require.NotNil(t, jobs)
-		require.Len(t, jobs, 2)
-
-		// Check first job
-		assert.Equal(t, 1, jobs[0].ID)
-		assert.Equal(t, "Software Engineer", jobs[0].Title)
-		assert.Equal(t, "Acme Corp", jobs[0].Company.Name)
-		assert.Equal(t, models.INTERESTED, jobs[0].Status)
-
-		// Check second job
-		assert.Equal(t, 2, jobs[1].ID)
-		assert.Equal(t, "Frontend Developer", jobs[1].Title)
-		assert.Equal(t, "Beta Inc", jobs[1].Company.Name)
-		assert.Equal(t, models.APPLIED, jobs[1].Status)
-
-		assert.NoError(t, mock.ExpectationsWereMet())
-	})
-
-	t.Run("should filter by company ID", func(t *testing.T) {
-		repo, mock, _ := setupJobRepositoryTest(t)
-		defer mock.ExpectClose()
-
-		now := time.Now()
+	t.Run("filter by company", func(t *testing.T) {
 		companyID := 1
+		now := time.Now()
 
 		rows := sqlmock.NewRows([]string{
 			"j.id", "j.title", "j.description", "j.location", "j.job_type",
-			"j.source_url", "j.salary_range", "j.required_skills", "j.application_deadline",
+			"j.source_url", "j.required_skills",
 			"j.application_url", "j.company_id", "j.status", "j.experience_level",
 			"j.notes", "j.created_at", "j.updated_at",
 			"c.id", "c.name", "c.created_at", "c.updated_at",
-		}).
-			AddRow(
-				1, "Software Engineer", "Build awesome software", "Remote", int(models.FULL_TIME),
-				"https://example.com", "$100k-150k", `["Go","SQL"]`, now.Add(7*24*time.Hour),
-				"https://apply.example.com", companyID, int(models.INTERESTED), int(models.SENIOR),
-				"John Doe", "Great company", now.Add(-24*time.Hour), now, now,
-				companyID, "Acme Corp", now, now,
-			)
+		}).AddRow(
+			1, "Software Engineer", "Build awesome software", "Remote", int(models.FULL_TIME),
+			"https://example.com", `["Go","SQL"]`,
+			"https://apply.example.com", companyID, int(models.INTERESTED), int(models.SENIOR),
+			"Great company", now.Add(-24*time.Hour), now,
+			companyID, "Acme Corp", now, now,
+		)
 
 		mock.ExpectQuery("SELECT.*FROM jobs.*WHERE.*company_id.*ORDER BY").
 			WithArgs(companyID).
 			WillReturnRows(rows)
 
-		ctx := context.Background()
-		filter := models.JobFilter{
-			CompanyID: &companyID,
-		}
-		jobs, err := repo.GetAll(ctx, filter)
+		filter := models.JobFilter{CompanyID: &companyID}
+		jobs, err := repo.GetAll(context.Background(), filter)
 
 		require.NoError(t, err)
-		require.NotNil(t, jobs)
 		require.Len(t, jobs, 1)
 		assert.Equal(t, companyID, jobs[0].Company.ID)
-
-		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 }

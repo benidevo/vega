@@ -31,6 +31,22 @@ func (m *MockJobRepository) Create(ctx context.Context, job *models.Job) (*model
 	return args.Get(0).(*models.Job), args.Error(1)
 }
 
+func (m *MockJobRepository) GetBySourceURL(ctx context.Context, sourceURL string) (*models.Job, error) {
+	args := m.Called(ctx, sourceURL)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.Job), args.Error(1)
+}
+
+func (m *MockJobRepository) GetOrCreate(ctx context.Context, job *models.Job) (*models.Job, error) {
+	args := m.Called(ctx, job)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.Job), args.Error(1)
+}
+
 func (m *MockJobRepository) GetByID(ctx context.Context, id int) (*models.Job, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {

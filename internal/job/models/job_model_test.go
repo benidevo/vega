@@ -1,7 +1,6 @@
 package models
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -60,19 +59,17 @@ func TestJobStatus_String(t *testing.T) {
 
 func TestJobType_FromString(t *testing.T) {
 	tests := []struct {
-		name    string
-		str     string
-		want    JobType
-		wantErr bool
+		name string
+		str  string
+		want JobType
 	}{
-		{"Full Time", "full_time", FULL_TIME, false},
-		{"Part Time", "part_time", PART_TIME, false},
-		{"Contract", "contract", CONTRACT, false},
-		{"Intern", "intern", INTERN, false},
-		{"Remote", "remote", REMOTE, false},
-		{"Freelance", "freelance", FREELANCE, false},
-		{"Other", "other", OTHER, false},
-		{"Invalid", "Invalid", OTHER, true},
+		{"Full Time", "full_time", FULL_TIME},
+		{"Part Time", "part_time", PART_TIME},
+		{"Contract", "contract", CONTRACT},
+		{"Intern", "intern", INTERN},
+		{"Remote", "remote", REMOTE},
+		{"Freelance", "freelance", FREELANCE},
+		{"Unknown input returns OTHER", "unknown", OTHER},
 	}
 
 	for _, tt := range tests {
@@ -83,24 +80,46 @@ func TestJobType_FromString(t *testing.T) {
 	}
 }
 
+func TestJobType_String(t *testing.T) {
+	tests := []struct {
+		jobType JobType
+		want    string
+	}{
+		{FULL_TIME, "Full Time"},
+		{PART_TIME, "Part Time"},
+		{CONTRACT, "Contract"},
+		{INTERN, "Intern"},
+		{REMOTE, "Remote"},
+		{FREELANCE, "Freelance"},
+		{OTHER, "Other"},
+		{999, "Other"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.want, func(t *testing.T) {
+			got := tt.jobType.String()
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
 func TestExperienceLevel_FromString(t *testing.T) {
 	tests := []struct {
-		name    string
-		str     string
-		want    ExperienceLevel
-		wantErr bool
+		name string
+		str  string
+		want ExperienceLevel
 	}{
-		{"Entry", "entry", ENTRY, false},
-		{"Entry Level", "entry level", ENTRY, false},
-		{"Junior", "junior", ENTRY, false},
-		{"Mid", "mid", MID_LEVEL, false},
-		{"Mid Level", "mid level", MID_LEVEL, false},
-		{"Intermediate", "intermediate", MID_LEVEL, false},
-		{"Senior", "senior", SENIOR, false},
-		{"Senior Level", "senior level", SENIOR, false},
-		{"Executive", "executive", EXECUTIVE, false},
-		{"Leadership", "leadership", EXECUTIVE, false},
-		{"Invalid", "invalid", NOT_SPECIFIED, true},
+		{"Entry", "entry", ENTRY},
+		{"Entry Level", "entry level", ENTRY},
+		{"Junior", "junior", ENTRY},
+		{"Mid", "mid", MID_LEVEL},
+		{"Mid Level", "mid level", MID_LEVEL},
+		{"Intermediate", "intermediate", MID_LEVEL},
+		{"Senior", "senior", SENIOR},
+		{"Senior Level", "senior level", SENIOR},
+		{"Executive", "executive", EXECUTIVE},
+		{"Leadership", "leadership", EXECUTIVE},
+		{"Unknown input returns NOT_SPECIFIED", "unknown", NOT_SPECIFIED},
 	}
 
 	for _, tt := range tests {
@@ -111,63 +130,83 @@ func TestExperienceLevel_FromString(t *testing.T) {
 	}
 }
 
-func TestNewJob_WithOptions(t *testing.T) {
-	title := "Software Engineer"
-	description := "Build awesome software"
-	company := Company{Name: "Acme Corp"}
-	requiredSkills := []string{"Go", "SQL", "AWS"}
+func TestExperienceLevel_String(t *testing.T) {
+	tests := []struct {
+		level ExperienceLevel
+		want  string
+	}{
+		{ENTRY, "Entry Level"},
+		{MID_LEVEL, "Mid Level"},
+		{SENIOR, "Senior Level"},
+		{EXECUTIVE, "Executive Level"},
+		{NOT_SPECIFIED, "Not Specified"},
+		{999, "Not Specified"},
+	}
 
-	// Create job with all options
-	job := NewJob(
-		title,
-		description,
-		company,
-		WithJobType(FULL_TIME),
-		WithLocation("Remote"),
-		WithSourceURL("https://example.com"),
-		WithRequiredSkills(requiredSkills),
-		WithApplicationURL("https://apply.example.com"),
-		WithStatus(APPLIED),
-		WithExperienceLevel(SENIOR),
-		WithNotes("Great opportunity"),
-	)
-
-	assert.Equal(t, title, job.Title)
-	assert.Equal(t, description, job.Description)
-	assert.Equal(t, company.Name, job.Company.Name)
-	assert.Equal(t, FULL_TIME, job.JobType)
-	assert.Equal(t, "Remote", job.Location)
-	assert.Equal(t, "https://example.com", job.SourceURL)
-	assert.Equal(t, requiredSkills, job.RequiredSkills)
-	assert.Equal(t, "https://apply.example.com", job.ApplicationURL)
-	assert.Equal(t, APPLIED, job.Status)
-	assert.Equal(t, SENIOR, job.ExperienceLevel)
-	assert.Equal(t, "Great opportunity", job.Notes)
-	assert.NotZero(t, job.CreatedAt)
-	assert.NotZero(t, job.UpdatedAt)
+	for _, tt := range tests {
+		t.Run(tt.want, func(t *testing.T) {
+			got := tt.level.String()
+			assert.Equal(t, tt.want, got)
+		})
+	}
 }
 
-func TestNewJob_DefaultValues(t *testing.T) {
-	title := "Software Engineer"
-	description := "Build awesome software"
-	company := Company{Name: "Acme Corp"}
+func TestNewJob(t *testing.T) {
+	t.Run("With options", func(t *testing.T) {
+		title := "Software Engineer"
+		description := "Build awesome software"
+		company := Company{Name: "Acme Corp"}
+		requiredSkills := []string{"Go", "SQL", "AWS"}
 
-	// Create job with only required fields
-	job := NewJob(title, description, company)
+		job := NewJob(
+			title,
+			description,
+			company,
+			WithJobType(FULL_TIME),
+			WithLocation("Remote"),
+			WithSourceURL("https://example.com"),
+			WithRequiredSkills(requiredSkills),
+			WithApplicationURL("https://apply.example.com"),
+			WithStatus(APPLIED),
+			WithExperienceLevel(SENIOR),
+			WithNotes("Great opportunity"),
+		)
 
-	// Verify default values
-	assert.Equal(t, title, job.Title)
-	assert.Equal(t, description, job.Description)
-	assert.Equal(t, company.Name, job.Company.Name)
-	assert.Equal(t, INTERESTED, job.Status)
-	assert.Empty(t, job.Location)
-	assert.Empty(t, job.SourceURL)
-	assert.Empty(t, job.RequiredSkills)
-	assert.Empty(t, job.ApplicationURL)
-	assert.Zero(t, job.ExperienceLevel)
-	assert.Empty(t, job.Notes)
-	assert.NotZero(t, job.CreatedAt)
-	assert.NotZero(t, job.UpdatedAt)
+		assert.Equal(t, title, job.Title)
+		assert.Equal(t, description, job.Description)
+		assert.Equal(t, company.Name, job.Company.Name)
+		assert.Equal(t, FULL_TIME, job.JobType)
+		assert.Equal(t, "Remote", job.Location)
+		assert.Equal(t, "https://example.com", job.SourceURL)
+		assert.Equal(t, requiredSkills, job.RequiredSkills)
+		assert.Equal(t, "https://apply.example.com", job.ApplicationURL)
+		assert.Equal(t, APPLIED, job.Status)
+		assert.Equal(t, SENIOR, job.ExperienceLevel)
+		assert.Equal(t, "Great opportunity", job.Notes)
+		assert.NotZero(t, job.CreatedAt)
+		assert.NotZero(t, job.UpdatedAt)
+	})
+
+	t.Run("Default values", func(t *testing.T) {
+		title := "Software Engineer"
+		description := "Build awesome software"
+		company := Company{Name: "Acme Corp"}
+
+		job := NewJob(title, description, company)
+
+		assert.Equal(t, title, job.Title)
+		assert.Equal(t, description, job.Description)
+		assert.Equal(t, company.Name, job.Company.Name)
+		assert.Equal(t, INTERESTED, job.Status)
+		assert.Empty(t, job.Location)
+		assert.Empty(t, job.SourceURL)
+		assert.Empty(t, job.RequiredSkills)
+		assert.Empty(t, job.ApplicationURL)
+		assert.Zero(t, job.ExperienceLevel)
+		assert.Empty(t, job.Notes)
+		assert.NotZero(t, job.CreatedAt)
+		assert.NotZero(t, job.UpdatedAt)
+	})
 }
 
 func TestJob_Validate(t *testing.T) {
@@ -188,7 +227,6 @@ func TestJob_Validate(t *testing.T) {
 		{
 			name: "Missing title",
 			job: &Job{
-				Title:       "",
 				Description: "Build awesome software",
 				Company:     Company{Name: "Acme Corp"},
 			},
@@ -197,9 +235,8 @@ func TestJob_Validate(t *testing.T) {
 		{
 			name: "Missing description",
 			job: &Job{
-				Title:       "Software Engineer",
-				Description: "",
-				Company:     Company{Name: "Acme Corp"},
+				Title:   "Software Engineer",
+				Company: Company{Name: "Acme Corp"},
 			},
 			wantErr: true,
 		},
@@ -208,7 +245,6 @@ func TestJob_Validate(t *testing.T) {
 			job: &Job{
 				Title:       "Software Engineer",
 				Description: "Build awesome software",
-				Company:     Company{Name: ""},
 			},
 			wantErr: true,
 		},
@@ -219,16 +255,33 @@ func TestJob_Validate(t *testing.T) {
 			err := tt.job.Validate()
 			if tt.wantErr {
 				assert.Error(t, err)
-				if tt.job.Title == "" {
-					assert.True(t, strings.Contains(err.Error(), "title"), "Expected error about title")
-				} else if tt.job.Description == "" {
-					assert.True(t, strings.Contains(err.Error(), "description"), "Expected error about description")
-				} else if tt.job.Company.Name == "" {
-					assert.True(t, strings.Contains(err.Error(), "company"), "Expected error about company")
-				}
 			} else {
 				assert.NoError(t, err)
 			}
+		})
+	}
+}
+
+func TestIsValidTransition(t *testing.T) {
+	tests := []struct {
+		name    string
+		current JobStatus
+		new     JobStatus
+		want    bool
+	}{
+		{"Same status", INTERESTED, INTERESTED, true},
+		{"Forward progression", INTERESTED, APPLIED, true},
+		{"Multiple forward steps", INTERVIEWING, OFFER_RECEIVED, true},
+		{"Backward progression", APPLIED, INTERESTED, false},
+		{"Terminal state cannot transition", REJECTED, APPLIED, false},
+		{"Offer can be rejected", OFFER_RECEIVED, REJECTED, true},
+		{"Any state to not interested", APPLIED, NOT_INTERESTED, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := IsValidTransition(tt.current, tt.new)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

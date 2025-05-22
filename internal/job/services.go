@@ -127,7 +127,7 @@ func (s *JobService) CreateJob(ctx context.Context, title, description, companyN
 		return nil, err
 	}
 
-	createdJob, err := s.jobRepo.Create(ctx, job)
+	createdJob, err := s.jobRepo.GetOrCreate(ctx, job)
 	if err != nil {
 		s.log.Error().
 			Str("title", title).

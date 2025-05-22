@@ -34,6 +34,7 @@ var (
 	ErrFailedToUpdateCompany = commonerrors.New("failed to update company")
 	ErrFailedToDeleteCompany = commonerrors.New("failed to delete company")
 	ErrFailedToGetJobStats   = commonerrors.New("failed to get job stats")
+	ErrFailedToGetJob        = commonerrors.New("failed to get job")
 )
 
 // WrapError is a convenience function that calls the common errors package

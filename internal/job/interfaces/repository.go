@@ -25,4 +25,6 @@ type JobRepository interface {
 	Delete(ctx context.Context, id int) error
 	UpdateStatus(ctx context.Context, id int, status models.JobStatus) error
 	GetStats(ctx context.Context) (*models.JobStats, error)
+	GetBySourceURL(ctx context.Context, sourceURL string) (*models.Job, error)
+	GetOrCreate(ctx context.Context, job *models.Job) (*models.Job, error)
 }

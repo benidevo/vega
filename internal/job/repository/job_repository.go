@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"strings"
 	"time"
 
@@ -33,6 +34,95 @@ func validateJob(jobModel *models.Job) error {
 	}
 
 	return jobModel.Validate()
+}
+
+// GetOrCreate retrieves a job by its SourceURL or creates it if it does not exist.
+// Returns the existing or newly created job, or an error if the operation fails.
+func (r *SQLiteJobRepository) GetOrCreate(ctx context.Context, jobModel *models.Job) (*models.Job, error) {
+	if err := validateJob(jobModel); err != nil {
+		return nil, err
+	}
+
+	if jobModel.SourceURL == "" {
+		return nil, models.ErrInvalidJobID
+	}
+
+	existingJob, err := r.GetBySourceURL(ctx, jobModel.SourceURL)
+	if err == nil {
+		return existingJob, nil
+	}
+
+	if !errors.Is(err, models.ErrJobNotFound) {
+		return nil, err
+	}
+
+	return r.Create(ctx, jobModel)
+}
+
+// GetBySourceURL retrieves a job by its source URL
+func (r *SQLiteJobRepository) GetBySourceURL(ctx context.Context, sourceURL string) (*models.Job, error) {
+	if sourceURL == "" {
+		return nil, models.ErrInvalidJobID
+	}
+
+	query := `
+		SELECT
+			j.id, j.title, j.description, j.location, j.job_type,
+			j.source_url, j.required_skills,
+			j.application_url, j.company_id, j.status, j.experience_level,
+			j.notes, j.created_at, j.updated_at,
+			c.id, c.name, c.created_at, c.updated_at
+		FROM jobs j
+		JOIN companies c ON j.company_id = c.id
+		WHERE j.source_url = ?
+	`
+
+	row := r.db.QueryRowContext(ctx, query, sourceURL)
+
+	var j models.Job
+	var company models.Company
+	var skillsJSON string
+	var jobType, status, experienceLevel int
+	var notes, jobSourceURL, applicationURL, location sql.NullString
+
+	err := row.Scan(
+		&j.ID, &j.Title, &j.Description, &location, &jobType,
+		&jobSourceURL, &skillsJSON,
+		&applicationURL, &company.ID, &status, &experienceLevel,
+		&notes, &j.CreatedAt, &j.UpdatedAt,
+		&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, models.ErrJobNotFound
+		}
+		return nil, models.WrapError(models.ErrFailedToGetJob, err)
+	}
+
+	if location.Valid {
+		j.Location = location.String
+	}
+	if jobSourceURL.Valid {
+		j.SourceURL = jobSourceURL.String
+	}
+	if applicationURL.Valid {
+		j.ApplicationURL = applicationURL.String
+	}
+	if notes.Valid {
+		j.Notes = notes.String
+	}
+
+	if err := json.Unmarshal([]byte(skillsJSON), &j.RequiredSkills); err != nil {
+		j.RequiredSkills = []string{}
+	}
+
+	j.JobType = models.JobType(jobType)
+	j.Status = models.JobStatus(status)
+	j.ExperienceLevel = models.ExperienceLevel(experienceLevel)
+	j.Company = company
+
+	return &j, nil
 }
 
 // Create inserts a new job into the database
