@@ -7,7 +7,7 @@ import (
 // Company represents a company entity with its basic details.
 type Company struct {
 	ID        int       `json:"id" db:"id" sql:"primary_key;auto_increment"`
-	Name      string    `json:"name" db:"name" sql:"type:text;not null;unique;index"`
+	Name      string    `json:"name" db:"name" sql:"type:text;not null;unique;index" validate:"required,min=1,max=255"`
 	CreatedAt time.Time `json:"created_at" db:"created_at" sql:"not null;default:current_timestamp"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at" sql:"not null;default:current_timestamp"`
 }

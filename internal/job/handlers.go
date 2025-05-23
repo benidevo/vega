@@ -2,6 +2,7 @@ package job
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -10,19 +11,201 @@ import (
 	"github.com/benidevo/ascentio/internal/config"
 	"github.com/benidevo/ascentio/internal/job/models"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 // JobHandler manages job-related HTTP requests
 type JobHandler struct {
-	service *JobService
-	cfg     *config.Settings
+	service        *JobService
+	cfg            *config.Settings
+	commandFactory *CommandFactory
+}
+
+// formatValidationError converts validator errors to user-friendly messages
+func (h *JobHandler) formatValidationError(err error) string {
+	if validationErrs, ok := err.(validator.ValidationErrors); ok {
+		for _, e := range validationErrs {
+			// Check field and tag combinations
+			field := e.Field()
+			tag := e.Tag()
+
+			switch field {
+			case "Title":
+				switch tag {
+				case "required":
+					return models.ErrJobTitleRequired.Error()
+				case "min":
+					return "Job title cannot be empty"
+				case "max":
+					return "Job title must be less than 255 characters"
+				}
+			case "Description":
+				switch tag {
+				case "required":
+					return models.ErrJobDescriptionRequired.Error()
+				case "min":
+					return "Job description cannot be empty"
+				}
+			case "Company.Name", "Name": // Handle both nested and flat field names
+				switch tag {
+				case "required":
+					return models.ErrCompanyNameRequired.Error()
+				case "min":
+					return "Company name cannot be empty"
+				case "max":
+					return "Company name must be less than 255 characters"
+				}
+			case "Location":
+				if tag == "max" {
+					return "Location must be less than 255 characters"
+				}
+			case "Notes":
+				if tag == "max" {
+					return "Notes must be less than 5000 characters"
+				}
+			case "RequiredSkills":
+				switch tag {
+				case "max":
+					return "Cannot have more than 50 skills"
+				case "dive": // This happens when validating array elements
+					return "Invalid skill entry"
+				}
+			case "SourceURL", "ApplicationURL":
+				switch tag {
+				case "url":
+					return models.ErrInvalidURLFormat.Error()
+				case "omitempty": // Skip this tag
+					continue
+				}
+			case "Status":
+				switch tag {
+				case "min", "max":
+					return models.ErrInvalidJobStatus.Error()
+				}
+			case "JobType":
+				switch tag {
+				case "min", "max":
+					return "Invalid job type"
+				}
+			case "ExperienceLevel":
+				switch tag {
+				case "min", "max":
+					return "Invalid experience level"
+				}
+			}
+
+			// If we got here, no specific message was found but we have an error
+			// Return a generic message based on the tag
+			switch tag {
+			case "required":
+				return fmt.Sprintf("%s is required", field)
+			case "min":
+				return fmt.Sprintf("%s is too short", field)
+			case "max":
+				return fmt.Sprintf("%s is too long", field)
+			case "url":
+				return fmt.Sprintf("%s must be a valid URL", field)
+			default:
+				return fmt.Sprintf("Invalid %s", strings.ToLower(field))
+			}
+		}
+	}
+	return err.Error()
+}
+
+// renderError is a helper function to render error messages with appropriate status codes
+func (h *JobHandler) renderError(c *gin.Context, err error) {
+	sentinelErr := models.GetSentinelError(err)
+	statusCode := http.StatusInternalServerError
+
+	// Check if it's a validation error
+	if _, ok := err.(validator.ValidationErrors); ok {
+		statusCode = http.StatusBadRequest
+		errorMessage := h.formatValidationError(err)
+		c.HTML(statusCode, "partials/alert-error.html", gin.H{
+			"message": errorMessage,
+		})
+		return
+	}
+
+	// Determine appropriate status code based on error type
+	if errors.Is(err, models.ErrInvalidJobIDFormat) ||
+		errors.Is(err, models.ErrInvalidJobID) ||
+		errors.Is(err, models.ErrInvalidFieldParam) ||
+		errors.Is(err, models.ErrFieldRequired) ||
+		errors.Is(err, models.ErrInvalidJobStatus) ||
+		errors.Is(err, models.ErrStatusRequired) ||
+		errors.Is(err, models.ErrJobTitleRequired) ||
+		errors.Is(err, models.ErrCompanyNameRequired) ||
+		errors.Is(err, models.ErrInvalidStatusTransition) ||
+		errors.Is(err, models.ErrJobDescriptionRequired) ||
+		errors.Is(err, models.ErrCompanyRequired) ||
+		errors.Is(err, models.ErrInvalidURLFormat) {
+		statusCode = http.StatusBadRequest
+	} else if errors.Is(err, models.ErrJobNotFound) {
+		statusCode = http.StatusNotFound
+	}
+
+	c.HTML(statusCode, "partials/alert-error.html", gin.H{
+		"message": sentinelErr.Error(),
+	})
+}
+
+// renderDashboardError is a helper function specifically for dashboard error messages
+func (h *JobHandler) renderDashboardError(c *gin.Context, err error) {
+	sentinelErr := models.GetSentinelError(err)
+	statusCode := http.StatusInternalServerError
+
+	// Check if it's a validation error
+	if _, ok := err.(validator.ValidationErrors); ok {
+		statusCode = http.StatusBadRequest
+		errorMessage := h.formatValidationError(err)
+		c.HTML(statusCode, "partials/alert-error-dashboard.html", gin.H{
+			"message": errorMessage,
+		})
+		return
+	}
+
+	// Determine appropriate status code based on error type
+	if errors.Is(err, models.ErrInvalidJobStatus) ||
+		errors.Is(err, models.ErrStatusRequired) ||
+		errors.Is(err, models.ErrInvalidStatusTransition) {
+		statusCode = http.StatusBadRequest
+	}
+
+	c.HTML(statusCode, "partials/alert-error-dashboard.html", gin.H{
+		"message": sentinelErr.Error(),
+	})
 }
 
 // NewJobHandler creates and returns a new JobHandler with the provided JobService and configuration settings.
 func NewJobHandler(service *JobService, cfg *config.Settings) *JobHandler {
 	return &JobHandler{
-		service: service,
-		cfg:     cfg,
+		service:        service,
+		cfg:            cfg,
+		commandFactory: NewCommandFactory(),
+	}
+}
+
+// ValidateJobID is a middleware that validates the job ID parameter
+func (h *JobHandler) ValidateJobID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		jobIDStr := c.Param("id")
+		if jobIDStr == "" {
+			c.Next()
+			return
+		}
+
+		jobID, err := h.service.ValidateJobIDFormat(jobIDStr)
+		if err != nil {
+			h.renderError(c, models.ErrInvalidJobIDFormat)
+			c.Abort()
+			return
+		}
+
+		// Store the validated job ID in the context
+		c.Set("jobID", jobID)
+		c.Next()
 	}
 }
 
@@ -101,16 +284,12 @@ func (h *JobHandler) CreateJob(c *gin.Context) {
 	notes := strings.TrimSpace(c.PostForm("notes"))
 
 	if err := h.service.ValidateURL(sourceURL); err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-			"message": err.Error(),
-		})
+		h.renderError(c, err)
 		return
 	}
 
 	if err := h.service.ValidateURL(applicationURL); err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-			"message": err.Error(),
-		})
+		h.renderError(c, err)
 		return
 	}
 
@@ -126,9 +305,7 @@ func (h *JobHandler) CreateJob(c *gin.Context) {
 	statusStr := c.PostForm("status")
 	status, err := models.JobStatusFromString(statusStr)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-			"message": err.Error(),
-		})
+		h.renderError(c, err)
 		return
 	}
 
@@ -154,10 +331,7 @@ func (h *JobHandler) CreateJob(c *gin.Context) {
 
 	job, err := h.service.CreateJob(c.Request.Context(), title, description, companyName, options...)
 	if err != nil {
-		sentinelErr := models.GetSentinelError(err)
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-			"message": sentinelErr.Error(),
-		})
+		h.renderError(c, err)
 		return
 	}
 
@@ -176,14 +350,13 @@ func (h *JobHandler) GetJobDetails(c *gin.Context) {
 		return
 	}
 
-	jobIDStr := c.Param("id")
-	jobID, err := h.service.ValidateJobIDFormat(jobIDStr)
-	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-			"message": models.ErrInvalidJobIDFormat.Error(),
-		})
+	jobIDValue, exists := c.Get("jobID")
+	if !exists {
+		h.renderError(c, models.ErrInvalidJobIDFormat)
 		return
 	}
+	jobID := jobIDValue.(int)
+	jobIDStr := c.Param("id")
 
 	job, err := h.service.GetJob(c.Request.Context(), jobID)
 	if err != nil {
@@ -195,10 +368,7 @@ func (h *JobHandler) GetJobDetails(c *gin.Context) {
 			})
 			return
 		}
-		sentinelErr := models.GetSentinelError(err)
-		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
-			"message": "Error retrieving job details: " + sentinelErr.Error(),
-		})
+		h.renderError(c, err)
 		return
 	}
 
@@ -217,123 +387,52 @@ func (h *JobHandler) GetJobDetails(c *gin.Context) {
 
 // UpdateJobField handles the request to update a specific job field
 func (h *JobHandler) UpdateJobField(c *gin.Context) {
-	jobIDStr := c.Param("id")
-	jobID, err := h.service.ValidateJobIDFormat(jobIDStr)
-	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-			"message": models.ErrInvalidJobIDFormat.Error(),
-		})
+	jobIDValue, exists := c.Get("jobID")
+	if !exists {
+		h.renderError(c, models.ErrInvalidJobIDFormat)
 		return
 	}
+	jobID := jobIDValue.(int)
 
 	field := c.Param("field")
-	err = h.service.ValidateFieldName(field)
+	err := h.service.ValidateFieldName(field)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-			"message": err.Error(),
-		})
+		h.renderError(c, err)
 		return
 	}
 
 	job, err := h.service.GetJob(c.Request.Context(), jobID)
 	if err != nil {
-		sentinelErr := models.GetSentinelError(err)
-		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
-			"message": "Error retrieving job: " + sentinelErr.Error(),
-		})
+		h.renderError(c, err)
 		return
 	}
 
-	var successMessage string
+	// Get the appropriate command for the field
+	command, err := h.commandFactory.GetCommand(field)
+	if err != nil {
+		h.renderError(c, err)
+		return
+	}
 
-	switch field {
-	case "status":
-		statusStr := c.PostForm("status")
-		if statusStr == "" {
-			c.HTML(http.StatusBadRequest, "partials/alert-error-dashboard.html", gin.H{
-				"message": models.ErrStatusRequired.Error(),
-			})
-			return
+	// Execute the command
+	successMessage, err := command.Execute(c, job, h.service)
+	if err != nil {
+		// Use dashboard-specific error format for status updates
+		if field == "status" {
+			h.renderDashboardError(c, err)
+		} else {
+			h.renderError(c, err)
 		}
-
-		status, err := models.JobStatusFromString(statusStr)
-		if err != nil {
-			c.HTML(http.StatusBadRequest, "partials/alert-error-dashboard.html", gin.H{
-				"message": models.ErrInvalidJobStatus.Error(),
-			})
-			return
-		}
-
-		job.Status = status
-		successMessage = "Job status updated to " + status.String()
-
-	case "notes":
-		notes := strings.TrimSpace(c.PostForm("notes"))
-		// Notes can be empty - no validation needed
-		job.Notes = notes
-		successMessage = "Notes updated successfully"
-
-	case "skills":
-		skillsStr := c.PostForm("skills")
-		skills := h.service.ValidateAndFilterSkills(skillsStr)
-
-		job.RequiredSkills = skills
-		successMessage = "Skills updated successfully"
-
-	case "basic":
-		title := strings.TrimSpace(c.PostForm("title"))
-		if title == "" {
-			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-				"message": models.ErrJobTitleRequired.Error(),
-			})
-			return
-		}
-		job.Title = title
-
-		companyName := strings.TrimSpace(c.PostForm("company_name"))
-		if companyName == "" {
-			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-				"message": models.ErrCompanyNameRequired.Error(),
-			})
-			return
-		}
-		job.Company.Name = companyName
-
-		location := strings.TrimSpace(c.PostForm("location"))
-		job.Location = location
-
-		successMessage = "Job details updated successfully"
-
-	default:
-		// This should never happen since I validate field parameter above
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-			"message": models.ErrInvalidFieldParam.Error(),
-		})
 		return
 	}
 
 	err = h.service.UpdateJob(c.Request.Context(), job)
 	if err != nil {
-		sentinelErr := models.GetSentinelError(err)
-		statusCode := http.StatusInternalServerError
-
-		if errors.Is(err, models.ErrInvalidStatusTransition) ||
-			errors.Is(err, models.ErrInvalidJobStatus) ||
-			errors.Is(err, models.ErrJobTitleRequired) ||
-			errors.Is(err, models.ErrJobDescriptionRequired) ||
-			errors.Is(err, models.ErrCompanyRequired) {
-			statusCode = http.StatusBadRequest
-		}
-
 		// Use dashboard-specific error format for status updates
 		if field == "status" {
-			c.HTML(statusCode, "partials/alert-error-dashboard.html", gin.H{
-				"message": sentinelErr.Error(),
-			})
+			h.renderDashboardError(c, err)
 		} else {
-			c.HTML(statusCode, "partials/alert-error.html", gin.H{
-				"message": sentinelErr.Error(),
-			})
+			h.renderError(c, err)
 		}
 		return
 	}
@@ -353,21 +452,16 @@ func (h *JobHandler) UpdateJobField(c *gin.Context) {
 
 // DeleteJob handles the request to delete a job
 func (h *JobHandler) DeleteJob(c *gin.Context) {
-	jobIDStr := c.Param("id")
-	jobID, err := h.service.ValidateJobIDFormat(jobIDStr)
-	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-			"message": models.ErrInvalidJobIDFormat.Error(),
-		})
+	jobIDValue, exists := c.Get("jobID")
+	if !exists {
+		h.renderError(c, models.ErrInvalidJobIDFormat)
 		return
 	}
+	jobID := jobIDValue.(int)
 
-	err = h.service.DeleteJob(c.Request.Context(), jobID)
+	err := h.service.DeleteJob(c.Request.Context(), jobID)
 	if err != nil {
-		sentinelErr := models.GetSentinelError(err)
-		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
-			"message": "Error deleting job: " + sentinelErr.Error(),
-		})
+		h.renderError(c, err)
 		return
 	}
 

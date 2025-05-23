@@ -11,22 +11,25 @@ import (
 	"github.com/benidevo/ascentio/internal/job/interfaces"
 	"github.com/benidevo/ascentio/internal/job/models"
 	"github.com/benidevo/ascentio/internal/logger"
+	"github.com/go-playground/validator/v10"
 	"github.com/rs/zerolog"
 )
 
 // JobService provides business logic for job management.
 type JobService struct {
-	jobRepo interfaces.JobRepository
-	cfg     *config.Settings
-	log     zerolog.Logger
+	jobRepo   interfaces.JobRepository
+	cfg       *config.Settings
+	log       zerolog.Logger
+	validator *validator.Validate
 }
 
 // NewJobService creates a new JobService instance.
 func NewJobService(jobRepo interfaces.JobRepository, cfg *config.Settings) *JobService {
 	return &JobService{
-		jobRepo: jobRepo,
-		cfg:     cfg,
-		log:     logger.GetLogger("job"),
+		jobRepo:   jobRepo,
+		cfg:       cfg,
+		log:       logger.GetLogger("job"),
+		validator: validator.New(),
 	}
 }
 
@@ -92,15 +95,21 @@ func (s *JobService) ValidateAndFilterSkills(skillsStr string) []string {
 	return skills
 }
 
-// ValidateURL checks if a URL string is valid
+// ValidateURL checks if a URL string is valid and safe
 func (s *JobService) ValidateURL(urlStr string) error {
 	if urlStr == "" {
 		return nil // Empty URL is allowed
 	}
 
-	_, err := url.ParseRequestURI(urlStr)
+	parsedURL, err := url.ParseRequestURI(urlStr)
 	if err != nil {
 		s.log.Error().Str("url", urlStr).Msg("Invalid URL format")
+		return models.ErrInvalidURLFormat
+	}
+
+	// Only allow http and https schemes to prevent XSS via javascript: or data: URLs
+	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+		s.log.Error().Str("url", urlStr).Str("scheme", parsedURL.Scheme).Msg("Invalid URL scheme")
 		return models.ErrInvalidURLFormat
 	}
 
@@ -117,6 +126,15 @@ func (s *JobService) CreateJob(ctx context.Context, title, description, companyN
 
 	company := models.Company{Name: companyName}
 	job := models.NewJob(title, description, company, options...)
+
+	if err := s.validator.Struct(job); err != nil {
+		s.log.Error().
+			Str("title", title).
+			Str("company", companyName).
+			Err(err).
+			Msg("Job validation failed")
+		return nil, err
+	}
 
 	if err := job.Validate(); err != nil {
 		s.log.Error().
@@ -230,6 +248,14 @@ func (s *JobService) UpdateJob(ctx context.Context, job *models.Job) error {
 		Str("title", job.Title).
 		Msg("Updating job")
 
+	if err := s.validator.Struct(job); err != nil {
+		s.log.Error().
+			Int("job_id", job.ID).
+			Err(err).
+			Msg("Job validation failed")
+		return err
+	}
+
 	if err := job.Validate(); err != nil {
 		s.log.Error().
 			Int("job_id", job.ID).
@@ -341,31 +367,6 @@ func (s *JobService) UpdateJobStatus(ctx context.Context, id int, status models.
 		return err
 	}
 
-	if !models.IsValidTransition(job.Status, status) {
-		s.log.Error().
-			Int("job_id", id).
-			Str("current_status", job.Status.String()).
-			Str("new_status", status.String()).
-			Msg("Invalid job status transition")
-		return models.ErrInvalidStatusTransition
-	}
-
-	err = s.jobRepo.UpdateStatus(ctx, id, status)
-	if err != nil {
-		s.log.Error().
-			Int("job_id", id).
-			Str("status", status.String()).
-			Err(err).
-			Msg("Failed to update job status")
-		return err
-	}
-
-	s.log.Info().
-		Int("job_id", id).
-		Str("title", job.Title).
-		Str("old_status", job.Status.String()).
-		Str("new_status", status.String()).
-		Msg("Job status updated successfully")
-
-	return nil
+	job.Status = status
+	return s.UpdateJob(ctx, job)
 }

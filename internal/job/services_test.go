@@ -122,7 +122,7 @@ func TestJobService(t *testing.T) {
 
 	t.Run("should create job successfully", func(t *testing.T) {
 		mockRepo := new(MockJobRepository)
-		mockRepo.On("Create", ctx, mock.AnythingOfType("*models.Job")).Return(job, nil)
+		mockRepo.On("GetOrCreate", ctx, mock.AnythingOfType("*models.Job")).Return(job, nil)
 
 		service := NewJobService(mockRepo, cfg)
 		createdJob, err := service.CreateJob(ctx, job.Title, job.Description, company.Name)
@@ -246,6 +246,39 @@ func TestJobService(t *testing.T) {
 		})
 	})
 
+	t.Run("should validate URLs for XSS prevention", func(t *testing.T) {
+		mockJobRepo := new(MockJobRepository)
+		cfg := &config.Settings{}
+		service := NewJobService(mockJobRepo, cfg)
+
+		testCases := []struct {
+			name    string
+			url     string
+			wantErr bool
+		}{
+			{"empty URL is valid", "", false},
+			{"valid http URL", "http://example.com/job", false},
+			{"valid https URL", "https://example.com/job", false},
+			{"javascript URL is blocked", "javascript:alert('XSS')", true},
+			{"data URL is blocked", "data:text/html,<script>alert('XSS')</script>", true},
+			{"file URL is blocked", "file:///etc/passwd", true},
+			{"ftp URL is blocked", "ftp://example.com/file", true},
+			{"invalid URL format", "not a url", true},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				err := service.ValidateURL(tc.url)
+				if tc.wantErr {
+					assert.Error(t, err)
+					assert.Equal(t, models.ErrInvalidURLFormat, err)
+				} else {
+					assert.NoError(t, err)
+				}
+			})
+		}
+	})
+
 	t.Run("should update job successfully", func(t *testing.T) {
 		mockRepo := new(MockJobRepository)
 		mockRepo.On("GetByID", ctx, job.ID).Return(job, nil)
@@ -291,8 +324,11 @@ func TestJobService(t *testing.T) {
 
 	t.Run("should update job status successfully", func(t *testing.T) {
 		mockRepo := new(MockJobRepository)
-		mockRepo.On("GetByID", ctx, 1).Return(job, nil)
-		mockRepo.On("UpdateStatus", ctx, 1, models.APPLIED).Return(nil)
+		mockRepo.On("GetByID", ctx, 1).Return(job, nil).Once()
+		updatedJob := createTestJob(1, "Software Engineer", company)
+		updatedJob.Status = models.APPLIED
+		mockRepo.On("GetByID", ctx, 1).Return(job, nil).Once()
+		mockRepo.On("Update", ctx, mock.AnythingOfType("*models.Job")).Return(nil)
 
 		service := NewJobService(mockRepo, cfg)
 		err := service.UpdateJobStatus(ctx, 1, models.APPLIED)

@@ -58,8 +58,7 @@
           <div class="flex gap-2">
             <button
               class="px-3 py-1 bg-primary hover:bg-primary-dark text-white text-sm rounded-md"
-              hx-post="/jobs/{{.jobID}}/basic"
-              hx-headers='{"X-HTTP-Method-Override": "PUT"}'
+              hx-put="/jobs/{{.jobID}}/basic"
               hx-include="#job-title-input, #job-company-input, #job-location-input"
               hx-target="#header-response"
               hx-swap="innerHTML"
@@ -88,12 +87,12 @@
         <div>
           <h3 class="text-lg font-medium text-primary mb-3">Job Description</h3>
           <div class="text-gray-300 space-y-4">
-            <p>{{.job.Description}}</p>
+            <p class="whitespace-pre-wrap">{{.job.Description}}</p>
             {{if .job.Notes}}
             <p>
               <strong>Notes:</strong>
             </p>
-            <p>{{.job.Notes}}</p>
+            <p class="whitespace-pre-wrap">{{.job.Notes}}</p>
             {{end}}
           </div>
         </div>
@@ -137,8 +136,7 @@
             <div class="flex gap-2">
               <button
                 class="px-3 py-1 bg-primary hover:bg-primary-dark text-white text-sm rounded-md"
-                hx-post="/jobs/{{.jobID}}/skills"
-                hx-headers='{"X-HTTP-Method-Override": "PUT"}'
+                hx-put="/jobs/{{.jobID}}/skills"
                 hx-include="#skills-input"
                 hx-target="#skills-response"
                 hx-swap="innerHTML"
@@ -216,8 +214,7 @@
             <h3 class="text-lg font-medium text-primary">Your Notes</h3>
             <button id="save-notes-btn"
               class="px-3 py-1 bg-primary hover:bg-primary-dark text-white text-sm rounded-md hidden"
-              hx-post="/jobs/{{.jobID}}/notes"
-              hx-headers='{"X-HTTP-Method-Override": "PUT"}'
+              hx-put="/jobs/{{.jobID}}/notes"
               hx-include="#job-notes"
               hx-target="#notes-response"
               hx-swap="innerHTML">
@@ -263,8 +260,7 @@
           <h3 class="text-lg font-medium text-white mb-3">Application Status</h3>
           <select
             class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors mb-4"
-            hx-post="/jobs/{{.jobID}}/status"
-            hx-headers='{"X-HTTP-Method-Override": "PUT"}'
+            hx-put="/jobs/{{.jobID}}/status"
             hx-target="#status-response"
             hx-trigger="change"
             name="status"

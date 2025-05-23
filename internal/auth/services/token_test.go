@@ -84,7 +84,7 @@ func TestTokenTypes(t *testing.T) {
 			Role:     models.ADMIN,
 		}, nil)
 
-		mockRepo.On("UpdateUser", ctx, mock.AnythingOfType("*auth.User")).Return(&models.User{}, nil)
+		mockRepo.On("UpdateUser", ctx, mock.AnythingOfType("*models.User")).Return(&models.User{}, nil)
 
 		authService := NewAuthService(mockRepo, cfg)
 

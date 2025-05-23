@@ -132,7 +132,7 @@ func TestLogin(t *testing.T) {
 			Role:     models.ADMIN,
 		}, nil)
 
-		mockRepo.On("UpdateUser", ctx, mock.AnythingOfType("*auth.User")).Return(&models.User{}, nil)
+		mockRepo.On("UpdateUser", ctx, mock.AnythingOfType("*models.User")).Return(&models.User{}, nil)
 
 		authService := NewAuthService(mockRepo, cfg)
 
@@ -259,9 +259,9 @@ func TestChangePassword(t *testing.T) {
 
 	mockRepo.On("FindByID", ctx, 999).Return(nil, models.ErrUserNotFound)
 
-	mockRepo.On("UpdateUser", ctx, mock.AnythingOfType("*auth.User")).Return(&models.User{}, nil).Once()
+	mockRepo.On("UpdateUser", ctx, mock.AnythingOfType("*models.User")).Return(&models.User{}, nil).Once()
 	updateErr := commonerrors.WrapError(models.ErrUserPasswordChangeFailed, errors.New("update error"))
-	mockRepo.On("UpdateUser", ctx, mock.AnythingOfType("*auth.User")).Return(nil, updateErr).Once()
+	mockRepo.On("UpdateUser", ctx, mock.AnythingOfType("*models.User")).Return(nil, updateErr).Once()
 
 	authService := NewAuthService(mockRepo, cfg)
 

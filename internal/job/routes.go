@@ -7,8 +7,12 @@ func RegisterRoutes(router *gin.RouterGroup, handler *JobHandler) {
 	router.GET("", handler.ListJobsPage)
 	router.GET("/new", handler.GetNewJobForm)
 	router.POST("/new", handler.CreateJob)
-	router.GET("/:id/details", handler.GetJobDetails)
-	router.PUT("/:id/:field", handler.UpdateJobField)
-	router.POST("/:id/:field", handler.UpdateJobField) // Supports POST with X-HTTP-Method-Override header
-	router.DELETE("/:id", handler.DeleteJob)
+
+	jobRoutes := router.Group("")
+	jobRoutes.Use(handler.ValidateJobID())
+	{
+		jobRoutes.GET("/:id/details", handler.GetJobDetails)
+		jobRoutes.PUT("/:id/:field", handler.UpdateJobField)
+		jobRoutes.DELETE("/:id", handler.DeleteJob)
+	}
 }
