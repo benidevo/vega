@@ -1,121 +1,74 @@
 {{define "partials/job-form-validation.html"}}
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const form = document.querySelector('form[hx-post]');
-    const titleInput = document.getElementById('title');
-    const companyInput = document.getElementById('company_name');
-    const descriptionInput = document.getElementById('description');
-    const skillsInput = document.getElementById('skills');
-    const formResponse = document.getElementById('form-response');
+<!-- Hyperscript form validation -->
+<div _="on htmx:afterSwap from body
+         if #form-response.textContent contains 'successfully'
+           call me.clearForm()
+         end
+         show #form-response
+         call #form-response.scrollIntoView({behavior: 'smooth'})
+         
+       def clearForm()
+         set form to the first <form[hx-post]/> in document
+         call form.reset()
+         set inputs to <input[type='text'],input[type='url'],input[type='number'],textarea/> in form
+         for input in inputs
+           set input.value to ''
+         end
+         set selects to <select/> in form
+         for select in selects
+           if select.options.length > 0
+             set select.selectedIndex to 0
+           end
+         end
+       end">
+</div>
 
-    // Function to clear form fields after successful submission
-    function clearForm() {
-      // Clear all form fields
-      form.reset();
+<!-- Form validation behaviors -->
+<div _="on htmx:beforeRequest from body[target.matches('form[hx-post]')]
+         set isValid to true
+         
+         -- Clear previous errors
+         for error in <.text-red-400/> in the target
+           remove error
+         end
+         remove .border-red-500 from <input,textarea/> in the target
+         put '' into #form-response
+         
+         -- Validate required fields
+         if #title.value.trim() == ''
+           call me.showError(#title, 'Job title is required')
+           set isValid to false
+         end
+         
+         if #company_name.value.trim() == ''
+           call me.showError(#company_name, 'Company name is required')
+           set isValid to false
+         end
+         
+         if #description.value.trim() == ''
+           call me.showError(#description, 'Job description is required')
+           set isValid to false
+         end
+         
+         if not isValid
+           halt the event
+         end
+         
+       def showError(input, message)
+         add .border-red-500 to input
+         add .focus:border-red-500 to input
+         add .focus:ring-red-500 to input
+         make a <p.text-sm.text-red-400.mt-1/> 
+         put message into it
+         put it after input
+       end">
+</div>
 
-      // Additional clearing for any elements that might not be properly reset
-      const textInputs = form.querySelectorAll('input[type="text"], input[type="url"], input[type="number"], textarea');
-      textInputs.forEach(input => {
-        input.value = '';
-      });
-
-      // Reset selects to defaults
-      const selects = form.querySelectorAll('select');
-      selects.forEach(select => {
-        if (select.options.length > 0) {
-          select.selectedIndex = 0;
-        }
-      });
-    }
-
-    // Client-side validation functions
-    function showError(input, message) {
-      const existingError = input.parentNode.querySelector('.text-red-400');
-      if (existingError) {
-        existingError.remove();
-      }
-
-      input.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
-
-      const errorElement = document.createElement('p');
-      errorElement.className = 'text-sm text-red-400 mt-1';
-      errorElement.textContent = message;
-      input.parentNode.appendChild(errorElement);
-
-      return false;
-    }
-
-    function clearError(input) {
-      const existingError = input.parentNode.querySelector('.text-red-400');
-      if (existingError) {
-        existingError.remove();
-      }
-      input.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
-    }
-
-    // The response-targets extension now handles error responses automatically
-
-    // Listen for successful responses and clear the form
-    document.body.addEventListener('htmx:afterSwap', function(event) {
-      // Check if this is a success response (contains "successfully" text)
-      if (formResponse.textContent.includes('successfully')) {
-        // Clear form after successful submission
-        clearForm();
-      }
-
-      // Make sure response is visible and scroll to it
-      formResponse.style.display = 'block';
-      formResponse.scrollIntoView({ behavior: 'smooth' });
-    });
-
-    // Add HTMX event listeners for form validation
-    document.body.addEventListener('htmx:beforeRequest', function(event) {
-      let isValid = true;
-
-      // Clear previous errors
-      clearError(titleInput);
-      clearError(companyInput);
-      clearError(descriptionInput);
-      clearError(skillsInput);
-
-      // Clear previous response
-      formResponse.innerHTML = '';
-
-      // Validate required fields
-      if (!titleInput.value.trim()) {
-        isValid = showError(titleInput, 'Job title is required');
-      }
-
-      if (!companyInput.value.trim()) {
-        isValid = showError(companyInput, 'Company name is required');
-      }
-
-      if (!descriptionInput.value.trim()) {
-        isValid = showError(descriptionInput, 'Job description is required');
-      }
-
-      // Cancel the request if validation fails
-      if (!isValid) {
-        event.preventDefault();
-      }
-    });
-
-    // Input event listeners to clear errors on typing
-    titleInput.addEventListener('input', function() {
-      clearError(titleInput);
-    });
-
-    companyInput.addEventListener('input', function() {
-      clearError(companyInput);
-    });
-
-    descriptionInput.addEventListener('input', function() {
-      clearError(descriptionInput);
-    });
-
-    skillsInput.addEventListener('input', function() {
-      clearError(skillsInput);
-    });
-  });
-</script>
+<!-- Clear errors on input -->
+<div _="on input from <#title,#company_name,#description,#skills/> in body
+         remove .text-red-400 from next <.text-red-400/> from me
+         remove .border-red-500 from me
+         remove .focus:border-red-500 from me
+         remove .focus:ring-red-500 from me">
+</div>
 {{end}}

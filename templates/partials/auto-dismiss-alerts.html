@@ -1,20 +1,3 @@
 {{define "partials/auto-dismiss-alerts.html"}}
-<script>
-  document.addEventListener('htmx:afterSettle', function() {
-    const alerts = document.querySelectorAll('.auto-dismiss-alert');
-    
-    alerts.forEach(alert => {
-      setTimeout(() => {
-        alert.style.transition = 'opacity 0.5s ease-out';
-        alert.style.opacity = '0';
-        
-        setTimeout(() => {
-          if (alert.parentNode) {
-            alert.parentNode.removeChild(alert);
-          }
-        }, 500);
-      }, 3000);
-    });
-  });
-</script>
+<!-- Auto-dismiss alerts are handled by hyperscript on each alert element -->
 {{end}}

@@ -15,7 +15,8 @@
         <div id="job-header-display">
           <div class="flex items-center">
             <h2 class="text-xl md:text-2xl font-semibold text-white mr-2">{{.job.Title}}</h2>
-            <button onclick="toggleJobHeaderEdit()" class="text-gray-400 hover:text-white flex items-center justify-center">
+            <button _="on click toggle .hidden on #job-header-display then toggle .hidden on #job-header-edit"
+                    class="text-gray-400 hover:text-white flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
               </svg>
@@ -62,12 +63,12 @@
               hx-include="#job-title-input, #job-company-input, #job-location-input"
               hx-target="#header-response"
               hx-swap="innerHTML"
-              hx-on::after-request="if(event.detail.successful) { toggleJobHeaderEdit(); window.location.reload(); }">
+              _="on htmx:afterRequest if event.detail.successful toggle .hidden on #job-header-display then toggle .hidden on #job-header-edit then wait 100ms then call window.location.reload()">
               Save
             </button>
             <button
               class="px-3 py-1 bg-slate-600 hover:bg-slate-700 text-white text-sm rounded-md"
-              onclick="toggleJobHeaderEdit()">
+              _="on click toggle .hidden on #job-header-display then toggle .hidden on #job-header-edit">
               Cancel
             </button>
           </div>
@@ -103,11 +104,17 @@
             <h3 class="text-lg font-medium text-primary">Skills</h3>
             <button id="edit-skills-btn"
               class="px-3 py-1 bg-primary hover:bg-primary-dark text-white text-sm rounded-md flex items-center gap-2"
-              onclick="toggleSkillsEdit()">
+              _="on click
+                 toggle .hidden on #skills-display
+                 then toggle .hidden on #skills-edit
+                 then if #skills-display matches .hidden
+                      put 'Cancel' into me.lastChild
+                 else
+                      put 'Edit Skills' into me.lastChild">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
               </svg>
-              Edit Skills
+              <span>Edit Skills</span>
             </button>
           </div>
 
@@ -140,12 +147,31 @@
                 hx-include="#skills-input"
                 hx-target="#skills-response"
                 hx-swap="innerHTML"
-                hx-on::after-request="if(event.detail.successful) { handleSkillsUpdate(); }">
+                _="on htmx:afterRequest
+                   if event.detail.successful
+                     set skills to #skills-input.value
+                     set skillsArray to skills.split(',').map(s => s.trim()).filter(s => s)
+                     if skillsArray.length > 0
+                       put '' into #skills-display then
+                       for skill in skillsArray
+                         make a <span.px-3.py-1.5.bg-slate-700.rounded-md.text-sm.text-primary/>
+                         put skill into the result
+                         put the result at the end of #skills-display
+                         make a text ' ' then put it at the end of #skills-display
+                       end
+                     else
+                       make a <span.text-gray-400/> called noSkills
+                       put 'No skills listed' into noSkills
+                       put '' into #skills-display
+                       put noSkills into #skills-display
+                     end
+                     trigger click on #edit-skills-btn
+                   end">
                 Save
               </button>
               <button
                 class="px-3 py-1 bg-slate-600 hover:bg-slate-700 text-white text-sm rounded-md"
-                onclick="toggleSkillsEdit()">
+                _="on click trigger click on #edit-skills-btn">
                 Cancel
               </button>
             </div>
@@ -154,59 +180,6 @@
           <div id="skills-response" class="mt-2"></div>
         </div>
 
-        <script>
-          function toggleSkillsEdit() {
-            const displayEl = document.getElementById('skills-display');
-            const editEl = document.getElementById('skills-edit');
-            const editBtn = document.getElementById('edit-skills-btn');
-
-            if (displayEl.classList.contains('hidden')) {
-              // Switch to display mode
-              displayEl.classList.remove('hidden');
-              editEl.classList.add('hidden');
-              editBtn.textContent = 'Edit Skills';
-            } else {
-              // Switch to edit mode
-              displayEl.classList.add('hidden');
-              editEl.classList.remove('hidden');
-              editBtn.textContent = 'Cancel';
-            }
-          }
-
-          function handleSkillsUpdate() {
-            // Get the current skills from the input
-            const skillsInput = document.getElementById('skills-input');
-            const skillsValue = skillsInput.value;
-            const skillsArray = skillsValue.split(',').map(skill => skill.trim()).filter(skill => skill);
-
-            // Update the skills display
-            const skillsDisplay = document.getElementById('skills-display');
-
-            if (skillsArray.length > 0) {
-              // Clear existing skills
-              skillsDisplay.innerHTML = '';
-
-              // Add new skills
-              skillsArray.forEach(skill => {
-                const skillSpan = document.createElement('span');
-                skillSpan.className = 'px-3 py-1.5 bg-slate-700 rounded-md text-sm text-primary';
-                skillSpan.textContent = skill;
-                skillsDisplay.appendChild(skillSpan);
-
-                // Add a space between skill tags for better layout
-                const space = document.createTextNode(' ');
-                skillsDisplay.appendChild(space);
-              });
-            } else {
-              skillsDisplay.innerHTML = '<span class="text-gray-400">No skills listed</span>';
-            }
-
-            // Skills are now only displayed in the skills section, no need to update elsewhere
-
-            // Now switch back to display mode
-            toggleSkillsEdit();
-          }
-        </script>
 
         <!-- Notes section -->
         <div>
@@ -227,7 +200,7 @@
             class="w-full px-4 py-3 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
             rows="4"
             placeholder="Add your personal notes about this job..."
-            oninput="document.getElementById('save-notes-btn').classList.remove('hidden')"
+            _="on input remove .hidden from #save-notes-btn"
           >{{.job.Notes}}</textarea>
           <div id="notes-response" class="mt-2"></div>
         </div>
@@ -274,11 +247,19 @@
           </select>
           <div id="status-response"></div>
 
-          <button id="analyze-button" class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2">
+          <button id="analyze-button" class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  _="on click
+                     toggle .hidden on #ai-analysis
+                     then if #ai-analysis matches .hidden
+                          put 'Analyze Job Match' into span in me
+                     else
+                          wait 100ms then call #ai-analysis.scrollIntoView({behavior: 'smooth', block: 'start'})
+                          then put 'Hide Analysis' into span in me
+                     end">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            Analyze Job Match
+            <span>Analyze Job Match</span>
           </button>
 
           <button class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2">
@@ -309,7 +290,7 @@
           <button
             id="delete-job-btn"
             class="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
-            onclick="openDeleteModal()"
+            _="on click remove .hidden from #delete-modal"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -409,7 +390,9 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div id="delete-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+<div id="delete-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden"
+     _="on keydown[key=='Escape'] from window add .hidden to me
+        on click if event.target.id == 'delete-modal' add .hidden to me">
   <div class="bg-slate-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4 border border-slate-700">
     <h3 class="text-xl font-semibold text-white mb-4">Confirm Deletion</h3>
     <p class="text-gray-300 mb-6">Are you sure you want to delete this job? This action cannot be undone.</p>
@@ -417,124 +400,20 @@
       <button
         id="cancel-delete-btn"
         class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md"
-        onclick="closeDeleteModal()">
+        _="on click add .hidden to #delete-modal">
         Cancel
       </button>
       <button
         id="confirm-delete-btn"
         class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md"
-        onclick="deleteJob()">
+        _="on click
+           add .hidden to #delete-modal
+           then fetch `/jobs/{{.jobID}}` {method: 'DELETE', headers: {'X-Requested-With': 'XMLHttpRequest'}}
+           then go to url '/jobs'">
         Delete
       </button>
     </div>
   </div>
 </div>
 
-<!-- JavaScript for all toggle functions and other UI interactions -->
-<script>
-  function toggleJobHeaderEdit() {
-    const displayEl = document.getElementById('job-header-display');
-    const editEl = document.getElementById('job-header-edit');
-
-    if (displayEl.classList.contains('hidden')) {
-      // Switch to display mode
-      displayEl.classList.remove('hidden');
-      editEl.classList.add('hidden');
-    } else {
-      // Switch to edit mode
-      displayEl.classList.add('hidden');
-      editEl.classList.remove('hidden');
-    }
-  }
-
-  function openDeleteModal() {
-    const modal = document.getElementById('delete-modal');
-    modal.classList.remove('hidden');
-
-    // Add click outside to close
-    modal.addEventListener('click', handleOutsideClick);
-
-    // Add listener for ESC key to close modal
-    document.addEventListener('keydown', handleEscKey);
-  }
-
-  function closeDeleteModal() {
-    const modal = document.getElementById('delete-modal');
-    modal.classList.add('hidden');
-
-    // Remove event listeners
-    document.removeEventListener('keydown', handleEscKey);
-    modal.removeEventListener('click', handleOutsideClick);
-  }
-
-  function handleEscKey(e) {
-    if (e.key === 'Escape') {
-      closeDeleteModal();
-    }
-  }
-
-  function handleOutsideClick(e) {
-    if (e.target.id === 'delete-modal') {
-      closeDeleteModal();
-    }
-  }
-
-  function deleteJob() {
-    // Close the modal
-    closeDeleteModal();
-
-    // Create a fetch request to delete the job
-    fetch('/jobs/{{.jobID}}', {
-      method: 'DELETE',
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    })
-    .then(response => {
-      // Redirect to dashboard regardless of response
-      window.location.href = '/jobs';
-    })
-    .catch(error => {
-      // Even if there's an error, redirect to dashboard
-      window.location.href = '/jobs';
-    });
-  }
-
-  document.addEventListener('DOMContentLoaded', function() {
-    const analyzeButton = document.getElementById('analyze-button');
-    const aiAnalysis = document.getElementById('ai-analysis');
-
-    // Add the gap class to the button for proper spacing
-analyzeButton.classList.add('gap-2');
-
-analyzeButton.addEventListener('click', function() {
-      if (aiAnalysis.classList.contains('hidden')) {
-        aiAnalysis.classList.remove('hidden');
-
-        // Scroll to the analysis section
-        setTimeout(() => {
-          aiAnalysis.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
-
-        // Update button text
-        analyzeButton.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-          <span>Hide Analysis</span>
-        `;
-      } else {
-        aiAnalysis.classList.add('hidden');
-
-        // Update button text
-        analyzeButton.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
-          <span>Analyze Job Match</span>
-        `;
-      }
-    });
-  });
-</script>
 {{end}}

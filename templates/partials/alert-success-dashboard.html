@@ -1,5 +1,6 @@
 {{define "partials/alert-success-dashboard.html"}}
-<div class="inline-flex items-center text-emerald-400 auto-dismiss-alert" hx-swap="outerHTML" hx-trigger="click delay:3s">
+<div class="inline-flex items-center text-emerald-400 auto-dismiss-alert" 
+     _="on load wait 3s then transition opacity to 0 over 0.5s then remove me">
   <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
   </svg>
