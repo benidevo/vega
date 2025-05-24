@@ -6,8 +6,8 @@ import (
 
 	"github.com/benidevo/ascentio/internal/auth/models"
 	"github.com/benidevo/ascentio/internal/auth/repository"
+	"github.com/benidevo/ascentio/internal/common/logger"
 	"github.com/benidevo/ascentio/internal/config"
-	"github.com/benidevo/ascentio/internal/logger"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rs/zerolog"
 	"golang.org/x/crypto/bcrypt"

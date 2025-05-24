@@ -12,8 +12,8 @@ import (
 
 	"github.com/benidevo/ascentio/internal/auth/models"
 	"github.com/benidevo/ascentio/internal/auth/repository"
+	"github.com/benidevo/ascentio/internal/common/logger"
 	"github.com/benidevo/ascentio/internal/config"
-	"github.com/benidevo/ascentio/internal/logger"
 	"github.com/rs/zerolog"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"

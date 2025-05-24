@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/benidevo/ascentio/internal/common/logger"
 	"github.com/benidevo/ascentio/internal/config"
 	"github.com/benidevo/ascentio/internal/job/interfaces"
 	"github.com/benidevo/ascentio/internal/job/models"
-	"github.com/benidevo/ascentio/internal/logger"
 	"github.com/go-playground/validator/v10"
 	"github.com/rs/zerolog"
 )

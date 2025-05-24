@@ -9,9 +9,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/benidevo/ascentio/internal/common/logger"
 	"github.com/benidevo/ascentio/internal/config"
 	"github.com/benidevo/ascentio/internal/db"
-	"github.com/benidevo/ascentio/internal/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	_ "modernc.org/sqlite"

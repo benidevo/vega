@@ -11,8 +11,8 @@ import (
 	"github.com/benidevo/ascentio/internal/auth/models"
 	authrepo "github.com/benidevo/ascentio/internal/auth/repository"
 	authservice "github.com/benidevo/ascentio/internal/auth/services"
+	"github.com/benidevo/ascentio/internal/common/logger"
 	"github.com/benidevo/ascentio/internal/config"
-	"github.com/benidevo/ascentio/internal/logger"
 	"github.com/rs/zerolog"
 	"gopkg.in/yaml.v2"
 )

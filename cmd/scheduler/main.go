@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/benidevo/ascentio/internal/common/logger"
 	"github.com/benidevo/ascentio/internal/config"
-	"github.com/benidevo/ascentio/internal/logger"
 	"github.com/benidevo/ascentio/internal/scheduler"
 )
 

@@ -5,8 +5,8 @@ import (
 	"errors"
 
 	authrepo "github.com/benidevo/ascentio/internal/auth/repository"
+	"github.com/benidevo/ascentio/internal/common/logger"
 	"github.com/benidevo/ascentio/internal/config"
-	"github.com/benidevo/ascentio/internal/logger"
 	"github.com/benidevo/ascentio/internal/settings/interfaces"
 	"github.com/benidevo/ascentio/internal/settings/models"
 	"github.com/rs/zerolog"

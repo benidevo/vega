@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/benidevo/ascentio/internal/common/logger"
 	"github.com/benidevo/ascentio/internal/config"
-	"github.com/benidevo/ascentio/internal/logger"
 	"github.com/benidevo/ascentio/internal/scheduler/commands"
 	"github.com/rs/zerolog"
 	_ "modernc.org/sqlite"
