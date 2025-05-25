@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     linkedin_profile TEXT,
     github_profile TEXT,
     website TEXT,
+    context TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

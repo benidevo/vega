@@ -11,6 +11,7 @@ func RegisterRoutes(settingsGroup *gin.RouterGroup, handler *SettingsHandler) {
 	settingsGroup.GET("/profile", handler.GetProfileSettingsPage)
 	settingsGroup.POST("/profile/personal", handler.HandleCreateProfile)
 	settingsGroup.POST("/profile/online", handler.HandleUpdateOnlineProfile)
+	settingsGroup.POST("/profile/context", handler.HandleUpdateContext)
 
 	// Security settings
 	settingsGroup.GET("/security", handler.GetSecuritySettingsPage)
@@ -18,24 +19,27 @@ func RegisterRoutes(settingsGroup *gin.RouterGroup, handler *SettingsHandler) {
 	// Notification settings
 	settingsGroup.GET("/notifications", handler.GetNotificationSettingsPage)
 
-	// Experience form routes
-	settingsGroup.GET("/profile/experience/form", handler.GetExperienceForm)
+	// Experience routes
+	settingsGroup.GET("/profile/experience/new", handler.GetAddExperiencePage)
+	settingsGroup.GET("/profile/experience/:id/edit", handler.GetEditExperiencePage)
 	settingsGroup.POST("/profile/experience", handler.HandleExperienceForm)
 	settingsGroup.POST("/profile/experience/:id", handler.HandleUpdateExperienceForm)
 	// Support both methods for maximum compatibility
 	settingsGroup.DELETE("/profile/experience/:id", handler.HandleDeleteWorkExperience)
 	settingsGroup.POST("/profile/experience/:id/delete", handler.HandleDeleteWorkExperience)
 
-	// Education form routes
-	settingsGroup.GET("/profile/education/form", handler.GetEducationForm)
+	// Education routes
+	settingsGroup.GET("/profile/education/new", handler.GetAddEducationPage)
+	settingsGroup.GET("/profile/education/:id/edit", handler.GetEditEducationPage)
 	settingsGroup.POST("/profile/education", handler.CreateEducationForm)
 	settingsGroup.POST("/profile/education/:id", handler.HandleUpdateEducationForm)
 	// Support both methods for maximum compatibility
 	settingsGroup.DELETE("/profile/education/:id", handler.HandleDeleteEducation)
 	settingsGroup.POST("/profile/education/:id/delete", handler.HandleDeleteEducation)
 
-	// Certification form routes
-	settingsGroup.GET("/profile/certification/form", handler.GetCertificationForm)
+	// Certification routes
+	settingsGroup.GET("/profile/certification/new", handler.GetAddCertificationPage)
+	settingsGroup.GET("/profile/certification/:id/edit", handler.GetEditCertificationPage)
 	settingsGroup.POST("/profile/certification", handler.CreateCertificationForm)
 	settingsGroup.POST("/profile/certification/:id", handler.HandleUpdateCertificationForm)
 	// Support both methods for maximum compatibility

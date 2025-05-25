@@ -132,6 +132,7 @@ func (h *SettingsHandler) GetProfileSettingsPage(c *gin.Context) {
 		"currentYear":    time.Now().Year(),
 		"username":       username,
 		"profile":        profile,
+		"industries":     models.GetAllIndustries(),
 	})
 }
 
@@ -233,6 +234,44 @@ func (h *SettingsHandler) HandleUpdateOnlineProfile(c *gin.Context) {
 	})
 }
 
+// HandleUpdateContext handles the HTTP request to update a user's personal context
+func (h *SettingsHandler) HandleUpdateContext(c *gin.Context) {
+	userID := c.GetInt("userID")
+
+	context := strings.TrimSpace(c.PostForm("context"))
+
+	// Check word count (rough validation)
+	words := strings.Fields(context)
+	if len(words) > 1000 {
+		c.HTML(http.StatusBadRequest, "partials/alert-error-dashboard.html", gin.H{
+			"message": "Context must not exceed 1000 words",
+		})
+		return
+	}
+
+	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error-dashboard.html", gin.H{
+			"message": "Failed to load profile settings",
+		})
+		return
+	}
+
+	profile.Context = context
+
+	err = h.service.UpdateProfile(c.Request.Context(), profile)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert-error-dashboard.html", gin.H{
+			"message": "Failed to update personal context",
+		})
+		return
+	}
+
+	c.HTML(http.StatusOK, "partials/alert-success-dashboard.html", gin.H{
+		"message": "Personal context updated successfully",
+	})
+}
+
 // GetSecuritySettings handles the request to display the security settings page
 func (h *SettingsHandler) GetSecuritySettingsPage(c *gin.Context) {
 	username, _ := c.Get("username")
@@ -274,9 +313,77 @@ func (h *SettingsHandler) GetNotificationSettingsPage(c *gin.Context) {
 	})
 }
 
-// GetExperienceForm returns the form to add a new work experience
-func (h *SettingsHandler) GetExperienceForm(c *gin.Context) {
-	c.HTML(http.StatusOK, "settings/forms/experience_form.html", gin.H{})
+// GetAddExperiencePage handles the request to display the add experience page
+func (h *SettingsHandler) GetAddExperiencePage(c *gin.Context) {
+	username, _ := c.Get("username")
+	userID, _ := c.Get("userID")
+
+	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID.(int))
+	if err != nil {
+		profile = &models.Profile{}
+	}
+
+	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
+		"title":              "Add Experience",
+		"page":               "settings-profile",
+		"activeNav":          "settings",
+		"activeSettings":     "profile",
+		"pageTitle":          "Profile Settings",
+		"currentYear":        time.Now().Year(),
+		"username":           username,
+		"profile":            profile,
+		"isAddingExperience": true,
+	})
+}
+
+// GetEditExperiencePage handles the request to display the edit experience page
+func (h *SettingsHandler) GetEditExperiencePage(c *gin.Context) {
+	username, _ := c.Get("username")
+	userID := c.GetInt("userID")
+	experienceIDStr := c.Param("id")
+
+	experienceID, err := strconv.Atoi(experienceIDStr)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "layouts/base.html", gin.H{
+			"title":       "Bad Request",
+			"page":        "404",
+			"currentYear": time.Now().Year(),
+		})
+		return
+	}
+
+	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
+			"title":       "Something Went Wrong",
+			"page":        "500",
+			"currentYear": time.Now().Year(),
+		})
+		return
+	}
+
+	experience, err := h.service.GetWorkExperienceByID(c.Request.Context(), experienceID, profile.ID)
+	if err != nil {
+		c.HTML(http.StatusNotFound, "layouts/base.html", gin.H{
+			"title":       "Not Found",
+			"page":        "404",
+			"currentYear": time.Now().Year(),
+		})
+		return
+	}
+
+	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
+		"title":               "Edit Experience",
+		"page":                "settings-profile",
+		"activeNav":           "settings",
+		"activeSettings":      "profile",
+		"pageTitle":           "Profile Settings",
+		"currentYear":         time.Now().Year(),
+		"username":            username,
+		"profile":             profile,
+		"experience":          experience,
+		"isEditingExperience": true,
+	})
 }
 
 // HandleExperienceForm processes the submission of a work experience form,
@@ -339,14 +446,152 @@ func (h *SettingsHandler) HandleExperienceForm(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/settings/profile")
 }
 
-// GetEducationForm returns the form to add a new education entry
-func (h *SettingsHandler) GetEducationForm(c *gin.Context) {
-	c.HTML(http.StatusOK, "settings/forms/education_form.html", gin.H{})
+// GetAddEducationPage handles the request to display the add education page
+func (h *SettingsHandler) GetAddEducationPage(c *gin.Context) {
+	username, _ := c.Get("username")
+	userID, _ := c.Get("userID")
+
+	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID.(int))
+	if err != nil {
+		profile = &models.Profile{}
+	}
+
+	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
+		"title":             "Add Education",
+		"page":              "settings-profile",
+		"activeNav":         "settings",
+		"activeSettings":    "profile",
+		"pageTitle":         "Profile Settings",
+		"currentYear":       time.Now().Year(),
+		"username":          username,
+		"profile":           profile,
+		"isAddingEducation": true,
+	})
 }
 
-// GetCertificationForm returns the form to add a new certification
-func (h *SettingsHandler) GetCertificationForm(c *gin.Context) {
-	c.HTML(http.StatusOK, "settings/forms/certification_form.html", gin.H{})
+// GetEditEducationPage handles the request to display the edit education page
+func (h *SettingsHandler) GetEditEducationPage(c *gin.Context) {
+	username, _ := c.Get("username")
+	userID := c.GetInt("userID")
+	educationIDStr := c.Param("id")
+
+	educationID, err := strconv.Atoi(educationIDStr)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "layouts/base.html", gin.H{
+			"title":       "Bad Request",
+			"page":        "404",
+			"currentYear": time.Now().Year(),
+		})
+		return
+	}
+
+	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
+			"title":       "Something Went Wrong",
+			"page":        "500",
+			"currentYear": time.Now().Year(),
+		})
+		return
+	}
+
+	education, err := h.service.GetEducationByID(c.Request.Context(), educationID, profile.ID)
+	if err != nil {
+		c.HTML(http.StatusNotFound, "layouts/base.html", gin.H{
+			"title":       "Not Found",
+			"page":        "404",
+			"currentYear": time.Now().Year(),
+		})
+		return
+	}
+
+	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
+		"title":              "Edit Education",
+		"page":               "settings-profile",
+		"activeNav":          "settings",
+		"activeSettings":     "profile",
+		"pageTitle":          "Profile Settings",
+		"currentYear":        time.Now().Year(),
+		"username":           username,
+		"profile":            profile,
+		"education":          education,
+		"isEditingEducation": true,
+	})
+}
+
+// GetAddCertificationPage handles the request to display the add certification page
+func (h *SettingsHandler) GetAddCertificationPage(c *gin.Context) {
+	username, _ := c.Get("username")
+	userID, _ := c.Get("userID")
+
+	// Get profile to avoid template errors
+	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID.(int))
+	if err != nil {
+		// Create empty profile to avoid template errors
+		profile = &models.Profile{}
+	}
+
+	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
+		"title":                 "Add Certification",
+		"page":                  "settings-profile",
+		"activeNav":             "settings",
+		"activeSettings":        "profile",
+		"pageTitle":             "Profile Settings",
+		"currentYear":           time.Now().Year(),
+		"username":              username,
+		"profile":               profile,
+		"isAddingCertification": true,
+	})
+}
+
+// GetEditCertificationPage handles the request to display the edit certification page
+func (h *SettingsHandler) GetEditCertificationPage(c *gin.Context) {
+	username, _ := c.Get("username")
+	userID := c.GetInt("userID")
+	certificationIDStr := c.Param("id")
+
+	certificationID, err := strconv.Atoi(certificationIDStr)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "layouts/base.html", gin.H{
+			"title":       "Bad Request",
+			"page":        "404",
+			"currentYear": time.Now().Year(),
+		})
+		return
+	}
+
+	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
+			"title":       "Something Went Wrong",
+			"page":        "500",
+			"currentYear": time.Now().Year(),
+		})
+		return
+	}
+
+	certification, err := h.service.GetCertificationByID(c.Request.Context(), certificationID, profile.ID)
+	if err != nil {
+		c.HTML(http.StatusNotFound, "layouts/base.html", gin.H{
+			"title":       "Not Found",
+			"page":        "404",
+			"currentYear": time.Now().Year(),
+		})
+		return
+	}
+
+	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
+		"title":                  "Edit Certification",
+		"page":                   "settings-profile",
+		"activeNav":              "settings",
+		"activeSettings":         "profile",
+		"pageTitle":              "Profile Settings",
+		"currentYear":            time.Now().Year(),
+		"username":               username,
+		"profile":                profile,
+		"certification":          certification,
+		"isEditingCertification": true,
+	})
 }
 
 // HandleEducationForm processes the submission of an education form,

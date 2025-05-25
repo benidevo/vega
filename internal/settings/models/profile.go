@@ -89,6 +89,7 @@ type Profile struct {
 	LinkedInProfile string    `json:"linkedin_profile" db:"linkedin_profile" sql:"type:text" validate:"omitempty,linkedin,max=500"`
 	GitHubProfile   string    `json:"github_profile" db:"github_profile" sql:"type:text" validate:"omitempty,github,max=500"`
 	Website         string    `json:"website" db:"website" sql:"type:text" validate:"omitempty,url,max=500"`
+	Context         string    `json:"context" db:"context" sql:"type:text" validate:"max=6000"`
 	CreatedAt       time.Time `json:"created_at" db:"created_at" sql:"type:timestamp;not null;default:current_timestamp"`
 	UpdatedAt       time.Time `json:"updated_at" db:"updated_at" sql:"type:timestamp;not null;default:current_timestamp"`
 
@@ -108,6 +109,7 @@ func (p *Profile) Sanitize() {
 	p.LinkedInProfile = strings.TrimSpace(p.LinkedInProfile)
 	p.GitHubProfile = strings.TrimSpace(p.GitHubProfile)
 	p.Website = strings.TrimSpace(p.Website)
+	p.Context = strings.TrimSpace(p.Context)
 
 	cleanSkills := make([]string, 0, len(p.Skills))
 	for _, skill := range p.Skills {

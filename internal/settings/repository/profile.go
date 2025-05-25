@@ -24,7 +24,7 @@ func (r *ProfileRepository) GetProfile(ctx context.Context, userID int) (*models
 		SELECT
 			p.id, p.user_id, p.first_name, p.last_name, p.title, p.industry,
 			p.career_summary, p.skills, p.phone_number, p.location,
-			p.linkedin_profile, p.github_profile, p.website, p.created_at, p.updated_at,
+			p.linkedin_profile, p.github_profile, p.website, p.context, p.created_at, p.updated_at,
 
 			we.id, we.profile_id, we.company, we.title, we.location,
 			we.start_date, we.end_date, we.description, we.current,
@@ -120,6 +120,7 @@ func (r *ProfileRepository) GetProfile(ctx context.Context, userID int) (*models
 			linkedInProfile  string
 			gitHubProfile    string
 			website          string
+			context          string
 			profileCreatedAt time.Time
 			profileUpdatedAt time.Time
 		)
@@ -128,7 +129,7 @@ func (r *ProfileRepository) GetProfile(ctx context.Context, userID int) (*models
 			// Profile fields
 			&profileID, &profileUserID, &firstName, &lastName, &profileTitle,
 			&industry, &careerSummary, &skillsJSON, &phoneNumber, &profileLocation,
-			&linkedInProfile, &gitHubProfile, &website, &profileCreatedAt, &profileUpdatedAt,
+			&linkedInProfile, &gitHubProfile, &website, &context, &profileCreatedAt, &profileUpdatedAt,
 
 			// Work experience fields
 			&weID, &weProfileID, &weCompany, &weTitle, &weLocation,
@@ -163,6 +164,7 @@ func (r *ProfileRepository) GetProfile(ctx context.Context, userID int) (*models
 				LinkedInProfile: linkedInProfile,
 				GitHubProfile:   gitHubProfile,
 				Website:         website,
+				Context:         context,
 				CreatedAt:       profileCreatedAt,
 				UpdatedAt:       profileUpdatedAt,
 				WorkExperience:  []models.WorkExperience{},
@@ -275,8 +277,8 @@ func (r *ProfileRepository) UpdateProfile(ctx context.Context, profile *models.P
 	upsertQuery := `
 		INSERT INTO profiles (
 			user_id, first_name, last_name, title, industry, career_summary, skills,
-			phone_number, location, linkedin_profile, github_profile, website, updated_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			phone_number, location, linkedin_profile, github_profile, website, context, updated_at
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(user_id) DO UPDATE SET
 			first_name = excluded.first_name,
 			last_name = excluded.last_name,
@@ -289,6 +291,7 @@ func (r *ProfileRepository) UpdateProfile(ctx context.Context, profile *models.P
 			linkedin_profile = excluded.linkedin_profile,
 			github_profile = excluded.github_profile,
 			website = excluded.website,
+			context = excluded.context,
 			updated_at = excluded.updated_at
 		RETURNING id`
 
@@ -299,7 +302,7 @@ func (r *ProfileRepository) UpdateProfile(ctx context.Context, profile *models.P
 		profile.UserID, profile.FirstName, profile.LastName, profile.Title,
 		profile.Industry, profile.CareerSummary, skillsJSON, profile.PhoneNumber,
 		profile.Location, profile.LinkedInProfile, profile.GitHubProfile,
-		profile.Website, now,
+		profile.Website, profile.Context, now,
 	).Scan(&profileID)
 
 	if err != nil {
