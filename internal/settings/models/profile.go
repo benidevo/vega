@@ -86,8 +86,8 @@ type Profile struct {
 	Skills          []string  `json:"skills" db:"skills" sql:"type:text" validate:"max=50,dive,required,min=1,max=100"`
 	PhoneNumber     string    `json:"phone_number" db:"phone_number" sql:"type:text" validate:"phone"`
 	Location        string    `json:"location" db:"location" sql:"type:text" validate:"max=200"`
-	LinkedInProfile string    `json:"linkedin_profile" db:"linkedin_profile" sql:"type:text" validate:"linkedin,url,max=500"`
-	GitHubProfile   string    `json:"github_profile" db:"github_profile" sql:"type:text" validate:"github,url,max=500"`
+	LinkedInProfile string    `json:"linkedin_profile" db:"linkedin_profile" sql:"type:text" validate:"omitempty,linkedin,max=500"`
+	GitHubProfile   string    `json:"github_profile" db:"github_profile" sql:"type:text" validate:"omitempty,github,max=500"`
 	Website         string    `json:"website" db:"website" sql:"type:text" validate:"omitempty,url,max=500"`
 	CreatedAt       time.Time `json:"created_at" db:"created_at" sql:"type:timestamp;not null;default:current_timestamp"`
 	UpdatedAt       time.Time `json:"updated_at" db:"updated_at" sql:"type:timestamp;not null;default:current_timestamp"`
