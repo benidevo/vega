@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/benidevo/ascentio/internal/settings/models"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 // SettingsHandler manages settings-related HTTP requests
@@ -20,6 +22,79 @@ func NewSettingsHandler(service *SettingsService) *SettingsHandler {
 	return &SettingsHandler{
 		service: service,
 	}
+}
+
+// formatValidationError formats validation errors into user-friendly messages.
+//
+// Note: This function returns the message for the first encountered validation error.
+func (h *SettingsHandler) formatValidationError(err error) string {
+	if validationErrors, ok := err.(validator.ValidationErrors); ok {
+		for _, e := range validationErrors {
+			field := e.Field()
+			tag := e.Tag()
+
+			switch field {
+			case "FirstName":
+				if tag == "required" {
+					return "First name is required"
+				}
+				if tag == "max" {
+					return "First name must not exceed 100 characters"
+				}
+			case "LastName":
+				if tag == "required" {
+					return "Last name is required"
+				}
+				if tag == "max" {
+					return "Last name must not exceed 100 characters"
+				}
+			case "PhoneNumber":
+				if tag == "phone" {
+					return "Phone number contains invalid characters or must be between 10-20 characters"
+				}
+			case "LinkedInProfile":
+				if tag == "linkedin" {
+					return "LinkedIn profile must be a valid LinkedIn URL"
+				}
+				if tag == "url" {
+					return "LinkedIn profile must be a valid URL"
+				}
+			case "GitHubProfile":
+				if tag == "github" {
+					return "GitHub profile must be a valid GitHub URL"
+				}
+				if tag == "url" {
+					return "GitHub profile must be a valid URL"
+				}
+			case "Website":
+				if tag == "url" {
+					return "Website must be a valid URL"
+				}
+			case "Skills":
+				if tag == "max" {
+					return "Skills must not exceed 50 items"
+				}
+				if tag == "dive" {
+					return "Each skill must be between 1-100 characters"
+				}
+			default:
+				// Generic messages for common tags
+				switch tag {
+				case "required":
+					return fmt.Sprintf("%s is required", field)
+				case "min":
+					return fmt.Sprintf("%s is too short", field)
+				case "max":
+					return fmt.Sprintf("%s is too long", field)
+				case "url":
+					return fmt.Sprintf("%s must be a valid URL", field)
+				default:
+					return fmt.Sprintf("Invalid %s", strings.ToLower(field))
+				}
+			}
+		}
+	}
+	return err.Error()
 }
 
 // GetSettingsHome handles the request to display the settings home page
@@ -105,6 +180,14 @@ func (h *SettingsHandler) HandleCreateProfile(c *gin.Context) {
 
 	err = h.service.UpdateProfile(c.Request.Context(), profile)
 	if err != nil {
+		// Check if it's a validation error
+		if _, ok := err.(validator.ValidationErrors); ok {
+			errorMessage := h.formatValidationError(err)
+			c.HTML(http.StatusBadRequest, "partials/alert-error-dashboard.html", gin.H{
+				"message": errorMessage,
+			})
+			return
+		}
 		c.HTML(http.StatusBadRequest, "partials/alert-error-dashboard.html", gin.H{
 			"message": "Failed to update profile",
 		})

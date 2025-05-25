@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"time"
 
 	"github.com/benidevo/ascentio/internal/settings/models"
@@ -196,10 +195,7 @@ func (r *ProfileRepository) GetProfile(ctx context.Context, userID int) (*models
 					UpdatedAt:   weUpdatedAt.Time,
 				}
 
-				if weEndDate.Valid {
-					endDate := weEndDate.Time
-					exp.EndDate = &endDate
-				}
+				exp.EndDate = fromNullTime(weEndDate)
 
 				profile.WorkExperience = append(profile.WorkExperience, exp)
 			}
@@ -222,10 +218,7 @@ func (r *ProfileRepository) GetProfile(ctx context.Context, userID int) (*models
 					UpdatedAt:    edUpdatedAt.Time,
 				}
 
-				if edEndDate.Valid {
-					endDate := edEndDate.Time
-					edu.EndDate = &endDate
-				}
+				edu.EndDate = fromNullTime(edEndDate)
 
 				profile.Education = append(profile.Education, edu)
 			}
@@ -248,10 +241,7 @@ func (r *ProfileRepository) GetProfile(ctx context.Context, userID int) (*models
 					UpdatedAt:     certUpdatedAt.Time,
 				}
 
-				if certExpiryDate.Valid {
-					expiryDate := certExpiryDate.Time
-					cert.ExpiryDate = &expiryDate
-				}
+				cert.ExpiryDate = fromNullTime(certExpiryDate)
 
 				profile.Certifications = append(profile.Certifications, cert)
 			}
@@ -366,9 +356,7 @@ func (r *ProfileRepository) GetWorkExperiences(ctx context.Context, profileID in
 			return nil, err
 		}
 
-		if endDate.Valid {
-			exp.EndDate = &endDate.Time
-		}
+		exp.EndDate = fromNullTime(endDate)
 
 		experiences = append(experiences, exp)
 	}
@@ -388,12 +376,7 @@ func (r *ProfileRepository) AddWorkExperience(ctx context.Context, experience *m
 			description, current, created_at, updated_at
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
-	var endDate sql.NullTime
-	if experience.EndDate != nil {
-		endDate.Time = *experience.EndDate
-		endDate.Valid = true
-	}
-
+	endDate := toNullTime(experience.EndDate)
 	now := time.Now().UTC()
 
 	_, err := r.db.ExecContext(ctx, query,
@@ -416,12 +399,7 @@ func (r *ProfileRepository) UpdateWorkExperience(ctx context.Context, experience
 		    description = ?, current = ?, updated_at = ?
 		WHERE id = ?`
 
-	var endDate sql.NullTime
-	if experience.EndDate != nil {
-		endDate.Time = *experience.EndDate
-		endDate.Valid = true
-	}
-
+	endDate := toNullTime(experience.EndDate)
 	now := time.Now().UTC()
 
 	result, err := r.db.ExecContext(ctx, query,
@@ -440,7 +418,7 @@ func (r *ProfileRepository) UpdateWorkExperience(ctx context.Context, experience
 	}
 
 	if rowsAffected == 0 {
-		return nil, errors.New("work experience not found")
+		return nil, models.ErrWorkExperienceNotFound
 	}
 
 	experience.UpdatedAt = now
@@ -462,7 +440,7 @@ func (r *ProfileRepository) DeleteWorkExperience(ctx context.Context, id int) er
 	}
 
 	if rowsAffected == 0 {
-		return errors.New("work experience not found")
+		return models.ErrWorkExperienceNotFound
 	}
 
 	return nil
@@ -505,9 +483,7 @@ func (r *ProfileRepository) GetEducation(ctx context.Context, profileID int) ([]
 			return nil, err
 		}
 
-		if endDate.Valid {
-			edu.EndDate = &endDate.Time
-		}
+		edu.EndDate = fromNullTime(endDate)
 
 		educationEntries = append(educationEntries, edu)
 	}
@@ -574,7 +550,7 @@ func (r *ProfileRepository) UpdateEducation(ctx context.Context, education *mode
 	}
 
 	if rowsAffected == 0 {
-		return nil, errors.New("education not found")
+		return nil, models.ErrEducationNotFound
 	}
 
 	education.UpdatedAt = now
@@ -596,7 +572,7 @@ func (r *ProfileRepository) DeleteEducation(ctx context.Context, id int) error {
 	}
 
 	if rowsAffected == 0 {
-		return errors.New("education not found")
+		return models.ErrEducationNotFound
 	}
 
 	return nil
@@ -640,9 +616,7 @@ func (r *ProfileRepository) GetCertifications(ctx context.Context, profileID int
 			return nil, err
 		}
 
-		if expiryDate.Valid {
-			cert.ExpiryDate = &expiryDate.Time
-		}
+		cert.ExpiryDate = fromNullTime(expiryDate)
 
 		certifications = append(certifications, cert)
 	}
@@ -710,7 +684,7 @@ func (r *ProfileRepository) UpdateCertification(ctx context.Context, certificati
 	}
 
 	if rowsAffected == 0 {
-		return nil, errors.New("certification not found")
+		return nil, models.ErrCertificationNotFound
 	}
 
 	certification.UpdatedAt = now
@@ -733,7 +707,7 @@ func (r *ProfileRepository) DeleteCertification(ctx context.Context, id int) err
 	}
 
 	if rowsAffected == 0 {
-		return errors.New("certification not found")
+		return models.ErrCertificationNotFound
 	}
 
 	return nil
