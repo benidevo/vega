@@ -66,7 +66,6 @@ func (m *MockUserRepository) FindAllUsers(ctx context.Context) ([]*models.User, 
 func setupTestConfig() *config.Settings {
 	return &config.Settings{
 		TokenSecret:        "test-secret-key",
-		TokenExpiration:    time.Hour,
 		AccessTokenExpiry:  15 * time.Minute,
 		RefreshTokenExpiry: 7 * 24 * time.Hour,
 	}

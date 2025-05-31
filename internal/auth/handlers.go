@@ -215,7 +215,7 @@ func (h *GoogleAuthHandler) HandleCallback(c *gin.Context) {
 		return
 	}
 
-	accessToken, refreshToken, err := h.service.Authenticate(c.Request.Context(), code)
+	accessToken, refreshToken, err := h.service.Authenticate(c.Request.Context(), code, "")
 	if err != nil {
 		h.service.LogError(err)
 

@@ -68,10 +68,22 @@ func (s *GoogleAuthService) GetAuthURL() string {
 }
 
 // exchangeCode exchanges an authorization code for an OAuth2 token using the configured OAuth2 client.
-func (s *GoogleAuthService) exchangeCode(ctx context.Context, code string) (*oauth2.Token, error) {
-	token, err := s.oauthCfg.Exchange(ctx, code)
+func (s *GoogleAuthService) exchangeCode(ctx context.Context, code string, redirectURI string) (*oauth2.Token, error) {
+	if redirectURI == "" {
+		redirectURI = s.cfg.GoogleClientRedirectURL
+	}
+
+	cfg := &oauth2.Config{
+		ClientID:     s.oauthCfg.ClientID,
+		ClientSecret: s.oauthCfg.ClientSecret,
+		Endpoint:     s.oauthCfg.Endpoint,
+		Scopes:       s.oauthCfg.Scopes,
+		RedirectURL:  redirectURI,
+	}
+
+	token, err := cfg.Exchange(ctx, code)
 	if err != nil {
-		s.log.Error().Err(err).Str("code_length", fmt.Sprintf("%d", len(code))).Msg("Failed to exchange Google auth code")
+		s.log.Error().Err(err).Str("code_length", fmt.Sprintf("%d", len(code))).Msg("Failed to exchange Google authcode")
 		return nil, fmt.Errorf("%w: %v", models.ErrGoogleCodeExchangeFailed, err)
 	}
 	return token, nil
@@ -109,14 +121,16 @@ func (s *GoogleAuthService) getUserInfo(ctx context.Context, token *oauth2.Token
 // Authenticate exchanges the provided Google OAuth code for access and refresh tokens.
 // It retrieves user info, creates or fetches the user in the database, generates authentication tokens,
 // updates the user's last login time, and returns the access and refresh tokens.
-func (s *GoogleAuthService) Authenticate(ctx context.Context, code string) (string, string, error) {
-	token, err := s.exchangeCode(ctx, code)
+func (s *GoogleAuthService) Authenticate(ctx context.Context, code, redirect_uri string) (string, string, error) {
+	token, err := s.exchangeCode(ctx, code, redirect_uri)
 	if err != nil {
+		s.log.Error().Err(err).Msg("Failed to exchange Google auth code")
 		return "", "", err
 	}
 
 	userInfo, err := s.getUserInfo(ctx, token)
 	if err != nil {
+		s.log.Error().Err(err).Msg("Failed to retrieve Google user info")
 		return "", "", err
 	}
 
@@ -127,6 +141,7 @@ func (s *GoogleAuthService) Authenticate(ctx context.Context, code string) (stri
 
 	user, err := s.getOrCreateUser(ctx, userInfo)
 	if err != nil {
+		s.log.Error().Err(err).Msg("Failed to get or create Google user")
 		return "", "", err
 	}
 

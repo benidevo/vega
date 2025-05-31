@@ -18,7 +18,6 @@ type Settings struct {
 	MigrationsDir      string
 
 	TokenSecret        string
-	TokenExpiration    time.Duration
 	AccessTokenExpiry  time.Duration
 	RefreshTokenExpiry time.Duration
 	CookieDomain       string
@@ -35,14 +34,9 @@ type Settings struct {
 // populated from environment variables. If an environment variable is
 // not set, a predefined default value is used.
 func NewSettings() Settings {
-	tokenExpiration, err := strconv.Atoi(getEnv("TOKEN_EXPIRATION", "60"))
+	accessTokenMins, err := strconv.Atoi(getEnv("ACCESS_TOKEN_EXPIRY", "60"))
 	if err != nil {
-		tokenExpiration = 60 // Default to 60 minutes if conversion fails
-	}
-
-	accessTokenMins, err := strconv.Atoi(getEnv("ACCESS_TOKEN_EXPIRY", "15"))
-	if err != nil {
-		accessTokenMins = 15
+		accessTokenMins = 60 // Default to 60 minutes if conversion fails
 	}
 
 	refreshTokenHours, err := strconv.Atoi(getEnv("REFRESH_TOKEN_EXPIRY", "168"))
@@ -65,7 +59,6 @@ func NewSettings() Settings {
 		DBDriver:           getEnv("DB_DRIVER", "sqlite"),
 		LogLevel:           getEnv("LOG_LEVEL", "info"),
 		IsDevelopment:      isDevelopment,
-		TokenExpiration:    time.Duration(tokenExpiration) * time.Minute,
 		TokenSecret:        getEnv("TOKEN_SECRET", "default-secret"),
 		IsTest:             getEnv("GO_ENV", "") == "test",
 		MigrationsDir:      getEnv("MIGRATIONS_DIR", "migrations/sqlite"),

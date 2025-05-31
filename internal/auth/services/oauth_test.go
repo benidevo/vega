@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"testing"
-	"time"
 
 	"github.com/benidevo/ascentio/internal/auth/models"
 	commonerrors "github.com/benidevo/ascentio/internal/common/errors"
@@ -19,7 +18,6 @@ func setupGoogleAuthTest() (*MockUserRepository, *config.Settings, context.Conte
 	mockRepo := new(MockUserRepository)
 	cfg := &config.Settings{
 		TokenSecret:             "test-secret-key",
-		TokenExpiration:         time.Hour,
 		GoogleAuthUserInfoURL:   "https://www.googleapis.com/oauth2/v1/userinfo",
 		GoogleAuthUserInfoScope: "https://www.googleapis.com/auth/userinfo.email",
 	}

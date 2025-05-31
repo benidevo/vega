@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	authapi "github.com/benidevo/ascentio/internal/api/auth"
+	jobapi "github.com/benidevo/ascentio/internal/api/job"
 	"github.com/benidevo/ascentio/internal/auth"
 	"github.com/benidevo/ascentio/internal/home"
 	"github.com/benidevo/ascentio/internal/job"
@@ -20,6 +22,8 @@ func SetupRoutes(a *App) {
 	homeHandler := home.Setup(&a.config)
 	jobHandler := job.Setup(a.db, &a.config)
 	settingsHandler := settings.Setup(&a.config, a.db)
+	authAPIHandler := authapi.Setup(a.db, &a.config)
+	jobAPIHandler := jobapi.Setup(a.db, &a.config)
 
 	// Setup Google Auth
 	googleAuthHandler, err := auth.SetupGoogleAuth(&a.config, a.db)
@@ -47,6 +51,13 @@ func SetupRoutes(a *App) {
 	settingsGroup := a.router.Group("/settings")
 	settingsGroup.Use(authHandler.AuthMiddleware())
 	settings.RegisterRoutes(settingsGroup, settingsHandler)
+
+	authAPIGroup := a.router.Group("/api/auth")
+	authapi.RegisterRoutes(authAPIGroup, authAPIHandler)
+
+	jobAPIGroup := a.router.Group("/api/jobs")
+	jobAPIGroup.Use(authHandler.APIAuthMiddleware())
+	jobapi.RegisterRoutes(jobAPIGroup, jobAPIHandler)
 
 	a.router.NoRoute(func(c *gin.Context) {
 		c.HTML(http.StatusNotFound, "layouts/base.html", gin.H{

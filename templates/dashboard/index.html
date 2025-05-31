@@ -101,12 +101,12 @@
       {{range .jobs}}
       <div class="bg-slate-800 rounded-lg shadow-lg overflow-hidden flex flex-col">
         <div class="px-4 md:px-6 py-4 md:py-5 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-          <div>
-            <h3 class="text-lg font-semibold text-white">{{.Title}}</h3>
-            <p class="text-gray-400 text-sm">{{.Company.Name}}{{if .Location}} · {{.Location}}{{end}}</p>
+          <div class="flex-1 min-w-0">
+            <h3 class="text-lg font-semibold text-white truncate">{{.Title}}</h3>
+            <p class="text-gray-400 text-sm truncate">{{.Company.Name}}{{if .Location}} · {{.Location}}{{end}}</p>
           </div>
-          <div class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-            92% Match <!-- Keeping match percentage as dummy data -->
+          <div class="flex-none px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium whitespace-nowrap">
+            92% Match
           </div>
         </div>
         <div class="px-4 md:px-6 py-4 flex-1 flex flex-col">

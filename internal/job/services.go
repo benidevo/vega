@@ -33,6 +33,13 @@ func NewJobService(jobRepo interfaces.JobRepository, cfg *config.Settings) *JobS
 	}
 }
 
+// LogError logs the provided error using the service's logger if the error is not nil.
+func (s *JobService) LogError(err error) {
+	if err != nil {
+		s.log.Error().Err(err).Msg("JobService error")
+	}
+}
+
 // ValidateFieldName checks if a field name is valid for job updates.
 // It returns an error if the field is empty or not one of the allowed values.
 func (s *JobService) ValidateFieldName(field string) error {

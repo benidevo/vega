@@ -12,6 +12,7 @@ import (
 	"github.com/benidevo/ascentio/internal/common/logger"
 	"github.com/benidevo/ascentio/internal/config"
 	"github.com/benidevo/ascentio/internal/db"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	_ "modernc.org/sqlite"
@@ -31,6 +32,14 @@ type App struct {
 // It initializes the router using the Gin framework and sets up a channel to handle OS signals.
 func New(cfg config.Settings) *App {
 	router := gin.Default()
+
+	// Configure CORS
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowAllOrigins = true
+	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
+	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
+
+	router.Use(cors.New(corsConfig))
 
 	// Only load templates in non-test environment
 	if !cfg.IsTest {

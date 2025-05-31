@@ -14,7 +14,6 @@ import (
 func TestTokenTypes(t *testing.T) {
 	cfg := &config.Settings{
 		TokenSecret:        "test-secret-key",
-		TokenExpiration:    time.Hour,
 		AccessTokenExpiry:  15 * time.Minute,
 		RefreshTokenExpiry: 7 * 24 * time.Hour,
 		AppName:            "TestApp",
