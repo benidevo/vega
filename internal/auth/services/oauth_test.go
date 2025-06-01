@@ -28,7 +28,7 @@ func setupGoogleAuthTest() (*MockUserRepository, *config.Settings, context.Conte
 func TestGetOrCreateUser(t *testing.T) {
 	mockRepo, cfg, ctx := setupGoogleAuthTest()
 
-	log := logger.GetLogger("test")
+	log := logger.GetPrivacyLogger("test")
 
 	service := &GoogleAuthService{
 		cfg:  cfg,
@@ -107,7 +107,7 @@ func TestGetOrCreateUser(t *testing.T) {
 
 func TestGetAuthURL(t *testing.T) {
 	_, cfg, _ := setupGoogleAuthTest()
-	log := logger.GetLogger("test")
+	log := logger.GetPrivacyLogger("test")
 
 	t.Run("should_return_auth_url_with_state", func(t *testing.T) {
 		service := &GoogleAuthService{

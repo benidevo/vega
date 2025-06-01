@@ -40,3 +40,8 @@ func Initialize(isDevelopment bool, logLevel string) {
 func GetLogger(module string) zerolog.Logger {
 	return log.Logger.With().Str("module", module).Logger()
 }
+
+// GetPrivacyLogger returns a PrivacyLogger instance with GDPR-compliant logging methods
+func GetPrivacyLogger(module string) *PrivacyLogger {
+	return NewPrivacyLogger(GetLogger(module))
+}

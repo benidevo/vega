@@ -13,7 +13,6 @@ import (
 	authservice "github.com/benidevo/ascentio/internal/auth/services"
 	"github.com/benidevo/ascentio/internal/common/logger"
 	"github.com/benidevo/ascentio/internal/config"
-	"github.com/rs/zerolog"
 	"gopkg.in/yaml.v2"
 )
 
@@ -35,7 +34,7 @@ type UserEntry struct {
 type UserSyncCommand struct {
 	db      *sql.DB
 	config  *config.Settings
-	log     zerolog.Logger
+	log     *logger.PrivacyLogger
 	authSvc *authservice.AuthService
 }
 
@@ -44,7 +43,7 @@ func NewUserSyncCommand(db *sql.DB, cfg *config.Settings) *UserSyncCommand {
 	return &UserSyncCommand{
 		db:      db,
 		config:  cfg,
-		log:     logger.GetLogger("user-sync"),
+		log:     logger.GetPrivacyLogger("user-sync"),
 		authSvc: authservice.NewAuthService(authrepo.NewSQLiteUserRepository(db), cfg),
 	}
 }
@@ -80,7 +79,10 @@ func (c *UserSyncCommand) Execute(args []string) error {
 
 	for _, user := range userConfig.Users {
 		if err := c.processUser(user); err != nil {
-			c.log.Error().Err(err).Str("username", user.Username).Msg("Failed to process user")
+			c.log.Error().Err(err).
+				Str("event", "user_sync_failed").
+				Str("hashed_id", logger.HashIdentifier(user.Username)).
+				Msg("Failed to process user")
 			continue
 		}
 	}
@@ -126,20 +128,32 @@ func (c *UserSyncCommand) processUser(entry UserEntry) error {
 	}
 
 	if err == nil {
-		c.log.Info().Str("username", entry.Username).Msg("User created successfully")
+		c.log.Info().
+			Str("event", "user_created").
+			Str("hashed_id", logger.HashIdentifier(entry.Username)).
+			Msg("User created successfully")
 		return nil
 	}
 
 	if entry.ResetOnNextRun {
-		c.log.Info().Str("username", entry.Username).Msg("Resetting user password")
+		c.log.Info().
+			Str("event", "password_reset_started").
+			Str("hashed_id", logger.HashIdentifier(entry.Username)).
+			Msg("Resetting user password")
 
 		if err := c.authSvc.ChangePassword(ctx, user.ID, entry.Password); err != nil {
 			return fmt.Errorf("failed to reset password: %w", err)
 		}
 
-		c.log.Info().Str("username", entry.Username).Msg("Password reset successfully")
+		c.log.Info().
+			Str("event", "password_reset_success").
+			Str("user_ref", fmt.Sprintf("user_%d", user.ID)).
+			Msg("Password reset successfully")
 	} else {
-		c.log.Info().Str("username", entry.Username).Msg("User exists, no action required")
+		c.log.Info().
+			Str("event", "user_exists").
+			Str("hashed_id", logger.HashIdentifier(entry.Username)).
+			Msg("User exists, no action required")
 	}
 
 	return nil

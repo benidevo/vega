@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/benidevo/ascentio/internal/auth/models"
+	"github.com/benidevo/ascentio/internal/common/logger"
 	"github.com/benidevo/ascentio/internal/config"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -79,8 +79,8 @@ func (c *TestUserSyncCommandWrapper) processUser(entry UserEntry) error {
 	return nil
 }
 
-func createTestLogger() zerolog.Logger {
-	return zerolog.New(os.Stdout).With().Timestamp().Str("module", "user-sync-test").Logger()
+func createTestLogger() *logger.PrivacyLogger {
+	return logger.GetPrivacyLogger("user-sync-test")
 }
 
 func setupTest(t *testing.T) (*MockAuthService, *TestUserSyncCommandWrapper, string) {

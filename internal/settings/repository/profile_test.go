@@ -35,7 +35,7 @@ func TestGetProfile(t *testing.T) {
 			// Profile fields
 			"id", "user_id", "first_name", "last_name", "title", "industry",
 			"career_summary", "skills", "phone_number", "location",
-			"linkedin_profile", "github_profile", "website", "created_at", "updated_at",
+			"linkedin_profile", "github_profile", "website", "context", "created_at", "updated_at",
 			// Work experience fields
 			"we_id", "we_profile_id", "we_company", "we_title", "we_location",
 			"we_start_date", "we_end_date", "we_description", "we_current",
@@ -52,7 +52,7 @@ func TestGetProfile(t *testing.T) {
 			1, userID, "John", "Doe", "Software Engineer", models.IndustryTechnology,
 			"Experienced developer", skillsJSON, "+1234567890", "New York",
 			"https://linkedin.com/in/johndoe", "https://github.com/johndoe", "https://johndoe.com",
-			now, now,
+			"", now, now,
 			// Work experience data
 			1, 1, "Acme Corp", "Senior Developer", "Remote",
 			now.Add(-365*24*time.Hour), nil, "Building great software", true,
@@ -99,7 +99,7 @@ func TestGetProfile(t *testing.T) {
 			// Profile fields
 			"id", "user_id", "first_name", "last_name", "title", "industry",
 			"career_summary", "skills", "phone_number", "location",
-			"linkedin_profile", "github_profile", "website", "created_at", "updated_at",
+			"linkedin_profile", "github_profile", "website", "context", "created_at", "updated_at",
 			// All nullable fields for related entities
 			"we_id", "we_profile_id", "we_company", "we_title", "we_location",
 			"we_start_date", "we_end_date", "we_description", "we_current",
@@ -113,7 +113,7 @@ func TestGetProfile(t *testing.T) {
 			// Profile data
 			2, userID, "Jane", "Smith", "", models.IndustryUnspecified,
 			"", []byte("[]"), "", "",
-			"", "", "", now, now,
+			"", "", "", "", now, now,
 			// All nulls for related data
 			nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
 			nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
@@ -184,7 +184,7 @@ func TestUpdateProfile(t *testing.T) {
 				profile.Title, profile.Industry, profile.CareerSummary,
 				skillsJSON, profile.PhoneNumber, profile.Location,
 				profile.LinkedInProfile, profile.GitHubProfile, profile.Website,
-				sqlmock.AnyArg(), // updated_at
+				profile.Context, sqlmock.AnyArg(), // context, updated_at
 			).
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
 		mock.ExpectCommit()
@@ -389,7 +389,7 @@ func TestHandleNullValues(t *testing.T) {
 			// Profile fields
 			"id", "user_id", "first_name", "last_name", "title", "industry",
 			"career_summary", "skills", "phone_number", "location",
-			"linkedin_profile", "github_profile", "website", "created_at", "updated_at",
+			"linkedin_profile", "github_profile", "website", "context", "created_at", "updated_at",
 			// Work experience fields (all nullable)
 			"we_id", "we_profile_id", "we_company", "we_title", "we_location",
 			"we_start_date", "we_end_date", "we_description", "we_current",
@@ -405,7 +405,7 @@ func TestHandleNullValues(t *testing.T) {
 			// Profile with some null fields
 			1, 1, "John", "Doe", "", models.IndustryUnspecified,
 			"", []byte("null"), "", "",
-			"", "", "", now, now,
+			"", "", "", "", now, now,
 			// All nulls for related data
 			nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
 			nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,

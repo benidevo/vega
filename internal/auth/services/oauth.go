@@ -14,7 +14,6 @@ import (
 	"github.com/benidevo/ascentio/internal/auth/repository"
 	"github.com/benidevo/ascentio/internal/common/logger"
 	"github.com/benidevo/ascentio/internal/config"
-	"github.com/rs/zerolog"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
@@ -32,7 +31,7 @@ type GoogleAuthUserInfo struct {
 type GoogleAuthService struct {
 	cfg      *config.Settings
 	oauthCfg *oauth2.Config
-	log      zerolog.Logger
+	log      *logger.PrivacyLogger
 	repo     repository.UserRepository
 }
 
@@ -52,7 +51,7 @@ func NewGoogleAuthService(cfg *config.Settings, repo repository.UserRepository) 
 	return &GoogleAuthService{
 		cfg:      cfg,
 		oauthCfg: oauthCfg,
-		log:      logger.GetLogger("google_auth"),
+		log:      logger.GetPrivacyLogger("google_auth"),
 		repo:     repo,
 	}, nil
 }
@@ -112,7 +111,10 @@ func (s *GoogleAuthService) getUserInfo(ctx context.Context, token *oauth2.Token
 	}
 
 	if userInfo.Email == "" {
-		s.log.Warn().Interface("user_info", userInfo).Msg("Google returned user info with empty email")
+		s.log.Warn().
+			Str("event", "google_empty_email").
+			Str("google_id", userInfo.ID).
+			Msg("Google returned user info with empty email")
 	}
 
 	return &userInfo, nil
@@ -135,7 +137,8 @@ func (s *GoogleAuthService) Authenticate(ctx context.Context, code, redirect_uri
 	}
 
 	s.log.Info().
-		Str("email", userInfo.Email).
+		Str("event", "google_auth_success").
+		Str("hashed_id", logger.HashIdentifier(userInfo.Email)).
 		Bool("verified_email", userInfo.VerifiedEmail).
 		Msg("Google user authenticated")
 
@@ -147,13 +150,19 @@ func (s *GoogleAuthService) Authenticate(ctx context.Context, code, redirect_uri
 
 	accessToken, err := GenerateAccessToken(user, s.cfg)
 	if err != nil {
-		s.log.Error().Err(err).Int("user_id", user.ID).Msg("Failed to generate access token for Google user")
+		s.log.Error().Err(err).
+			Str("event", "google_access_token_failed").
+			Str("user_ref", fmt.Sprintf("user_%d", user.ID)).
+			Msg("Failed to generate access token for Google user")
 		return "", "", models.ErrGoogleAuthTokenCreationFailed
 	}
 
 	refreshToken, err := GenerateRefreshToken(user, s.cfg)
 	if err != nil {
-		s.log.Error().Err(err).Int("user_id", user.ID).Msg("Failed to generate refresh token for Google user")
+		s.log.Error().Err(err).
+			Str("event", "google_refresh_token_failed").
+			Str("user_ref", fmt.Sprintf("user_%d", user.ID)).
+			Msg("Failed to generate refresh token for Google user")
 		return "", "", models.ErrGoogleAuthTokenCreationFailed
 	}
 
@@ -161,10 +170,14 @@ func (s *GoogleAuthService) Authenticate(ctx context.Context, code, redirect_uri
 	_, err = s.repo.UpdateUser(ctx, user)
 	if err != nil {
 		sentinelErr := models.GetSentinelError(err)
-		s.log.Warn().Err(err).Int("user_id", user.ID).Str("error_type", sentinelErr.Error()).Msg("Failed to update user last login time")
+		s.log.Warn().Err(err).
+			Str("event", "google_last_login_update_failed").
+			Str("user_ref", fmt.Sprintf("user_%d", user.ID)).
+			Str("error_type", sentinelErr.Error()).
+			Msg("Failed to update user last login time")
 	}
 
-	s.log.Info().Int("user_id", user.ID).Str("email", user.Username).Msg("Google user successfully logged in")
+	s.log.LogAuthEvent("google_login_success", user.ID, true)
 	return accessToken, refreshToken, nil
 }
 
@@ -180,19 +193,34 @@ func (s *GoogleAuthService) getOrCreateUser(ctx context.Context, userInfo *Googl
 
 		if sentinelErr != models.ErrUserNotFound {
 			// This is an unexpected error
-			s.log.Error().Err(err).Str("email", userInfo.Email).Str("error_type", sentinelErr.Error()).Msg("Error looking up Google user")
+			s.log.Error().Err(err).
+				Str("event", "google_user_lookup_error").
+				Str("hashed_id", logger.HashIdentifier(userInfo.Email)).
+				Str("error_type", sentinelErr.Error()).
+				Msg("Error looking up Google user")
 			return nil, models.ErrGoogleUserCreationFailed
 		}
 
 		// User doesn't exist, create a new one
-		s.log.Info().Str("email", userInfo.Email).Msg("Creating new user from Google account")
+		s.log.Info().
+			Str("event", "google_user_create").
+			Str("hashed_id", logger.HashIdentifier(userInfo.Email)).
+			Msg("Creating new user from Google account")
 		user, err = s.repo.CreateUser(ctx, userInfo.Email, "", models.STANDARD.String())
 		if err != nil {
 			sentinelErr := models.GetSentinelError(err)
-			s.log.Error().Err(err).Str("email", userInfo.Email).Str("error_type", sentinelErr.Error()).Msg("Failed to create user from Google account")
+			s.log.Error().Err(err).
+				Str("event", "google_user_create_failed").
+				Str("hashed_id", logger.HashIdentifier(userInfo.Email)).
+				Str("error_type", sentinelErr.Error()).
+				Msg("Failed to create user from Google account")
 			return nil, models.ErrGoogleUserCreationFailed
 		}
-		s.log.Info().Str("email", userInfo.Email).Int("user_id", user.ID).Msg("New user created from Google account")
+		s.log.Info().
+			Str("event", "google_user_created").
+			Str("hashed_id", logger.HashIdentifier(userInfo.Email)).
+			Str("user_ref", fmt.Sprintf("user_%d", user.ID)).
+			Msg("New user created from Google account")
 	}
 
 	return user, nil

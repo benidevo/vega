@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/benidevo/ascentio/internal/auth/models"
+	"github.com/benidevo/ascentio/internal/common/logger"
 	"github.com/benidevo/ascentio/internal/config"
 	settingsModels "github.com/benidevo/ascentio/internal/settings/models"
 	"github.com/go-playground/validator/v10"
@@ -181,7 +182,7 @@ func setupTestService() (*SettingsService, *MockProfileRepository, *MockUserRepo
 		userRepo:     mockUserRepo,
 		settingsRepo: mockProfileRepo,
 		cfg:          cfg,
-		log:          zerolog.Nop(),
+		log:          logger.GetPrivacyLogger("settings-test"),
 		validator:    validator.New(),
 	}
 	return service, mockProfileRepo, mockUserRepo

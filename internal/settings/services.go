@@ -2,6 +2,7 @@ package settings
 
 import (
 	"context"
+	"fmt"
 
 	authrepo "github.com/benidevo/ascentio/internal/auth/repository"
 	"github.com/benidevo/ascentio/internal/common/logger"
@@ -9,7 +10,6 @@ import (
 	"github.com/benidevo/ascentio/internal/settings/interfaces"
 	"github.com/benidevo/ascentio/internal/settings/models"
 	"github.com/go-playground/validator/v10"
-	"github.com/rs/zerolog"
 )
 
 // SettingsService provides business logic for user settings management
@@ -17,7 +17,7 @@ type SettingsService struct {
 	userRepo     authrepo.UserRepository
 	settingsRepo interfaces.SettingsRepository
 	cfg          *config.Settings
-	log          zerolog.Logger
+	log          *logger.PrivacyLogger
 	validator    *validator.Validate
 }
 
@@ -27,7 +27,7 @@ func NewSettingsService(settingsRepo interfaces.SettingsRepository, cfg *config.
 		userRepo:     userRepo,
 		settingsRepo: settingsRepo,
 		cfg:          cfg,
-		log:          logger.GetLogger("settings"),
+		log:          logger.GetPrivacyLogger("settings"),
 		validator:    validator.New(),
 	}
 }
@@ -36,12 +36,18 @@ func NewSettingsService(settingsRepo interfaces.SettingsRepository, cfg *config.
 func (s *SettingsService) GetProfileSettings(ctx context.Context, userId int) (*models.Profile, error) {
 	profile, err := s.settingsRepo.GetProfile(ctx, userId)
 	if err != nil {
-		s.log.Error().Err(err).Int("user_id", userId).Msg("Failed to get profile settings")
+		s.log.Error().Err(err).
+			Str("event", "profile_get_failed").
+			Str("user_ref", fmt.Sprintf("user_%d", userId)).
+			Msg("Failed to get profile settings")
 		return nil, models.WrapError(models.ErrFailedToGetSettings, err)
 	}
 
 	if profile == nil {
-		s.log.Info().Int("user_id", userId).Msg("Profile not found, creating empty profile")
+		s.log.Info().
+			Str("event", "profile_empty_created").
+			Str("user_ref", fmt.Sprintf("user_%d", userId)).
+			Msg("Profile not found, creating empty profile")
 		return &models.Profile{
 			UserID:         userId,
 			Skills:         []string{},
