@@ -6,33 +6,7 @@ Ascentio uses a **monolithic architecture** implemented entirely in Go, with a S
 
 ### 1.1 High-Level Architecture Diagram
 
-```plaintext
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                                  VPS Host                                    │
-│                            (via Docker Compose)                              │
-│                                                                              │
-│  ┌─────────────────────────────┐                                             │
-│  │      Go Application         │                                             │
-│  │---------------------------  │                                             │
-│  │ - Web UI & Admin Dashboard  │                                             │
-│  │ - REST API Endpoints        │                                             │
-│  │ - Job Management System     │                                             │
-│  │ - Authentication (OAuth)    │                                             │
-│  │ - Settings Management       │                                             │
-│  │ - User Management           │                                             │
-│  │ - Environment-based Config   │                                             │
-│  └─────────────┬───────────────┘                                             │
-│                │                                                             │
-│                ▼                                                             │
-│  ┌─────────────┴───────────────┐      ┌─────────────────────────────────┐    │
-│  │     SQLite (Data)           │      │     Static Assets & Uploads     │    │
-│  │ - Users & Authentication    │      │ - Templates & UI Resources      │    │
-│  │ - Jobs & Applications       │      │ - File Storage                  │    │
-│  │ - Settings & Configuration   │      │                                 │    │
-│  └─────────────────────────────┘      └─────────────────────────────────┘    │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
+![Architecture Diagram](architecture.jpg)
 
 ### 1.2 Component Responsibilities
 

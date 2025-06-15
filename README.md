@@ -20,13 +20,7 @@ Ascentio is a self-hosted job prospecting and management application designed to
 
 ## Technology Stack
 
-* **Backend**: Go 1.24+ with Gin web framework
-* **AI Integration**: Google Gemini Flash 2.5 for job matching
-* **Database**: SQLite3 with WAL mode for performance
-* **Frontend**: Go templates, HTMX, Tailwind CSS
-* **Browser Extension**: TypeScript, Chrome Extension Manifest V3
-* **Authentication**: Google OAuth 2.0, JWT tokens
-* **Deployment**: Docker & Docker Compose
+Built with Go, SQLite, and modern web technologies. See [Technical Design Document](docs/TDD.md) for complete technology stack details.
 
 ## 🚀 Quick Start
 
@@ -105,40 +99,7 @@ make run
 
 ## 📖 Configuration
 
-### Environment Variables
-
-Key configuration options (see `.env.example` for complete list):
-
-```bash
-# Application
-SERVER_PORT=:8080
-IS_DEVELOPMENT=true
-LOG_LEVEL=info
-
-# Database
-DB_CONNECTION_STRING=/app/data/ascentio.db?_journal_mode=WAL
-MIGRATIONS_DIR=migrations/sqlite
-
-# Authentication
-TOKEN_SECRET=your-jwt-secret-key
-GOOGLE_CLIENT_ID=your-google-oauth-client-id
-GOOGLE_CLIENT_SECRET=your-google-oauth-secret
-
-# Admin User (optional - for automatic creation)
-CREATE_ADMIN_USER=true
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=secure-password
-ADMIN_EMAIL=admin@example.com
-```
-
-### Google OAuth Setup
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing one
-3. Enable the Google+ API
-4. Create OAuth 2.0 credentials
-5. Add your redirect URI: `http://localhost:8000/auth/google/callback`
-6. Copy Client ID and Secret to your `.env` file
+Copy `.env.example` to `.env` and configure Google OAuth credentials. See [Technical Design Document](docs/TDD.md) for complete configuration reference.
 
 ## 🧪 Development & Testing
 
@@ -171,30 +132,9 @@ make format
 make test
 ```
 
-## 📊 API Endpoints
+## 📊 API Documentation
 
-### Authentication
-
-* `POST /api/auth/login` - Username/password login
-
-* `POST /api/auth/refresh` - Refresh JWT token
-* `GET /auth/google` - Google OAuth login
-* `GET /auth/google/callback` - OAuth callback
-
-### Jobs
-
-* `GET /api/jobs` - List jobs with filtering
-
-* `POST /api/jobs` - Create new job
-* `GET /api/jobs/{id}` - Get job details
-* `PATCH /api/jobs/{id}` - Update job
-* `DELETE /api/jobs/{id}` - Delete job
-
-### Health
-
-* `GET /health` - Application health check
-
-* `GET /health/ready` - Readiness probe
+Ascentio provides RESTful APIs for job management, authentication, and system health. See [Technical Design Document](docs/TDD.md) for complete API reference.
 
 ## 🔮 Roadmap
 
