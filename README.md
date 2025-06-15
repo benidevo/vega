@@ -4,109 +4,220 @@
 
 ## Overview
 
-Ascentio is an application designed for job prospecting. It utilizes a monolithic architecture, runs within Docker containers managed by Docker Compose, uses the Gin web framework, and persists data using SQLite.
+Ascentio is a self-hosted job prospecting and management application designed to help users organize their job search process. Built with simplicity and privacy in mind, it provides a clean web interface for tracking job applications, managing opportunities, and maintaining your job search workflow.
+
+## ✨ Features
+
+* **🔐 Secure Authentication**: Google OAuth and username/password options
+* **📋 Job Management**: Create, edit, and organize job postings with detailed tracking
+* **🎨 Modern UI**: Responsive design with Tailwind CSS and HTMX interactivity
+* **🔧 Easy Setup**: One-command deployment with Docker Compose
+* **🛡️ Privacy-First**: Self-hosted with GDPR-compliant logging
+* **⚡ Fast & Lightweight**: Efficient SQLite database with optimized performance
+* **🔌 API-Ready**: RESTful endpoints for automation and integrations
 
 ## Technology Stack
 
-* Go
-* Gin (Web Framework)
-* SQLite (Database)
-* Docker
+* **Backend**: Go 1.24+ with Gin web framework
+* **Database**: SQLite3 with WAL mode for performance
+* **Frontend**: Go templates, HTMX, Tailwind CSS
+* **Authentication**: Google OAuth 2.0, JWT tokens
+* **Deployment**: Docker & Docker Compose
 
-## Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
 
 * Docker
 * Docker Compose
 
-### Running the Application
+### Installation
 
-1. Clone the repository.
-2. Navigate to the project directory.
-3. Run the application using the Makefile:
+1. **Clone the repository**:
 
-    ```sh
-    make run
-    ```
+   ```bash
+   git clone https://github.com/benidevo/ascentio.git
+   cd ascentio
+   ```
 
-    This command will build the Docker image (if necessary) and start the application container in detached mode.
+2. **Configure environment**:
 
-## Available Commands (via Makefile)
+   ```bash
+   cp .env.example .env
+   # Edit .env with your settings (Google OAuth, admin credentials, etc.)
+   ```
 
-* `make run`: Builds and starts the application containers.
-* `make test`: Runs the test suite within the application container.
-* `make stop`: Stops the application containers.
-* `make logs`: Tails the logs from the application container.
-* `make enter-app`: Opens a shell inside the running application container.
-* `make format`: Formats the Go code within the application container using `go fmt` and `go vet`.
+3. **Start the application**:
 
-### Database Migration Commands
+   ```bash
+   make run
+   ```
 
-* `make migrate-create`: Create a new migration file (will prompt for migration name).
-* `make migrate-up`: Apply all pending migrations.
-* `make migrate-down`: Rollback the most recent migration.
-* `make migrate-reset`: Rollback all migrations.
-* `make migrate-force`: Set the migration version (will prompt for version).
+4. **Access the application**:
+   * Open <http://localhost:8000> in your browser
+   * Create an admin user or sign in with Google OAuth
 
-## Development
+### 🔑 Admin User Setup
+
+For first-time setup, you can create an admin user automatically:
+
+```bash
+# Set environment variables in .env or export directly:
+export CREATE_ADMIN_USER=true
+export ADMIN_USERNAME=admin
+export ADMIN_PASSWORD=your_secure_password
+export ADMIN_EMAIL=admin@example.com
+
+# Restart the application
+make run
+```
+
+## 🛠️ Development Commands
+
+| Command | Description |
+|---------|-------------|
+| `make run` | Build and start the application containers |
+| `make restart` | Rebuild and restart containers |
+| `make test` | Run the full test suite with coverage |
+| `make test-verbose` | Run tests with verbose output |
+| `make stop` | Stop the application containers |
+| `make logs` | View container logs (last 100 lines, follow) |
+| `make enter-app` | Open shell inside the running container |
+| `make format` | Format Go code and run linters |
+
+## 🗄️ Database Management
+
+| Command | Description |
+|---------|-------------|
+| `make migrate-create` | Create a new migration file |
+| `make migrate-up` | Apply all pending migrations |
+| `make migrate-down` | Rollback the most recent migration |
+| `make migrate-reset` | Rollback all migrations |
+| `make migrate-force` | Set migration to specific version |
+
+## 📖 Configuration
+
+### Environment Variables
+
+Key configuration options (see `.env.example` for complete list):
+
+```bash
+# Application
+SERVER_PORT=:8080
+IS_DEVELOPMENT=true
+LOG_LEVEL=info
+
+# Database
+DB_CONNECTION_STRING=/app/data/ascentio.db?_journal_mode=WAL
+MIGRATIONS_DIR=migrations/sqlite
+
+# Authentication
+TOKEN_SECRET=your-jwt-secret-key
+GOOGLE_CLIENT_ID=your-google-oauth-client-id
+GOOGLE_CLIENT_SECRET=your-google-oauth-secret
+
+# Admin User (optional - for automatic creation)
+CREATE_ADMIN_USER=true
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=secure-password
+ADMIN_EMAIL=admin@example.com
+```
+
+### Google OAuth Setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable the Google+ API
+4. Create OAuth 2.0 credentials
+5. Add your redirect URI: `http://localhost:8000/auth/google/callback`
+6. Copy Client ID and Secret to your `.env` file
+
+## 🧪 Development & Testing
 
 ### Database Migrations
 
-Ascentio uses [golang-migrate](https://github.com/golang-migrate/migrate) for database schema management. Migrations are automatically applied when the application starts.
-
-Migration files are stored in the `migrations/sqlite` directory and follow the naming convention:
-
-```
-{version}_{description}.{up|down}.sql
-```
-
-For example:
-
-* `000001_create_users_table.up.sql`: Creates the users table
-* `000001_create_users_table.down.sql`: Drops the users table
-
-#### Working with Migrations
-
-1. **Creating a new migration**:
-
-   ```bash
-   make migrate-create
-   # Enter migration name when prompted, e.g., "add_jobs_table"
-   ```
-
-2. **Edit the migration files**:
-   After creation, edit the generated SQL files:
-   * `{version}_add_jobs_table.up.sql`: Add SQL to create new tables/columns
-   * `{version}_add_jobs_table.down.sql`: Add SQL to revert the changes
-
-3. **Apply migrations**:
-
-   ```bash
-   make migrate-up
-   ```
-
-4. **Rollback migrations**:
-
-   ```bash
-   make migrate-down  # Rollback one migration
-   make migrate-reset # Rollback all migrations
-   ```
-
-5. **Fix migration state**:
-   If migrations get into a bad state, you can force a specific version:
-
-   ```bash
-   make migrate-force
-   # Enter version number when prompted
-   ```
-
-### Git Hooks
-
-This project uses Git hooks to ensure code quality. To set up:
+Migrations are automatically applied on startup. To work with migrations manually:
 
 ```bash
-make setup-hooks
+# Create new migration
+make migrate-create
+# Enter name when prompted
+
+# Apply migrations
+make migrate-up
+
+# Rollback migrations
+make migrate-down
 ```
 
-This will install the pre-commit hooks defined in the `.githooks/pre-commit` file. The hooks will run automatically on commit and push, ensuring that code quality checks are performed.
+### Code Quality
+
+```bash
+# Set up Git hooks for code quality
+make setup-hooks
+
+# Format code and run linters
+make format
+
+# Run tests with coverage
+make test
+```
+
+## 📊 API Endpoints
+
+### Authentication
+
+* `POST /api/auth/login` - Username/password login
+
+* `POST /api/auth/refresh` - Refresh JWT token
+* `GET /auth/google` - Google OAuth login
+* `GET /auth/google/callback` - OAuth callback
+
+### Jobs
+
+* `GET /api/jobs` - List jobs with filtering
+
+* `POST /api/jobs` - Create new job
+* `GET /api/jobs/{id}` - Get job details
+* `PATCH /api/jobs/{id}` - Update job
+* `DELETE /api/jobs/{id}` - Delete job
+
+### Health
+
+* `GET /health` - Application health check
+
+* `GET /health/ready` - Readiness probe
+
+## 🔮 Roadmap
+
+### Current Status ✅
+
+* [x] User authentication (Google OAuth + username/password)
+* [x] Job management CRUD operations
+* [x] Responsive web interface
+* [x] RESTful API endpoints
+* [x] Environment-based configuration
+* [x] Automated migrations
+* [x] GDPR-compliant logging
+
+### Future Plans 🚧
+
+* [ ] AI-powered job matching and scoring
+* [ ] Automated cover letter generation
+* [ ] Email notifications and alerts
+* [ ] Analytics and insights dashboard
+* [ ] Browser extension for job capture
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes and add tests
+4. Run the test suite: `make test`
+5. Commit your changes: `git commit -m 'Add amazing feature'`
+6. Push to the branch: `git push origin feature/amazing-feature`
+7. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

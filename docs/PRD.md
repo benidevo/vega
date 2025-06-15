@@ -2,147 +2,193 @@
 
 ## 1. Product Overview
 
-Ascentio is an automated system designed to streamline the job search process. It identifies relevant job opportunities matching a user's profile, evaluates the match quality using AI, and generates tailored cover letter drafts to aid the job application process. The MVP will focus on manual job entry, core matching functionality, and basic document generation. The system presents prioritized job matches and associated materials via a dashboard, allowing users to efficiently review opportunities and apply manually.
+Ascentio is a job prospecting and management application designed to help users organize their job search process. The current implementation provides a solid foundation with user authentication, job management capabilities, and a modern web interface. The application emphasizes simplicity, self-hosting capabilities, and clean architecture principles. Users can manage job postings, track application status, and maintain their job search workflow through an intuitive web dashboard.
 
 ## 2. Business Requirements
 
-### 2.1 Key Objectives (MVP)
+### 2.1 Key Objectives (Current State)
 
-* Enable manual job entry through admin UI and API endpoints
-* Intelligently match job requirements with user skills/experience using API-based LLMs (OpenAI, Claude, Gemini)
-* Generate tailored cover letter drafts as PDFs to assist the application process
-* Provide a clear dashboard for reviewing matched jobs, match quality, and generated materials
-* Enable users to efficiently manage and track job opportunities they're interested in
-* Operate efficiently on minimal infrastructure (single VPS) and be fully configurable through environment variables and mounted files
-* Support self-hosting via Docker Compose
+* Provide secure user authentication with multiple options (Google OAuth, username/password)
+* Enable job management through intuitive web UI and REST API endpoints
+* Offer a responsive, modern web interface for job tracking and management
+* Support efficient job organization and application status tracking
+* Operate efficiently on minimal infrastructure (single VPS) with environment-based configuration
+* Maintain clean, maintainable codebase with comprehensive testing
+* Support self-hosting via Docker Compose with minimal setup requirements
+* Provide foundation for future AI-powered features and automation
 
 ### 2.2 Target Users
 
-* Job seekers looking to maximize their application efficiency
-* Professionals interested in passively monitoring relevant job openings
-* Career transitioners wanting to explore opportunities in new fields
-* Users comfortable with self-hosting via Docker
+* Job seekers who want to organize and track their job applications systematically
+* Professionals who prefer self-hosted solutions for privacy and control
+* Developers and technical users comfortable with Docker-based deployments
+* Users who value clean, simple interfaces over complex feature sets
+* Career changers who need to manage multiple job opportunities across different fields
 
 ## 3. Functional Requirements
 
-### 3.1 Job Management
+### 3.1 Authentication & User Management
 
-* **Manual Job Entry:**
-  * Admin UI form for manually adding job listings
-  * API endpoint for submitting job details programmatically
-  * Support for future scraper integrations via the same API
-* **Job Data Processing:**
-  * Store key information (title, company, location, description, requirements, URL)
-  * Detect and filter duplicate listings based on URL
+* **Google OAuth Integration:**
+  * Seamless registration and login via Google accounts
+  * Secure token-based authentication
+* **Username/Password Authentication:**
+  * Traditional login support for users who prefer it
+  * Secure password hashing and session management
+* **Environment-based Admin Creation:**
+  * Automatic admin user creation on first startup
+  * Configurable via environment variables
 
-### 3.2 Profile Management
+### 3.2 Job Management
 
-* **Resume Analysis:**
-  * Parse and extract skills, experience, and qualifications from an uploaded resume file
-  * Support for a single primary resume
-* **Preference Configuration:**
-  * Target roles, locations, keywords defined via config files
-  * All settings configurable through mounted files and environment variables
+* **Job CRUD Operations:**
+  * Create, read, update, and delete job postings
+  * Web form interface for manual job entry
+  * REST API endpoints for programmatic access
+* **Job Data Storage:**
+  * Store essential information (title, company, location, description, URL, salary)
+  * Application status tracking (applied, interested, rejected, etc.)
+  * Notes and custom fields for additional context
 
-### 3.3 Job Matching
+### 3.3 User Interface
 
-* **AI-Powered Evaluation:**
-  * Use API-based LLMs to assess job-resume compatibility
-  * Generate match scores (0-100%) with confidence ratings
-  * Provide reasoning/explanation for match assessments
-* **Filtering and Prioritization:**
-  * Rank jobs based on match quality
-  * Filter out poor matches based on a configurable threshold
+* **Responsive Web Dashboard:**
+  * Modern, mobile-friendly interface built with Tailwind CSS
+  * HTMX-powered interactive elements for smooth user experience
+  * Clean, intuitive navigation and layout
+* **Job Listing Views:**
+  * Sortable and filterable job tables
+  * Detailed job view with all information
+  * Status management and bulk operations
 
-### 3.4 Application Assistance
+### 3.4 Settings & Configuration
 
-* **Cover Letter Generation:**
-  * Generate tailored cover letter draft using selected LLM
-  * Use user-provided writing samples for style reference
-  * Save generated cover letter as downloadable PDF
-  * Associate generated PDF with corresponding job match
-* **Apply Links:**
-  * Store and provide the original job posting URL for manual application
+* **User Preferences:**
+  * Customizable application settings
+  * User profile management
+* **System Configuration:**
+  * Environment-based configuration system
+  * Database connection and authentication settings
 
-### 3.5 Admin Dashboard (UI)
+### 3.5 API Endpoints
 
-* **Job Management:**
-  * List view of all jobs with filtering options
-  * Form for manually adding new jobs
-  * View/edit job details
-* **Match Results:**
-  * Overview of matched jobs with scores and explanations
-  * Access to download generated cover letter PDFs
-  * Direct links to original job postings
-* **Status Management:**
-  * Allow marking jobs (e.g., "Interested", "Applied", "Not Interested")
-  * Basic status tracking and filtering
+* **Job Management API:**
+  * GET /api/jobs - List all jobs with filtering
+  * POST /api/jobs - Create new job posting
+  * GET /api/jobs/{id} - Get specific job details
+  * PATCH /api/jobs/{id} - Update job information
+  * DELETE /api/jobs/{id} - Remove job posting
+* **Authentication API:**
+  * POST /api/auth/login - Username/password authentication
+  * POST /api/auth/refresh - Token refresh
+  * GET /auth/google - Google OAuth initiation
+  * GET /auth/google/callback - OAuth callback handling
 
 ## 4. Non-Functional Requirements
 
 ### 4.1 Performance
 
-* Admin UI dashboard loads within 2 seconds
-* Job matching and cover letter generation complete within 30 seconds
-* Support for at least 1000 stored jobs with good UI performance
+* Web dashboard loads within 2 seconds on typical hardware
+* API responses complete within 1 second for standard operations
+* Support for thousands of stored jobs with efficient pagination
+* Optimized SQLite queries with proper indexing
 
 ### 4.2 Security
 
-* Secure storage of API keys for LLM services
-* Basic authentication for admin dashboard
+* Secure JWT token-based authentication
+* bcrypt password hashing with appropriate cost factors
+* GDPR-compliant logging with hashed user identifiers
+* Environment-based secret management
 * HTTPS support for production deployments
 
 ### 4.3 Reliability
 
-* High success rate for AI matching and cover letter generation tasks
-* Graceful error handling with clear error messages
-* Comprehensive logging for troubleshooting
+* Comprehensive error handling with user-friendly messages
+* Automatic database migrations on startup
+* Graceful degradation when external services are unavailable
+* Extensive test coverage for critical functionality
 
 ### 4.4 Configuration
 
-* All settings configurable via environment variables
-* Support for mounted configuration files and assets
-* Documentation for all configuration options
+* Complete environment variable-based configuration
+* Secure secret management
+* Docker Compose deployment with minimal configuration
+* Clear documentation for all settings
 
 ## 5. User Experience
 
 ### 5.1 Setup & Configuration
 
-* Deployment via Docker Compose
-* Configuration through environment variables and mounted files
-* Clear documentation on required file formats
+* One-command deployment via Docker Compose (`make run`)
+* Environment variable-based configuration with sensible defaults
+* Automatic admin user creation on first startup
+* Clear documentation and examples provided
 
-### 5.2 Admin Dashboard
+### 5.2 Web Interface
 
-* Clean, responsive web interface
-* Intuitive job entry form
-* Job listing with sort/filter functionality
-* Match details view with explanations
-* PDF preview and download functionality
+* Clean, modern interface with Tailwind CSS styling
+* Responsive design that works on desktop and mobile
+* Intuitive navigation and user-friendly forms
+* Interactive elements powered by HTMX for smooth experience
+* Accessible design following web standards
 
-### 5.3 Automation Flow
+### 5.3 Authentication Flow
 
-* Scheduled, configurable execution of matching and document generation
-* Optional notification when new matches are found (future)
+* Multiple authentication options (Google OAuth recommended)
+* Seamless registration process for new users
+* Secure session management with automatic token refresh
+* Clear error messages and user feedback
 
 ## 6. Technical Constraints
 
 * Must operate efficiently on a single VPS (1-2 CPU, 2GB RAM)
 * Containerized deployment using Docker Compose
-* Persistent storage via mounted volumes
-* Go-based implementation
+* SQLite database for simplicity and ease of backup
+* Go-based implementation with minimal external dependencies
+* Stateless application design for easy scaling
 
 ## 7. Success Metrics
 
-* User-perceived quality of job matches
-* Quality and usefulness of generated cover letter drafts
-* Time saved in finding relevant opportunities
-* Successful setup rate by self-hosting users
+* User satisfaction with the job tracking and management interface
+* Time saved in organizing job search activities
+* Successful deployment rate by self-hosting users
+* Application stability and uptime
+* Code quality and maintainability metrics
 
-## 8. Future Expansion (Post-MVP)
+## 8. Current Architecture Status
 
-* Automated job scraping from platforms (LinkedIn, Indeed)
-* Email notifications for new matches
-* Enhanced analytics on job requirements and skill gaps
-* Multiple resume support
-* Browser extension for quick job capture
+### 8.1 Implemented Features ✅
+
+* Complete authentication system with Google OAuth and username/password
+* Job management CRUD operations via web UI and API
+* Responsive web interface with modern design
+* Environment-based configuration system
+* Automated database migrations
+* Comprehensive test coverage
+* GDPR-compliant logging system
+* Health monitoring endpoints
+
+### 8.2 Foundation for Future Features
+
+* Modular architecture ready for AI integration
+* RESTful API design for external tool integration
+* Extensible job data model
+* Plugin-ready configuration system
+
+## 9. Future Expansion Roadmap
+
+### Phase 1: AI Integration
+
+* LLM-based job matching and scoring
+* Automated cover letter generation
+* Resume parsing and skill extraction
+
+### Phase 2: Automation
+
+* Browser extension for job capture
+* Email notifications and alerts
+* Scheduled processing workflows
+
+### Phase 3: Advanced Features
+
+* Analytics dashboard with insights

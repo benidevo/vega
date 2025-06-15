@@ -6,7 +6,7 @@ Ascentio uses a **monolithic architecture** implemented entirely in Go, with a S
 
 ### 1.1 High-Level Architecture Diagram
 
-```
+```plaintext
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                                  VPS Host                                    │
 │                            (via Docker Compose)                              │
@@ -14,19 +14,21 @@ Ascentio uses a **monolithic architecture** implemented entirely in Go, with a S
 │  ┌─────────────────────────────┐                                             │
 │  │      Go Application         │                                             │
 │  │---------------------------  │                                             │
-│  │ - Admin UI & API            │                                             │
-│  │ - Job Management            │                                             │
-│  │ - LLM Client(s)             │                                             │
-│  │ - Job Matcher               │                                             │
-│  │ - Cover Letter Generator    │                                             │
-│  │ - PDF Creator               │                                             │
-│  │ - Authentication            │                                             │
+│  │ - Web UI & Admin Dashboard  │                                             │
+│  │ - REST API Endpoints        │                                             │
+│  │ - Job Management System     │                                             │
+│  │ - Authentication (OAuth)    │                                             │
+│  │ - Settings Management       │                                             │
+│  │ - User Management           │                                             │
+│  │ - Environment-based Config   │                                             │
 │  └─────────────┬───────────────┘                                             │
 │                │                                                             │
 │                ▼                                                             │
 │  ┌─────────────┴───────────────┐      ┌─────────────────────────────────┐    │
-│  │     SQLite (Data)           │      │     Scheduled Processes (Cron)  │    │
-│  │                             │      │                                 │    │
+│  │     SQLite (Data)           │      │     Static Assets & Uploads     │    │
+│  │ - Users & Authentication    │      │ - Templates & UI Resources      │    │
+│  │ - Jobs & Applications       │      │ - File Storage                  │    │
+│  │ - Settings & Configuration   │      │                                 │    │
 │  └─────────────────────────────┘      └─────────────────────────────────┘    │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
@@ -34,36 +36,38 @@ Ascentio uses a **monolithic architecture** implemented entirely in Go, with a S
 
 ### 1.2 Component Responsibilities
 
-1. **Admin UI & API**
-   * Web interface for job management and results viewing
-   * REST API endpoints for programmatic job submission
-   * Authentication and session management
+1. **Web UI & Admin Dashboard**
+   * Responsive web interface built with Go templates
+   * HTMX-powered interactive elements
+   * Tailwind CSS for modern styling
+   * Home page with authentication options
 
-2. **Job Management**
-   * Job CRUD operations
-   * Deduplication logic
-   * Status tracking
+2. **Authentication System**
+   * Google OAuth integration for user registration
+   * Username/password authentication (legacy support)
+   * Environment-based admin user creation
+   * JWT token management for sessions
 
-3. **LLM Clients**
-   * Interface for LLM provider interactions
-   * Implementation for Gemini
-   * Error handling and retries
+3. **Job Management**
+   * Job CRUD operations via web UI and API
+   * Job posting creation, editing, and deletion
+   * Status tracking and filtering
+   * Application status management
 
-4. **Job Matcher**
-   * Resume parsing and skill extraction
-   * Job description analysis
-   * Match score calculation
-   * Match explanation generation
+4. **Settings Management**
+   * User preferences and configuration
+   * Application settings storage
+   * Environment-based configuration
 
-5. **Cover Letter Generator**
-   * Content generation based on job and resume
-   * PDF formatting and creation
-   * Storage and retrieval
+5. **API Layer**
+   * RESTful endpoints for job management
+   * Authentication API endpoints
+   * Health check and monitoring endpoints
 
-6. **Scheduled Processes**
-   * Job matching execution
-   * Document generation execution
-   * Run via cron as configured
+6. **Database Layer**
+   * SQLite for data persistence
+   * Automated migration system
+   * User, job, and settings data storage
 
 ## 2. Technology Stack
 
@@ -71,17 +75,16 @@ Ascentio uses a **monolithic architecture** implemented entirely in Go, with a S
 
 * **Language**: Go 1.24+
 * **Web Framework**: Gin
-* **Database**: SQLite3
-* **AI/ML**: API clients for OpenAI, Claude, and Gemini
-* **PDF Generation**: `jung-kurt/gofpdf` or similar
+* **Database**: SQLite3 with WAL mode
+* **Authentication**: Google OAuth 2.0, JWT tokens
 * **UI Framework**:
   * Go templates with template inheritance
   * HTMX for interactive UI elements and form submissions
   * Tailwind CSS for responsive styling
   * Particles.js for background animations
   * Minimal JavaScript approach
-* **UI Design System**: Refer to [UI-Design.md](./UI-Design.md) for detailed UI guidelines, components, and styling
-* **Scheduling**: Cron (via separate container)
+* **Migration System**: golang-migrate for database schema management
+* **Configuration**: Environment variables and file-based configuration
 
 ### 2.2 Development & Deployment
 
@@ -93,7 +96,7 @@ Ascentio uses a **monolithic architecture** implemented entirely in Go, with a S
 
 ### 3.1 Job Management API
 
-```
+```plaintext
 POST /api/jobs
 - Add a new job posting
 - Body: Job details (title, company, description, etc.)
@@ -118,90 +121,101 @@ DELETE /api/jobs/{id}
 - Returns: Success confirmation
 ```
 
-### 3.2 Match Management API
+### 3.2 Authentication API
 
+```plaintext
+POST /api/auth/login
+- Authenticate user with username/password
+- Body: { username, password }
+- Returns: Access and refresh tokens
+
+POST /api/auth/refresh
+- Refresh access token using refresh token
+- Body: { refresh_token }
+- Returns: New access token
+
+POST /api/auth/logout
+- Invalidate current session
+- Returns: Success confirmation
+
+GET /auth/google
+- Initiate Google OAuth flow
+- Redirects to Google authorization
+
+GET /auth/google/callback
+- Handle Google OAuth callback
+- Returns: Authenticated session
 ```
-GET /api/matches
-- List job matches with optional filters
-- Query params: minScore, status, jobId
-- Returns: Paginated matches with scores
 
-GET /api/matches/{id}
-- Get details for a specific match
-- Returns: Match details with explanation
+### 3.3 Health & Monitoring API
 
-GET /api/matches/{id}/cover-letter
-- Download generated cover letter PDF
-- Returns: PDF file
-```
+```plaintext
+GET /health
+- Application health check
+- Returns: System status and database connectivity
 
-### 3.3 Process Trigger API
-
-```
-POST /api/processes/match
-- Trigger job matching process
-- Query params: jobId (optional)
-- Returns: Process run ID and status
-
-POST /api/processes/generate
-- Trigger cover letter generation
-- Query params: matchId (optional)
-- Returns: Process run ID and status
+GET /health/ready
+- Readiness probe for container orchestration
+- Returns: Service readiness status
 ```
 
 ## 4. Configuration Architecture
 
 ### 4.1 Environment Variables
 
-```
-# Database
-DB_PATH=/app/data/ascentio.db
-
-# Authentication
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=secure_password
-JWT_SECRET=random_secure_string
-
-# LLM Configuration
-DEFAULT_LLM_PROVIDER=openai
-OPENAI_API_KEY=sk-...
-CLAUDE_API_KEY=sk-...
-GEMINI_API_KEY=...
-
-# Application Settings
-PORT=8080
+```plaintext
+# Application Configuration
+APP_NAME=ascentio
+SERVER_PORT=:8080
+IS_DEVELOPMENT=true
 LOG_LEVEL=info
-BASE_URL=http://localhost:8080
+
+# Database Configuration
+DB_DRIVER=sqlite
+DB_CONNECTION_STRING=/app/data/ascentio.db?_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=ON
+MIGRATIONS_DIR=migrations/sqlite
+
+# Authentication & Security
+TOKEN_SECRET=your-super-secret-jwt-key-here
+ACCESS_TOKEN_EXPIRY=60
+REFRESH_TOKEN_EXPIRY=168
+COOKIE_DOMAIN=
+COOKIE_SECURE=false
+COOKIE_SAME_SITE=lax
+
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_CLIENT_REDIRECT_URL=http://localhost:8000/auth/google/callback
+GOOGLE_AUTH_USER_INFO_URL=https://www.googleapis.com/oauth2/v3/userinfo
+GOOGLE_AUTH_USER_INFO_SCOPE=https://www.googleapis.com/auth/userinfo.email
+
+# Admin User Creation (set CREATE_ADMIN_USER=true to create admin on startup)
+CREATE_ADMIN_USER=false
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=change-this-secure-password
+ADMIN_EMAIL=admin@example.com
+
+# CORS Configuration
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
+CORS_ALLOW_CREDENTIALS=true
 ```
 
 ### 4.2 Mounted Volumes & Files
 
-```
-/app/config/
-  ├── profile.json       # User profile configuration
-  ├── search_settings.json  # Job search preferences
-  └── llm_settings.json  # LLM-specific configuration
-
-/app/assets/
-  ├── resume.pdf         # User's resume
-  └── writing_samples/   # Cover letter samples
-
+```plaintext
 /app/data/
-  ├── generated/         # Generated cover letters
-  └── uploads/           # Temporary upload storage
+  └── ascentio.db        # SQLite database file (with WAL journal)
+
+/app/templates/
+  ├── base.html          # Base template layout
+  ├── home/              # Home page templates
+  ├── auth/              # Authentication templates
+  ├── jobs/              # Job management templates
+  └── settings/          # Settings page templates
+
+/app/static/
+  ├── css/              # Compiled CSS assets
+  ├── js/               # JavaScript files
+  └── images/           # Static images and assets
 ```
-
-## 5. Scheduled Processes
-
-The scheduler container will run these processes based on the crontab generated from configuration:
-
-1. **Job Matcher** (`/app/matcher`)
-   * Find unmatched jobs and compare to resume
-   * Generate match scores and explanations
-   * Update database with results
-
-2. **Cover Letter Generator** (`/app/generator`)
-   * Find matched jobs without cover letters
-   * Generate cover letter content using LLM
-   * Create PDF files and store them
-   * Update database with file paths
