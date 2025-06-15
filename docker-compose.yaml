@@ -23,35 +23,6 @@ services:
     networks:
       - ascentio
 
-  scheduler:
-    build:
-      context: .
-      dockerfile: docker/dev/Dockerfile
-    container_name: scheduler
-    env_file:
-      - .env
-    environment:
-      - DB_CONNECTION_STRING=/app/data/ascentio.db?_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=ON&_cache_size=10000&_synchronous=NORMAL
-      - GO_ENV=development
-    entrypoint: ["/bin/sh", "-c"]
-    command: >
-      "
-      # Wait for app to initialize database
-      sleep 10
-
-      # Run scheduler in development mode
-      cd /app && go run cmd/scheduler/main.go sync-users /app/config/users.yaml
-
-      # Keep container running
-      tail -f /dev/null
-      "
-    volumes:
-      - .:/app
-      - ascentio-data:/app/data
-    depends_on:
-      - app
-    networks:
-      - ascentio
 
   db-dashboard:
     image: coleifer/sqlite-web:latest

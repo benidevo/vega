@@ -39,6 +39,11 @@ type Settings struct {
 
 	CORSAllowedOrigins   []string
 	CORSAllowCredentials bool
+
+	CreateAdminUser bool
+	AdminUsername   string
+	AdminPassword   string
+	AdminEmail      string
 }
 
 // NewSettings initializes and returns a Settings struct with default values
@@ -115,6 +120,11 @@ func NewSettings() Settings {
 
 		CORSAllowedOrigins:   getCORSOrigins(),
 		CORSAllowCredentials: getEnv("CORS_ALLOW_CREDENTIALS", "false") == "true",
+
+		CreateAdminUser: getEnv("CREATE_ADMIN_USER", "false") == "true",
+		AdminUsername:   getEnv("ADMIN_USERNAME", ""),
+		AdminPassword:   getEnv("ADMIN_PASSWORD", ""),
+		AdminEmail:      getEnv("ADMIN_EMAIL", ""),
 	}
 }
 

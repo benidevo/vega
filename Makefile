@@ -2,6 +2,10 @@ setup-hooks:
 	git config core.hooksPath .githooks
 	chmod +x .githooks/pre-commit
 
+restart:
+	docker compose down
+	docker compose up --build --remove-orphans
+
 test:
 	docker compose exec app sh -c "/app/scripts/coverage.sh"
 
@@ -25,8 +29,6 @@ logs:
 enter-app:
 	docker compose exec app sh
 
-enter-scheduler:
-	docker compose run --rm scheduler /bin/sh
 
 format:
 	docker compose exec app sh -c "go fmt ./... && go vet ./..."

@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/benidevo/ascentio/internal/auth"
 	"github.com/benidevo/ascentio/internal/common/logger"
 	"github.com/benidevo/ascentio/internal/config"
 	"github.com/benidevo/ascentio/internal/db"
@@ -153,6 +154,10 @@ func (a *App) setupDependencies() error {
 
 	if !a.config.IsTest {
 		if err := a.runMigrations(); err != nil {
+			return err
+		}
+
+		if err := auth.CreateAdminUserIfRequired(a.db, &a.config); err != nil {
 			return err
 		}
 	}

@@ -27,9 +27,6 @@ jobs:
       - name: Build application
         run: go build ./cmd/ascentio
 
-      - name: Build scheduler
-        run: go build ./cmd/scheduler
-
   lint:
     name: Lint
     runs-on: ubuntu-latest

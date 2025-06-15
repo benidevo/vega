@@ -56,3 +56,38 @@ func TestGetEnv(t *testing.T) {
 		assert.Equal(t, ":8080", value, "Should use default when env var is empty")
 	})
 }
+
+func TestAdminUserConfiguration(t *testing.T) {
+	t.Run("should have default admin configuration", func(t *testing.T) {
+		// Clear any admin environment variables that might be set
+		t.Setenv("CREATE_ADMIN_USER", "")
+		t.Setenv("ADMIN_USERNAME", "")
+		t.Setenv("ADMIN_PASSWORD", "")
+		t.Setenv("ADMIN_EMAIL", "")
+
+		settings := NewSettings()
+		assert.False(t, settings.CreateAdminUser, "Expected CreateAdminUser to be false by default")
+		assert.Equal(t, "", settings.AdminUsername, "Expected AdminUsername to be empty by default")
+		assert.Equal(t, "", settings.AdminPassword, "Expected AdminPassword to be empty by default")
+		assert.Equal(t, "", settings.AdminEmail, "Expected AdminEmail to be empty by default")
+	})
+
+	t.Run("should read admin configuration from environment variables", func(t *testing.T) {
+		t.Setenv("CREATE_ADMIN_USER", "true")
+		t.Setenv("ADMIN_USERNAME", "testadmin")
+		t.Setenv("ADMIN_PASSWORD", "testpassword")
+		t.Setenv("ADMIN_EMAIL", "admin@test.com")
+
+		settings := NewSettings()
+		assert.True(t, settings.CreateAdminUser, "Expected CreateAdminUser to be true")
+		assert.Equal(t, "testadmin", settings.AdminUsername, "Expected AdminUsername to be testadmin")
+		assert.Equal(t, "testpassword", settings.AdminPassword, "Expected AdminPassword to be testpassword")
+		assert.Equal(t, "admin@test.com", settings.AdminEmail, "Expected AdminEmail to be admin@test.com")
+	})
+
+	t.Run("should handle false CREATE_ADMIN_USER", func(t *testing.T) {
+		t.Setenv("CREATE_ADMIN_USER", "false")
+		settings := NewSettings()
+		assert.False(t, settings.CreateAdminUser, "Expected CreateAdminUser to be false")
+	})
+}
