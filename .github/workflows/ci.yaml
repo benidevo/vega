@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ main, master ]
 
+env:
+  TOKEN_SECRET: test-secret-for-ci
+  GOOGLE_CLIENT_ID: test-client-id
+  GOOGLE_CLIENT_SECRET: test-client-secret
+
 jobs:
   build:
     name: Build
@@ -14,81 +19,57 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.0'
 
-      - name: Build Docker image
-        run: docker compose build app
+      - name: Build application
+        run: go build ./cmd/ascentio
+
+      - name: Build scheduler
+        run: go build ./cmd/scheduler
 
   lint:
     name: Lint
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Docker image
-        run: docker compose build app
-
-      - name: Create app container
-        run: docker compose up -d app
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
 
       - name: Check code formatting
         run: |
-          if ! docker compose exec app sh -c "test -z \$(gofmt -l .)"; then
+          if ! test -z $(gofmt -l .); then
             echo "Code formatting issues detected:"
-            docker compose exec app sh -c "gofmt -l ."
+            gofmt -l .
             exit 1
           fi
 
       - name: Run go vet
-        run: docker compose exec app go vet ./...
+        run: go vet ./...
 
   test-and-coverage:
     name: Test and Coverage
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
 
-      - name: Build Docker image
-        run: docker compose build app
-
-      - name: Create app container and copy coverage script
+      - name: Run tests with coverage
         run: |
-          docker compose up -d app
-          docker compose exec app sh -c "mkdir -p /app/scripts"
-          cat > scripts/coverage.sh << 'EOF'
-          #!/bin/sh
-
-          # Run tests and generate coverage profile
           go test ./... -coverprofile=coverage.out -coverpkg='github.com/benidevo/ascentio/internal/...' -covermode=set
-
-          # Filter out handlers from the coverage output
           grep -v '/handlers.go' coverage.out > coverage.filtered.out
-
-          # Generate report
-          if [ "$1" = "verbose" ]; then
-            go tool cover -func=coverage.filtered.out
-          else
-            go tool cover -func=coverage.filtered.out | grep total:
-          fi
-          EOF
-          chmod +x scripts/coverage.sh
-          docker compose cp scripts/coverage.sh app:/app/scripts/coverage.sh
-
-      - name: Run tests with coverage (excluding handlers)
-        run: |
-          docker compose exec app sh -c "chmod +x /app/scripts/coverage.sh && /app/scripts/coverage.sh verbose"
-          docker compose cp app:/app/coverage.filtered.out ./coverage.filtered.out
+          go tool cover -func=coverage.filtered.out
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
