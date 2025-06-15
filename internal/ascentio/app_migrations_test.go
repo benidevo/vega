@@ -40,12 +40,11 @@ func TestAppMigrations(t *testing.T) {
 
 		dbPath := filepath.Join(dbDir, "test_ascentio.db")
 
-		cfg := config.Settings{
-			DBConnectionString: dbPath,
-			DBDriver:           "sqlite",
-			MigrationsDir:      migrationsDir,
-			IsTest:             true,
-		}
+		cfg := config.NewSettings()
+		cfg.DBConnectionString = dbPath
+		cfg.DBDriver = "sqlite"
+		cfg.MigrationsDir = migrationsDir
+		cfg.IsTest = true
 
 		app := New(cfg)
 		err = app.Setup()
@@ -81,12 +80,11 @@ func TestAppMigrations(t *testing.T) {
 		defer os.RemoveAll(tempDir)
 
 		dbPath := filepath.Join(tempDir, "test_db.db")
-		cfg := config.Settings{
-			DBConnectionString: dbPath,
-			DBDriver:           "sqlite",
-			MigrationsDir:      "/nonexistent/path",
-			IsTest:             true,
-		}
+		cfg := config.NewSettings()
+		cfg.DBConnectionString = dbPath
+		cfg.DBDriver = "sqlite"
+		cfg.MigrationsDir = "/nonexistent/path"
+		cfg.IsTest = true
 
 		app := New(cfg)
 		err = app.Setup()

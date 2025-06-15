@@ -35,7 +35,8 @@ func New(cfg config.Settings) *App {
 
 	// Configure CORS
 	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowAllOrigins = true
+	corsConfig.AllowOrigins = cfg.CORSAllowedOrigins
+	corsConfig.AllowCredentials = cfg.CORSAllowCredentials
 	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
 

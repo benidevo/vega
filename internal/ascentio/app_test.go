@@ -16,12 +16,12 @@ var TEST_HOST = "http://localhost"
 
 func mockConfig(t *testing.T) config.Settings {
 	t.Helper()
-	return config.Settings{
-		ServerPort:         ":0",
-		DBConnectionString: ":memory:",
-		DBDriver:           "sqlite",
-		IsTest:             true,
-	}
+	cfg := config.NewSettings()
+	cfg.ServerPort = ":0"
+	cfg.DBConnectionString = ":memory:"
+	cfg.DBDriver = "sqlite"
+	cfg.IsTest = true
+	return cfg
 }
 
 func TestAppLifecycle(t *testing.T) {

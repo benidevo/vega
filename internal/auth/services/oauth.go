@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/benidevo/ascentio/internal/auth/models"
@@ -43,7 +42,7 @@ func (s *GoogleAuthService) LogError(err error) {
 // NewGoogleAuthService creates a new instance of GoogleAuthService using the provided configuration settings.
 // It initializes the OAuth configuration and returns an error if credentials cannot be loaded.
 func NewGoogleAuthService(cfg *config.Settings, repo repository.UserRepository) (*GoogleAuthService, error) {
-	oauthCfg, err := getGoogleCredentials(cfg.GoogleClientConfigFile, cfg.GoogleClientRedirectURL, cfg.GoogleAuthUserInfoScope)
+	oauthCfg, err := getGoogleCredentials(cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleClientRedirectURL, cfg.GoogleAuthUserInfoScope)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", models.ErrGoogleCredentialsReadFailed, err)
 	}
@@ -240,34 +239,18 @@ func (s *GoogleAuthService) CreateDriveService(ctx context.Context, token *oauth
 	return driveService, nil
 }
 
-// getGoogleCredentials reads a Google OAuth2 client secret JSON file from configPath,
-// parses the credentials, and returns an oauth2.Config configured with the provided redirectURL.
+// getGoogleCredentials creates an oauth2.Config using environment variables
+// for client ID and secret instead of reading from a JSON file.
 //
-// It returns an error if the file cannot be read or parsed.
-func getGoogleCredentials(configPath, redirectURL, userInfoScope string) (*oauth2.Config, error) {
-	data, err := os.ReadFile(configPath)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", models.ErrGoogleCredentialsReadFailed, err)
-	}
-	var creds struct {
-		Web struct {
-			ClientID     string   `json:"client_id"`
-			ClientSecret string   `json:"client_secret"`
-			RedirectURIs []string `json:"redirect_uris"`
-		} `json:"web"`
-	}
-
-	if err := json.Unmarshal(data, &creds); err != nil {
-		return nil, fmt.Errorf("%w: %v", models.ErrGoogleCredentialsInvalid, err)
-	}
-
-	if creds.Web.ClientID == "" || creds.Web.ClientSecret == "" {
+// It returns an error if required credentials are missing.
+func getGoogleCredentials(clientID, clientSecret, redirectURL, userInfoScope string) (*oauth2.Config, error) {
+	if clientID == "" || clientSecret == "" {
 		return nil, models.ErrGoogleCredentialsInvalid
 	}
 
 	oauthCfg := &oauth2.Config{
-		ClientID:     creds.Web.ClientID,
-		ClientSecret: creds.Web.ClientSecret,
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
 		RedirectURL:  redirectURL,
 		Scopes: []string{
 			drive.DriveFileScope,

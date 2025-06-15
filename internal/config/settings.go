@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -24,10 +25,14 @@ type Settings struct {
 	CookieSecure       bool
 	CookieSameSite     string
 
-	GoogleClientConfigFile  string
+	GoogleClientID          string
+	GoogleClientSecret      string
 	GoogleClientRedirectURL string
 	GoogleAuthUserInfoURL   string
 	GoogleAuthUserInfoScope string
+
+	CORSAllowedOrigins   []string
+	CORSAllowCredentials bool
 }
 
 // NewSettings initializes and returns a Settings struct with default values
@@ -59,7 +64,7 @@ func NewSettings() Settings {
 		DBDriver:           getEnv("DB_DRIVER", "sqlite"),
 		LogLevel:           getEnv("LOG_LEVEL", "info"),
 		IsDevelopment:      isDevelopment,
-		TokenSecret:        getEnv("TOKEN_SECRET", "default-secret"),
+		TokenSecret:        getEnv("TOKEN_SECRET", ""),
 		IsTest:             getEnv("GO_ENV", "") == "test",
 		MigrationsDir:      getEnv("MIGRATIONS_DIR", "migrations/sqlite"),
 
@@ -69,10 +74,14 @@ func NewSettings() Settings {
 		CookieSecure:       cookieSecure,
 		CookieSameSite:     getEnv("COOKIE_SAME_SITE", "lax"),
 
-		GoogleClientConfigFile:  getEnv("GOOGLE_CLIENT_CONFIG_FILE", "config/google_oauth_credentials.json"),
+		GoogleClientID:          getEnv("GOOGLE_CLIENT_ID", ""),
+		GoogleClientSecret:      getEnv("GOOGLE_CLIENT_SECRET", ""),
 		GoogleClientRedirectURL: getEnv("GOOGLE_CLIENT_REDIRECT_URL", "http://localhost:8000/auth/google/callback"),
 		GoogleAuthUserInfoURL:   getEnv("GOOGLE_AUTH_USER_INFO_URL", "https://www.googleapis.com/oauth2/v3/userinfo"),
 		GoogleAuthUserInfoScope: getEnv("GOOGLE_AUTH_USER_INFO_SCOPE", "https://www.googleapis.com/auth/userinfo.email"),
+
+		CORSAllowedOrigins:   getCORSOrigins(),
+		CORSAllowCredentials: getEnv("CORS_ALLOW_CREDENTIALS", "false") == "true",
 	}
 }
 
@@ -82,4 +91,20 @@ func getEnv(key string, defaultValue string) (value string) {
 		value = defaultValue
 	}
 	return
+}
+
+// getCORSOrigins parses the CORS_ALLOWED_ORIGINS environment variable
+// and returns a slice of origins. If not set, returns localhost origins for development.
+func getCORSOrigins() []string {
+	origins := getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:8080")
+	if origins == "" {
+		return []string{"http://localhost:8080"}
+	}
+
+	originList := strings.Split(origins, ",")
+	for i, origin := range originList {
+		originList[i] = strings.TrimSpace(origin)
+	}
+
+	return originList
 }
