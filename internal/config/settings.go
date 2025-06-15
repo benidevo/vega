@@ -1,7 +1,9 @@
 package config
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -17,6 +19,10 @@ type Settings struct {
 	IsDevelopment      bool
 	IsTest             bool
 	MigrationsDir      string
+
+	DBMaxOpenConns    int
+	DBMaxIdleConns    int
+	DBConnMaxLifetime time.Duration
 
 	TokenSecret        string
 	AccessTokenExpiry  time.Duration
@@ -49,6 +55,21 @@ func NewSettings() Settings {
 		refreshTokenHours = 168 // 7 days
 	}
 
+	dbMaxOpenConns, err := strconv.Atoi(getEnv("DB_MAX_OPEN_CONNS", "25"))
+	if err != nil {
+		dbMaxOpenConns = 25
+	}
+
+	dbMaxIdleConns, err := strconv.Atoi(getEnv("DB_MAX_IDLE_CONNS", "5"))
+	if err != nil {
+		dbMaxIdleConns = 5
+	}
+
+	dbConnMaxLifetimeMins, err := strconv.Atoi(getEnv("DB_CONN_MAX_LIFETIME_MINS", "5"))
+	if err != nil {
+		dbConnMaxLifetimeMins = 5
+	}
+
 	cookieSecure := getEnv("COOKIE_SECURE", "") == "true"
 	isDevelopment := getEnv("IS_DEVELOPMENT", "false") == "true"
 
@@ -57,16 +78,28 @@ func NewSettings() Settings {
 		cookieSecure = false
 	}
 
+	isTest := getEnv("GO_ENV", "") == "test"
+
+	// Use in-memory database for tests by default
+	dbConnectionString := getEnv("DB_CONNECTION_STRING", "/app/data/ascentio.db?_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=ON&_cache_size=10000&_synchronous=NORMAL")
+	if isTest && getEnv("DB_CONNECTION_STRING", "") == "" {
+		dbConnectionString = ":memory:"
+	}
+
 	return Settings{
 		AppName:            "ascentio",
 		ServerPort:         getEnv("SERVER_PORT", ":8080"),
-		DBConnectionString: getEnv("DB_CONNECTION_STRING", "/app/data/ascentio.db?_journal=WAL&_busy_timeout=5000"),
+		DBConnectionString: dbConnectionString,
 		DBDriver:           getEnv("DB_DRIVER", "sqlite"),
 		LogLevel:           getEnv("LOG_LEVEL", "info"),
 		IsDevelopment:      isDevelopment,
 		TokenSecret:        getEnv("TOKEN_SECRET", ""),
-		IsTest:             getEnv("GO_ENV", "") == "test",
+		IsTest:             isTest,
 		MigrationsDir:      getEnv("MIGRATIONS_DIR", "migrations/sqlite"),
+
+		DBMaxOpenConns:    dbMaxOpenConns,
+		DBMaxIdleConns:    dbMaxIdleConns,
+		DBConnMaxLifetime: time.Duration(dbConnMaxLifetimeMins) * time.Minute,
 
 		AccessTokenExpiry:  time.Duration(accessTokenMins) * time.Minute,
 		RefreshTokenExpiry: time.Duration(refreshTokenHours) * time.Hour,
@@ -83,6 +116,30 @@ func NewSettings() Settings {
 		CORSAllowedOrigins:   getCORSOrigins(),
 		CORSAllowCredentials: getEnv("CORS_ALLOW_CREDENTIALS", "false") == "true",
 	}
+}
+
+// NewTestSettings creates settings optimized for testing with in-memory database
+func NewTestSettings() Settings {
+	settings := NewSettings()
+	settings.IsTest = true
+	settings.DBConnectionString = ":memory:"
+	settings.ServerPort = ":0" // Use random available port
+	return settings
+}
+
+// NewTestSettingsWithTempDB creates settings for testing with a temporary file database
+// This is useful for tests that need persistence or migration testing
+// The caller is responsible for cleaning up the returned temp file path
+func NewTestSettingsWithTempDB() (Settings, string) {
+	tempDir := os.TempDir()
+	tempFile := filepath.Join(tempDir, fmt.Sprintf("ascentio_test_%d.db", time.Now().UnixNano()))
+
+	settings := NewSettings()
+	settings.IsTest = true
+	settings.DBConnectionString = tempFile + "?_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=ON"
+	settings.ServerPort = ":0"
+
+	return settings, tempFile
 }
 
 func getEnv(key string, defaultValue string) (value string) {

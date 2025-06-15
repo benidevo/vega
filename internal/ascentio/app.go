@@ -142,6 +142,10 @@ func (a *App) setupDependencies() error {
 		return err
 	}
 
+	database.SetMaxOpenConns(a.config.DBMaxOpenConns)
+	database.SetMaxIdleConns(a.config.DBMaxIdleConns)
+	database.SetConnMaxLifetime(a.config.DBConnMaxLifetime)
+
 	if err := database.Ping(); err != nil {
 		return err
 	}

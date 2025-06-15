@@ -7,6 +7,7 @@ import (
 	authapi "github.com/benidevo/ascentio/internal/api/auth"
 	jobapi "github.com/benidevo/ascentio/internal/api/job"
 	"github.com/benidevo/ascentio/internal/auth"
+	"github.com/benidevo/ascentio/internal/health"
 	"github.com/benidevo/ascentio/internal/home"
 	"github.com/benidevo/ascentio/internal/job"
 	"github.com/benidevo/ascentio/internal/settings"
@@ -17,6 +18,8 @@ import (
 // SetupRoutes configures all application routes and middleware
 func SetupRoutes(a *App) {
 	a.router.Use(globalErrorHandler)
+
+	health.RegisterRoutes(a.router, a.db)
 
 	authHandler := auth.SetupAuth(a.db, &a.config)
 	homeHandler := home.Setup(&a.config)

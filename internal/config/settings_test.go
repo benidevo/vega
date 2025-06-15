@@ -12,7 +12,7 @@ func TestNewSettings(t *testing.T) {
 
 	require.NotNil(t, settings, "Expected config to be initialized")
 	assert.Equal(t, ":8080", settings.ServerPort, "Expected default server port to be :8080")
-	assert.Equal(t, settings.DBConnectionString, "/app/data/ascentio.db?_journal=WAL&_busy_timeout=5000", "Expected default DB connection string to be /app/data/ascentio.db?_journal=WAL&_busy_timeout=5000")
+	assert.Equal(t, settings.DBConnectionString, "/app/data/ascentio.db?_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=ON&_cache_size=10000&_synchronous=NORMAL", "Expected default DB connection string to be enhanced")
 	assert.Equal(t, settings.DBDriver, "sqlite", "Expected default DB driver to be sqlite")
 }
 
@@ -28,7 +28,7 @@ func TestGetEnv(t *testing.T) {
 	})
 
 	t.Run("should return overridden DB_CONNECTION_STRING from environment variable", func(t *testing.T) {
-		value := getEnv("DB_CONNECTION_STRING", "/app/data/ascentio.db?_journal=WAL&_busy_timeout=5000")
+		value := getEnv("DB_CONNECTION_STRING", "/app/data/ascentio.db?_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=ON&_cache_size=10000&_synchronous=NORMAL")
 		assert.Equal(t, "/app/data/test.db?_journal=WAL&_busy_timeout=5000", value, "Expected DB_CONNECTION_STRING to be /app/data/test.db?_journal=WAL&_busy_timeout=5000")
 	})
 
