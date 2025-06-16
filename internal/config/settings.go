@@ -44,6 +44,9 @@ type Settings struct {
 	AdminUsername   string
 	AdminPassword   string
 	AdminEmail      string
+
+	GeminiAPIKey string
+	GeminiModel  string
 }
 
 // NewSettings initializes and returns a Settings struct with default values
@@ -125,6 +128,8 @@ func NewSettings() Settings {
 		AdminUsername:   getEnv("ADMIN_USERNAME", ""),
 		AdminPassword:   getEnv("ADMIN_PASSWORD", ""),
 		AdminEmail:      getEnv("ADMIN_EMAIL", ""),
+		GeminiAPIKey:    getEnv("GEMINI_API_KEY", ""),
+		GeminiModel:     getEnv("GEMINI_MODEL", ""),
 	}
 }
 
