@@ -3,7 +3,7 @@ package models
 // MatchResult represents the result of a matching process, including the match score,
 // identified strengths and weaknesses, key highlights, and overall feedback.
 type MatchResult struct {
-	MatchScore int      `json:"match_score"`
+	MatchScore int      `json:"matchScore"`
 	Strengths  []string `json:"strengths"`
 	Weaknesses []string `json:"weaknesses"`
 	Highlights []string `json:"highlights"`
@@ -20,9 +20,8 @@ const (
 	CoverLetterTypePlainText CoverLetterFormat = "plain_text"
 )
 
-// CoverLetter represents a cover letter with its format, content, and word count.
+// CoverLetter represents a cover letter with its format and content.
 type CoverLetter struct {
-	Format    CoverLetterFormat `json:"type"`
-	Content   string            `json:"content"`
-	WordCount int               `json:"word_count"`
+	Format  CoverLetterFormat `json:"format"`
+	Content string            `json:"content"`
 }

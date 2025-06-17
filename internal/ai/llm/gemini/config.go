@@ -14,6 +14,35 @@ type Config struct {
 	// Temperature controls the randomness of the output. Higher values (e.g., 0.8) make the output more random,
 	// while lower values (e.g., 0.2) make it more focused and deterministic.
 	Temperature *float32
+
+	// Retry configuration
+	MaxRetries     int
+	BaseRetryDelay int // seconds
+	MaxRetryDelay  int // seconds
+
+	// Response configuration
+	ResponseMIMEType string
+
+	// Cover letter configuration
+	DefaultWordRange string
+
+	// Match score configuration
+	MinMatchScore int
+	MaxMatchScore int
+
+	// Default values for fallbacks
+	DefaultStrengthsMsg string
+	DefaultWeaknessMsg  string
+	DefaultHighlightMsg string
+	DefaultFeedbackMsg  string
+
+	// Advanced generation parameters
+	MaxOutputTokens       int32
+	TopP                  *float32
+	TopK                  *float32
+	SystemInstruction     string
+	CoverLetterStopSeqs   []string
+	MatchAnalysisStopSeqs []string
 }
 
 // NewConfig creates a new Config instance with the provided API key and optional parameters.
@@ -25,5 +54,39 @@ func NewConfig(cfg *config.Settings) *Config {
 		MaxTokens:   1024,
 		Model:       cfg.GeminiModel,
 		Temperature: &defaultTemp,
+
+		// Retry configuration
+		MaxRetries:     3,
+		BaseRetryDelay: 1,  // 1 second
+		MaxRetryDelay:  30, // 30 seconds
+
+		// Response configuration
+		ResponseMIMEType: "application/json",
+
+		// Cover letter configuration
+		DefaultWordRange: "250-400",
+
+		// Match score configuration
+		MinMatchScore: 0,
+		MaxMatchScore: 100,
+
+		// Default fallback messages
+		DefaultStrengthsMsg: "No specific strengths identified",
+		DefaultWeaknessMsg:  "No specific weaknesses identified",
+		DefaultHighlightMsg: "No specific highlights identified",
+		DefaultFeedbackMsg:  "Unable to provide detailed feedback at this time.",
+
+		// Advanced generation parameters
+		MaxOutputTokens:       2048,
+		TopP:                  floatPtr(0.9),
+		TopK:                  floatPtr(40),
+		SystemInstruction:     "You are a professional career advisor and expert writer. Always provide helpful, accurate, and constructive feedback.",
+		CoverLetterStopSeqs:   []string{"```", "---", "END"},
+		MatchAnalysisStopSeqs: []string{"```", "---", "END"},
 	}
+}
+
+// Helper function to create float32 pointers
+func floatPtr(f float32) *float32 {
+	return &f
 }
