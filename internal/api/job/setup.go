@@ -9,8 +9,7 @@ import (
 
 // Setup initializes the job API module with its dependencies
 func Setup(db *sql.DB, cfg *config.Settings) *JobAPIHandler {
-	jobRepo := job.SetupJobRepository(db)
-	jobService := job.SetupJobService(jobRepo, cfg)
+	jobService := job.SetupService(db, cfg)
 
 	return NewJobAPIHandler(jobService)
 }

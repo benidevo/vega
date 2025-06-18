@@ -124,7 +124,7 @@ func TestJobService(t *testing.T) {
 		mockRepo := new(MockJobRepository)
 		mockRepo.On("GetOrCreate", ctx, mock.AnythingOfType("*models.Job")).Return(job, nil)
 
-		service := NewJobService(mockRepo, cfg)
+		service := NewJobService(mockRepo, nil, nil, cfg)
 		createdJob, err := service.CreateJob(ctx, job.Title, job.Description, company.Name)
 
 		require.NoError(t, err)
@@ -137,7 +137,7 @@ func TestJobService(t *testing.T) {
 		mockRepo := new(MockJobRepository)
 		mockRepo.On("GetByID", ctx, 1).Return(job, nil)
 
-		service := NewJobService(mockRepo, cfg)
+		service := NewJobService(mockRepo, nil, nil, cfg)
 		foundJob, err := service.GetJob(ctx, 1)
 
 		require.NoError(t, err)
@@ -146,7 +146,7 @@ func TestJobService(t *testing.T) {
 	})
 
 	t.Run("should return error when invalid ID", func(t *testing.T) {
-		service := NewJobService(nil, cfg) // No repo calls expected
+		service := NewJobService(nil, nil, nil, cfg) // No repo calls expected
 		_, err := service.GetJob(ctx, 0)
 		assert.Equal(t, models.ErrInvalidJobID, err)
 
@@ -168,7 +168,7 @@ func TestJobService(t *testing.T) {
 			}
 			mockRepo.On("GetAll", ctx, searchFilter).Return(jobs[:1], nil)
 
-			service := NewJobService(mockRepo, cfg)
+			service := NewJobService(mockRepo, nil, nil, cfg)
 			result, err := service.GetJobs(ctx, searchFilter)
 
 			require.NoError(t, err)
@@ -184,7 +184,7 @@ func TestJobService(t *testing.T) {
 			}
 			mockRepo.On("GetAll", ctx, statusFilter).Return(jobs, nil)
 
-			service := NewJobService(mockRepo, cfg)
+			service := NewJobService(mockRepo, nil, nil, cfg)
 			result, err := service.GetJobs(ctx, statusFilter)
 
 			require.NoError(t, err)
@@ -200,7 +200,7 @@ func TestJobService(t *testing.T) {
 			}
 			mockRepo.On("GetAll", ctx, companyFilter).Return(jobs, nil)
 
-			service := NewJobService(mockRepo, cfg)
+			service := NewJobService(mockRepo, nil, nil, cfg)
 			result, err := service.GetJobs(ctx, companyFilter)
 
 			require.NoError(t, err)
@@ -216,7 +216,7 @@ func TestJobService(t *testing.T) {
 			}
 			mockRepo.On("GetAll", ctx, typeFilter).Return(jobs, nil)
 
-			service := NewJobService(mockRepo, cfg)
+			service := NewJobService(mockRepo, nil, nil, cfg)
 			result, err := service.GetJobs(ctx, typeFilter)
 
 			require.NoError(t, err)
@@ -237,7 +237,7 @@ func TestJobService(t *testing.T) {
 			}
 			mockRepo.On("GetAll", ctx, complexFilter).Return(jobs[:1], nil)
 
-			service := NewJobService(mockRepo, cfg)
+			service := NewJobService(mockRepo, nil, nil, cfg)
 			result, err := service.GetJobs(ctx, complexFilter)
 
 			require.NoError(t, err)
@@ -249,7 +249,7 @@ func TestJobService(t *testing.T) {
 	t.Run("should validate URLs for XSS prevention", func(t *testing.T) {
 		mockJobRepo := new(MockJobRepository)
 		cfg := &config.Settings{}
-		service := NewJobService(mockJobRepo, cfg)
+		service := NewJobService(mockJobRepo, nil, nil, cfg)
 
 		testCases := []struct {
 			name    string
@@ -284,7 +284,7 @@ func TestJobService(t *testing.T) {
 		mockRepo.On("GetByID", ctx, job.ID).Return(job, nil)
 		mockRepo.On("Update", ctx, mock.AnythingOfType("*models.Job")).Return(nil)
 
-		service := NewJobService(mockRepo, cfg)
+		service := NewJobService(mockRepo, nil, nil, cfg)
 		err := service.UpdateJob(ctx, job)
 
 		require.NoError(t, err)
@@ -292,7 +292,7 @@ func TestJobService(t *testing.T) {
 	})
 
 	t.Run("should validate job before updating", func(t *testing.T) {
-		service := NewJobService(nil, cfg) // No repo calls expected
+		service := NewJobService(nil, nil, nil, cfg) // No repo calls expected
 
 		// Test nil job
 		err := service.UpdateJob(ctx, nil)
@@ -309,7 +309,7 @@ func TestJobService(t *testing.T) {
 		mockRepo.On("GetByID", ctx, 1).Return(job, nil)
 		mockRepo.On("Delete", ctx, 1).Return(nil)
 
-		service := NewJobService(mockRepo, cfg)
+		service := NewJobService(mockRepo, nil, nil, cfg)
 		err := service.DeleteJob(ctx, 1)
 
 		require.NoError(t, err)
@@ -317,7 +317,7 @@ func TestJobService(t *testing.T) {
 	})
 
 	t.Run("should return error when trying to delete with invalid ID", func(t *testing.T) {
-		service := NewJobService(nil, cfg) // No repo calls expected
+		service := NewJobService(nil, nil, nil, cfg) // No repo calls expected
 		err := service.DeleteJob(ctx, 0)
 		assert.Equal(t, models.ErrInvalidJobID, err)
 	})
@@ -330,7 +330,7 @@ func TestJobService(t *testing.T) {
 		mockRepo.On("GetByID", ctx, 1).Return(job, nil).Once()
 		mockRepo.On("Update", ctx, mock.AnythingOfType("*models.Job")).Return(nil)
 
-		service := NewJobService(mockRepo, cfg)
+		service := NewJobService(mockRepo, nil, nil, cfg)
 		err := service.UpdateJobStatus(ctx, 1, models.APPLIED)
 
 		require.NoError(t, err)
@@ -338,7 +338,7 @@ func TestJobService(t *testing.T) {
 	})
 
 	t.Run("should validate inputs when updating status", func(t *testing.T) {
-		service := NewJobService(nil, cfg) // No repo calls expected
+		service := NewJobService(nil, nil, nil, cfg) // No repo calls expected
 
 		// Test invalid ID
 		err := service.UpdateJobStatus(ctx, 0, models.APPLIED)

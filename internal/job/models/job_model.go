@@ -319,3 +319,44 @@ type JobStats struct {
 	TotalApplied int `json:"total_applied"`
 	HighMatch    int `json:"high_match"`
 }
+
+// CoverLetter represents a generated cover letter in the job domain.
+type CoverLetter struct {
+	ID          int       `json:"id" db:"id"`
+	JobID       int       `json:"jobId" db:"job_id"`
+	UserID      int       `json:"userId" db:"user_id"`
+	Content     string    `json:"content" db:"content"`
+	Format      string    `json:"format" db:"format"`
+	GeneratedAt time.Time `json:"generatedAt" db:"generated_at"`
+	CreatedAt   time.Time `json:"createdAt" db:"created_at"`
+	UpdatedAt   time.Time `json:"updatedAt" db:"updated_at"`
+}
+
+// JobMatchAnalysis represents a job match analysis result in the job domain.
+type JobMatchAnalysis struct {
+	ID         int       `json:"id" db:"id"`
+	JobID      int       `json:"jobId" db:"job_id"`
+	UserID     int       `json:"userId" db:"user_id"`
+	MatchScore int       `json:"matchScore" db:"match_score"`
+	Strengths  []string  `json:"strengths" db:"strengths"`
+	Weaknesses []string  `json:"weaknesses" db:"weaknesses"`
+	Highlights []string  `json:"highlights" db:"highlights"`
+	Feedback   string    `json:"feedback" db:"feedback"`
+	AnalyzedAt time.Time `json:"analyzedAt" db:"analyzed_at"`
+	CreatedAt  time.Time `json:"createdAt" db:"created_at"`
+	UpdatedAt  time.Time `json:"updatedAt" db:"updated_at"`
+}
+
+// CoverLetterFormat represents the format type for cover letters.
+type CoverLetterFormat string
+
+const (
+	CoverLetterFormatHTML      CoverLetterFormat = "html"
+	CoverLetterFormatMarkdown  CoverLetterFormat = "markdown"
+	CoverLetterFormatPlainText CoverLetterFormat = "plain_text"
+)
+
+// String returns the string representation of the cover letter format.
+func (f CoverLetterFormat) String() string {
+	return string(f)
+}

@@ -7,6 +7,11 @@ import (
 var (
 	// Validation errors
 	ErrValidationFailed = commonerrors.New("request validation failed")
+
+	// Setup errors
+	ErrProviderInitFailed  = commonerrors.New("failed to initialize AI provider")
+	ErrUnsupportedProvider = commonerrors.New("unsupported AI provider")
+	ErrMissingAPIKey       = commonerrors.New("missing API key for AI provider")
 )
 
 // WrapError wraps the given innerErr with the provided sentinelErr.

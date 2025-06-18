@@ -140,7 +140,11 @@ func (h *JobHandler) renderError(c *gin.Context, err error) {
 		errors.Is(err, models.ErrInvalidStatusTransition) ||
 		errors.Is(err, models.ErrJobDescriptionRequired) ||
 		errors.Is(err, models.ErrCompanyRequired) ||
-		errors.Is(err, models.ErrInvalidURLFormat) {
+		errors.Is(err, models.ErrInvalidURLFormat) ||
+		errors.Is(err, models.ErrProfileIncomplete) ||
+		errors.Is(err, models.ErrProfileSkillsRequired) ||
+		errors.Is(err, models.ErrProfileSummaryRequired) ||
+		errors.Is(err, models.ErrAIServiceUnavailable) {
 		statusCode = http.StatusBadRequest
 	} else if errors.Is(err, models.ErrJobNotFound) {
 		statusCode = http.StatusNotFound

@@ -45,6 +45,7 @@ type Settings struct {
 	AdminPassword   string
 	AdminEmail      string
 
+	AIProvider   string
 	GeminiAPIKey string
 	GeminiModel  string
 }
@@ -128,6 +129,7 @@ func NewSettings() Settings {
 		AdminUsername:   getEnv("ADMIN_USERNAME", ""),
 		AdminPassword:   getEnv("ADMIN_PASSWORD", ""),
 		AdminEmail:      getEnv("ADMIN_EMAIL", ""),
+		AIProvider:      getEnv("AI_PROVIDER", "gemini"),
 		GeminiAPIKey:    getEnv("GEMINI_API_KEY", ""),
 		GeminiModel:     getEnv("GEMINI_MODEL", ""),
 	}

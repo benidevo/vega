@@ -7,29 +7,34 @@ import (
 	"strings"
 	"time"
 
+	"github.com/benidevo/ascentio/internal/ai"
 	"github.com/benidevo/ascentio/internal/common/logger"
 	"github.com/benidevo/ascentio/internal/config"
 	"github.com/benidevo/ascentio/internal/job/interfaces"
 	"github.com/benidevo/ascentio/internal/job/models"
+	"github.com/benidevo/ascentio/internal/settings"
 	"github.com/go-playground/validator/v10"
-	"github.com/rs/zerolog"
 )
 
 // JobService provides business logic for job management.
 type JobService struct {
-	jobRepo   interfaces.JobRepository
-	cfg       *config.Settings
-	log       zerolog.Logger
-	validator *validator.Validate
+	jobRepo         interfaces.JobRepository
+	aiService       *ai.AIService
+	settingsService *settings.SettingsService
+	cfg             *config.Settings
+	log             *logger.PrivacyLogger
+	validator       *validator.Validate
 }
 
 // NewJobService creates a new JobService instance.
-func NewJobService(jobRepo interfaces.JobRepository, cfg *config.Settings) *JobService {
+func NewJobService(jobRepo interfaces.JobRepository, aiService *ai.AIService, settingsService *settings.SettingsService, cfg *config.Settings) *JobService {
 	return &JobService{
-		jobRepo:   jobRepo,
-		cfg:       cfg,
-		log:       logger.GetLogger("job"),
-		validator: validator.New(),
+		jobRepo:         jobRepo,
+		aiService:       aiService,
+		settingsService: settingsService,
+		cfg:             cfg,
+		log:             logger.GetPrivacyLogger("job"),
+		validator:       validator.New(),
 	}
 }
 

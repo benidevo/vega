@@ -13,17 +13,17 @@ import (
 	"github.com/benidevo/ascentio/internal/ai/models"
 )
 
-// GeminiFlash represents a client for interacting with the Gemini AI service.
+// Gemini represents a client for interacting with the Gemini AI service.
 //
 // It holds a reference to the underlying genai.Client and configuration settings.
-type GeminiFlash struct {
+type Gemini struct {
 	client *genai.Client
 	cfg    *Config
 }
 
-// New creates and initializes a new GeminiFlash client using the provided context and configuration.
-// It returns a pointer to the GeminiFlash instance or an error if the client initialization fails.
-func New(ctx context.Context, cfg *Config) (*GeminiFlash, error) {
+// New creates and initializes a new Gemini client using the provided context and configuration.
+// It returns a pointer to the Gemini instance or an error if the client initialization fails.
+func New(ctx context.Context, cfg *Config) (*Gemini, error) {
 	client, err := genai.NewClient(ctx, &genai.ClientConfig{
 		APIKey:  cfg.APIKey,
 		Backend: genai.BackendGeminiAPI})
@@ -32,15 +32,15 @@ func New(ctx context.Context, cfg *Config) (*GeminiFlash, error) {
 		return nil, WrapError(ErrClientInitFailed, err)
 	}
 
-	return &GeminiFlash{
+	return &Gemini{
 		client: client,
 		cfg:    cfg,
 	}, nil
 }
 
-// Generate implements the Provider interface for the GeminiFlash client.
+// Generate implements the Provider interface for the Gemini client.
 // It processes requests based on the ResponseType and returns appropriate data.
-func (g *GeminiFlash) Generate(ctx context.Context, request llm.GenerateRequest) (llm.GenerateResponse, error) {
+func (g *Gemini) Generate(ctx context.Context, request llm.GenerateRequest) (llm.GenerateResponse, error) {
 	start := time.Now()
 
 	switch request.ResponseType {
@@ -54,7 +54,7 @@ func (g *GeminiFlash) Generate(ctx context.Context, request llm.GenerateRequest)
 }
 
 // generateCoverLetter generates a cover letter based on the provided prompt.
-func (g *GeminiFlash) generateCoverLetter(ctx context.Context, prompt models.Prompt, start time.Time) (llm.GenerateResponse, error) {
+func (g *Gemini) generateCoverLetter(ctx context.Context, prompt models.Prompt, start time.Time) (llm.GenerateResponse, error) {
 	coverLetterPrompt := prompt.ToCoverLetterPrompt(g.cfg.DefaultWordRange)
 
 	result, err := g.executeWithRetry(ctx, func() (string, error) {
@@ -90,8 +90,8 @@ func (g *GeminiFlash) generateCoverLetter(ctx context.Context, prompt models.Pro
 	}, nil
 }
 
-// generateMatchResult analyzes the given prompt using the GeminiFlash model and returns a match result.
-func (g *GeminiFlash) generateMatchResult(ctx context.Context, prompt models.Prompt, start time.Time) (llm.GenerateResponse, error) {
+// generateMatchResult analyzes the given prompt using the Gemini model and returns a match result.
+func (g *Gemini) generateMatchResult(ctx context.Context, prompt models.Prompt, start time.Time) (llm.GenerateResponse, error) {
 	matchPrompt := prompt.ToMatchAnalysisPrompt(g.cfg.MinMatchScore, g.cfg.MaxMatchScore)
 
 	result, err := g.executeWithRetry(ctx, func() (string, error) {
@@ -127,7 +127,7 @@ func (g *GeminiFlash) generateMatchResult(ctx context.Context, prompt models.Pro
 	}, nil
 }
 
-func (g *GeminiFlash) executeWithRetry(ctx context.Context, operation func() (string, error)) (string, error) {
+func (g *Gemini) executeWithRetry(ctx context.Context, operation func() (string, error)) (string, error) {
 	maxRetries := g.cfg.MaxRetries
 	baseDelay := time.Duration(g.cfg.BaseRetryDelay) * time.Second
 
@@ -164,7 +164,7 @@ func (g *GeminiFlash) executeWithRetry(ctx context.Context, operation func() (st
 	return "", lastErr
 }
 
-func (g *GeminiFlash) getMatchAnalysisSchema() *genai.Schema {
+func (g *Gemini) getMatchAnalysisSchema() *genai.Schema {
 	return &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
@@ -203,7 +203,7 @@ func (g *GeminiFlash) getMatchAnalysisSchema() *genai.Schema {
 	}
 }
 
-func (g *GeminiFlash) parseMatchResultJSON(jsonResponse string) (models.MatchResult, error) {
+func (g *Gemini) parseMatchResultJSON(jsonResponse string) (models.MatchResult, error) {
 	var result models.MatchResult
 	if err := json.Unmarshal([]byte(jsonResponse), &result); err != nil {
 		return models.MatchResult{}, WrapError(ErrResponseParseFailed, err)
@@ -232,7 +232,7 @@ func (g *GeminiFlash) parseMatchResultJSON(jsonResponse string) (models.MatchRes
 	return result, nil
 }
 
-func (g *GeminiFlash) getCoverLetterSchema() *genai.Schema {
+func (g *Gemini) getCoverLetterSchema() *genai.Schema {
 	return &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
@@ -246,7 +246,7 @@ func (g *GeminiFlash) getCoverLetterSchema() *genai.Schema {
 	}
 }
 
-func (g *GeminiFlash) parseCoverLetterJSON(jsonResponse string) (models.CoverLetter, error) {
+func (g *Gemini) parseCoverLetterJSON(jsonResponse string) (models.CoverLetter, error) {
 	var result models.CoverLetter
 	if err := json.Unmarshal([]byte(jsonResponse), &result); err != nil {
 		return models.CoverLetter{}, WrapError(ErrResponseParseFailed, err)
@@ -261,7 +261,7 @@ func (g *GeminiFlash) parseCoverLetterJSON(jsonResponse string) (models.CoverLet
 	return result, nil
 }
 
-func (g *GeminiFlash) buildSystemInstruction() *genai.Content {
+func (g *Gemini) buildSystemInstruction() *genai.Content {
 	if g.cfg.SystemInstruction == "" {
 		return nil
 	}

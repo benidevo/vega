@@ -13,22 +13,22 @@ import (
 )
 
 // CoverLetterService provides methods to generate cover letters using a specified LLM provider.
-type CoverLetterService struct {
+type CoverLetterGeneratorService struct {
 	model llm.Provider
 	log   zerolog.Logger
 }
 
-// NewCoverLetterService creates and returns a new instance of CoverLetterService
+// NewCoverLetterGeneratorService creates and returns a new instance of CoverLetterGeneratorService
 // using the provided llm.Provider as the underlying model.
-func NewCoverLetterService(model llm.Provider) *CoverLetterService {
-	return &CoverLetterService{
+func NewCoverLetterGeneratorService(model llm.Provider) *CoverLetterGeneratorService {
+	return &CoverLetterGeneratorService{
 		model: model,
 		log:   logger.GetLogger("ai_cover_letter"),
 	}
 }
 
 // GenerateCoverLetter generates a cover letter based on the provided request.
-func (c *CoverLetterService) GenerateCoverLetter(ctx context.Context, req models.Request) (*models.CoverLetter, error) {
+func (c *CoverLetterGeneratorService) GenerateCoverLetter(ctx context.Context, req models.Request) (*models.CoverLetter, error) {
 	start := time.Now()
 
 	c.log.Info().
@@ -84,7 +84,7 @@ func (c *CoverLetterService) GenerateCoverLetter(ctx context.Context, req models
 	return &result, nil
 }
 
-func (c *CoverLetterService) validateCoverLetter(letter *models.CoverLetter) error {
+func (c *CoverLetterGeneratorService) validateCoverLetter(letter *models.CoverLetter) error {
 	if letter.Content == "" {
 		return models.WrapError(models.ErrValidationFailed, fmt.Errorf("generated cover letter is empty"))
 	}

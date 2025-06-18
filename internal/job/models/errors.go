@@ -35,6 +35,15 @@ var (
 	ErrFailedToDeleteCompany = commonerrors.New("failed to delete company")
 	ErrFailedToGetJobStats   = commonerrors.New("failed to get job stats")
 	ErrFailedToGetJob        = commonerrors.New("failed to get job")
+
+	// AI service errors
+	ErrAIServiceUnavailable   = commonerrors.New("AI service is not available")
+	ErrProfileServiceRequired = commonerrors.New("profile service dependency is required")
+
+	// Profile validation errors for AI operations
+	ErrProfileIncomplete      = commonerrors.New("please complete your profile to use AI features")
+	ErrProfileSkillsRequired  = commonerrors.New("please add skills to your profile to use AI features")
+	ErrProfileSummaryRequired = commonerrors.New("please add a career summary to your profile to use AI features")
 )
 
 // WrapError is a convenience function that calls the common errors package
