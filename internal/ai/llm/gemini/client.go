@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"google.golang.org/genai"
@@ -65,13 +66,29 @@ func (g *Gemini) generateCoverLetter(ctx context.Context, prompt models.Prompt, 
 			MaxOutputTokens:   g.cfg.MaxOutputTokens,
 			TopP:              g.cfg.TopP,
 			TopK:              g.cfg.TopK,
-			StopSequences:     g.cfg.CoverLetterStopSeqs,
 			SystemInstruction: g.buildSystemInstruction(),
 		})
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("generate content error: %w", err)
 		}
-		return resp.Text(), nil
+
+		if len(resp.Candidates) == 0 {
+			return "", fmt.Errorf("no candidates in response")
+		}
+
+		candidate := resp.Candidates[0]
+		if candidate.Content == nil || len(candidate.Content.Parts) == 0 {
+			return "", fmt.Errorf("no content in response candidate")
+		}
+
+		var responseText string
+		for _, part := range candidate.Content.Parts {
+			if part.Text != "" {
+				responseText += part.Text
+			}
+		}
+
+		return responseText, nil
 	})
 
 	if err != nil {
@@ -102,13 +119,29 @@ func (g *Gemini) generateMatchResult(ctx context.Context, prompt models.Prompt, 
 			MaxOutputTokens:   g.cfg.MaxOutputTokens,
 			TopP:              g.cfg.TopP,
 			TopK:              g.cfg.TopK,
-			StopSequences:     g.cfg.MatchAnalysisStopSeqs,
 			SystemInstruction: g.buildSystemInstruction(),
 		})
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("generate content error: %w", err)
 		}
-		return resp.Text(), nil
+
+		if len(resp.Candidates) == 0 {
+			return "", fmt.Errorf("no candidates in response")
+		}
+
+		candidate := resp.Candidates[0]
+		if candidate.Content == nil || len(candidate.Content.Parts) == 0 {
+			return "", fmt.Errorf("no content in response candidate")
+		}
+
+		var responseText string
+		for _, part := range candidate.Content.Parts {
+			if part.Text != "" {
+				responseText += part.Text
+			}
+		}
+
+		return responseText, nil
 	})
 
 	if err != nil {
@@ -204,8 +237,10 @@ func (g *Gemini) getMatchAnalysisSchema() *genai.Schema {
 }
 
 func (g *Gemini) parseMatchResultJSON(jsonResponse string) (models.MatchResult, error) {
+	cleanJSON := g.extractJSON(jsonResponse)
+
 	var result models.MatchResult
-	if err := json.Unmarshal([]byte(jsonResponse), &result); err != nil {
+	if err := json.Unmarshal([]byte(cleanJSON), &result); err != nil {
 		return models.MatchResult{}, WrapError(ErrResponseParseFailed, err)
 	}
 
@@ -247,8 +282,10 @@ func (g *Gemini) getCoverLetterSchema() *genai.Schema {
 }
 
 func (g *Gemini) parseCoverLetterJSON(jsonResponse string) (models.CoverLetter, error) {
+	cleanJSON := g.extractJSON(jsonResponse)
+
 	var result models.CoverLetter
-	if err := json.Unmarshal([]byte(jsonResponse), &result); err != nil {
+	if err := json.Unmarshal([]byte(cleanJSON), &result); err != nil {
 		return models.CoverLetter{}, WrapError(ErrResponseParseFailed, err)
 	}
 
@@ -272,4 +309,37 @@ func (g *Gemini) buildSystemInstruction() *genai.Content {
 	}
 
 	return nil
+}
+
+// extractJSON attempts to extract JSON content from a response that may contain extra text
+func (g *Gemini) extractJSON(response string) string {
+	response = strings.TrimSpace(response)
+
+	// Look for JSON object boundaries
+	startIdx := strings.Index(response, "{")
+	if startIdx == -1 {
+		return response // No JSON found, return as is
+	}
+
+	// Find the matching closing brace
+	braceCount := 0
+	endIdx := -1
+
+	for i := startIdx; i < len(response) && endIdx == -1; i++ {
+		switch response[i] {
+		case '{':
+			braceCount++
+		case '}':
+			braceCount--
+			if braceCount == 0 {
+				endIdx = i
+			}
+		}
+	}
+
+	if endIdx == -1 {
+		return response // No matching brace found, return as is
+	}
+
+	return response[startIdx : endIdx+1]
 }

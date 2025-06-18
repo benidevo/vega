@@ -1,0 +1,116 @@
+<!-- Cover Letter Generator -->
+<div class="bg-slate-800 rounded-xl shadow-lg overflow-hidden mb-6">
+  <div class="px-6 py-5 border-b border-slate-700">
+    <h3 class="text-xl font-semibold text-white flex items-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+      AI-Generated Cover Letter
+    </h3>
+  </div>
+  <div class="p-6 space-y-6">
+    <!-- Cover Letter Content -->
+    <div class="bg-slate-700 bg-opacity-60 rounded-lg p-5">
+      <div class="flex justify-between items-center mb-4">
+        <h4 class="text-lg font-medium text-white">Generated Cover Letter</h4>
+        <div class="flex gap-2">
+          <button class="px-3 py-1 bg-slate-600 hover:bg-slate-700 text-white text-sm rounded-md transition-colors"
+                  onclick="copyToClipboard('cover-letter-content')">
+            Copy
+          </button>
+          <button class="px-3 py-1 bg-slate-600 hover:bg-slate-700 text-white text-sm rounded-md transition-colors"
+                  onclick="downloadCoverLetter()">
+            Download
+          </button>
+        </div>
+      </div>
+      
+      <div id="cover-letter-content" class="bg-white text-gray-800 p-6 rounded-md whitespace-pre-wrap text-sm leading-relaxed">{{.CoverLetter.Content}}</div>
+    </div>
+
+    <!-- Cover Letter Metadata -->
+    <div class="bg-slate-700 bg-opacity-60 rounded-lg p-4">
+      <h5 class="text-sm font-medium text-gray-300 mb-2">Generated</h5>
+      <p class="text-white">{{.CoverLetter.GeneratedAt.Format "Jan 2, 2006 at 3:04 PM"}}</p>
+    </div>
+
+    <!-- Actions -->
+    <div class="bg-blue-900 bg-opacity-30 border border-blue-800 rounded-lg p-5">
+      <h4 class="text-lg font-medium text-blue-400 mb-2">Next Steps</h4>
+      <p class="text-gray-300 mb-3">Your cover letter has been generated. Review it carefully and personalize it further if needed before submitting your application.</p>
+      <div class="flex gap-2">
+        <button class="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-md text-sm transition-colors"
+                onclick="editCoverLetter()">
+          Edit
+        </button>
+        <button class="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-md text-sm transition-colors"
+                onclick="scrollToTop()">
+          Back to Top
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function copyToClipboard(elementId) {
+  const element = document.getElementById(elementId);
+  const text = element.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const button = event.target;
+    const originalText = button.innerText;
+    button.innerText = 'Copied!';
+    button.classList.add('bg-green-600');
+    setTimeout(() => {
+      button.innerText = originalText;
+      button.classList.remove('bg-green-600');
+    }, 2000);
+  });
+}
+
+function downloadCoverLetter() {
+  if (typeof html2pdf === 'undefined') {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    script.onload = function() {
+      generatePDF();
+    };
+    document.head.appendChild(script);
+  } else {
+    generatePDF();
+  }
+  
+  function generatePDF() {
+    const element = document.getElementById('cover-letter-content');
+    const opt = {
+      margin: 0.5,
+      filename: 'cover-letter.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(element).save();
+  }
+}
+
+function editCoverLetter() {
+  const content = document.getElementById('cover-letter-content');
+  content.contentEditable = true;
+  content.focus();
+  content.style.border = '2px solid #3b82f6';
+  
+  const saveBtn = document.createElement('button');
+  saveBtn.innerText = 'Save Changes';
+  saveBtn.className = 'mt-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-md text-sm transition-colors';
+  saveBtn.onclick = function() {
+    content.contentEditable = false;
+    content.style.border = 'none';
+    this.remove();
+  };
+  content.parentElement.appendChild(saveBtn);
+}
+
+function scrollToTop() {
+  document.getElementById('job-header-display').scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+</script>

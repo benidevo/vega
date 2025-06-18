@@ -131,7 +131,7 @@ func NewSettings() Settings {
 		AdminEmail:      getEnv("ADMIN_EMAIL", ""),
 		AIProvider:      getEnv("AI_PROVIDER", "gemini"),
 		GeminiAPIKey:    getEnv("GEMINI_API_KEY", ""),
-		GeminiModel:     getEnv("GEMINI_MODEL", ""),
+		GeminiModel:     "gemini-2.5-flash",
 	}
 }
 

@@ -37,12 +37,10 @@ type Config struct {
 	DefaultFeedbackMsg  string
 
 	// Advanced generation parameters
-	MaxOutputTokens       int32
-	TopP                  *float32
-	TopK                  *float32
-	SystemInstruction     string
-	CoverLetterStopSeqs   []string
-	MatchAnalysisStopSeqs []string
+	MaxOutputTokens   int32
+	TopP              *float32
+	TopK              *float32
+	SystemInstruction string
 }
 
 // NewConfig creates a new Config instance with the provided API key and optional parameters.
@@ -51,7 +49,7 @@ func NewConfig(cfg *config.Settings) *Config {
 
 	return &Config{
 		APIKey:      cfg.GeminiAPIKey,
-		MaxTokens:   1024,
+		MaxTokens:   8192,
 		Model:       cfg.GeminiModel,
 		Temperature: &defaultTemp,
 
@@ -77,12 +75,10 @@ func NewConfig(cfg *config.Settings) *Config {
 		DefaultFeedbackMsg:  "Unable to provide detailed feedback at this time.",
 
 		// Advanced generation parameters
-		MaxOutputTokens:       2048,
-		TopP:                  floatPtr(0.9),
-		TopK:                  floatPtr(40),
-		SystemInstruction:     "You are a professional career advisor and expert writer. Always provide helpful, accurate, and constructive feedback.",
-		CoverLetterStopSeqs:   []string{"```", "---", "END"},
-		MatchAnalysisStopSeqs: []string{"```", "---", "END"},
+		MaxOutputTokens:   8192,
+		TopP:              floatPtr(0.9),
+		TopK:              floatPtr(40),
+		SystemInstruction: "You are a professional career advisor and expert writer. Always provide helpful, accurate, and constructive feedback. When responding with JSON, output ONLY valid JSON without any preamble, explanation, or additional text. Do not include phrases like 'Here is the JSON' or any other text before or after the JSON object.",
 	}
 }
 

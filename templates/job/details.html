@@ -248,25 +248,36 @@
           <div id="status-response"></div>
 
           <button id="analyze-button" class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                  _="on click
-                     toggle .hidden on #ai-analysis
-                     then if #ai-analysis matches .hidden
-                          put 'Analyze Job Match' into span in me
-                     else
-                          wait 100ms then call #ai-analysis.scrollIntoView({behavior: 'smooth', block: 'start'})
-                          then put 'Hide Analysis' into span in me
-                     end">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
+                  hx-post="/jobs/{{.jobID}}/analyze"
+                  hx-target="#ai-analysis"
+                  hx-swap="innerHTML"
+                  hx-indicator="#analyze-spinner">
+            <span id="analyze-spinner" class="htmx-indicator">
+              <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </span>
+            <span id="analyze-icon" class="htmx-indicator:not(.htmx-request) block">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </span>
             <span>Analyze Job Match</span>
           </button>
 
-          <button class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <button id="cover-letter-button" class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  hx-post="/jobs/{{.jobID}}/cover-letter"
+                  hx-target="#cover-letter-section"
+                  hx-swap="innerHTML">
+            <svg class="cover-letter-spinner htmx-indicator animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <svg class="cover-letter-icon h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
-            Generate Cover Letter
+            <span>Generate Cover Letter</span>
           </button>
 
           {{if .job.SourceURL}}
@@ -290,7 +301,7 @@
           <button
             id="delete-job-btn"
             class="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
-            _="on click 
+            _="on click
                put {url: '/jobs/{{.jobID}}', method: 'DELETE', type: 'job'} into window.itemToDelete
                set #delete-message.textContent to 'Are you sure you want to delete this job? This action cannot be undone.'
                remove .hidden from #delete-modal-shared"
@@ -305,92 +316,87 @@
     </div>
   </div>
 
-  <!-- AI Analysis section - hidden by default -->
-  <div id="ai-analysis" class="bg-slate-800 rounded-xl shadow-lg overflow-hidden mb-6 hidden">
-    <div class="px-6 py-5 border-b border-slate-700">
-      <h3 class="text-xl font-semibold text-white flex items-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-        AI Match Analysis
-      </h3>
-    </div>
-    <div class="p-6 space-y-6">
-      <!-- Match Score -->
-      <div class="flex items-center space-x-4">
-        <div class="relative w-24 h-24 flex-shrink-0">
-          <svg class="w-24 h-24 transform -rotate-90" viewBox="0 0 120 120">
-            <circle cx="60" cy="60" r="54" fill="none" stroke="#1e293b" stroke-width="12" />
-            <circle cx="60" cy="60" r="54" fill="none" stroke="#10b981" stroke-width="12" stroke-dasharray="339.292" stroke-dashoffset="27.1434" />
-          </svg>
-          <div class="absolute inset-0 flex items-center justify-center">
-            <span class="text-2xl font-bold text-white">92%</span>
-          </div>
-        </div>
-        <div>
-          <h4 class="text-lg font-medium text-white">Strong Match</h4>
-          <p class="text-gray-300">Your profile aligns well with this job's requirements</p>
-        </div>
-      </div>
+  <!-- AI Analysis section - will be populated by HTMX -->
+  <div id="ai-analysis"></div>
 
-      <!-- Strengths -->
-      <div>
-        <h4 class="text-lg font-medium text-green-400 mb-3">Strengths</h4>
-        <ul class="space-y-2">
-          <li class="flex items-start">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            <span class="text-gray-300">Your 7 years of Go experience exceeds the 5+ years requirement</span>
-          </li>
-          <li class="flex items-start">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            <span class="text-gray-300">Strong microservices background with 5 years of experience</span>
-          </li>
-          <li class="flex items-start">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            <span class="text-gray-300">Your Docker and Kubernetes experience is directly relevant</span>
-          </li>
-          <li class="flex items-start">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            <span class="text-gray-300">You have experience with both SQL and NoSQL databases</span>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Areas to Highlight -->
-      <div>
-        <h4 class="text-lg font-medium text-yellow-400 mb-3">Areas to Highlight</h4>
-        <ul class="space-y-2">
-          <li class="flex items-start">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-yellow-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <span class="text-gray-300">Emphasize your Kafka experience as it's listed as a "nice to have"</span>
-          </li>
-          <li class="flex items-start">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-yellow-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <span class="text-gray-300">Your AWS experience is relevant but not explicitly mentioned</span>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Recommendation -->
-      <div class="bg-blue-900 bg-opacity-30 border border-blue-800 rounded-lg p-5">
-        <h4 class="text-lg font-medium text-blue-400 mb-2">Recommendation</h4>
-        <p class="text-gray-300">Based on your profile, you're an excellent match for this position. When applying, emphasize your extensive Go experience, microservices architecture work, and container orchestration skills. Make sure to highlight your experience with message brokers like Kafka to address their "nice to have" requirements.</p>
-      </div>
-    </div>
-  </div>
+  <!-- Cover Letter section - will be populated by HTMX -->
+  <div id="cover-letter-section"></div>
 </div>
 
+<style>
+/* HTMX indicators are hidden by default and shown during requests */
+.htmx-indicator {
+  display: none;
+}
+
+.htmx-request .htmx-indicator {
+  display: block;
+}
+
+.htmx-request .analyze-icon,
+.htmx-request .cover-letter-icon {
+  display: none;
+}
+</style>
+
+<script>
+document.addEventListener('htmx:afterRequest', function(evt) {
+
+  if (evt.detail.target.id === 'ai-analysis' && evt.detail.xhr.status === 200) {
+    // Hide cover letter section
+    document.getElementById('cover-letter-section').innerHTML = '';
+    // Scroll to analysis
+    setTimeout(() => {
+      document.getElementById('ai-analysis').scrollIntoView({behavior: 'smooth', block: 'start'});
+    }, 100);
+  }
+  if (evt.detail.target.id === 'cover-letter-section' && evt.detail.xhr.status === 200) {
+    // Hide analysis section
+    document.getElementById('ai-analysis').innerHTML = '';
+    // Scroll to cover letter
+    setTimeout(() => {
+      document.getElementById('cover-letter-section').scrollIntoView({behavior: 'smooth', block: 'start'});
+    }, 100);
+  }
+});
+
+// Event delegation for dynamically loaded content
+document.addEventListener('click', function(evt) {
+  // Check if the clicked element or its parent has a data-action
+  let target = evt.target;
+  let action = target.getAttribute('data-action');
+
+  // If no action on the target, check parent elements (in case of nested elements)
+  while (!action && target.parentElement) {
+    target = target.parentElement;
+    action = target.getAttribute('data-action');
+  }
+
+  if (action === 'regenerate-analysis') {
+    evt.preventDefault();
+
+    // Show spinner on clicked button
+    const originalContent = target.innerHTML;
+    target.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Re-analyzing...';
+    target.disabled = true;
+
+    document.getElementById('analyze-button').click();
+
+  } else if (action === 'generate-cover-letter') {
+    evt.preventDefault();
+
+    // Show spinner on clicked button
+    const originalContent = target.innerHTML;
+    target.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Generating...';
+    target.disabled = true;
+
+    document.getElementById('cover-letter-button').click();
+
+  } else if (action === 'scroll-to-top') {
+    evt.preventDefault();
+    document.getElementById('job-header-display').scrollIntoView({behavior: 'smooth', block: 'start'});
+  }
+});
+</script>
 
 {{end}}

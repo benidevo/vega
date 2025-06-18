@@ -1,8 +1,10 @@
 package job
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
@@ -191,6 +193,14 @@ func NewJobHandler(service *JobService, cfg *config.Settings) *JobHandler {
 	}
 }
 
+func (h *JobHandler) getAIErrorMessage(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	return models.GetSentinelError(err).Error()
+}
+
 // ValidateJobID is a middleware that validates the job ID parameter
 func (h *JobHandler) ValidateJobID() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -377,15 +387,31 @@ func (h *JobHandler) GetJobDetails(c *gin.Context) {
 	}
 
 	username, _ := c.Get("username")
+
+	// Check profile validation for AI features
+	var profileValidationError error
+	userIDValue, exists := c.Get("userID")
+	if exists && h.service.settingsService != nil {
+		userID := userIDValue.(int)
+		profile, err := h.service.settingsService.GetProfileSettings(c.Request.Context(), userID)
+		if err == nil {
+			if validateErr := h.service.ValidateProfileForAI(profile); validateErr != nil {
+				profileValidationError = validateErr
+			}
+		}
+	}
+
 	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-		"title":       "Job Details",
-		"page":        "job-details",
-		"activeNav":   "jobs",
-		"pageTitle":   "Job Details",
-		"currentYear": time.Now().Year(),
-		"username":    username,
-		"job":         job,
-		"jobID":       jobIDStr,
+		"title":                  "Job Details",
+		"page":                   "job-details",
+		"activeNav":              "jobs",
+		"pageTitle":              "Job Details",
+		"currentYear":            time.Now().Year(),
+		"username":               username,
+		"job":                    job,
+		"jobID":                  jobIDStr,
+		"profileValidationError": profileValidationError,
+		"profileErrorMessage":    h.getAIErrorMessage(profileValidationError),
 	})
 }
 
@@ -470,11 +496,137 @@ func (h *JobHandler) DeleteJob(c *gin.Context) {
 	}
 
 	if c.GetHeader("HX-Request") == "true" {
-		// This will immediately redirect the browser without showing any intermediate content
 		c.Header("HX-Redirect", "/jobs")
 		c.String(http.StatusOK, "")
 		return
 	}
 
 	c.Redirect(http.StatusFound, "/jobs")
+}
+
+// AnalyzeJobMatch handles the HTMX request to perform AI job match analysis
+func (h *JobHandler) AnalyzeJobMatch(c *gin.Context) {
+	jobIDValue, exists := c.Get("jobID")
+	if !exists {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Invalid job ID format",
+		})
+		return
+	}
+	jobID := jobIDValue.(int)
+
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.HTML(http.StatusUnauthorized, "partials/alert-error.html", gin.H{
+			"message": "Authentication required",
+		})
+		return
+	}
+	userID := userIDValue.(int)
+
+	analysis, err := h.service.AnalyzeJobMatch(c.Request.Context(), userID, jobID)
+	if err != nil {
+		errorMessage := h.getAIErrorMessage(err)
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": errorMessage,
+		})
+		return
+	}
+
+	html, err := h.renderTemplate("partials/job_match_analysis.html", h.buildMatchAnalysisData(analysis))
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
+			"message": "Error rendering analysis",
+		})
+		return
+	}
+	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
+}
+
+// GenerateCoverLetter handles the HTMX request to generate AI cover letter
+func (h *JobHandler) GenerateCoverLetter(c *gin.Context) {
+	jobIDValue, exists := c.Get("jobID")
+	if !exists {
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": "Invalid job ID format",
+		})
+		return
+	}
+	jobID := jobIDValue.(int)
+
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.HTML(http.StatusUnauthorized, "partials/alert-error.html", gin.H{
+			"message": "Authentication required",
+		})
+		return
+	}
+	userID := userIDValue.(int)
+
+	coverLetter, err := h.service.GenerateCoverLetter(c.Request.Context(), userID, jobID)
+	if err != nil {
+		errorMessage := h.getAIErrorMessage(err)
+		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			"message": errorMessage,
+		})
+		return
+	}
+
+	html, err := h.renderTemplate("partials/cover_letter_generator.html", gin.H{
+		"CoverLetter": coverLetter,
+	})
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
+			"message": "Error rendering cover letter",
+		})
+		return
+	}
+	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
+}
+
+// buildMatchAnalysisData creates template data for match analysis
+func (h *JobHandler) buildMatchAnalysisData(analysis *models.JobMatchAnalysis) gin.H {
+	var matchCategory, matchColor string
+	if analysis.MatchScore >= 80 {
+		matchCategory = "Excellent Match"
+		matchColor = "#10b981" // green
+	} else if analysis.MatchScore >= 70 {
+		matchCategory = "Strong Match"
+		matchColor = "#10b981" // green
+	} else if analysis.MatchScore >= 60 {
+		matchCategory = "Good Match"
+		matchColor = "#f59e0b" // yellow
+	} else if analysis.MatchScore >= 40 {
+		matchCategory = "Fair Match"
+		matchColor = "#f59e0b" // yellow
+	} else {
+		matchCategory = "Weak Match"
+		matchColor = "#ef4444" // red
+	}
+
+	// Calculate stroke offset for the circle progress
+	// 339.292 is the circumference of the circle with radius 54
+	strokeOffset := 339.292 - (339.292 * float64(analysis.MatchScore) / 100)
+
+	return gin.H{
+		"Analysis":      analysis,
+		"MatchCategory": matchCategory,
+		"MatchColor":    matchColor,
+		"StrokeOffset":  strokeOffset,
+	}
+}
+
+// renderTemplate renders a template to string with given data
+func (h *JobHandler) renderTemplate(templateName string, data interface{}) (string, error) {
+	tmpl, err := template.ParseFiles("templates/" + templateName)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse template %s: %w", templateName, err)
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return "", fmt.Errorf("failed to execute template %s: %w", templateName, err)
+	}
+
+	return buf.String(), nil
 }

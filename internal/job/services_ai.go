@@ -59,7 +59,7 @@ func (s *JobService) AnalyzeJobMatch(ctx context.Context, userID, jobID int) (*m
 		return nil, err
 	}
 
-	if err := s.validateProfileForAI(profile); err != nil {
+	if err := s.ValidateProfileForAI(profile); err != nil {
 		s.log.Warn().
 			Str("user_ref", userRef).
 			Int("job_id", jobID).
@@ -140,7 +140,7 @@ func (s *JobService) GenerateCoverLetter(ctx context.Context, userID, jobID int)
 		return nil, err
 	}
 
-	if err := s.validateProfileForAI(profile); err != nil {
+	if err := s.ValidateProfileForAI(profile); err != nil {
 		s.log.Warn().
 			Str("user_ref", userRef).
 			Int("job_id", jobID).
@@ -310,8 +310,8 @@ func (s *JobService) convertToCoverLetter(aiResult *aimodels.CoverLetter, userID
 	}
 }
 
-// validateProfileForAI validates that the user profile has sufficient data for AI operations.
-func (s *JobService) validateProfileForAI(profile *settingsmodels.Profile) error {
+// ValidateProfileForAI validates that the user profile has sufficient data for AI operations.
+func (s *JobService) ValidateProfileForAI(profile *settingsmodels.Profile) error {
 	if profile.FirstName == "" && profile.LastName == "" {
 		return models.ErrProfileIncomplete
 	}
