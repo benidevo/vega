@@ -14,48 +14,10 @@
   </div>
   {{end}}
   <!-- Stats -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5 mb-8">
-    <div class="bg-slate-800 rounded-lg shadow-lg p-4 md:p-5">
-      <div class="flex items-center">
-        <div class="p-2 md:p-3 rounded-full bg-blue-500 bg-opacity-10">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:h-8 md:w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-          </svg>
-        </div>
-        <div class="ml-5">
-          <p class="text-gray-400 text-xs md:text-sm">Total Jobs</p>
-          <p class="text-2xl md:text-3xl font-semibold text-white">{{.totalJobs}}</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-slate-800 rounded-lg shadow-lg p-4 md:p-5">
-      <div class="flex items-center">
-        <div class="p-2 md:p-3 rounded-full bg-green-500 bg-opacity-10">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:h-8 md:w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <div class="ml-5">
-          <p class="text-gray-400 text-xs md:text-sm">Applied</p>
-          <p class="text-2xl md:text-3xl font-semibold text-white">{{.applied}}</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-slate-800 rounded-lg shadow-lg p-4 md:p-5">
-      <div class="flex items-center">
-        <div class="p-2 md:p-3 rounded-full bg-yellow-500 bg-opacity-10">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:h-8 md:w-8 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-          </svg>
-        </div>
-        <div class="ml-5">
-          <p class="text-gray-400 text-xs md:text-sm">High Match</p>
-          <p class="text-2xl md:text-3xl font-semibold text-white">{{.highMatch}}</p>
-        </div>
-      </div>
-    </div>
+  <div class="grid grid-cols-3 md:grid-cols-3 gap-3 md:gap-5 mb-8">
+    {{template "partials/stats-card-jobs" .}}
+    {{template "partials/stats-card-applied" .}}
+    {{template "partials/stats-card-match" .}}
   </div>
 
   <!-- Filtering Controls -->
@@ -87,98 +49,50 @@
   </div>
 
   <!-- Job Cards -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- Add a debug section for jobs data -->
-    {{if .debug}}
-    <div class="col-span-2 p-4 bg-slate-800 rounded-lg text-xs font-mono overflow-auto" style="max-height: 200px;">
-      <h3 class="font-bold mb-2 text-white">Debug Info:</h3>
-      <pre>Jobs object exists: {{if .jobs}}yes{{else}}no{{end}}</pre>
-      <pre>Jobs count: {{if .jobs}}{{len .jobs}}{{else}}0{{end}}</pre>
-    </div>
-    {{end}}
-
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
     {{if and .jobs (gt (len .jobs) 0)}}
       {{range .jobs}}
-      <div class="bg-slate-800 rounded-lg shadow-lg overflow-hidden flex flex-col">
-        <div class="px-4 md:px-6 py-4 md:py-5 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-          <div class="flex-1 min-w-0">
-            <h3 class="text-lg font-semibold text-white truncate">{{.Title}}</h3>
-            <p class="text-gray-400 text-sm truncate">{{.Company.Name}}{{if .Location}} · {{.Location}}{{end}}</p>
+      <div class="bg-slate-800 rounded-lg shadow-lg overflow-hidden hover:bg-slate-750 transition-colors cursor-pointer group" 
+           _="on click if not (event.target.matches('select') or event.target.closest('select')) then go to url '/jobs/{{.ID}}/details'">
+        <div class="px-4 md:px-6 py-4 md:py-5">
+          <div class="flex justify-between items-start mb-2">
+            <h3 class="text-lg font-semibold text-white truncate group-hover:text-blue-300 transition-colors flex-1 min-w-0 pr-2">{{.Title}}</h3>
+            <div class="flex-none px-2 py-1 bg-yellow-500 bg-opacity-20 text-yellow-400 rounded text-xs font-medium whitespace-nowrap">
+              92% Match
+            </div>
           </div>
-          <div class="flex-none px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium whitespace-nowrap">
-            92% Match
-          </div>
-        </div>
-        <div class="px-4 md:px-6 py-4 flex-1 flex flex-col">
-          <p class="text-gray-300 mb-4 text-sm md:text-base h-[60px] overflow-hidden">
-            {{if gt (len .Description) 150}}
-              {{slice .Description 0 150}}...
+          <p class="text-gray-400 text-sm truncate mb-3">{{.Company.Name}}{{if .Location}} · {{.Location}}{{end}}</p>
+          <p class="text-gray-300 text-sm mb-4 line-clamp-2 leading-relaxed">
+            {{if gt (len .Description) 120}}
+              {{slice .Description 0 120}}...
             {{else}}
               {{.Description}}
             {{end}}
           </p>
-          <div class="flex flex-wrap gap-2 mb-4 overflow-hidden">
-            {{if .RequiredSkills}}
-              <!-- Always display a maximum of 5 skills -->
-              {{range $index, $skill := .RequiredSkills}}
-                {{if lt $index 5}}
-                  <span class="px-2 py-1 bg-slate-700 rounded-md text-xs text-primary">{{$skill}}</span>
-                {{end}}
-              {{end}}
-
-              <!-- Display "more" indicator if more than 5 skills exist -->
-              {{if gt (len .RequiredSkills) 5}}
-                <span class="px-2 py-1 bg-slate-600 rounded-md text-xs text-gray-300">+more</span>
-              {{end}}
-            {{else}}
-              <span class="text-gray-400 text-xs">No skills listed</span>
-            {{end}}
-          </div>
-          <div class="mt-auto border-t border-slate-700 pt-4">
-            <div class="flex flex-col sm:flex-row justify-between gap-4">
-              <div class="w-full sm:w-auto">
-                <div>
-                  <select
-                    class="bg-slate-700 text-white border-slate-600 rounded-md px-2 py-1 text-sm w-full"
-                    hx-post="/jobs/{{.ID}}/status"
-                    hx-headers='{"X-HTTP-Method-Override": "PUT"}'
-                    hx-trigger="change"
-                    hx-target="#status-response-{{.ID}}"
-                    hx-swap="innerHTML"
-                    name="status"
-                  >
-                    <option value="interested" {{if eq .Status 0}}selected{{end}}>Interested</option>
-                    <option value="applied" {{if eq .Status 1}}selected{{end}}>Applied</option>
-                    <option value="interviewing" {{if eq .Status 2}}selected{{end}}>Interviewing</option>
-                    <option value="offered" {{if eq .Status 3}}selected{{end}}>Offer Received</option>
-                    <option value="rejected" {{if eq .Status 4}}selected{{end}}>Rejected</option>
-                    <option value="not_interested" {{if eq .Status 5}}selected{{end}}>Not Interested</option>
-                  </select>
-                </div>
-                <div id="status-response-{{.ID}}" class="text-xs text-green-400 mt-2 ml-2"></div>
-              </div>
-              <div class="flex items-center gap-2 w-full sm:w-auto mt-4 sm:mt-0">
-                <a href="/jobs/{{.ID}}/details" class="inline-flex items-center justify-center text-xs px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded">
-                  View Details
-                </a>
-                <button
-                  type="button"
-                  class="inline-flex items-center justify-center text-xs px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded"
-                  _="on click 
-                     put {url: `/jobs/{{.ID}}`, method: 'DELETE', type: 'job'} into window.itemToDelete
-                     set #delete-message.textContent to 'Are you sure you want to delete this job? This action cannot be undone.'
-                     then remove .hidden from #delete-modal-shared"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
+          <div class="flex justify-start" onclick="event.stopPropagation()">
+            <select
+              class="bg-slate-700 text-white border-slate-600 rounded-md px-3 py-2 text-sm cursor-pointer hover:bg-slate-600 transition-colors min-w-0"
+              hx-post="/jobs/{{.ID}}/status"
+              hx-headers='{"X-HTTP-Method-Override": "PUT"}'
+              hx-trigger="change"
+              hx-target="#status-response-{{.ID}}"
+              hx-swap="innerHTML"
+              name="status"
+            >
+              <option value="interested" {{if eq .Status 0}}selected{{end}}>Interested</option>
+              <option value="applied" {{if eq .Status 1}}selected{{end}}>Applied</option>
+              <option value="interviewing" {{if eq .Status 2}}selected{{end}}>Interviewing</option>
+              <option value="offered" {{if eq .Status 3}}selected{{end}}>Offer Received</option>
+              <option value="rejected" {{if eq .Status 4}}selected{{end}}>Rejected</option>
+              <option value="not_interested" {{if eq .Status 5}}selected{{end}}>Not Interested</option>
+            </select>
           </div>
         </div>
+        <div id="status-response-{{.ID}}" class="text-xs text-green-400 px-4 md:px-6 pb-2"></div>
       </div>
       {{end}}
     {{else}}
-      <div class="col-span-2 text-center py-8">
+      <div class="col-span-full text-center py-8">
         <p class="text-gray-400">No jobs found. <a href="/jobs/new" class="text-primary hover:text-teal-400">Add your first job</a>.</p>
       </div>
     {{end}}
