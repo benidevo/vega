@@ -21,6 +21,7 @@ type JobRepository interface {
 	Create(ctx context.Context, job *models.Job) (*models.Job, error)
 	GetByID(ctx context.Context, id int) (*models.Job, error)
 	GetAll(ctx context.Context, filter models.JobFilter) ([]*models.Job, error)
+	GetCount(ctx context.Context, filter models.JobFilter) (int, error)
 	Update(ctx context.Context, job *models.Job) error
 	Delete(ctx context.Context, id int) error
 	UpdateStatus(ctx context.Context, id int, status models.JobStatus) error

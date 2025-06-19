@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -88,11 +89,6 @@ func (h *JobHandler) formatValidationError(err error) string {
 				switch tag {
 				case "min", "max":
 					return "Invalid job type"
-				}
-			case "ExperienceLevel":
-				switch tag {
-				case "min", "max":
-					return "Invalid experience level"
 				}
 			}
 
@@ -213,9 +209,25 @@ func (h *JobHandler) ValidateJobID() gin.HandlerFunc {
 func (h *JobHandler) ListJobsPage(c *gin.Context) {
 	username, _ := c.Get("username")
 	statusParam := c.Query("status")
+	pageParam := c.DefaultQuery("page", "1")
+	limitParam := c.DefaultQuery("limit", "12")
+
+	// Parse pagination parameters
+	page := 1
+	if p, err := models.ParsePositiveInt(pageParam); err == nil && p > 0 {
+		page = p
+	}
+
+	limit := 12
+	if l, err := models.ParsePositiveInt(limitParam); err == nil && l > 0 && l <= 100 {
+		limit = l
+	}
+
+	offset := (page - 1) * limit
 
 	filter := models.JobFilter{
-		Limit: 50,
+		Limit:  limit,
+		Offset: offset,
 	}
 
 	if statusParam != "" && statusParam != "all" {
@@ -225,13 +237,13 @@ func (h *JobHandler) ListJobsPage(c *gin.Context) {
 		}
 	}
 
-	jobs, err := h.service.GetJobs(c.Request.Context(), filter)
+	jobsWithPagination, err := h.service.GetJobsWithPagination(c.Request.Context(), filter)
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
 			"title":        "Dashboard",
 			"page":         "dashboard",
 			"activeNav":    "jobs",
-			"pageTitle":    "Job Matches",
+			"pageTitle":    "Jobs",
 			"currentYear":  time.Now().Year(),
 			"username":     username,
 			"jobs":         []*models.Job{},
@@ -240,21 +252,48 @@ func (h *JobHandler) ListJobsPage(c *gin.Context) {
 		return
 	}
 
+	// Handle edge case: requested page is beyond total pages
+	if page > jobsWithPagination.Pagination.TotalPages && jobsWithPagination.Pagination.TotalPages > 0 {
+		redirectURL := "?page=" + strconv.Itoa(jobsWithPagination.Pagination.TotalPages)
+		if statusParam != "" && statusParam != "all" {
+			redirectURL += "&status=" + statusParam
+		}
+
+		if c.GetHeader("HX-Request") == "true" {
+			c.Header("HX-Redirect", redirectURL)
+			c.String(http.StatusOK, "")
+			return
+		}
+		c.Redirect(http.StatusFound, redirectURL)
+		return
+	}
+
 	stats := h.service.GetJobStats(c.Request.Context())
 
-	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
+	templateData := gin.H{
 		"title":        "Dashboard",
 		"page":         "dashboard",
 		"activeNav":    "jobs",
-		"pageTitle":    "Job Matches",
+		"pageTitle":    "Jobs",
 		"currentYear":  time.Now().Year(),
 		"username":     username,
-		"jobs":         jobs,
+		"jobs":         jobsWithPagination.Jobs,
+		"pagination":   jobsWithPagination.Pagination,
 		"totalJobs":    stats.TotalJobs,
 		"applied":      stats.TotalApplied,
 		"highMatch":    1, // Keeping this dummy data for now
 		"statusFilter": statusParam,
-	})
+	}
+
+	// Check if this is an HTMX request
+	if c.GetHeader("HX-Request") == "true" {
+		// Return only the jobs container fragment
+		c.HTML(http.StatusOK, "partials/jobs-container", templateData)
+		return
+	}
+
+	// Return full page for regular requests
+	c.HTML(http.StatusOK, "layouts/base.html", templateData)
 }
 
 // GetNewJobForm renders the form for adding a new job.
@@ -262,10 +301,10 @@ func (h *JobHandler) ListJobsPage(c *gin.Context) {
 func (h *JobHandler) GetNewJobForm(c *gin.Context) {
 	username, _ := c.Get("username")
 	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-		"title":       "Add New Job",
+		"title":       "New Job",
 		"page":        "job-new",
 		"activeNav":   "newjob",
-		"pageTitle":   "Add New Job",
+		"pageTitle":   "New Job",
 		"currentYear": time.Now().Year(),
 		"username":    username,
 	})
@@ -297,9 +336,6 @@ func (h *JobHandler) CreateJob(c *gin.Context) {
 	jobTypeStr := c.PostForm("job_type")
 	jobType := models.JobTypeFromString(jobTypeStr)
 
-	expLevelStr := c.PostForm("experience_level")
-	expLevel := models.ExperienceLevelFromString(expLevelStr)
-
 	statusStr := c.PostForm("status")
 	status, err := models.JobStatusFromString(statusStr)
 	if err != nil {
@@ -309,7 +345,6 @@ func (h *JobHandler) CreateJob(c *gin.Context) {
 
 	options := []models.JobOption{
 		models.WithJobType(jobType),
-		models.WithExperienceLevel(expLevel),
 		models.WithStatus(status),
 		models.WithRequiredSkills(skills),
 	}

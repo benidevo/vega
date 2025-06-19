@@ -103,54 +103,6 @@ func TestJobType_String(t *testing.T) {
 	}
 }
 
-func TestExperienceLevel_FromString(t *testing.T) {
-	tests := []struct {
-		name string
-		str  string
-		want ExperienceLevel
-	}{
-		{"Entry", "entry", ENTRY},
-		{"Entry Level", "entry level", ENTRY},
-		{"Junior", "junior", ENTRY},
-		{"Mid", "mid", MID_LEVEL},
-		{"Mid Level", "mid level", MID_LEVEL},
-		{"Intermediate", "intermediate", MID_LEVEL},
-		{"Senior", "senior", SENIOR},
-		{"Senior Level", "senior level", SENIOR},
-		{"Executive", "executive", EXECUTIVE},
-		{"Leadership", "leadership", EXECUTIVE},
-		{"Unknown input returns NOT_SPECIFIED", "unknown", NOT_SPECIFIED},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := ExperienceLevelFromString(tt.str)
-			assert.Equal(t, tt.want, got)
-		})
-	}
-}
-
-func TestExperienceLevel_String(t *testing.T) {
-	tests := []struct {
-		level ExperienceLevel
-		want  string
-	}{
-		{ENTRY, "Entry Level"},
-		{MID_LEVEL, "Mid Level"},
-		{SENIOR, "Senior Level"},
-		{EXECUTIVE, "Executive Level"},
-		{NOT_SPECIFIED, "Not Specified"},
-		{999, "Not Specified"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.want, func(t *testing.T) {
-			got := tt.level.String()
-			assert.Equal(t, tt.want, got)
-		})
-	}
-}
-
 func TestNewJob(t *testing.T) {
 	t.Run("With options", func(t *testing.T) {
 		title := "Software Engineer"
@@ -168,7 +120,6 @@ func TestNewJob(t *testing.T) {
 			WithRequiredSkills(requiredSkills),
 			WithApplicationURL("https://apply.example.com"),
 			WithStatus(APPLIED),
-			WithExperienceLevel(SENIOR),
 			WithNotes("Great opportunity"),
 		)
 
@@ -181,7 +132,6 @@ func TestNewJob(t *testing.T) {
 		assert.Equal(t, requiredSkills, job.RequiredSkills)
 		assert.Equal(t, "https://apply.example.com", job.ApplicationURL)
 		assert.Equal(t, APPLIED, job.Status)
-		assert.Equal(t, SENIOR, job.ExperienceLevel)
 		assert.Equal(t, "Great opportunity", job.Notes)
 		assert.NotZero(t, job.CreatedAt)
 		assert.NotZero(t, job.UpdatedAt)
@@ -202,7 +152,6 @@ func TestNewJob(t *testing.T) {
 		assert.Empty(t, job.SourceURL)
 		assert.Empty(t, job.RequiredSkills)
 		assert.Empty(t, job.ApplicationURL)
-		assert.Zero(t, job.ExperienceLevel)
 		assert.Empty(t, job.Notes)
 		assert.NotZero(t, job.CreatedAt)
 		assert.NotZero(t, job.UpdatedAt)

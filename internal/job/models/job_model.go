@@ -1,6 +1,7 @@
 package models
 
 import (
+	"strconv"
 	"strings"
 	"time"
 )
@@ -139,69 +140,22 @@ func (j JobType) String() string {
 	}
 }
 
-// ExperienceLevel represents the level of experience required for a job.
-type ExperienceLevel int
-
-const (
-	ENTRY ExperienceLevel = iota
-	MID_LEVEL
-	SENIOR
-	EXECUTIVE
-	NOT_SPECIFIED
-)
-
-// FromString parses a string and returns the corresponding ExperienceLevel.
-// Accepts various synonyms for each level.
-// Returns NOT_SPECIFIED if the string does not match any known level.
-func ExperienceLevelFromString(experience string) ExperienceLevel {
-	switch strings.ToLower(experience) {
-	case "entry", "entry level", "junior":
-		return ENTRY
-	case "mid", "mid level", "intermediate":
-		return MID_LEVEL
-	case "senior", "senior level":
-		return SENIOR
-	case "executive", "leadership":
-		return EXECUTIVE
-	default:
-		return NOT_SPECIFIED
-	}
-}
-
-// String returns the string representation of the ExperienceLevel.
-// It maps each ExperienceLevel constant to a human-readable string.
-func (e ExperienceLevel) String() string {
-	switch e {
-	case ENTRY:
-		return "Entry Level"
-	case MID_LEVEL:
-		return "Mid Level"
-	case SENIOR:
-		return "Senior Level"
-	case EXECUTIVE:
-		return "Executive Level"
-	default:
-		return "Not Specified"
-	}
-}
-
 // Job represents a job posting.
 // It includes metadata for database mapping and JSON serialization.
 type Job struct {
-	ID              int             `json:"id" db:"id" sql:"primary_key;auto_increment"`
-	Title           string          `json:"title" db:"title" sql:"type:text;not null;index" validate:"required,min=1,max=255"`
-	Description     string          `json:"description" db:"description" sql:"type:text;not null" validate:"required,min=1"`
-	Location        string          `json:"location" db:"location" sql:"type:text" validate:"max=255"`
-	JobType         JobType         `json:"job_type" db:"job_type" sql:"type:integer;not null;default:0" validate:"min=0,max=6"`
-	SourceURL       string          `json:"source_url" db:"source_url" sql:"type:text;unique;index" validate:"omitempty,url"`
-	RequiredSkills  []string        `json:"required_skills" db:"required_skills" sql:"type:text" validate:"max=50,dive,max=100"` // Stored as JSON
-	ApplicationURL  string          `json:"application_url" db:"application_url" sql:"type:text" validate:"omitempty,url"`
-	Company         Company         `json:"company" sql:"-" validate:"required"` // Not stored directly, company_id is used instead
-	Status          JobStatus       `json:"status" db:"status" sql:"type:integer;not null;default:0;index" validate:"min=0,max=5"`
-	ExperienceLevel ExperienceLevel `json:"experience_level" db:"experience_level" sql:"type:integer;not null;default:0" validate:"min=0,max=4"`
-	Notes           string          `json:"notes,omitempty" db:"notes" sql:"type:text" validate:"max=5000"`
-	CreatedAt       time.Time       `json:"created_at" db:"created_at" sql:"type:timestamp;not null;default:current_timestamp"`
-	UpdatedAt       time.Time       `json:"updated_at" db:"updated_at" sql:"type:timestamp;not null;default:current_timestamp"`
+	ID             int       `json:"id" db:"id" sql:"primary_key;auto_increment"`
+	Title          string    `json:"title" db:"title" sql:"type:text;not null;index" validate:"required,min=1,max=255"`
+	Description    string    `json:"description" db:"description" sql:"type:text;not null" validate:"required,min=1"`
+	Location       string    `json:"location" db:"location" sql:"type:text" validate:"max=255"`
+	JobType        JobType   `json:"job_type" db:"job_type" sql:"type:integer;not null;default:0" validate:"min=0,max=6"`
+	SourceURL      string    `json:"source_url" db:"source_url" sql:"type:text;unique;index" validate:"omitempty,url"`
+	RequiredSkills []string  `json:"required_skills" db:"required_skills" sql:"type:text" validate:"max=50,dive,max=100"` // Stored as JSON
+	ApplicationURL string    `json:"application_url" db:"application_url" sql:"type:text" validate:"omitempty,url"`
+	Company        Company   `json:"company" sql:"-" validate:"required"` // Not stored directly, company_id is used instead
+	Status         JobStatus `json:"status" db:"status" sql:"type:integer;not null;default:0;index" validate:"min=0,max=5"`
+	Notes          string    `json:"notes,omitempty" db:"notes" sql:"type:text" validate:"max=5000"`
+	CreatedAt      time.Time `json:"created_at" db:"created_at" sql:"type:timestamp;not null;default:current_timestamp"`
+	UpdatedAt      time.Time `json:"updated_at" db:"updated_at" sql:"type:timestamp;not null;default:current_timestamp"`
 
 	// SQL-only fields
 	CompanyID int `json:"-" db:"company_id" sql:"type:integer;not null;index;references:companies(id)"`
@@ -249,13 +203,6 @@ func WithApplicationURL(url string) JobOption {
 func WithStatus(status JobStatus) JobOption {
 	return func(j *Job) {
 		j.Status = status
-	}
-}
-
-// WithExperienceLevel sets the required experience level
-func WithExperienceLevel(level ExperienceLevel) JobOption {
-	return func(j *Job) {
-		j.ExperienceLevel = level
 	}
 }
 
@@ -320,6 +267,20 @@ type JobStats struct {
 	HighMatch    int `json:"high_match"`
 }
 
+type PaginationInfo struct {
+	CurrentPage  int  `json:"current_page"`
+	TotalPages   int  `json:"total_pages"`
+	TotalItems   int  `json:"total_items"`
+	ItemsPerPage int  `json:"items_per_page"`
+	HasNext      bool `json:"has_next"`
+	HasPrev      bool `json:"has_prev"`
+}
+
+type JobsWithPagination struct {
+	Jobs       []*Job          `json:"jobs"`
+	Pagination *PaginationInfo `json:"pagination"`
+}
+
 // CoverLetter represents a generated cover letter in the job domain.
 type CoverLetter struct {
 	ID          int       `json:"id" db:"id"`
@@ -359,4 +320,16 @@ const (
 // String returns the string representation of the cover letter format.
 func (f CoverLetterFormat) String() string {
 	return string(f)
+}
+
+// ParsePositiveInt parses a string to a positive integer, returns error if invalid or negative
+func ParsePositiveInt(s string) (int, error) {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, err
+	}
+	if i <= 0 {
+		return 0, strconv.ErrRange
+	}
+	return i, nil
 }

@@ -88,12 +88,12 @@
         <div>
           <h3 class="text-lg font-medium text-primary mb-3">Job Description</h3>
           <div class="text-gray-300 space-y-4">
-            <p class="whitespace-pre-wrap">{{.job.Description}}</p>
+            <p class="whitespace-pre-wrap leading-relaxed">{{.job.Description}}</p>
             {{if .job.Notes}}
             <p>
               <strong>Notes:</strong>
             </p>
-            <p class="whitespace-pre-wrap">{{.job.Notes}}</p>
+            <p class="whitespace-pre-wrap leading-relaxed">{{.job.Notes}}</p>
             {{end}}
           </div>
         </div>
@@ -222,10 +222,6 @@
             <p class="text-white">{{.job.JobType.String}}</p>
           </div>
 
-          <div>
-            <p class="text-gray-400 text-sm">Experience Level</p>
-            <p class="text-white">{{.job.ExperienceLevel.String}}</p>
-          </div>
         </div>
 
         <!-- Status -->

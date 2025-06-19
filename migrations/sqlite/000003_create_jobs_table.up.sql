@@ -10,7 +10,6 @@ CREATE TABLE IF NOT EXISTS jobs (
     application_url TEXT,
     company_id INTEGER NOT NULL,
     status INTEGER NOT NULL DEFAULT 0,
-    experience_level INTEGER NOT NULL DEFAULT 0,
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

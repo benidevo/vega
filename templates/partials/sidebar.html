@@ -1,6 +1,6 @@
 {{define "sidebar"}}
 <!-- Sidebar Navigation - hidden on mobile by default -->
-<div id="sidebar" class="hidden md:flex w-full md:w-64 bg-slate-800 text-white shadow-lg py-6 md:py-8 px-4 flex-col justify-between fixed md:relative h-full z-20 overflow-y-auto transition-all duration-300 transform -translate-x-full md:translate-x-0">
+<div id="sidebar" class="hidden md:flex w-full md:w-48 lg:w-56 bg-slate-800 text-white shadow-lg py-6 md:py-8 px-4 flex-col justify-between fixed md:relative h-full z-20 overflow-y-auto transition-all duration-300 transform -translate-x-full md:translate-x-0">
   <!-- Logo and Nav -->
   <div>
     <!-- Logo - hidden on mobile as it's in the top bar -->
@@ -27,14 +27,14 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 {{if eq .activeNav "jobs"}}text-primary{{else}}text-gray-400 group-hover:text-primary{{end}}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
         </svg>
-        Job Matches
+        Jobs
       </a>
 
       <a href="/jobs/new" class="{{if eq .activeNav "newjob"}}bg-slate-700 text-white{{else}}text-gray-300 hover:bg-slate-700 hover:text-white{{end}} group flex items-center px-3 py-3 text-sm font-medium rounded-md">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 {{if eq .activeNav "newjob"}}text-primary{{else}}text-gray-400 group-hover:text-primary{{end}}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
-        Add New Job
+        New Job
       </a>
 
       <a href="/settings" class="{{if eq .activeNav "settings"}}bg-slate-700 text-white{{else}}text-gray-300 hover:bg-slate-700 hover:text-white{{end}} group flex items-center px-3 py-3 text-sm font-medium rounded-md">

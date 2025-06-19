@@ -69,7 +69,7 @@ func (r *SQLiteJobRepository) GetBySourceURL(ctx context.Context, sourceURL stri
 		SELECT
 			j.id, j.title, j.description, j.location, j.job_type,
 			j.source_url, j.required_skills,
-			j.application_url, j.company_id, j.status, j.experience_level,
+			j.application_url, j.company_id, j.status,
 			j.notes, j.created_at, j.updated_at,
 			c.id, c.name, c.created_at, c.updated_at
 		FROM jobs j
@@ -82,13 +82,13 @@ func (r *SQLiteJobRepository) GetBySourceURL(ctx context.Context, sourceURL stri
 	var j models.Job
 	var company models.Company
 	var skillsJSON string
-	var jobType, status, experienceLevel int
+	var jobType, status int
 	var notes, jobSourceURL, applicationURL, location sql.NullString
 
 	err := row.Scan(
 		&j.ID, &j.Title, &j.Description, &location, &jobType,
 		&jobSourceURL, &skillsJSON,
-		&applicationURL, &company.ID, &status, &experienceLevel,
+		&applicationURL, &company.ID, &status,
 		&notes, &j.CreatedAt, &j.UpdatedAt,
 		&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt,
 	)
@@ -119,7 +119,6 @@ func (r *SQLiteJobRepository) GetBySourceURL(ctx context.Context, sourceURL stri
 
 	j.JobType = models.JobType(jobType)
 	j.Status = models.JobStatus(status)
-	j.ExperienceLevel = models.ExperienceLevel(experienceLevel)
 	j.Company = company
 
 	return &j, nil
@@ -164,9 +163,9 @@ func (r *SQLiteJobRepository) Create(ctx context.Context, jobModel *models.Job) 
 		INSERT INTO jobs (
 			title, description, location, job_type, source_url,
 			required_skills, application_url,
-			company_id, status, experience_level, notes,
+			company_id, status, notes,
 			created_at, updated_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
 	result, err := tx.ExecContext(
@@ -181,7 +180,6 @@ func (r *SQLiteJobRepository) Create(ctx context.Context, jobModel *models.Job) 
 		jobModel.ApplicationURL,
 		company.ID,
 		int(jobModel.Status),
-		int(jobModel.ExperienceLevel),
 		jobModel.Notes,
 		jobModel.CreatedAt,
 		jobModel.UpdatedAt,
@@ -217,7 +215,7 @@ func (r *SQLiteJobRepository) GetByID(ctx context.Context, id int) (*models.Job,
 		SELECT
 			j.id, j.title, j.description, j.location, j.job_type,
 			j.source_url, j.required_skills,
-			j.application_url, j.company_id, j.status, j.experience_level,
+			j.application_url, j.company_id, j.status,
 			j.notes, j.created_at, j.updated_at,
 			c.id, c.name, c.created_at, c.updated_at
 		FROM jobs j
@@ -230,13 +228,13 @@ func (r *SQLiteJobRepository) GetByID(ctx context.Context, id int) (*models.Job,
 	var j models.Job
 	var company models.Company
 	var skillsJSON string
-	var jobType, status, experienceLevel int
+	var jobType, status int
 	var notes, sourceURL, applicationURL, location sql.NullString
 
 	err := row.Scan(
 		&j.ID, &j.Title, &j.Description, &location, &jobType,
 		&sourceURL, &skillsJSON,
-		&applicationURL, &company.ID, &status, &experienceLevel,
+		&applicationURL, &company.ID, &status,
 		&notes, &j.CreatedAt, &j.UpdatedAt,
 		&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt,
 	)
@@ -270,7 +268,6 @@ func (r *SQLiteJobRepository) GetByID(ctx context.Context, id int) (*models.Job,
 
 	j.JobType = models.JobType(jobType)
 	j.Status = models.JobStatus(status)
-	j.ExperienceLevel = models.ExperienceLevel(experienceLevel)
 
 	j.Company = company
 
@@ -283,7 +280,7 @@ func (r *SQLiteJobRepository) GetAll(ctx context.Context, filter models.JobFilte
 		SELECT
 			j.id, j.title, j.description, j.location, j.job_type,
 			j.source_url, j.required_skills,
-			j.application_url, j.company_id, j.status, j.experience_level,
+			j.application_url, j.company_id, j.status,
 			j.notes, j.created_at, j.updated_at,
 			c.id, c.name, c.created_at, c.updated_at
 		FROM jobs j
@@ -342,13 +339,13 @@ func (r *SQLiteJobRepository) GetAll(ctx context.Context, filter models.JobFilte
 		var j models.Job
 		var company models.Company
 		var skillsJSON string
-		var jobType, status, experienceLevel int
+		var jobType, status int
 		var notes, sourceURL, applicationURL, location sql.NullString
 
 		err := rows.Scan(
 			&j.ID, &j.Title, &j.Description, &location, &jobType,
 			&sourceURL, &skillsJSON,
-			&applicationURL, &company.ID, &status, &experienceLevel,
+			&applicationURL, &company.ID, &status,
 			&notes, &j.CreatedAt, &j.UpdatedAt,
 			&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt,
 		)
@@ -376,7 +373,6 @@ func (r *SQLiteJobRepository) GetAll(ctx context.Context, filter models.JobFilte
 
 		j.JobType = models.JobType(jobType)
 		j.Status = models.JobStatus(status)
-		j.ExperienceLevel = models.ExperienceLevel(experienceLevel)
 
 		j.Company = company
 
@@ -432,8 +428,7 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, job *models.Job) error
 			title = ?, description = ?, location = ?, job_type = ?,
 			source_url = ?, required_skills = ?,
 			application_url = ?, company_id = ?,
-			status = ?, experience_level = ?,
-			notes = ?, updated_at = ?
+			status = ?, notes = ?, updated_at = ?
 		WHERE id = ?
 	`
 
@@ -449,7 +444,6 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, job *models.Job) error
 		job.ApplicationURL,
 		company.ID,
 		int(job.Status),
-		int(job.ExperienceLevel),
 		job.Notes,
 		job.UpdatedAt,
 		job.ID,
@@ -533,13 +527,58 @@ func (r *SQLiteJobRepository) UpdateStatus(ctx context.Context, id int, status m
 	return nil
 }
 
+// GetCount returns the total count of jobs matching the given filter
+func (r *SQLiteJobRepository) GetCount(ctx context.Context, filter models.JobFilter) (int, error) {
+	query := `
+		SELECT COUNT(*)
+		FROM jobs j
+		JOIN companies c ON j.company_id = c.id
+	`
+
+	var conditions []string
+	var args []interface{}
+
+	if filter.CompanyID != nil {
+		conditions = append(conditions, "j.company_id = ?")
+		args = append(args, *filter.CompanyID)
+	}
+
+	if filter.Status != nil {
+		conditions = append(conditions, "j.status = ?")
+		args = append(args, int(*filter.Status))
+	}
+
+	if filter.JobType != nil {
+		conditions = append(conditions, "j.job_type = ?")
+		args = append(args, int(*filter.JobType))
+	}
+
+	if filter.Search != "" {
+		conditions = append(conditions, "(j.title LIKE ? OR j.description LIKE ? OR c.name LIKE ?)")
+		searchPattern := "%" + filter.Search + "%"
+		args = append(args, searchPattern, searchPattern, searchPattern)
+	}
+
+	if len(conditions) > 0 {
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	var count int
+	err := r.db.QueryRowContext(ctx, query, args...).Scan(&count)
+	if err != nil {
+		return 0, models.WrapError(models.ErrFailedToGetJobStats, err)
+	}
+
+	return count, nil
+}
+
 // GetStats returns aggregate statistics about jobs in the database.
 // It currently returns the total number of jobs and the number of jobs with status APPLIED.
 func (r *SQLiteJobRepository) GetStats(ctx context.Context) (*models.JobStats, error) {
 	query := `
         SELECT
             COUNT(*) AS total_jobs,
-            SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS applied
+            COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS applied
         FROM jobs
     `
 	rows, err := r.db.QueryContext(ctx, query, int(models.APPLIED))

@@ -3,6 +3,7 @@ package ascentio
 import (
 	"context"
 	"database/sql"
+	"html/template"
 	"net/http"
 	"os"
 	"os/signal"
@@ -45,6 +46,8 @@ func New(cfg config.Settings) *App {
 
 	// Only load templates in non-test environment
 	if !cfg.IsTest {
+		// Setup template functions
+		router.SetFuncMap(templateFuncMap())
 		router.LoadHTMLGlob("templates/**/*.html")
 	}
 
@@ -181,4 +184,54 @@ func (a *App) runMigrations() error {
 	}
 
 	return nil
+}
+
+// templateFuncMap returns a map of custom template functions
+func templateFuncMap() template.FuncMap {
+	return template.FuncMap{
+		"add": func(a, b int) int {
+			return a + b
+		},
+		"sub": func(a, b int) int {
+			return a - b
+		},
+		"mul": func(a, b int) int {
+			return a * b
+		},
+		"min": func(a, b int) int {
+			if a < b {
+				return a
+			}
+			return b
+		},
+		"max": func(a, b int) int {
+			if a > b {
+				return a
+			}
+			return b
+		},
+		"pageRange": func(current, total int) []int {
+			// Show at most 5 page numbers around current page
+			start := current - 2
+			end := current + 2
+
+			if start < 1 {
+				start = 1
+				end = start + 4
+			}
+			if end > total {
+				end = total
+				start = end - 4
+			}
+			if start < 1 {
+				start = 1
+			}
+
+			pages := make([]int, 0)
+			for i := start; i <= end; i++ {
+				pages = append(pages, i)
+			}
+			return pages
+		},
+	}
 }

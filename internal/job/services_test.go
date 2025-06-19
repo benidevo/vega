@@ -63,6 +63,11 @@ func (m *MockJobRepository) GetAll(ctx context.Context, filter models.JobFilter)
 	return args.Get(0).([]*models.Job), args.Error(1)
 }
 
+func (m *MockJobRepository) GetCount(ctx context.Context, filter models.JobFilter) (int, error) {
+	args := m.Called(ctx, filter)
+	return args.Int(0), args.Error(1)
+}
+
 func (m *MockJobRepository) Update(ctx context.Context, job *models.Job) error {
 	args := m.Called(ctx, job)
 	return args.Error(0)
@@ -167,12 +172,13 @@ func TestJobService(t *testing.T) {
 				Limit:  10,
 			}
 			mockRepo.On("GetAll", ctx, searchFilter).Return(jobs[:1], nil)
+			mockRepo.On("GetCount", ctx, searchFilter).Return(1, nil)
 
 			service := NewJobService(mockRepo, nil, nil, cfg)
-			result, err := service.GetJobs(ctx, searchFilter)
+			result, err := service.GetJobsWithPagination(ctx, searchFilter)
 
 			require.NoError(t, err)
-			assert.Len(t, result, 1)
+			assert.Len(t, result.Jobs, 1)
 			mockRepo.AssertExpectations(t)
 		})
 
@@ -181,14 +187,16 @@ func TestJobService(t *testing.T) {
 			status := models.APPLIED
 			statusFilter := models.JobFilter{
 				Status: &status,
+				Limit:  12,
 			}
 			mockRepo.On("GetAll", ctx, statusFilter).Return(jobs, nil)
+			mockRepo.On("GetCount", ctx, statusFilter).Return(2, nil)
 
 			service := NewJobService(mockRepo, nil, nil, cfg)
-			result, err := service.GetJobs(ctx, statusFilter)
+			result, err := service.GetJobsWithPagination(ctx, statusFilter)
 
 			require.NoError(t, err)
-			assert.Len(t, result, 2)
+			assert.Len(t, result.Jobs, 2)
 			mockRepo.AssertExpectations(t)
 		})
 
@@ -197,14 +205,16 @@ func TestJobService(t *testing.T) {
 			companyID := 1
 			companyFilter := models.JobFilter{
 				CompanyID: &companyID,
+				Limit:     12,
 			}
 			mockRepo.On("GetAll", ctx, companyFilter).Return(jobs, nil)
+			mockRepo.On("GetCount", ctx, companyFilter).Return(2, nil)
 
 			service := NewJobService(mockRepo, nil, nil, cfg)
-			result, err := service.GetJobs(ctx, companyFilter)
+			result, err := service.GetJobsWithPagination(ctx, companyFilter)
 
 			require.NoError(t, err)
-			assert.Len(t, result, 2)
+			assert.Len(t, result.Jobs, 2)
 			mockRepo.AssertExpectations(t)
 		})
 
@@ -213,14 +223,16 @@ func TestJobService(t *testing.T) {
 			jobType := models.FULL_TIME
 			typeFilter := models.JobFilter{
 				JobType: &jobType,
+				Limit:   12,
 			}
 			mockRepo.On("GetAll", ctx, typeFilter).Return(jobs, nil)
+			mockRepo.On("GetCount", ctx, typeFilter).Return(2, nil)
 
 			service := NewJobService(mockRepo, nil, nil, cfg)
-			result, err := service.GetJobs(ctx, typeFilter)
+			result, err := service.GetJobsWithPagination(ctx, typeFilter)
 
 			require.NoError(t, err)
-			assert.Len(t, result, 2)
+			assert.Len(t, result.Jobs, 2)
 			mockRepo.AssertExpectations(t)
 		})
 
@@ -236,12 +248,13 @@ func TestJobService(t *testing.T) {
 				Offset:  10,
 			}
 			mockRepo.On("GetAll", ctx, complexFilter).Return(jobs[:1], nil)
+			mockRepo.On("GetCount", ctx, complexFilter).Return(1, nil)
 
 			service := NewJobService(mockRepo, nil, nil, cfg)
-			result, err := service.GetJobs(ctx, complexFilter)
+			result, err := service.GetJobsWithPagination(ctx, complexFilter)
 
 			require.NoError(t, err)
-			assert.Len(t, result, 1)
+			assert.Len(t, result.Jobs, 1)
 			mockRepo.AssertExpectations(t)
 		})
 	})

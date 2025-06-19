@@ -44,13 +44,16 @@
 
     /* HTMX indicator styling */
     .htmx-indicator {
-      display: none;
+      display: none !important;
+      pointer-events: none !important;
     }
     .htmx-request .htmx-indicator {
-      display: inline-block;
+      display: flex !important;
+      pointer-events: auto !important;
     }
     .htmx-request.htmx-indicator {
-      display: inline-block;
+      display: flex !important;
+      pointer-events: auto !important;
     }
 
     /* Toast animations */

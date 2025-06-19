@@ -226,21 +226,56 @@ func (s *JobService) GetJobStats(ctx context.Context) *models.JobStats {
 	return stats
 }
 
-// GetJobs retrieves jobs based on the provided filter.
-func (s *JobService) GetJobs(ctx context.Context, filter models.JobFilter) ([]*models.Job, error) {
+// GetJobsWithPagination retrieves jobs with pagination metadata
+func (s *JobService) GetJobsWithPagination(ctx context.Context, filter models.JobFilter) (*models.JobsWithPagination, error) {
+	if filter.Limit <= 0 {
+		filter.Limit = 12 // Default page size
+	}
+	if filter.Offset < 0 {
+		filter.Offset = 0
+	}
+
 	jobs, err := s.jobRepo.GetAll(ctx, filter)
 	if err != nil {
 		s.log.Error().
 			Err(err).
-			Msg("Failed to get jobs with filter")
+			Msg("Failed to get jobs with pagination")
 		return nil, err
+	}
+
+	totalCount, err := s.jobRepo.GetCount(ctx, filter)
+	if err != nil {
+		s.log.Error().
+			Err(err).
+			Msg("Failed to get total job count")
+		return nil, err
+	}
+
+	currentPage := (filter.Offset / filter.Limit) + 1
+	totalPages := (totalCount + filter.Limit - 1) / filter.Limit // Ceiling division
+
+	pagination := &models.PaginationInfo{
+		CurrentPage:  currentPage,
+		TotalPages:   totalPages,
+		TotalItems:   totalCount,
+		ItemsPerPage: filter.Limit,
+		HasNext:      currentPage < totalPages,
+		HasPrev:      currentPage > 1,
+	}
+
+	result := &models.JobsWithPagination{
+		Jobs:       jobs,
+		Pagination: pagination,
 	}
 
 	s.log.Debug().
 		Int("count", len(jobs)).
-		Msg("Jobs retrieved successfully")
+		Int("total_count", totalCount).
+		Int("current_page", currentPage).
+		Int("total_pages", totalPages).
+		Msg("Jobs with pagination retrieved successfully")
 
-	return jobs, nil
+	return result, nil
 }
 
 // UpdateJob updates a job's details.

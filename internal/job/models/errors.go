@@ -8,7 +8,6 @@ var (
 	// Model validation errors
 	ErrInvalidJobStatus        = commonerrors.New("invalid job status")
 	ErrInvalidStatusTransition = commonerrors.New("job status can only move forward")
-	ErrInvalidExperienceLevel  = commonerrors.New("invalid experience level")
 	ErrJobTitleRequired        = commonerrors.New("job title is required")
 	ErrJobDescriptionRequired  = commonerrors.New("job description is required")
 	ErrCompanyRequired         = commonerrors.New("job company is required")

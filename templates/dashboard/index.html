@@ -7,97 +7,54 @@
 {{end}}
 
 {{define "dashboard-jobs-content"}}
-<div>
+<div class="flex flex-col flex-1 overflow-hidden">
   {{if .error}}
   <div class="bg-red-900 bg-opacity-50 border border-red-800 text-red-100 px-4 py-3 rounded mb-6">
     <p>{{.error}}</p>
   </div>
   {{end}}
-  <!-- Stats -->
-  <div class="grid grid-cols-3 md:grid-cols-3 gap-3 md:gap-5 mb-8">
-    {{template "partials/stats-card-jobs" .}}
-    {{template "partials/stats-card-applied" .}}
-    {{template "partials/stats-card-match" .}}
+  
+  <!-- Fixed Top Content -->
+  <div class="flex-none">
+    <!-- Stats -->
+    <div class="grid grid-cols-3 gap-3 md:gap-4 mb-6">
+      {{template "partials/stats-card-jobs" .}}
+      {{template "partials/stats-card-applied" .}}
+      {{template "partials/stats-card-match" .}}
+    </div>
+
+    <!-- Filtering Controls -->
+    <div class="flex flex-col sm:flex-row gap-3 mb-6">
+      <select
+        id="status-filter"
+        class="bg-slate-700 text-white border-slate-600 rounded-md px-3 py-2 text-sm w-full sm:w-auto"
+        hx-get="/jobs"
+        hx-trigger="change"
+        hx-target="#jobs-container"
+        hx-push-url="true"
+        name="status"
+      >
+        <option value="all" {{if or (eq .statusFilter "") (eq .statusFilter "all")}}selected{{end}}>All Jobs</option>
+        <option value="interested" {{if eq .statusFilter "interested"}}selected{{end}}>Interested</option>
+        <option value="applied" {{if eq .statusFilter "applied"}}selected{{end}}>Applied</option>
+        <option value="interviewing" {{if eq .statusFilter "interviewing"}}selected{{end}}>Interviewing</option>
+        <option value="offer received" {{if eq .statusFilter "offer received"}}selected{{end}}>Offer Received</option>
+        <option value="rejected" {{if eq .statusFilter "rejected"}}selected{{end}}>Rejected</option>
+        <option value="not interested" {{if eq .statusFilter "not interested"}}selected{{end}}>Not Interested</option>
+      </select>
+      <button
+        class="bg-primary text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-primary-dark transition-colors w-full sm:w-auto"
+        hx-get="/jobs"
+        hx-target="#jobs-container"
+      >
+        Refresh Matches
+      </button>
+    </div>
   </div>
 
-  <!-- Filtering Controls -->
-  <div class="flex flex-col sm:flex-row gap-4 mb-8">
-    <select
-      id="status-filter"
-      class="bg-slate-700 text-white border-slate-600 rounded-md px-3 py-2 text-sm w-full sm:w-auto"
-      hx-get="/jobs"
-      hx-trigger="change"
-      hx-target="body"
-      hx-push-url="true"
-      name="status"
-    >
-      <option value="all" {{if or (eq .statusFilter "") (eq .statusFilter "all")}}selected{{end}}>All Jobs</option>
-      <option value="interested" {{if eq .statusFilter "interested"}}selected{{end}}>Interested</option>
-      <option value="applied" {{if eq .statusFilter "applied"}}selected{{end}}>Applied</option>
-      <option value="interviewing" {{if eq .statusFilter "interviewing"}}selected{{end}}>Interviewing</option>
-      <option value="offer received" {{if eq .statusFilter "offer received"}}selected{{end}}>Offer Received</option>
-      <option value="rejected" {{if eq .statusFilter "rejected"}}selected{{end}}>Rejected</option>
-      <option value="not interested" {{if eq .statusFilter "not interested"}}selected{{end}}>Not Interested</option>
-    </select>
-    <button
-      class="bg-primary text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-primary-dark transition-colors w-full sm:w-auto"
-      hx-get="/jobs"
-      hx-target="body"
-    >
-      Refresh Matches
-    </button>
+  <!-- Flexible Job Cards Container -->
+  <div id="jobs-container" class="flex-1 flex flex-col relative">
+    {{template "partials/jobs-container" .}}
   </div>
-
-  <!-- Job Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-    {{if and .jobs (gt (len .jobs) 0)}}
-      {{range .jobs}}
-      <div class="bg-slate-800 rounded-lg shadow-lg overflow-hidden hover:bg-slate-750 transition-colors cursor-pointer group" 
-           _="on click if not (event.target.matches('select') or event.target.closest('select')) then go to url '/jobs/{{.ID}}/details'">
-        <div class="px-4 md:px-6 py-4 md:py-5">
-          <div class="flex justify-between items-start mb-2">
-            <h3 class="text-lg font-semibold text-white truncate group-hover:text-blue-300 transition-colors flex-1 min-w-0 pr-2">{{.Title}}</h3>
-            <div class="flex-none px-2 py-1 bg-yellow-500 bg-opacity-20 text-yellow-400 rounded text-xs font-medium whitespace-nowrap">
-              92% Match
-            </div>
-          </div>
-          <p class="text-gray-400 text-sm truncate mb-3">{{.Company.Name}}{{if .Location}} · {{.Location}}{{end}}</p>
-          <p class="text-gray-300 text-sm mb-4 line-clamp-2 leading-relaxed">
-            {{if gt (len .Description) 120}}
-              {{slice .Description 0 120}}...
-            {{else}}
-              {{.Description}}
-            {{end}}
-          </p>
-          <div class="flex justify-start" onclick="event.stopPropagation()">
-            <select
-              class="bg-slate-700 text-white border-slate-600 rounded-md px-3 py-2 text-sm cursor-pointer hover:bg-slate-600 transition-colors min-w-0"
-              hx-post="/jobs/{{.ID}}/status"
-              hx-headers='{"X-HTTP-Method-Override": "PUT"}'
-              hx-trigger="change"
-              hx-target="#status-response-{{.ID}}"
-              hx-swap="innerHTML"
-              name="status"
-            >
-              <option value="interested" {{if eq .Status 0}}selected{{end}}>Interested</option>
-              <option value="applied" {{if eq .Status 1}}selected{{end}}>Applied</option>
-              <option value="interviewing" {{if eq .Status 2}}selected{{end}}>Interviewing</option>
-              <option value="offered" {{if eq .Status 3}}selected{{end}}>Offer Received</option>
-              <option value="rejected" {{if eq .Status 4}}selected{{end}}>Rejected</option>
-              <option value="not_interested" {{if eq .Status 5}}selected{{end}}>Not Interested</option>
-            </select>
-          </div>
-        </div>
-        <div id="status-response-{{.ID}}" class="text-xs text-green-400 px-4 md:px-6 pb-2"></div>
-      </div>
-      {{end}}
-    {{else}}
-      <div class="col-span-full text-center py-8">
-        <p class="text-gray-400">No jobs found. <a href="/jobs/new" class="text-primary hover:text-teal-400">Add your first job</a>.</p>
-      </div>
-    {{end}}
-  </div>
-
-
 </div>
 {{end}}
