@@ -117,7 +117,9 @@ func (h *SettingsHandler) GetProfileSettingsPage(c *gin.Context) {
 
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID.(int))
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusInternalServerError, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Failed to load profile settings",
 		})
 		return
@@ -164,7 +166,9 @@ func (h *SettingsHandler) HandleCreateProfile(c *gin.Context) {
 
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error-dashboard.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "dashboard",
 			"message": "Failed to load profile settings",
 		})
 		return
@@ -184,18 +188,24 @@ func (h *SettingsHandler) HandleCreateProfile(c *gin.Context) {
 		// Check if it's a validation error
 		if _, ok := err.(validator.ValidationErrors); ok {
 			errorMessage := h.formatValidationError(err)
-			c.HTML(http.StatusBadRequest, "partials/alert-error-dashboard.html", gin.H{
+			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "dashboard",
 				"message": errorMessage,
 			})
 			return
 		}
-		c.HTML(http.StatusBadRequest, "partials/alert-error-dashboard.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "dashboard",
 			"message": "Failed to update profile",
 		})
 		return
 	}
 
-	c.HTML(http.StatusOK, "partials/alert-success-dashboard.html", gin.H{
+	c.HTML(http.StatusOK, "partials/alert.html", gin.H{
+		"type":    "success",
+		"context": "dashboard",
 		"message": "Personal information updated successfully",
 	})
 }
@@ -211,7 +221,9 @@ func (h *SettingsHandler) HandleUpdateOnlineProfile(c *gin.Context) {
 
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error-dashboard.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "dashboard",
 			"message": "Failed to load profile settings",
 		})
 		return
@@ -223,13 +235,17 @@ func (h *SettingsHandler) HandleUpdateOnlineProfile(c *gin.Context) {
 
 	err = h.service.UpdateProfile(c.Request.Context(), profile)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error-dashboard.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "dashboard",
 			"message": "Failed to update online profiles",
 		})
 		return
 	}
 
-	c.HTML(http.StatusOK, "partials/alert-success-dashboard.html", gin.H{
+	c.HTML(http.StatusOK, "partials/alert.html", gin.H{
+		"type":    "success",
+		"context": "dashboard",
 		"message": "Online profiles updated successfully",
 	})
 }
@@ -243,7 +259,9 @@ func (h *SettingsHandler) HandleUpdateContext(c *gin.Context) {
 	// Check word count (rough validation)
 	words := strings.Fields(context)
 	if len(words) > 1000 {
-		c.HTML(http.StatusBadRequest, "partials/alert-error-dashboard.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "dashboard",
 			"message": "Context must not exceed 1000 words",
 		})
 		return
@@ -251,7 +269,9 @@ func (h *SettingsHandler) HandleUpdateContext(c *gin.Context) {
 
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error-dashboard.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "dashboard",
 			"message": "Failed to load profile settings",
 		})
 		return
@@ -261,13 +281,17 @@ func (h *SettingsHandler) HandleUpdateContext(c *gin.Context) {
 
 	err = h.service.UpdateProfile(c.Request.Context(), profile)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error-dashboard.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "dashboard",
 			"message": "Failed to update personal context",
 		})
 		return
 	}
 
-	c.HTML(http.StatusOK, "partials/alert-success-dashboard.html", gin.H{
+	c.HTML(http.StatusOK, "partials/alert.html", gin.H{
+		"type":    "success",
+		"context": "dashboard",
 		"message": "Personal context updated successfully",
 	})
 }
@@ -405,7 +429,9 @@ func (h *SettingsHandler) HandleExperienceForm(c *gin.Context) {
 	if startDate != "" {
 		parsedStartDate, err = time.Parse("2006-01", startDate)
 		if err != nil {
-			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "general",
 				"message": "Invalid start date format. Please use YYYY-MM.",
 			})
 			return
@@ -416,7 +442,9 @@ func (h *SettingsHandler) HandleExperienceForm(c *gin.Context) {
 	if endDate != "" {
 		t, err := time.Parse("2006-01", endDate)
 		if err != nil {
-			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "general",
 				"message": "Invalid end date format. Please use YYYY-MM.",
 			})
 			return
@@ -426,7 +454,9 @@ func (h *SettingsHandler) HandleExperienceForm(c *gin.Context) {
 
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Failed to load profile settings",
 		})
 		return
@@ -611,7 +641,9 @@ func (h *SettingsHandler) CreateEducationForm(c *gin.Context) {
 
 	// Validate required fields
 	if institution == "" || degree == "" {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Institution and degree are required",
 		})
 		return
@@ -622,13 +654,17 @@ func (h *SettingsHandler) CreateEducationForm(c *gin.Context) {
 	if startDate != "" {
 		parsedStartDate, err = time.Parse("2006-01", startDate)
 		if err != nil {
-			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "general",
 				"message": "Invalid start date format. Please use YYYY-MM.",
 			})
 			return
 		}
 	} else {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Start date is required",
 		})
 		return
@@ -638,7 +674,9 @@ func (h *SettingsHandler) CreateEducationForm(c *gin.Context) {
 	if !current && endDate != "" {
 		t, err := time.Parse("2006-01", endDate)
 		if err != nil {
-			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "general",
 				"message": "Invalid end date format. Please use YYYY-MM.",
 			})
 			return
@@ -649,7 +687,9 @@ func (h *SettingsHandler) CreateEducationForm(c *gin.Context) {
 	// Get user's profile
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Failed to load profile settings",
 		})
 		return
@@ -668,7 +708,9 @@ func (h *SettingsHandler) CreateEducationForm(c *gin.Context) {
 
 	err = h.service.CreateEducation(c.Request.Context(), education)
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusInternalServerError, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Failed to create education entry: " + err.Error(),
 		})
 		return
@@ -686,7 +728,9 @@ func (h *SettingsHandler) HandleUpdateEducationForm(c *gin.Context) {
 
 	educationID, err := strconv.Atoi(educationIDStr)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Invalid education ID format",
 		})
 		return
@@ -702,7 +746,9 @@ func (h *SettingsHandler) HandleUpdateEducationForm(c *gin.Context) {
 
 	// Validate required fields
 	if institution == "" || degree == "" {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Institution and degree are required",
 		})
 		return
@@ -713,13 +759,17 @@ func (h *SettingsHandler) HandleUpdateEducationForm(c *gin.Context) {
 	if startDate != "" {
 		parsedStartDate, err = time.Parse("2006-01", startDate)
 		if err != nil {
-			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "general",
 				"message": "Invalid start date format. Please use YYYY-MM.",
 			})
 			return
 		}
 	} else {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Start date is required",
 		})
 		return
@@ -729,7 +779,9 @@ func (h *SettingsHandler) HandleUpdateEducationForm(c *gin.Context) {
 	if !current && endDate != "" {
 		t, err := time.Parse("2006-01", endDate)
 		if err != nil {
-			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "general",
 				"message": "Invalid end date format. Please use YYYY-MM.",
 			})
 			return
@@ -740,7 +792,9 @@ func (h *SettingsHandler) HandleUpdateEducationForm(c *gin.Context) {
 	// Get user's profile
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Failed to load profile settings",
 		})
 		return
@@ -749,7 +803,9 @@ func (h *SettingsHandler) HandleUpdateEducationForm(c *gin.Context) {
 	// Get the existing education entry to update
 	education, err := h.service.GetEducationByID(c.Request.Context(), educationID, profile.ID)
 	if err != nil {
-		c.HTML(http.StatusNotFound, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusNotFound, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Education entry not found or you don't have permission to edit it",
 		})
 		return
@@ -770,7 +826,9 @@ func (h *SettingsHandler) HandleUpdateEducationForm(c *gin.Context) {
 	// Update the education entry
 	err = h.service.UpdateEducation(c.Request.Context(), education)
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusInternalServerError, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Failed to update education entry: " + err.Error(),
 		})
 		return
@@ -787,7 +845,9 @@ func (h *SettingsHandler) HandleDeleteEducation(c *gin.Context) {
 
 	educationID, err := strconv.Atoi(educationIDStr)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Invalid education ID format",
 		})
 		return
@@ -795,7 +855,9 @@ func (h *SettingsHandler) HandleDeleteEducation(c *gin.Context) {
 
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Failed to load profile settings",
 		})
 		return
@@ -803,7 +865,9 @@ func (h *SettingsHandler) HandleDeleteEducation(c *gin.Context) {
 
 	err = h.service.DeleteEducation(c.Request.Context(), educationID, profile.ID)
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusInternalServerError, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Failed to delete education entry: " + err.Error(),
 		})
 		return
@@ -827,7 +891,9 @@ func (h *SettingsHandler) CreateCertificationForm(c *gin.Context) {
 
 	// Validate required fields
 	if name == "" || issuingOrg == "" {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Certification name and issuing organization are required",
 		})
 		return
@@ -838,13 +904,17 @@ func (h *SettingsHandler) CreateCertificationForm(c *gin.Context) {
 	if issueDate != "" {
 		parsedIssueDate, err = time.Parse("2006-01", issueDate)
 		if err != nil {
-			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "general",
 				"message": "Invalid issue date format. Please use YYYY-MM.",
 			})
 			return
 		}
 	} else {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Issue date is required",
 		})
 		return
@@ -854,7 +924,9 @@ func (h *SettingsHandler) CreateCertificationForm(c *gin.Context) {
 	if !noExpiry && expiryDate != "" {
 		t, err := time.Parse("2006-01", expiryDate)
 		if err != nil {
-			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "general",
 				"message": "Invalid expiry date format. Please use YYYY-MM.",
 			})
 			return
@@ -865,7 +937,9 @@ func (h *SettingsHandler) CreateCertificationForm(c *gin.Context) {
 	// Get user's profile
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Failed to load profile settings",
 		})
 		return
@@ -884,7 +958,9 @@ func (h *SettingsHandler) CreateCertificationForm(c *gin.Context) {
 
 	err = h.service.CreateCertification(c.Request.Context(), certification)
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusInternalServerError, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Failed to create certification: " + err.Error(),
 		})
 		return
@@ -902,7 +978,9 @@ func (h *SettingsHandler) HandleUpdateCertificationForm(c *gin.Context) {
 
 	certificationID, err := strconv.Atoi(certificationIDStr)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Invalid certification ID format",
 		})
 		return
@@ -918,7 +996,9 @@ func (h *SettingsHandler) HandleUpdateCertificationForm(c *gin.Context) {
 
 	// Validate required fields
 	if name == "" || issuingOrg == "" {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Certification name and issuing organization are required",
 		})
 		return
@@ -929,13 +1009,17 @@ func (h *SettingsHandler) HandleUpdateCertificationForm(c *gin.Context) {
 	if issueDate != "" {
 		parsedIssueDate, err = time.Parse("2006-01", issueDate)
 		if err != nil {
-			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "general",
 				"message": "Invalid issue date format. Please use YYYY-MM.",
 			})
 			return
 		}
 	} else {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Issue date is required",
 		})
 		return
@@ -945,7 +1029,9 @@ func (h *SettingsHandler) HandleUpdateCertificationForm(c *gin.Context) {
 	if !noExpiry && expiryDate != "" {
 		t, err := time.Parse("2006-01", expiryDate)
 		if err != nil {
-			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "general",
 				"message": "Invalid expiry date format. Please use YYYY-MM.",
 			})
 			return
@@ -956,7 +1042,9 @@ func (h *SettingsHandler) HandleUpdateCertificationForm(c *gin.Context) {
 	// Get user's profile
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Failed to load profile settings",
 		})
 		return
@@ -965,7 +1053,9 @@ func (h *SettingsHandler) HandleUpdateCertificationForm(c *gin.Context) {
 	// Get the existing certification to update
 	certification, err := h.service.GetCertificationByID(c.Request.Context(), certificationID, profile.ID)
 	if err != nil {
-		c.HTML(http.StatusNotFound, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusNotFound, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Certification not found or you don't have permission to edit it",
 		})
 		return
@@ -986,7 +1076,9 @@ func (h *SettingsHandler) HandleUpdateCertificationForm(c *gin.Context) {
 	// Update the certification
 	err = h.service.UpdateCertification(c.Request.Context(), certification)
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusInternalServerError, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Failed to update certification: " + err.Error(),
 		})
 		return
@@ -1003,7 +1095,9 @@ func (h *SettingsHandler) HandleDeleteCertification(c *gin.Context) {
 
 	certificationID, err := strconv.Atoi(certificationIDStr)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Invalid certification ID format",
 		})
 		return
@@ -1011,7 +1105,9 @@ func (h *SettingsHandler) HandleDeleteCertification(c *gin.Context) {
 
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Failed to load profile settings",
 		})
 		return
@@ -1019,7 +1115,9 @@ func (h *SettingsHandler) HandleDeleteCertification(c *gin.Context) {
 
 	err = h.service.DeleteCertification(c.Request.Context(), certificationID, profile.ID)
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusInternalServerError, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Failed to delete certification: " + err.Error(),
 		})
 		return
@@ -1038,7 +1136,9 @@ func (h *SettingsHandler) HandleUpdateExperienceForm(c *gin.Context) {
 
 	experienceID, err := strconv.Atoi(experienceIDStr)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Invalid experience ID format",
 		})
 		return
@@ -1053,7 +1153,9 @@ func (h *SettingsHandler) HandleUpdateExperienceForm(c *gin.Context) {
 	current := strings.TrimSpace(c.PostForm("current")) == "on"
 
 	if jobTitle == "" || company == "" {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Job title and company name are required",
 		})
 		return
@@ -1063,13 +1165,17 @@ func (h *SettingsHandler) HandleUpdateExperienceForm(c *gin.Context) {
 	if startDate != "" {
 		parsedStartDate, err = time.Parse("2006-01", startDate)
 		if err != nil {
-			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "general",
 				"message": "Invalid start date format. Please use YYYY-MM.",
 			})
 			return
 		}
 	} else {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Start date is required",
 		})
 		return
@@ -1079,7 +1185,9 @@ func (h *SettingsHandler) HandleUpdateExperienceForm(c *gin.Context) {
 	if !current && endDate != "" {
 		t, err := time.Parse("2006-01", endDate)
 		if err != nil {
-			c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "general",
 				"message": "Invalid end date format. Please use YYYY-MM.",
 			})
 			return
@@ -1089,7 +1197,9 @@ func (h *SettingsHandler) HandleUpdateExperienceForm(c *gin.Context) {
 
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Failed to load profile settings",
 		})
 		return
@@ -1097,7 +1207,9 @@ func (h *SettingsHandler) HandleUpdateExperienceForm(c *gin.Context) {
 
 	experience, err := h.service.GetWorkExperienceByID(c.Request.Context(), experienceID, profile.ID)
 	if err != nil {
-		c.HTML(http.StatusNotFound, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusNotFound, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Work experience not found or you don't have permission to edit it",
 		})
 		return
@@ -1116,7 +1228,9 @@ func (h *SettingsHandler) HandleUpdateExperienceForm(c *gin.Context) {
 
 	err = h.service.UpdateWorkExperience(c.Request.Context(), experience)
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusInternalServerError, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Failed to update work experience: " + err.Error(),
 		})
 		return
@@ -1133,7 +1247,9 @@ func (h *SettingsHandler) HandleDeleteWorkExperience(c *gin.Context) {
 
 	experienceID, err := strconv.Atoi(experienceIDStr)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Invalid experience ID format",
 		})
 		return
@@ -1141,7 +1257,9 @@ func (h *SettingsHandler) HandleDeleteWorkExperience(c *gin.Context) {
 
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Failed to load profile settings",
 		})
 		return
@@ -1149,7 +1267,9 @@ func (h *SettingsHandler) HandleDeleteWorkExperience(c *gin.Context) {
 
 	err = h.service.DeleteWorkExperience(c.Request.Context(), experienceID, profile.ID)
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
+		c.HTML(http.StatusInternalServerError, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "general",
 			"message": "Failed to delete work experience: " + err.Error(),
 		})
 		return

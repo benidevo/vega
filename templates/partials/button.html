@@ -1,0 +1,102 @@
+{{define "partials/button.html"}}
+{{/* Simple button component for Go templates. No variable assignment */}}
+
+{{if eq .variant "primary"}}
+  <button
+    {{if .type}}type="{{.type}}"{{else}}type="button"{{end}}
+    {{if .id}}id="{{.id}}"{{end}}
+    class="bg-primary hover:bg-primary-dark text-white focus:ring-primary {{if eq .size "sm"}}px-3 py-1 text-sm{{else if eq .size "lg"}}px-6 py-3 text-lg{{else}}px-4 py-2 text-sm{{end}} font-medium rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center gap-2{{if .class}} {{.class}}{{end}}{{if .disabled}} opacity-50 cursor-not-allowed{{end}}"
+    {{if .disabled}}disabled{{end}}
+    {{if .onclick}}onclick="{{.onclick}}"{{end}}
+    {{if .hxGet}}hx-get="{{.hxGet}}"{{end}}
+    {{if .hxPost}}hx-post="{{.hxPost}}"{{end}}
+    {{if .hxPut}}hx-put="{{.hxPut}}"{{end}}
+    {{if .hxDelete}}hx-delete="{{.hxDelete}}"{{end}}
+    {{if .hxTarget}}hx-target="{{.hxTarget}}"{{end}}
+    {{if .hxSwap}}hx-swap="{{.hxSwap}}"{{end}}
+    {{if .hxInclude}}hx-include="{{.hxInclude}}"{{end}}
+    {{if .hxTrigger}}hx-trigger="{{.hxTrigger}}"{{end}}
+    {{if .hxIndicator}}hx-indicator="{{.hxIndicator}}"{{end}}
+    {{if .hyperscript}}_="{{.hyperscript}}"{{end}}>
+    {{if .loading}}
+      <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span>{{if .loadingText}}{{.loadingText}}{{else}}Loading...{{end}}</span>
+    {{else}}
+      {{if .icon}}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          {{.icon}}
+        </svg>
+      {{end}}
+      <span>{{.text}}</span>
+    {{end}}
+  </button>
+{{else if eq .variant "danger"}}
+  <button
+    {{if .type}}type="{{.type}}"{{else}}type="button"{{end}}
+    {{if .id}}id="{{.id}}"{{end}}
+    class="bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 {{if eq .size "sm"}}px-3 py-1 text-sm{{else if eq .size "lg"}}px-6 py-3 text-lg{{else}}px-4 py-2 text-sm{{end}} font-medium rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center gap-2{{if .class}} {{.class}}{{end}}{{if .disabled}} opacity-50 cursor-not-allowed{{end}}"
+    {{if .disabled}}disabled{{end}}
+    {{if .onclick}}onclick="{{.onclick}}"{{end}}
+    {{if .hxGet}}hx-get="{{.hxGet}}"{{end}}
+    {{if .hxPost}}hx-post="{{.hxPost}}"{{end}}
+    {{if .hxPut}}hx-put="{{.hxPut}}"{{end}}
+    {{if .hxDelete}}hx-delete="{{.hxDelete}}"{{end}}
+    {{if .hxTarget}}hx-target="{{.hxTarget}}"{{end}}
+    {{if .hxSwap}}hx-swap="{{.hxSwap}}"{{end}}
+    {{if .hxInclude}}hx-include="{{.hxInclude}}"{{end}}
+    {{if .hxTrigger}}hx-trigger="{{.hxTrigger}}"{{end}}
+    {{if .hxIndicator}}hx-indicator="{{.hxIndicator}}"{{end}}
+    {{if .hyperscript}}_="{{.hyperscript}}"{{end}}>
+    {{if .loading}}
+      <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span>{{if .loadingText}}{{.loadingText}}{{else}}Loading...{{end}}</span>
+    {{else}}
+      {{if .icon}}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          {{.icon}}
+        </svg>
+      {{end}}
+      <span>{{.text}}</span>
+    {{end}}
+  </button>
+{{else}}
+  {{/* Default secondary button */}}
+  <button
+    {{if .type}}type="{{.type}}"{{else}}type="button"{{end}}
+    {{if .id}}id="{{.id}}"{{end}}
+    class="bg-slate-600 hover:bg-slate-700 text-white focus:ring-slate-500 {{if eq .size "sm"}}px-3 py-1 text-sm{{else if eq .size "lg"}}px-6 py-3 text-lg{{else}}px-4 py-2 text-sm{{end}} font-medium rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center gap-2{{if .class}} {{.class}}{{end}}{{if .disabled}} opacity-50 cursor-not-allowed{{end}}"
+    {{if .disabled}}disabled{{end}}
+    {{if .onclick}}onclick="{{.onclick}}"{{end}}
+    {{if .hxGet}}hx-get="{{.hxGet}}"{{end}}
+    {{if .hxPost}}hx-post="{{.hxPost}}"{{end}}
+    {{if .hxPut}}hx-put="{{.hxPut}}"{{end}}
+    {{if .hxDelete}}hx-delete="{{.hxDelete}}"{{end}}
+    {{if .hxTarget}}hx-target="{{.hxTarget}}"{{end}}
+    {{if .hxSwap}}hx-swap="{{.hxSwap}}"{{end}}
+    {{if .hxInclude}}hx-include="{{.hxInclude}}"{{end}}
+    {{if .hxTrigger}}hx-trigger="{{.hxTrigger}}"{{end}}
+    {{if .hxIndicator}}hx-indicator="{{.hxIndicator}}"{{end}}
+    {{if .hyperscript}}_="{{.hyperscript}}"{{end}}>
+    {{if .loading}}
+      <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span>{{if .loadingText}}{{.loadingText}}{{else}}Loading...{{end}}</span>
+    {{else}}
+      {{if .icon}}
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          {{.icon}}
+        </svg>
+      {{end}}
+      <span>{{.text}}</span>
+    {{end}}
+  </button>
+{{end}}
+{{end}}

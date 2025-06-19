@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
+	"github.com/benidevo/ascentio/internal/common/alerts"
 	"github.com/benidevo/ascentio/internal/config"
 	"github.com/benidevo/ascentio/internal/job/models"
 	"github.com/gin-gonic/gin"
@@ -124,9 +124,7 @@ func (h *JobHandler) renderError(c *gin.Context, err error) {
 	if _, ok := err.(validator.ValidationErrors); ok {
 		statusCode = http.StatusBadRequest
 		errorMessage := h.formatValidationError(err)
-		c.HTML(statusCode, "partials/alert-error.html", gin.H{
-			"message": errorMessage,
-		})
+		alerts.RenderError(c, statusCode, errorMessage, alerts.ContextGeneral)
 		return
 	}
 
@@ -152,9 +150,7 @@ func (h *JobHandler) renderError(c *gin.Context, err error) {
 		statusCode = http.StatusNotFound
 	}
 
-	c.HTML(statusCode, "partials/alert-error.html", gin.H{
-		"message": sentinelErr.Error(),
-	})
+	alerts.RenderError(c, statusCode, sentinelErr.Error(), alerts.ContextGeneral)
 }
 
 // renderDashboardError is a helper function specifically for dashboard error messages
@@ -166,9 +162,7 @@ func (h *JobHandler) renderDashboardError(c *gin.Context, err error) {
 	if _, ok := err.(validator.ValidationErrors); ok {
 		statusCode = http.StatusBadRequest
 		errorMessage := h.formatValidationError(err)
-		c.HTML(statusCode, "partials/alert-error-dashboard.html", gin.H{
-			"message": errorMessage,
-		})
+		alerts.RenderError(c, statusCode, errorMessage, alerts.ContextDashboard)
 		return
 	}
 
@@ -179,9 +173,7 @@ func (h *JobHandler) renderDashboardError(c *gin.Context, err error) {
 		statusCode = http.StatusBadRequest
 	}
 
-	c.HTML(statusCode, "partials/alert-error-dashboard.html", gin.H{
-		"message": sentinelErr.Error(),
-	})
+	alerts.RenderError(c, statusCode, sentinelErr.Error(), alerts.ContextDashboard)
 }
 
 // NewJobHandler creates and returns a new JobHandler with the provided JobService and configuration settings.
@@ -191,14 +183,6 @@ func NewJobHandler(service *JobService, cfg *config.Settings) *JobHandler {
 		cfg:            cfg,
 		commandFactory: NewCommandFactory(),
 	}
-}
-
-func (h *JobHandler) getAIErrorMessage(err error) string {
-	if err == nil {
-		return ""
-	}
-
-	return models.GetSentinelError(err).Error()
 }
 
 // ValidateJobID is a middleware that validates the job ID parameter
@@ -343,16 +327,13 @@ func (h *JobHandler) CreateJob(c *gin.Context) {
 		options = append(options, models.WithNotes(notes))
 	}
 
-	job, err := h.service.CreateJob(c.Request.Context(), title, description, companyName, options...)
+	_, err = h.service.CreateJob(c.Request.Context(), title, description, companyName, options...)
 	if err != nil {
 		h.renderError(c, err)
 		return
 	}
 
-	c.HTML(http.StatusOK, "partials/alert-success.html", gin.H{
-		"message": "Job created successfully!",
-		"jobID":   strconv.Itoa(job.ID),
-	})
+	alerts.RenderSuccess(c, "Job created successfully!", alerts.ContextGeneral)
 }
 
 // GetJobDetails handles the HTTP request to retrieve and display details for a specific job.
@@ -411,7 +392,12 @@ func (h *JobHandler) GetJobDetails(c *gin.Context) {
 		"job":                    job,
 		"jobID":                  jobIDStr,
 		"profileValidationError": profileValidationError,
-		"profileErrorMessage":    h.getAIErrorMessage(profileValidationError),
+		"profileErrorMessage": func() string {
+			if profileValidationError == nil {
+				return ""
+			}
+			return models.GetSentinelError(profileValidationError).Error()
+		}(),
 	})
 }
 
@@ -469,15 +455,11 @@ func (h *JobHandler) UpdateJobField(c *gin.Context) {
 
 	// Use dashboard-specific alert for all status updates
 	if field == "status" {
-		c.HTML(http.StatusOK, "partials/alert-success-dashboard.html", gin.H{
-			"message": successMessage,
-		})
+		alerts.RenderSuccess(c, successMessage, alerts.ContextDashboard)
 		return
 	}
 
-	c.HTML(http.StatusOK, "partials/alert-success-detail.html", gin.H{
-		"message": successMessage,
-	})
+	alerts.RenderSuccess(c, successMessage, alerts.ContextGeneral)
 }
 
 // DeleteJob handles the request to delete a job
@@ -508,36 +490,27 @@ func (h *JobHandler) DeleteJob(c *gin.Context) {
 func (h *JobHandler) AnalyzeJobMatch(c *gin.Context) {
 	jobIDValue, exists := c.Get("jobID")
 	if !exists {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-			"message": "Invalid job ID format",
-		})
+		alerts.RenderError(c, http.StatusBadRequest, "Invalid job ID format", alerts.ContextGeneral)
 		return
 	}
 	jobID := jobIDValue.(int)
 
 	userIDValue, exists := c.Get("userID")
 	if !exists {
-		c.HTML(http.StatusUnauthorized, "partials/alert-error.html", gin.H{
-			"message": "Authentication required",
-		})
+		alerts.RenderError(c, http.StatusUnauthorized, "Authentication required", alerts.ContextGeneral)
 		return
 	}
 	userID := userIDValue.(int)
 
 	analysis, err := h.service.AnalyzeJobMatch(c.Request.Context(), userID, jobID)
 	if err != nil {
-		errorMessage := h.getAIErrorMessage(err)
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-			"message": errorMessage,
-		})
+		alerts.RenderError(c, http.StatusBadRequest, models.GetSentinelError(err).Error(), alerts.ContextGeneral)
 		return
 	}
 
 	html, err := h.renderTemplate("partials/job_match_analysis.html", h.buildMatchAnalysisData(analysis))
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
-			"message": "Error rendering analysis",
-		})
+		alerts.RenderError(c, http.StatusInternalServerError, "Error rendering analysis", alerts.ContextGeneral)
 		return
 	}
 	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
@@ -547,28 +520,21 @@ func (h *JobHandler) AnalyzeJobMatch(c *gin.Context) {
 func (h *JobHandler) GenerateCoverLetter(c *gin.Context) {
 	jobIDValue, exists := c.Get("jobID")
 	if !exists {
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-			"message": "Invalid job ID format",
-		})
+		alerts.RenderError(c, http.StatusBadRequest, "Invalid job ID format", alerts.ContextGeneral)
 		return
 	}
 	jobID := jobIDValue.(int)
 
 	userIDValue, exists := c.Get("userID")
 	if !exists {
-		c.HTML(http.StatusUnauthorized, "partials/alert-error.html", gin.H{
-			"message": "Authentication required",
-		})
+		alerts.RenderError(c, http.StatusUnauthorized, "Authentication required", alerts.ContextGeneral)
 		return
 	}
 	userID := userIDValue.(int)
 
 	coverLetter, err := h.service.GenerateCoverLetter(c.Request.Context(), userID, jobID)
 	if err != nil {
-		errorMessage := h.getAIErrorMessage(err)
-		c.HTML(http.StatusBadRequest, "partials/alert-error.html", gin.H{
-			"message": errorMessage,
-		})
+		alerts.RenderError(c, http.StatusBadRequest, models.GetSentinelError(err).Error(), alerts.ContextGeneral)
 		return
 	}
 
@@ -576,9 +542,7 @@ func (h *JobHandler) GenerateCoverLetter(c *gin.Context) {
 		"CoverLetter": coverLetter,
 	})
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "partials/alert-error.html", gin.H{
-			"message": "Error rendering cover letter",
-		})
+		alerts.RenderError(c, http.StatusInternalServerError, "Error rendering cover letter", alerts.ContextGeneral)
 		return
 	}
 	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))

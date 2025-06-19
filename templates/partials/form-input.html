@@ -1,0 +1,118 @@
+{{define "partials/form-input.html"}}
+{{$type := .type}}
+{{$id := .id}}
+{{$name := .name}}
+{{$label := .label}}
+{{$value := .value}}
+{{$placeholder := .placeholder}}
+{{$required := .required}}
+{{$helpText := .helpText}}
+{{$maxlength := .maxlength}}
+{{$rows := .rows}}
+{{$options := .options}}
+{{$selectedValue := .selectedValue}}
+{{$class := .class}}
+{{$icon := .icon}}
+{{$autocomplete := .autocomplete}}
+{{$disabled := .disabled}}
+{{$readonly := .readonly}}
+{{$htmx := .htmx}}
+{{$hyperscript := .hyperscript}}
+{{$containerClass := .containerClass}}
+
+{{/* Default values */}}
+{{if not $type}}{{$type = "text"}}{{end}}
+{{if not $rows}}{{$rows = 4}}{{end}}
+
+{{/* Base input classes */}}
+{{$inputClasses := "w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"}}
+{{if $class}}
+  {{$inputClasses = printf "%s %s" $inputClasses $class}}
+{{end}}
+{{if $disabled}}
+  {{$inputClasses = printf "%s opacity-50 cursor-not-allowed" $inputClasses}}
+{{end}}
+
+<div class="{{if $containerClass}}{{$containerClass}}{{else}}space-y-1{{end}}">
+  {{/* Label */}}
+  {{if $label}}
+    <label {{if $id}}for="{{$id}}"{{end}} class="block text-sm font-medium text-gray-300{{if $required}} after:content-['*'] after:ml-0.5 after:text-red-500{{end}}">
+      {{$label}}
+    </label>
+  {{end}}
+
+  {{/* Icon container for inputs with icons */}}
+  {{if and $icon (ne $type "textarea") (ne $type "select")}}
+    <div class="relative">
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          {{$icon}}
+        </svg>
+      </div>
+  {{end}}
+
+  {{/* Input field */}}
+  {{if eq $type "textarea"}}
+    <textarea
+      {{if $id}}id="{{$id}}"{{end}}
+      {{if $name}}name="{{$name}}"{{end}}
+      {{if $placeholder}}placeholder="{{$placeholder}}"{{end}}
+      {{if $maxlength}}maxlength="{{$maxlength}}"{{end}}
+      {{if $required}}required{{end}}
+      {{if $disabled}}disabled{{end}}
+      {{if $readonly}}readonly{{end}}
+      {{if $autocomplete}}autocomplete="{{$autocomplete}}"{{end}}
+      rows="{{$rows}}"
+      class="{{$inputClasses}}"
+      {{if $htmx}}
+        {{range $key, $val := $htmx}}hx-{{$key}}="{{$val}}"{{end}}
+      {{end}}
+      {{if $hyperscript}}_="{{$hyperscript}}"{{end}}>{{$value}}</textarea>
+  {{else if eq $type "select"}}
+    <select
+      {{if $id}}id="{{$id}}"{{end}}
+      {{if $name}}name="{{$name}}"{{end}}
+      {{if $required}}required{{end}}
+      {{if $disabled}}disabled{{end}}
+      class="{{$inputClasses}}"
+      {{if $htmx}}
+        {{range $key, $val := $htmx}}hx-{{$key}}="{{$val}}"{{end}}
+      {{end}}
+      {{if $hyperscript}}_="{{$hyperscript}}"{{end}}>
+      {{if $placeholder}}
+        <option value="">{{$placeholder}}</option>
+      {{end}}
+      {{range $options}}
+        <option value="{{.value}}" {{if eq .value $selectedValue}}selected{{end}}>{{.text}}</option>
+      {{end}}
+    </select>
+  {{else}}
+    <input
+      type="{{$type}}"
+      {{if $id}}id="{{$id}}"{{end}}
+      {{if $name}}name="{{$name}}"{{end}}
+      {{if $placeholder}}placeholder="{{$placeholder}}"{{end}}
+      {{if $value}}value="{{$value}}"{{end}}
+      {{if $maxlength}}maxlength="{{$maxlength}}"{{end}}
+      {{if $required}}required{{end}}
+      {{if $disabled}}disabled{{end}}
+      {{if $readonly}}readonly{{end}}
+      {{if $autocomplete}}autocomplete="{{$autocomplete}}"{{end}}
+      class="{{$inputClasses}}{{if $icon}} pl-10{{end}}"
+      {{if $htmx}}
+        {{range $key, $val := $htmx}}hx-{{$key}}="{{$val}}"{{end}}
+      {{end}}
+      {{if $hyperscript}}_="{{$hyperscript}}"{{end}}>
+  {{end}}
+
+  {{/* Close icon container */}}
+  {{if and $icon (ne $type "textarea") (ne $type "select")}}
+    </div>
+  {{end}}
+
+  {{/* Help text */}}
+  {{if $helpText}}
+    <p class="text-xs text-gray-400 mt-1">{{$helpText}}</p>
+  {{end}}
+</div>
+{{end}}

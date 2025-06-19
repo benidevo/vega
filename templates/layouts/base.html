@@ -331,11 +331,28 @@
 
       // Handle HTMX events for any page using HTMX
       if (typeof htmx !== 'undefined') {
-        // Handle 401 and 400 responses - allow swap and hide spinner
+        // Handle different response statuses
         document.body.addEventListener('htmx:beforeSwap', function(event) {
           if (event.detail.xhr.status === 401 || event.detail.xhr.status === 400) {
+            // Allow 400/401 responses to be swapped as they contain user-friendly error messages
             event.detail.shouldSwap = true;
             event.detail.isError = false;
+          } else if (event.detail.xhr.status >= 500) {
+            // Prevent 500+ errors from being swapped into content areas
+            event.detail.shouldSwap = false;
+            // Show a user-friendly error message instead
+            if (event.detail.target) {
+              event.detail.target.innerHTML = `
+                <div class="bg-red-900 bg-opacity-50 border border-red-700 text-red-200 p-3 rounded-md mb-3 text-sm" _="on load wait 5s then transition opacity to 0 over 0.5s then remove me">
+                  <div class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Something went wrong. Please try again later.</span>
+                  </div>
+                </div>
+              `;
+            }
           }
         });
 
@@ -344,35 +361,6 @@
           const spinner = document.getElementById('spinner');
           if (spinner) {
             spinner.classList.add('htmx-hide');
-          }
-        });
-
-        // Style and handle error messages
-        document.body.addEventListener('htmx:afterSwap', function(event) {
-          if (event.detail.xhr.status === 401 || event.detail.xhr.status === 400) {
-            const errorDiv = event.detail.xhr.status === 401
-              ? document.getElementById('form-response')
-              : document.getElementById('status-response');
-
-            if (errorDiv) {
-              // Add styling classes if they're not already part of the template
-              if (!errorDiv.classList.contains('auto-dismiss-alert')) {
-                errorDiv.classList.remove('hidden');
-                errorDiv.classList.add('animate-fade-in', 'mb-4', 'p-3', 'bg-red-900', 'bg-opacity-50', 'text-white', 'rounded-lg', 'border', 'border-red-800');
-              }
-
-              // Auto-hide after 5 seconds (if not already set up as auto-dismiss-alert)
-              if (!errorDiv.classList.contains('auto-dismiss-alert')) {
-                setTimeout(function() {
-                  errorDiv.classList.add('animate-fade-out');
-                  // Hide again after animation completes
-                  setTimeout(function() {
-                    errorDiv.classList.add('hidden');
-                    errorDiv.classList.remove('animate-fade-out');
-                  }, 300); // match animation duration
-                }, 5000);
-              }
-            }
           }
         });
       }

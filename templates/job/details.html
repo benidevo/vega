@@ -250,6 +250,7 @@
           <button id="analyze-button" class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
                   hx-post="/jobs/{{.jobID}}/analyze"
                   hx-target="#ai-analysis"
+                  hx-target-error="#analyze-error"
                   hx-swap="innerHTML"
                   hx-indicator="#analyze-spinner">
             <span id="analyze-spinner" class="htmx-indicator">
@@ -266,9 +267,13 @@
             <span>Analyze Job Match</span>
           </button>
 
+          <!-- Error display for analyze button -->
+          <div id="analyze-error"></div>
+
           <button id="cover-letter-button" class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
                   hx-post="/jobs/{{.jobID}}/cover-letter"
                   hx-target="#cover-letter-section"
+                  hx-target-4xx="#cover-letter-error"
                   hx-swap="innerHTML">
             <svg class="cover-letter-spinner htmx-indicator animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -279,6 +284,9 @@
             </svg>
             <span>Generate Cover Letter</span>
           </button>
+
+          <!-- Error display for cover letter button -->
+          <div id="cover-letter-error"></div>
 
           {{if .job.SourceURL}}
           <a href="{{.job.SourceURL}}" target="_blank" class="w-full mb-3 py-2.5 px-4 bg-slate-600 hover:bg-slate-500 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2">
@@ -343,7 +351,9 @@
 document.addEventListener('htmx:afterRequest', function(evt) {
 
   if (evt.detail.target.id === 'ai-analysis' && evt.detail.xhr.status === 200) {
-    // Hide cover letter section
+    // Clear any previous errors and hide cover letter section
+    document.getElementById('analyze-error').innerHTML = '';
+    document.getElementById('cover-letter-error').innerHTML = '';
     document.getElementById('cover-letter-section').innerHTML = '';
     // Scroll to analysis
     setTimeout(() => {
@@ -351,7 +361,9 @@ document.addEventListener('htmx:afterRequest', function(evt) {
     }, 100);
   }
   if (evt.detail.target.id === 'cover-letter-section' && evt.detail.xhr.status === 200) {
-    // Hide analysis section
+    // Clear any previous errors and hide analysis section
+    document.getElementById('analyze-error').innerHTML = '';
+    document.getElementById('cover-letter-error').innerHTML = '';
     document.getElementById('ai-analysis').innerHTML = '';
     // Scroll to cover letter
     setTimeout(() => {
@@ -372,27 +384,7 @@ document.addEventListener('click', function(evt) {
     action = target.getAttribute('data-action');
   }
 
-  if (action === 'regenerate-analysis') {
-    evt.preventDefault();
-
-    // Show spinner on clicked button
-    const originalContent = target.innerHTML;
-    target.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Re-analyzing...';
-    target.disabled = true;
-
-    document.getElementById('analyze-button').click();
-
-  } else if (action === 'generate-cover-letter') {
-    evt.preventDefault();
-
-    // Show spinner on clicked button
-    const originalContent = target.innerHTML;
-    target.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Generating...';
-    target.disabled = true;
-
-    document.getElementById('cover-letter-button').click();
-
-  } else if (action === 'scroll-to-top') {
+  if (action === 'scroll-to-top') {
     evt.preventDefault();
     document.getElementById('job-header-display').scrollIntoView({behavior: 'smooth', block: 'start'});
   }

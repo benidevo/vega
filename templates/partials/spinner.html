@@ -1,0 +1,70 @@
+{{define "partials/spinner.html"}}
+{{$size := .size}}
+{{$class := .class}}
+{{$color := .color}}
+{{$id := .id}}
+{{$inline := .inline}}
+{{$htmxIndicator := .htmxIndicator}}
+
+{{/* Default values */}}
+{{if not $size}}{{$size = "md"}}{{end}}
+{{if not $color}}{{$color = "current"}}{{end}}
+
+{{/* Size classes */}}
+{{$sizeClass := ""}}
+{{if eq $size "xs"}}
+  {{$sizeClass = "h-3 w-3"}}
+{{else if eq $size "sm"}}
+  {{$sizeClass = "h-4 w-4"}}
+{{else if eq $size "md"}}
+  {{$sizeClass = "h-5 w-5"}}
+{{else if eq $size "lg"}}
+  {{$sizeClass = "h-6 w-6"}}
+{{else if eq $size "xl"}}
+  {{$sizeClass = "h-8 w-8"}}
+{{else}}
+  {{$sizeClass = "h-5 w-5"}}
+{{end}}
+
+{{/* Color classes */}}
+{{$colorClass := ""}}
+{{if eq $color "white"}}
+  {{$colorClass = "text-white"}}
+{{else if eq $color "primary"}}
+  {{$colorClass = "text-primary"}}
+{{else if eq $color "gray"}}
+  {{$colorClass = "text-gray-400"}}
+{{else if eq $color "red"}}
+  {{$colorClass = "text-red-500"}}
+{{else if eq $color "blue"}}
+  {{$colorClass = "text-blue-500"}}
+{{else if eq $color "green"}}
+  {{$colorClass = "text-green-500"}}
+{{else}}
+  {{$colorClass = "text-current"}}
+{{end}}
+
+{{/* Build final classes */}}
+{{$finalClasses := printf "animate-spin %s %s" $sizeClass $colorClass}}
+{{if $class}}
+  {{$finalClasses = printf "%s %s" $finalClasses $class}}
+{{end}}
+{{if $htmxIndicator}}
+  {{$finalClasses = printf "%s htmx-indicator" $finalClasses}}
+{{end}}
+
+{{/* Render spinner */}}
+{{if $inline}}
+  <svg {{if $id}}id="{{$id}}"{{end}} class="{{$finalClasses}}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+    <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+  </svg>
+{{else}}
+  <span {{if $id}}id="{{$id}}"{{end}} class="{{if $htmxIndicator}}htmx-indicator {{end}}flex items-center justify-center">
+    <svg class="{{$finalClasses}}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+  </span>
+{{end}}
+{{end}}
