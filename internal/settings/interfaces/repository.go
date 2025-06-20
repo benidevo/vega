@@ -9,7 +9,10 @@ import (
 // SettingsRepository defines the interface for settings data access
 type SettingsRepository interface {
 	GetProfile(ctx context.Context, userID int) (*models.Profile, error)
+	GetProfileWithRelated(ctx context.Context, userID int) (*models.Profile, error)
 	UpdateProfile(ctx context.Context, profile *models.Profile) error
+	CreateProfileIfNotExists(ctx context.Context, userID int) (*models.Profile, error)
+	GetEntityByID(ctx context.Context, entityID, profileID int, entityType string) (interface{}, error)
 
 	GetWorkExperiences(ctx context.Context, profileID int) ([]models.WorkExperience, error)
 	AddWorkExperience(ctx context.Context, experience *models.WorkExperience) error

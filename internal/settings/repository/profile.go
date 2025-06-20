@@ -17,15 +17,8 @@ func NewProfileRepository(db *sql.DB) *ProfileRepository {
 	return &ProfileRepository{db: db}
 }
 
-// GetProfile retrieves a user's profile without related entities for backward compatibility
-// For performance, use GetProfileOptimized or GetProfileWithRelated instead
+// GetProfile retrieves a user's profile without related entities
 func (r *ProfileRepository) GetProfile(ctx context.Context, userID int) (*models.Profile, error) {
-	return r.GetProfileOptimized(ctx, userID)
-}
-
-// GetProfileOptimized retrieves a user's profile without related entities
-// This avoids the complex LEFT JOIN and N+1 issues of the original GetProfile
-func (r *ProfileRepository) GetProfileOptimized(ctx context.Context, userID int) (*models.Profile, error) {
 	query := `
 		SELECT id, user_id, first_name, last_name, title, industry,
 		       career_summary, skills, phone_number, location,
@@ -72,13 +65,11 @@ func (r *ProfileRepository) GetProfileOptimized(ctx context.Context, userID int)
 // GetProfileWithRelated retrieves a user's profile and loads related entities
 // This is an optimized version that uses separate queries instead of complex JOINs
 func (r *ProfileRepository) GetProfileWithRelated(ctx context.Context, userID int) (*models.Profile, error) {
-	// First get the profile
-	profile, err := r.GetProfileOptimized(ctx, userID)
+	profile, err := r.GetProfile(ctx, userID)
 	if err != nil || profile == nil {
 		return profile, err
 	}
 
-	// Load related entities using existing methods
 	workExperiences, err := r.GetWorkExperiences(ctx, profile.ID)
 	if err != nil {
 		return nil, err
@@ -94,7 +85,6 @@ func (r *ProfileRepository) GetProfileWithRelated(ctx context.Context, userID in
 		return nil, err
 	}
 
-	// Assign to profile
 	profile.WorkExperience = workExperiences
 	profile.Education = education
 	profile.Certifications = certifications
@@ -105,7 +95,7 @@ func (r *ProfileRepository) GetProfileWithRelated(ctx context.Context, userID in
 // CreateProfileIfNotExists creates a profile if it doesn't exist for the user
 func (r *ProfileRepository) CreateProfileIfNotExists(ctx context.Context, userID int) (*models.Profile, error) {
 	// Check if profile exists
-	profile, err := r.GetProfileOptimized(ctx, userID)
+	profile, err := r.GetProfile(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -147,13 +137,8 @@ func (r *ProfileRepository) CreateProfileIfNotExists(ctx context.Context, userID
 	return newProfile, nil
 }
 
-// UpdateProfile inserts or updates a user's profile in the database using an upsert operation.
+// UpdateProfile inserts or updates a user's profile using an upsert operation
 func (r *ProfileRepository) UpdateProfile(ctx context.Context, profile *models.Profile) error {
-	return r.UpdateProfileOptimized(ctx, profile)
-}
-
-// UpdateProfileOptimized updates profile without transactions (since it's a single operation)
-func (r *ProfileRepository) UpdateProfileOptimized(ctx context.Context, profile *models.Profile) error {
 	skillsJSON, err := json.Marshal(profile.Skills)
 	if err != nil {
 		return err
@@ -298,8 +283,7 @@ func (r *ProfileRepository) getCertificationByID(ctx context.Context, entityID, 
 // Continue with all the existing CRUD methods for WorkExperience, Education, and Certification...
 
 // GetWorkExperiences retrieves a list of work experiences for the specified profile ID,
-// ordered by start date in descending order. Returns a slice of WorkExperience models
-// or an error if the query fails.
+// ordered by start date in descending order
 func (r *ProfileRepository) GetWorkExperiences(ctx context.Context, profileID int) ([]models.WorkExperience, error) {
 	query := `
 		SELECT id, profile_id, company, title, location, start_date, end_date,

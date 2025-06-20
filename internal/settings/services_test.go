@@ -29,7 +29,7 @@ type MockProfileRepository struct {
 }
 
 // Optimized methods
-func (m *MockProfileRepository) GetProfileOptimized(ctx context.Context, userID int) (*settingsModels.Profile, error) {
+func (m *MockProfileRepository) GetProfile(ctx context.Context, userID int) (*settingsModels.Profile, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -45,7 +45,7 @@ func (m *MockProfileRepository) GetProfileWithRelated(ctx context.Context, userI
 	return args.Get(0).(*settingsModels.Profile), args.Error(1)
 }
 
-func (m *MockProfileRepository) UpdateProfileOptimized(ctx context.Context, profile *settingsModels.Profile) error {
+func (m *MockProfileRepository) UpdateProfile(ctx context.Context, profile *settingsModels.Profile) error {
 	args := m.Called(ctx, profile)
 	return args.Error(0)
 }
@@ -63,25 +63,12 @@ func (m *MockProfileRepository) GetEntityByID(ctx context.Context, entityID, pro
 	return args.Get(0), args.Error(1)
 }
 
-func (m *MockProfileRepository) GetProfile(ctx context.Context, userID int) (*settingsModels.Profile, error) {
-	args := m.Called(ctx, userID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*settingsModels.Profile), args.Error(1)
-}
-
 func (m *MockProfileRepository) GetWorkExperiences(ctx context.Context, profileID int) ([]settingsModels.WorkExperience, error) {
 	args := m.Called(ctx, profileID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]settingsModels.WorkExperience), args.Error(1)
-}
-
-func (m *MockProfileRepository) UpdateProfile(ctx context.Context, profile *settingsModels.Profile) error {
-	args := m.Called(ctx, profile)
-	return args.Error(0)
 }
 
 func (m *MockProfileRepository) AddWorkExperience(ctx context.Context, exp *settingsModels.WorkExperience) error {
