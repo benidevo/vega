@@ -339,32 +339,4 @@ func TestJobService(t *testing.T) {
 		err := service.DeleteJob(ctx, 0)
 		assert.Equal(t, models.ErrInvalidJobID, err)
 	})
-
-	t.Run("should update job status successfully", func(t *testing.T) {
-		mockRepo := new(MockJobRepository)
-		mockRepo.On("GetByID", ctx, 1).Return(job, nil).Once()
-		updatedJob := createTestJob(1, "Software Engineer", company)
-		updatedJob.Status = models.APPLIED
-		mockRepo.On("GetByID", ctx, 1).Return(job, nil).Once()
-		mockRepo.On("Update", ctx, mock.AnythingOfType("*models.Job")).Return(nil)
-
-		service := NewJobService(mockRepo, nil, nil, cfg)
-		err := service.UpdateJobStatus(ctx, 1, models.APPLIED)
-
-		require.NoError(t, err)
-		mockRepo.AssertExpectations(t)
-	})
-
-	t.Run("should validate inputs when updating status", func(t *testing.T) {
-		service := NewJobService(nil, nil, nil, cfg) // No repo calls expected
-
-		// Test invalid ID
-		err := service.UpdateJobStatus(ctx, 0, models.APPLIED)
-		assert.Equal(t, models.ErrInvalidJobID, err)
-
-		// Test invalid status
-		invalidStatus := models.JobStatus(999)
-		err = service.UpdateJobStatus(ctx, 1, invalidStatus)
-		assert.Equal(t, models.ErrInvalidJobStatus, err)
-	})
 }

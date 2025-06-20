@@ -384,36 +384,3 @@ func (s *JobService) DeleteJob(ctx context.Context, id int) error {
 
 	return nil
 }
-
-// UpdateJobStatus updates only the status of a job.
-func (s *JobService) UpdateJobStatus(ctx context.Context, id int, status models.JobStatus) error {
-	s.log.Debug().
-		Int("job_id", id).
-		Str("status", status.String()).
-		Msg("Updating job status")
-
-	if id <= 0 {
-		s.log.Error().Int("job_id", id).Msg("Invalid job ID")
-		return models.ErrInvalidJobID
-	}
-
-	if status < models.INTERESTED || status > models.NOT_INTERESTED {
-		s.log.Error().
-			Int("job_id", id).
-			Int("status_value", int(status)).
-			Msg("Invalid job status")
-		return models.ErrInvalidJobStatus
-	}
-
-	job, err := s.jobRepo.GetByID(ctx, id)
-	if err != nil {
-		s.log.Error().
-			Int("job_id", id).
-			Err(err).
-			Msg("Job not found for status update")
-		return err
-	}
-
-	job.Status = status
-	return s.UpdateJob(ctx, job)
-}

@@ -26,25 +26,12 @@
               {{.Description}}
             {{end}}
           </p>
-          <div class="flex justify-start" onclick="event.stopPropagation()">
-            <select
-              class="bg-slate-700 text-white border-slate-600 rounded-md px-3 py-2.5 text-sm cursor-pointer hover:bg-slate-600 transition-colors min-w-0"
-              hx-put="/jobs/{{.ID}}/status"
-              hx-trigger="change"
-              hx-target="#status-response-{{.ID}}"
-              hx-swap="innerHTML"
-              name="status"
-            >
-              <option value="interested" {{if eq .Status 0}}selected{{end}}>Interested</option>
-              <option value="applied" {{if eq .Status 1}}selected{{end}}>Applied</option>
-              <option value="interviewing" {{if eq .Status 2}}selected{{end}}>Interviewing</option>
-              <option value="offered" {{if eq .Status 3}}selected{{end}}>Offer Received</option>
-              <option value="rejected" {{if eq .Status 4}}selected{{end}}>Rejected</option>
-              <option value="not_interested" {{if eq .Status 5}}selected{{end}}>Not Interested</option>
-            </select>
+          <div class="flex justify-start">
+            <span class="text-xs text-gray-400 bg-slate-700/50 px-2 py-1 rounded">
+              {{if eq .Status 0}}Interested{{else if eq .Status 1}}Applied{{else if eq .Status 2}}Interviewing{{else if eq .Status 3}}Offer Received{{else if eq .Status 4}}Rejected{{else if eq .Status 5}}Not Interested{{end}}
+            </span>
           </div>
         </div>
-        <div id="status-response-{{.ID}}" class="text-xs text-green-400 px-4 md:px-6 pb-2"></div>
       </div>
       {{end}}
   </div>
