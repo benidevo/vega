@@ -1,6 +1,6 @@
 {{define "partials/pagination"}}
 {{if .pagination}}
-{{if ge .pagination.TotalPages 1}}
+{{if gt .pagination.TotalPages 1}}
 <nav aria-label="Job listings pagination" role="navigation" class="flex items-center justify-between px-2 py-3 sm:px-4">
   <div class="flex justify-between flex-1 sm:hidden">
     {{if .pagination.HasPrev}}

@@ -15,11 +15,11 @@
   <div class="absolute -inset-1 rounded-xl bg-gradient-to-r from-primary via-secondary to-primary opacity-20 blur-xl"></div>
 
   <!-- Form container -->
-  <div class="relative p-6 bg-slate-800 bg-opacity-70 backdrop-blur-xl rounded-xl shadow-2xl border border-white border-opacity-10">
+  <div class="relative p-4 md:p-6 bg-slate-800 bg-opacity-70 backdrop-blur-xl rounded-xl shadow-2xl border border-white border-opacity-10">
     <form id="job-form" hx-post="/jobs/new" hx-target="#form-response" hx-target-4*="#form-response" hx-target-5*="#form-response" hx-swap="innerHTML" hx-indicator="#spinner" hx-on::after-request="if(event.detail.successful && event.detail.xhr.responseText.includes('successfully')) { this.reset(); }">
 
       <!-- Form sections -->
-      <div class="space-y-8">
+      <div class="space-y-6 md:space-y-8">
         <!-- Job Basics Section -->
         <div>
           <h2 class="text-lg font-medium text-white mb-5 flex items-center">
@@ -33,21 +33,21 @@
             <div class="col-span-1 md:col-span-2">
               <label for="title" class="block text-sm font-medium text-gray-300 mb-1">Job Title *</label>
               <input type="text" id="title" name="title" required
-                     class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                     class="w-full px-3 py-3 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base">
             </div>
 
             <!-- Company Section -->
             <div>
               <label for="company_name" class="block text-sm font-medium text-gray-300 mb-1">Company Name *</label>
               <input type="text" id="company_name" name="company_name" required
-                     class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                     class="w-full px-3 py-3 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base">
             </div>
 
             <!-- Location -->
             <div>
               <label for="location" class="block text-sm font-medium text-gray-300 mb-1">Location</label>
               <input type="text" id="location" name="location"
-                     class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                     class="w-full px-3 py-3 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base"
                      placeholder="e.g., Remote, San Francisco, CA">
             </div>
 
@@ -61,7 +61,7 @@
                   </svg>
                 </div>
                 <input type="url" id="url" name="source_url"
-                       class="w-full pl-10 pr-4 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                       class="w-full pl-10 pr-4 py-3 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base"
                        placeholder="https://example.com/job-posting" required>
               </div>
             </div>
@@ -74,7 +74,7 @@
                   </svg>
                 </div>
                 <input type="url" id="url" name="application_url"
-                       class="w-full pl-10 pr-4 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                       class="w-full pl-10 pr-4 py-3 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base"
                        placeholder="https://example.com/job-application">
               </div>
             </div>
@@ -93,8 +93,8 @@
             <!-- Description -->
             <div>
               <label for="description" class="block text-sm font-medium text-gray-300 mb-1">Description *</label>
-              <textarea id="description" name="description" rows="6" required
-                        class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"></textarea>
+              <textarea id="description" name="description" rows="4" required
+                        class="w-full px-3 py-3 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base min-h-[120px] md:min-h-[150px]"></textarea>
               <p class="mt-1 text-sm text-gray-400">Paste the full job description or enter the key responsibilities and requirements</p>
             </div>
           </div>
@@ -113,7 +113,7 @@
             <div class="col-span-1 md:col-span-3">
               <label for="skills" class="block text-sm font-medium text-gray-300 mb-1">Skills (comma separated)</label>
               <input type="text" id="skills" name="skills"
-                     class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                     class="w-full px-3 py-3 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base"
                      placeholder="e.g., Go, Docker, Kubernetes, SQL, API Design">
               <p class="mt-1 text-sm text-gray-400">List the required technical skills for this position</p>
             </div>
@@ -122,7 +122,7 @@
             <div>
               <label for="job_type" class="block text-sm font-medium text-gray-300 mb-1">Job Type</label>
               <select id="job_type" name="job_type"
-                      class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                      class="w-full px-3 py-3 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base">
                 <option value="full_time">Full Time</option>
                 <option value="part_time">Part Time</option>
                 <option value="contract">Contract</option>
@@ -135,7 +135,7 @@
         </div>
 
         <!-- Application Status and Notes in One Row -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           <!-- Application Status -->
           <div>
             <h2 class="text-lg font-medium text-white mb-5 flex items-center">
@@ -147,7 +147,7 @@
             <div>
               <label for="status" class="block text-sm font-medium text-gray-300 mb-1">Current Status</label>
               <select id="status" name="status"
-                      class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                      class="w-full px-3 py-3 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base">
                 <option value="interested">Interested</option>
                 <option value="applied">Applied</option>
                 <option value="interviewing">Interviewing</option>
@@ -168,8 +168,8 @@
             </h2>
             <div>
               <label for="notes" class="block text-sm font-medium text-gray-300 mb-1">Additional Notes</label>
-              <textarea id="notes" name="notes" rows="4"
-                        class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+              <textarea id="notes" name="notes" rows="3"
+                        class="w-full px-3 py-3 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base min-h-[80px]"
                         placeholder="Any additional details or personal notes about this position"></textarea>
             </div>
           </div>
@@ -183,10 +183,10 @@
         <!-- Submit Button -->
         <div class="pt-6 border-t border-slate-700">
           <div class="flex flex-col sm:flex-row justify-end gap-4">
-            <a href="/jobs" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-md text-sm transition-colors text-center">
+            <a href="/jobs" class="w-full sm:w-auto px-5 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-md text-sm transition-colors text-center">
               Cancel
             </a>
-            <button type="submit" class="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors duration-300 flex items-center justify-center">
+            <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors duration-300 flex items-center justify-center">
               <span id="spinner" class="htmx-indicator mr-2">
                 <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

@@ -28,9 +28,8 @@
           </p>
           <div class="flex justify-start" onclick="event.stopPropagation()">
             <select
-              class="bg-slate-700 text-white border-slate-600 rounded-md px-3 py-2 text-sm cursor-pointer hover:bg-slate-600 transition-colors min-w-0"
-              hx-post="/jobs/{{.ID}}/status"
-              hx-headers='{"X-HTTP-Method-Override": "PUT"}'
+              class="bg-slate-700 text-white border-slate-600 rounded-md px-3 py-2.5 text-sm cursor-pointer hover:bg-slate-600 transition-colors min-w-0"
+              hx-put="/jobs/{{.ID}}/status"
               hx-trigger="change"
               hx-target="#status-response-{{.ID}}"
               hx-swap="innerHTML"

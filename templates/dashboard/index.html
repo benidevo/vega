@@ -27,7 +27,7 @@
     <div class="flex flex-col sm:flex-row gap-3 mb-6">
       <select
         id="status-filter"
-        class="bg-slate-700 text-white border-slate-600 rounded-md px-3 py-2 text-sm w-full sm:w-auto"
+        class="bg-slate-700 text-white border-slate-600 rounded-md px-3 py-3 text-base w-full sm:w-auto"
         hx-get="/jobs"
         hx-trigger="change"
         hx-target="#jobs-container"
@@ -43,7 +43,7 @@
         <option value="not interested" {{if eq .statusFilter "not interested"}}selected{{end}}>Not Interested</option>
       </select>
       <button
-        class="bg-primary text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-primary-dark transition-colors w-full sm:w-auto"
+        class="bg-primary text-white px-4 py-3 rounded-md text-base font-medium hover:bg-primary-dark transition-colors w-full sm:w-auto"
         hx-get="/jobs"
         hx-target="#jobs-container"
       >
