@@ -310,3 +310,109 @@ func TestJobMatcherService_validateMatchResult(t *testing.T) {
 		})
 	}
 }
+
+func TestJobMatcherService_GetMatchCategories(t *testing.T) {
+	tests := []struct {
+		name             string
+		score            int
+		expectedCategory string
+		expectedDesc     string
+	}{
+		{
+			name:             "excellent match - score 90",
+			score:            90,
+			expectedCategory: MatchCategoryExcellent,
+			expectedDesc:     MatchDescExcellent,
+		},
+		{
+			name:             "excellent match - score 100",
+			score:            100,
+			expectedCategory: MatchCategoryExcellent,
+			expectedDesc:     MatchDescExcellent,
+		},
+		{
+			name:             "strong match - score 80",
+			score:            80,
+			expectedCategory: MatchCategoryStrong,
+			expectedDesc:     MatchDescStrong,
+		},
+		{
+			name:             "strong match - score 89",
+			score:            89,
+			expectedCategory: MatchCategoryStrong,
+			expectedDesc:     MatchDescStrong,
+		},
+		{
+			name:             "good match - score 70",
+			score:            70,
+			expectedCategory: MatchCategoryGood,
+			expectedDesc:     MatchDescGood,
+		},
+		{
+			name:             "good match - score 79",
+			score:            79,
+			expectedCategory: MatchCategoryGood,
+			expectedDesc:     MatchDescGood,
+		},
+		{
+			name:             "fair match - score 60",
+			score:            60,
+			expectedCategory: MatchCategoryFair,
+			expectedDesc:     MatchDescFair,
+		},
+		{
+			name:             "fair match - score 69",
+			score:            69,
+			expectedCategory: MatchCategoryFair,
+			expectedDesc:     MatchDescFair,
+		},
+		{
+			name:             "partial match - score 50",
+			score:            50,
+			expectedCategory: MatchCategoryPartial,
+			expectedDesc:     MatchDescPartial,
+		},
+		{
+			name:             "partial match - score 59",
+			score:            59,
+			expectedCategory: MatchCategoryPartial,
+			expectedDesc:     MatchDescPartial,
+		},
+		{
+			name:             "poor match - score 49",
+			score:            49,
+			expectedCategory: MatchCategoryPoor,
+			expectedDesc:     MatchDescPoor,
+		},
+		{
+			name:             "poor match - score 0",
+			score:            0,
+			expectedCategory: MatchCategoryPoor,
+			expectedDesc:     MatchDescPoor,
+		},
+		{
+			name:             "poor match - negative score",
+			score:            -10,
+			expectedCategory: MatchCategoryPoor,
+			expectedDesc:     MatchDescPoor,
+		},
+		{
+			name:             "excellent match - very high score",
+			score:            150,
+			expectedCategory: MatchCategoryExcellent,
+			expectedDesc:     MatchDescExcellent,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockProvider := &MockProvider{}
+			service := NewJobMatcherService(mockProvider)
+
+			category, desc := service.GetMatchCategories(tt.score)
+
+			assert.Equal(t, tt.expectedCategory, category)
+			assert.Equal(t, tt.expectedDesc, desc)
+		})
+	}
+}
