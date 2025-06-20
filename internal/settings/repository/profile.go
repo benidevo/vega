@@ -17,264 +17,149 @@ func NewProfileRepository(db *sql.DB) *ProfileRepository {
 	return &ProfileRepository{db: db}
 }
 
-// GetProfile retrieves a user's profile and its related work experiences, education, and certifications
-// from the database by the given userID.
+// GetProfile retrieves a user's profile without related entities for backward compatibility
+// For performance, use GetProfileOptimized or GetProfileWithRelated instead
 func (r *ProfileRepository) GetProfile(ctx context.Context, userID int) (*models.Profile, error) {
+	return r.GetProfileOptimized(ctx, userID)
+}
+
+// GetProfileOptimized retrieves a user's profile without related entities
+// This avoids the complex LEFT JOIN and N+1 issues of the original GetProfile
+func (r *ProfileRepository) GetProfileOptimized(ctx context.Context, userID int) (*models.Profile, error) {
 	query := `
-		SELECT
-			p.id, p.user_id, p.first_name, p.last_name, p.title, p.industry,
-			p.career_summary, p.skills, p.phone_number, p.location,
-			p.linkedin_profile, p.github_profile, p.website, p.context, p.created_at, p.updated_at,
+		SELECT id, user_id, first_name, last_name, title, industry,
+		       career_summary, skills, phone_number, location,
+		       linkedin_profile, github_profile, website, context,
+		       created_at, updated_at
+		FROM profiles
+		WHERE user_id = ?`
 
-			we.id, we.profile_id, we.company, we.title, we.location,
-			we.start_date, we.end_date, we.description, we.current,
-			we.created_at, we.updated_at,
+	var profile models.Profile
+	var skillsJSON []byte
 
-			ed.id, ed.profile_id, ed.institution, ed.degree, ed.field_of_study,
-			ed.start_date, ed.end_date, ed.description, ed.created_at, ed.updated_at,
+	err := r.db.QueryRowContext(ctx, query, userID).Scan(
+		&profile.ID, &profile.UserID, &profile.FirstName, &profile.LastName,
+		&profile.Title, &profile.Industry, &profile.CareerSummary, &skillsJSON,
+		&profile.PhoneNumber, &profile.Location, &profile.LinkedInProfile,
+		&profile.GitHubProfile, &profile.Website, &profile.Context,
+		&profile.CreatedAt, &profile.UpdatedAt,
+	)
 
-			cert.id, cert.profile_id, cert.name, cert.issuing_org, cert.issue_date,
-			cert.expiry_date, cert.credential_id, cert.credential_url,
-			cert.created_at, cert.updated_at
-		FROM
-			profiles p
-		LEFT JOIN
-			work_experiences we ON p.id = we.profile_id
-		LEFT JOIN
-			education ed ON p.id = ed.profile_id
-		LEFT JOIN
-			certifications cert ON p.id = cert.profile_id
-		WHERE
-			p.user_id = ?
-		ORDER BY
-			we.start_date DESC,
-			ed.start_date DESC,
-			cert.issue_date DESC`
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
 
-	rows, err := r.db.QueryContext(ctx, query, userID)
+	// Unmarshal skills
+	if len(skillsJSON) > 0 {
+		if err := json.Unmarshal(skillsJSON, &profile.Skills); err != nil {
+			return nil, err
+		}
+	} else {
+		profile.Skills = []string{}
+	}
+
+	// Initialize empty slices for related entities
+	profile.WorkExperience = []models.WorkExperience{}
+	profile.Education = []models.Education{}
+	profile.Certifications = []models.Certification{}
+
+	return &profile, nil
+}
+
+// GetProfileWithRelated retrieves a user's profile and loads related entities
+// This is an optimized version that uses separate queries instead of complex JOINs
+func (r *ProfileRepository) GetProfileWithRelated(ctx context.Context, userID int) (*models.Profile, error) {
+	// First get the profile
+	profile, err := r.GetProfileOptimized(ctx, userID)
+	if err != nil || profile == nil {
+		return profile, err
+	}
+
+	// Load related entities using existing methods
+	workExperiences, err := r.GetWorkExperiences(ctx, profile.ID)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var profile *models.Profile
-
-	// Maps to track which related entities we've already added
-	workExperiencesMap := make(map[int]struct{})
-	educationMap := make(map[int]struct{})
-	certificationsMap := make(map[int]struct{})
-
-	// Iterate through all rows, which will include the profile repeated
-	// for each related entity
-	for rows.Next() {
-		// Nullable fields for the work experience, education, and certification
-		var (
-			// Work experience fields
-			weID          sql.NullInt64
-			weProfileID   sql.NullInt64
-			weCompany     sql.NullString
-			weTitle       sql.NullString
-			weLocation    sql.NullString
-			weStartDate   sql.NullTime
-			weEndDate     sql.NullTime
-			weDescription sql.NullString
-			weCurrent     sql.NullBool
-			weCreatedAt   sql.NullTime
-			weUpdatedAt   sql.NullTime
-
-			// Education fields
-			edID           sql.NullInt64
-			edProfileID    sql.NullInt64
-			edInstitution  sql.NullString
-			edDegree       sql.NullString
-			edFieldOfStudy sql.NullString
-			edStartDate    sql.NullTime
-			edEndDate      sql.NullTime
-			edDescription  sql.NullString
-			edCreatedAt    sql.NullTime
-			edUpdatedAt    sql.NullTime
-
-			// Certification fields
-			certID         sql.NullInt64
-			certProfileID  sql.NullInt64
-			certName       sql.NullString
-			certIssuingOrg sql.NullString
-			certIssueDate  sql.NullTime
-			certExpiryDate sql.NullTime
-			certCredID     sql.NullString
-			certCredURL    sql.NullString
-			certCreatedAt  sql.NullTime
-			certUpdatedAt  sql.NullTime
-
-			// Profile fields (will be the same in all rows)
-			profileID        int
-			profileUserID    int
-			firstName        string
-			lastName         string
-			profileTitle     string
-			industry         models.Industry
-			careerSummary    string
-			skillsJSON       []byte
-			phoneNumber      string
-			profileLocation  string
-			linkedInProfile  string
-			gitHubProfile    string
-			website          string
-			context          string
-			profileCreatedAt time.Time
-			profileUpdatedAt time.Time
-		)
-
-		err := rows.Scan(
-			// Profile fields
-			&profileID, &profileUserID, &firstName, &lastName, &profileTitle,
-			&industry, &careerSummary, &skillsJSON, &phoneNumber, &profileLocation,
-			&linkedInProfile, &gitHubProfile, &website, &context, &profileCreatedAt, &profileUpdatedAt,
-
-			// Work experience fields
-			&weID, &weProfileID, &weCompany, &weTitle, &weLocation,
-			&weStartDate, &weEndDate, &weDescription, &weCurrent,
-			&weCreatedAt, &weUpdatedAt,
-
-			// Education fields
-			&edID, &edProfileID, &edInstitution, &edDegree, &edFieldOfStudy,
-			&edStartDate, &edEndDate, &edDescription, &edCreatedAt, &edUpdatedAt,
-
-			// Certification fields
-			&certID, &certProfileID, &certName, &certIssuingOrg, &certIssueDate,
-			&certExpiryDate, &certCredID, &certCredURL, &certCreatedAt, &certUpdatedAt,
-		)
-
-		if err != nil {
-			return nil, err
-		}
-
-		// Initialize the profile if this is the first row
-		if profile == nil {
-			profile = &models.Profile{
-				ID:              profileID,
-				UserID:          profileUserID,
-				FirstName:       firstName,
-				LastName:        lastName,
-				Title:           profileTitle,
-				Industry:        industry,
-				CareerSummary:   careerSummary,
-				PhoneNumber:     phoneNumber,
-				Location:        profileLocation,
-				LinkedInProfile: linkedInProfile,
-				GitHubProfile:   gitHubProfile,
-				Website:         website,
-				Context:         context,
-				CreatedAt:       profileCreatedAt,
-				UpdatedAt:       profileUpdatedAt,
-				WorkExperience:  []models.WorkExperience{},
-				Education:       []models.Education{},
-				Certifications:  []models.Certification{},
-			}
-
-			if len(skillsJSON) > 0 {
-				if err := json.Unmarshal(skillsJSON, &profile.Skills); err != nil {
-					return nil, err
-				}
-			}
-		}
-
-		// Add work experience if it exists and we haven't added it yet
-		if weID.Valid {
-			if _, exists := workExperiencesMap[int(weID.Int64)]; !exists {
-				workExperiencesMap[int(weID.Int64)] = struct{}{}
-
-				exp := models.WorkExperience{
-					ID:          int(weID.Int64),
-					ProfileID:   int(weProfileID.Int64),
-					Company:     weCompany.String,
-					Title:       weTitle.String,
-					Location:    weLocation.String,
-					StartDate:   weStartDate.Time,
-					Description: weDescription.String,
-					Current:     weCurrent.Bool,
-					CreatedAt:   weCreatedAt.Time,
-					UpdatedAt:   weUpdatedAt.Time,
-				}
-
-				exp.EndDate = fromNullTime(weEndDate)
-
-				profile.WorkExperience = append(profile.WorkExperience, exp)
-			}
-		}
-
-		// Add education if it exists and we haven't added it yet
-		if edID.Valid {
-			if _, exists := educationMap[int(edID.Int64)]; !exists {
-				educationMap[int(edID.Int64)] = struct{}{}
-
-				edu := models.Education{
-					ID:           int(edID.Int64),
-					ProfileID:    int(edProfileID.Int64),
-					Institution:  edInstitution.String,
-					Degree:       edDegree.String,
-					FieldOfStudy: edFieldOfStudy.String,
-					StartDate:    edStartDate.Time,
-					Description:  edDescription.String,
-					CreatedAt:    edCreatedAt.Time,
-					UpdatedAt:    edUpdatedAt.Time,
-				}
-
-				edu.EndDate = fromNullTime(edEndDate)
-
-				profile.Education = append(profile.Education, edu)
-			}
-		}
-
-		// Add certification if it exists and we haven't added it yet
-		if certID.Valid {
-			if _, exists := certificationsMap[int(certID.Int64)]; !exists {
-				certificationsMap[int(certID.Int64)] = struct{}{}
-
-				cert := models.Certification{
-					ID:            int(certID.Int64),
-					ProfileID:     int(certProfileID.Int64),
-					Name:          certName.String,
-					IssuingOrg:    certIssuingOrg.String,
-					IssueDate:     certIssueDate.Time,
-					CredentialID:  certCredID.String,
-					CredentialURL: certCredURL.String,
-					CreatedAt:     certCreatedAt.Time,
-					UpdatedAt:     certUpdatedAt.Time,
-				}
-
-				cert.ExpiryDate = fromNullTime(certExpiryDate)
-
-				profile.Certifications = append(profile.Certifications, cert)
-			}
-		}
-	}
-
-	if err = rows.Err(); err != nil {
+	education, err := r.GetEducation(ctx, profile.ID)
+	if err != nil {
 		return nil, err
 	}
 
-	if profile == nil {
-		return nil, nil
+	certifications, err := r.GetCertifications(ctx, profile.ID)
+	if err != nil {
+		return nil, err
 	}
+
+	// Assign to profile
+	profile.WorkExperience = workExperiences
+	profile.Education = education
+	profile.Certifications = certifications
 
 	return profile, nil
 }
 
+// CreateProfileIfNotExists creates a profile if it doesn't exist for the user
+func (r *ProfileRepository) CreateProfileIfNotExists(ctx context.Context, userID int) (*models.Profile, error) {
+	// Check if profile exists
+	profile, err := r.GetProfileOptimized(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if profile != nil {
+		return profile, nil
+	}
+
+	// Create minimal profile
+	newProfile := &models.Profile{
+		UserID:         userID,
+		FirstName:      "",
+		LastName:       "",
+		Skills:         []string{},
+		WorkExperience: []models.WorkExperience{},
+		Education:      []models.Education{},
+		Certifications: []models.Certification{},
+	}
+
+	skillsJSON, err := json.Marshal(newProfile.Skills)
+	if err != nil {
+		return nil, err
+	}
+
+	query := `
+		INSERT INTO profiles (user_id, first_name, last_name, skills, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?)
+		RETURNING id`
+
+	now := time.Now().UTC()
+	err = r.db.QueryRowContext(ctx, query, userID, "", "", skillsJSON, now, now).Scan(&newProfile.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	newProfile.CreatedAt = now
+	newProfile.UpdatedAt = now
+
+	return newProfile, nil
+}
+
 // UpdateProfile inserts or updates a user's profile in the database using an upsert operation.
 func (r *ProfileRepository) UpdateProfile(ctx context.Context, profile *models.Profile) error {
+	return r.UpdateProfileOptimized(ctx, profile)
+}
+
+// UpdateProfileOptimized updates profile without transactions (since it's a single operation)
+func (r *ProfileRepository) UpdateProfileOptimized(ctx context.Context, profile *models.Profile) error {
 	skillsJSON, err := json.Marshal(profile.Skills)
 	if err != nil {
 		return err
 	}
 
-	tx, err := r.db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	upsertQuery := `
+	query := `
 		INSERT INTO profiles (
 			user_id, first_name, last_name, title, industry, career_summary, skills,
 			phone_number, location, linkedin_profile, github_profile, website, context, updated_at
@@ -293,31 +178,124 @@ func (r *ProfileRepository) UpdateProfile(ctx context.Context, profile *models.P
 			website = excluded.website,
 			context = excluded.context,
 			updated_at = excluded.updated_at
-		RETURNING id`
+		RETURNING id, updated_at`
 
 	now := time.Now().UTC()
 	var profileID int
+	var updatedAt time.Time
 
-	err = tx.QueryRowContext(ctx, upsertQuery,
+	err = r.db.QueryRowContext(ctx, query,
 		profile.UserID, profile.FirstName, profile.LastName, profile.Title,
 		profile.Industry, profile.CareerSummary, skillsJSON, profile.PhoneNumber,
 		profile.Location, profile.LinkedInProfile, profile.GitHubProfile,
 		profile.Website, profile.Context, now,
-	).Scan(&profileID)
+	).Scan(&profileID, &updatedAt)
 
 	if err != nil {
 		return err
 	}
 
-	if err := tx.Commit(); err != nil {
-		return err
-	}
-
 	profile.ID = profileID
-	profile.UpdatedAt = now
+	profile.UpdatedAt = updatedAt
 
 	return nil
 }
+
+// GetEntityByID retrieves any entity by ID and type with ownership verification
+func (r *ProfileRepository) GetEntityByID(ctx context.Context, entityID, profileID int, entityType string) (interface{}, error) {
+	switch entityType {
+	case "Experience":
+		return r.getWorkExperienceByID(ctx, entityID, profileID)
+	case "Education":
+		return r.getEducationByID(ctx, entityID, profileID)
+	case "Certification":
+		return r.getCertificationByID(ctx, entityID, profileID)
+	default:
+		return nil, models.ErrSettingsNotFound
+	}
+}
+
+// Private helper methods
+func (r *ProfileRepository) getWorkExperienceByID(ctx context.Context, entityID, profileID int) (*models.WorkExperience, error) {
+	query := `
+		SELECT id, profile_id, company, title, location, start_date, end_date,
+		       description, current, created_at, updated_at
+		FROM work_experiences
+		WHERE id = ? AND profile_id = ?`
+
+	var exp models.WorkExperience
+	var endDate sql.NullTime
+
+	err := r.db.QueryRowContext(ctx, query, entityID, profileID).Scan(
+		&exp.ID, &exp.ProfileID, &exp.Company, &exp.Title, &exp.Location,
+		&exp.StartDate, &endDate, &exp.Description, &exp.Current,
+		&exp.CreatedAt, &exp.UpdatedAt,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, models.ErrWorkExperienceNotFound
+		}
+		return nil, err
+	}
+
+	exp.EndDate = fromNullTime(endDate)
+	return &exp, nil
+}
+
+func (r *ProfileRepository) getEducationByID(ctx context.Context, entityID, profileID int) (*models.Education, error) {
+	query := `
+		SELECT id, profile_id, institution, degree, field_of_study,
+		       start_date, end_date, description, created_at, updated_at
+		FROM education
+		WHERE id = ? AND profile_id = ?`
+
+	var edu models.Education
+	var endDate sql.NullTime
+
+	err := r.db.QueryRowContext(ctx, query, entityID, profileID).Scan(
+		&edu.ID, &edu.ProfileID, &edu.Institution, &edu.Degree, &edu.FieldOfStudy,
+		&edu.StartDate, &endDate, &edu.Description, &edu.CreatedAt, &edu.UpdatedAt,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, models.ErrEducationNotFound
+		}
+		return nil, err
+	}
+
+	edu.EndDate = fromNullTime(endDate)
+	return &edu, nil
+}
+
+func (r *ProfileRepository) getCertificationByID(ctx context.Context, entityID, profileID int) (*models.Certification, error) {
+	query := `
+		SELECT id, profile_id, name, issuing_org, issue_date, expiry_date,
+		       credential_id, credential_url, created_at, updated_at
+		FROM certifications
+		WHERE id = ? AND profile_id = ?`
+
+	var cert models.Certification
+	var expiryDate sql.NullTime
+
+	err := r.db.QueryRowContext(ctx, query, entityID, profileID).Scan(
+		&cert.ID, &cert.ProfileID, &cert.Name, &cert.IssuingOrg, &cert.IssueDate,
+		&expiryDate, &cert.CredentialID, &cert.CredentialURL, &cert.CreatedAt, &cert.UpdatedAt,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, models.ErrCertificationNotFound
+		}
+		return nil, err
+	}
+
+	cert.ExpiryDate = fromNullTime(expiryDate)
+	return &cert, nil
+}
+
+// Continue with all the existing CRUD methods for WorkExperience, Education, and Certification...
 
 // GetWorkExperiences retrieves a list of work experiences for the specified profile ID,
 // ordered by start date in descending order. Returns a slice of WorkExperience models
@@ -695,7 +673,6 @@ func (r *ProfileRepository) UpdateCertification(ctx context.Context, certificati
 }
 
 // DeleteCertification deletes a certification record by its ID from the database.
-// Returns an error if the operation fails or if no rows are affected (certification not found).
 func (r *ProfileRepository) DeleteCertification(ctx context.Context, id int) error {
 	query := "DELETE FROM certifications WHERE id = ?"
 

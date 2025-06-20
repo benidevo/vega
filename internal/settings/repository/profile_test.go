@@ -32,42 +32,18 @@ func TestGetProfile(t *testing.T) {
 
 	t.Run("profile with all related data", func(t *testing.T) {
 		rows := sqlmock.NewRows([]string{
-			// Profile fields
 			"id", "user_id", "first_name", "last_name", "title", "industry",
 			"career_summary", "skills", "phone_number", "location",
-			"linkedin_profile", "github_profile", "website", "context", "created_at", "updated_at",
-			// Work experience fields
-			"we_id", "we_profile_id", "we_company", "we_title", "we_location",
-			"we_start_date", "we_end_date", "we_description", "we_current",
-			"we_created_at", "we_updated_at",
-			// Education fields
-			"ed_id", "ed_profile_id", "ed_institution", "ed_degree", "ed_field_of_study",
-			"ed_start_date", "ed_end_date", "ed_description", "ed_created_at", "ed_updated_at",
-			// Certification fields
-			"cert_id", "cert_profile_id", "cert_name", "cert_issuing_org", "cert_issue_date",
-			"cert_expiry_date", "cert_credential_id", "cert_credential_url",
-			"cert_created_at", "cert_updated_at",
+			"linkedin_profile", "github_profile", "website", "context",
+			"created_at", "updated_at",
 		}).AddRow(
-			// Profile data
 			1, userID, "John", "Doe", "Software Engineer", models.IndustryTechnology,
 			"Experienced developer", skillsJSON, "+1234567890", "New York",
 			"https://linkedin.com/in/johndoe", "https://github.com/johndoe", "https://johndoe.com",
 			"", now, now,
-			// Work experience data
-			1, 1, "Acme Corp", "Senior Developer", "Remote",
-			now.Add(-365*24*time.Hour), nil, "Building great software", true,
-			now, now,
-			// Education data
-			1, 1, "MIT", "BS Computer Science", "Computer Science",
-			now.Add(-4*365*24*time.Hour), now.Add(-365*24*time.Hour), "Graduated with honors",
-			now, now,
-			// Certification data
-			1, 1, "AWS Solutions Architect", "Amazon Web Services", now.Add(-180*24*time.Hour),
-			now.Add(365*24*time.Hour), "AWS-123456", "https://aws.amazon.com/verify/AWS-123456",
-			now, now,
 		)
 
-		mock.ExpectQuery("SELECT(.+)FROM(.+)profiles(.+)WHERE(.+)p.user_id = ?").
+		mock.ExpectQuery("SELECT(.+)FROM profiles(.+)WHERE user_id = \\?").
 			WithArgs(userID).
 			WillReturnRows(rows)
 
@@ -77,50 +53,27 @@ func TestGetProfile(t *testing.T) {
 		assert.Equal(t, "John", profile.FirstName)
 		assert.Equal(t, "Doe", profile.LastName)
 		assert.Len(t, profile.Skills, 3)
-		assert.Len(t, profile.WorkExperience, 1)
-		assert.Len(t, profile.Education, 1)
-		assert.Len(t, profile.Certifications, 1)
-
-		// Verify work experience
-		assert.Equal(t, "Acme Corp", profile.WorkExperience[0].Company)
-		assert.True(t, profile.WorkExperience[0].Current)
-
-		// Verify education
-		assert.Equal(t, "MIT", profile.Education[0].Institution)
-
-		// Verify certification
-		assert.Equal(t, "AWS Solutions Architect", profile.Certifications[0].Name)
+		// GetProfile now returns empty slices for related entities
+		assert.Empty(t, profile.WorkExperience)
+		assert.Empty(t, profile.Education)
+		assert.Empty(t, profile.Certifications)
 
 		require.NoError(t, mock.ExpectationsWereMet())
 	})
 
 	t.Run("profile without related data", func(t *testing.T) {
 		rows := sqlmock.NewRows([]string{
-			// Profile fields
 			"id", "user_id", "first_name", "last_name", "title", "industry",
 			"career_summary", "skills", "phone_number", "location",
-			"linkedin_profile", "github_profile", "website", "context", "created_at", "updated_at",
-			// All nullable fields for related entities
-			"we_id", "we_profile_id", "we_company", "we_title", "we_location",
-			"we_start_date", "we_end_date", "we_description", "we_current",
-			"we_created_at", "we_updated_at",
-			"ed_id", "ed_profile_id", "ed_institution", "ed_degree", "ed_field_of_study",
-			"ed_start_date", "ed_end_date", "ed_description", "ed_created_at", "ed_updated_at",
-			"cert_id", "cert_profile_id", "cert_name", "cert_issuing_org", "cert_issue_date",
-			"cert_expiry_date", "cert_credential_id", "cert_credential_url",
-			"cert_created_at", "cert_updated_at",
+			"linkedin_profile", "github_profile", "website", "context",
+			"created_at", "updated_at",
 		}).AddRow(
-			// Profile data
 			2, userID, "Jane", "Smith", "", models.IndustryUnspecified,
 			"", []byte("[]"), "", "",
 			"", "", "", "", now, now,
-			// All nulls for related data
-			nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-			nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-			nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
 		)
 
-		mock.ExpectQuery("SELECT(.+)FROM(.+)profiles(.+)WHERE(.+)p.user_id = ?").
+		mock.ExpectQuery("SELECT(.+)FROM profiles(.+)WHERE user_id = \\?").
 			WithArgs(userID).
 			WillReturnRows(rows)
 
@@ -136,7 +89,7 @@ func TestGetProfile(t *testing.T) {
 	})
 
 	t.Run("profile not found", func(t *testing.T) {
-		mock.ExpectQuery("SELECT(.+)FROM(.+)profiles(.+)WHERE(.+)p.user_id = ?").
+		mock.ExpectQuery("SELECT(.+)FROM profiles(.+)WHERE user_id = \\?").
 			WithArgs(999).
 			WillReturnRows(sqlmock.NewRows(nil))
 
@@ -148,7 +101,7 @@ func TestGetProfile(t *testing.T) {
 	})
 
 	t.Run("database error", func(t *testing.T) {
-		mock.ExpectQuery("SELECT(.+)FROM(.+)profiles(.+)WHERE(.+)p.user_id = ?").
+		mock.ExpectQuery("SELECT(.+)FROM profiles(.+)WHERE user_id = \\?").
 			WithArgs(userID).
 			WillReturnError(errors.New("database error"))
 
@@ -177,17 +130,15 @@ func TestUpdateProfile(t *testing.T) {
 	t.Run("successful update", func(t *testing.T) {
 		skillsJSON, _ := json.Marshal(profile.Skills)
 
-		mock.ExpectBegin()
-		mock.ExpectQuery("INSERT INTO profiles").
+		mock.ExpectQuery("INSERT INTO profiles(.+)ON CONFLICT\\(user_id\\) DO UPDATE SET(.+)").
 			WithArgs(
 				profile.UserID, profile.FirstName, profile.LastName,
 				profile.Title, profile.Industry, profile.CareerSummary,
 				skillsJSON, profile.PhoneNumber, profile.Location,
 				profile.LinkedInProfile, profile.GitHubProfile, profile.Website,
-				profile.Context, sqlmock.AnyArg(), // context, updated_at
+				profile.Context, sqlmock.AnyArg(), // updated_at
 			).
-			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
-		mock.ExpectCommit()
+			WillReturnRows(sqlmock.NewRows([]string{"id", "updated_at"}).AddRow(1, profile.UpdatedAt))
 
 		err := repo.UpdateProfile(ctx, profile)
 		require.NoError(t, err)
@@ -386,33 +337,17 @@ func TestHandleNullValues(t *testing.T) {
 
 	t.Run("profile with null optional fields", func(t *testing.T) {
 		rows := sqlmock.NewRows([]string{
-			// Profile fields
 			"id", "user_id", "first_name", "last_name", "title", "industry",
 			"career_summary", "skills", "phone_number", "location",
-			"linkedin_profile", "github_profile", "website", "context", "created_at", "updated_at",
-			// Work experience fields (all nullable)
-			"we_id", "we_profile_id", "we_company", "we_title", "we_location",
-			"we_start_date", "we_end_date", "we_description", "we_current",
-			"we_created_at", "we_updated_at",
-			// Education fields (all nullable)
-			"ed_id", "ed_profile_id", "ed_institution", "ed_degree", "ed_field_of_study",
-			"ed_start_date", "ed_end_date", "ed_description", "ed_created_at", "ed_updated_at",
-			// Certification fields (all nullable)
-			"cert_id", "cert_profile_id", "cert_name", "cert_issuing_org", "cert_issue_date",
-			"cert_expiry_date", "cert_credential_id", "cert_credential_url",
-			"cert_created_at", "cert_updated_at",
+			"linkedin_profile", "github_profile", "website", "context",
+			"created_at", "updated_at",
 		}).AddRow(
-			// Profile with some null fields
 			1, 1, "John", "Doe", "", models.IndustryUnspecified,
 			"", []byte("null"), "", "",
 			"", "", "", "", now, now,
-			// All nulls for related data
-			nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-			nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-			nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
 		)
 
-		mock.ExpectQuery("SELECT(.+)FROM(.+)profiles(.+)WHERE(.+)p.user_id = ?").
+		mock.ExpectQuery("SELECT(.+)FROM profiles(.+)WHERE user_id = \\?").
 			WithArgs(1).
 			WillReturnRows(rows)
 

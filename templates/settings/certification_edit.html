@@ -41,8 +41,10 @@
 
   <!-- Certification Form -->
   <div>
-    <form action="/settings/profile/certification" method="post" class="space-y-6">
-      <input type="hidden" name="id" value="{{.certification.ID}}">
+    <form hx-post="/settings/profile/certification/{{.certification.ID}}" 
+          hx-target="#form-alert-container" 
+          hx-swap="innerHTML"
+          class="space-y-6">
       
       <div>
         <label for="name" class="block text-sm font-medium text-gray-300 mb-2">Certification Name *</label>
@@ -84,9 +86,12 @@
                placeholder="https://example.com/credential">
       </div>
 
+      <!-- Alert container for form responses -->
+      <div id="form-alert-container" class="mb-4"></div>
+
       <!-- Form Actions -->
       <div class="flex justify-end space-x-4 pt-6 border-t border-slate-700">
-        <a href="/settings/profile" 
+        <a href="/settings/profile?scroll=certification" 
            class="px-6 py-2 border border-gray-500 rounded-lg shadow-sm text-sm font-medium text-gray-300 bg-transparent hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
           Cancel
         </a>

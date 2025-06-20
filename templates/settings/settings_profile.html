@@ -139,19 +139,19 @@
     <!-- Personal Context Section -->
     <div class="mb-10">
       <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Personal Context</h3>
-      
+
       <form class="space-y-6" hx-post="/settings/profile/context" hx-target="#form-alert-container" hx-swap="innerHTML" hx-indicator=".htmx-indicator">
         <div class="space-y-1">
           <label for="context" class="block text-sm font-medium text-gray-300">About You</label>
           <p class="text-xs text-gray-400 mb-2">
-            Share information about your interests, hobbies, values, or personal background that could help match you with the right opportunities. 
+            Share information about your interests, hobbies, values, or personal background that could help match you with the right opportunities.
             This will be used to generate personalized cover letters and find jobs that align with who you are beyond just your professional experience.
             (Maximum 1000 words)
           </p>
-          <textarea 
-            id="context" 
-            name="context" 
-            rows="8" 
+          <textarea
+            id="context"
+            name="context"
+            rows="8"
             maxlength="6000"
             class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors whitespace-pre-wrap"
             placeholder="Example: I'm passionate about sustainable technology and renewable energy. In my free time, I volunteer at local coding bootcamps teaching underprivileged youth. I'm also an avid rock climber which has taught me persistence and problem-solving. I value work-life balance and prefer companies with strong environmental commitments...">{{.profile.Context}}</textarea>
@@ -173,7 +173,7 @@
     </div>
 
     <!-- Work Experience Section -->
-    <div class="mb-10">
+    <div id="experience-section" class="mb-10">
       <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Work Experience</h3>
 
       <div id="work-experience-list">
@@ -217,9 +217,8 @@
                     </svg>
                   </a>
                   <button type="button" class="text-gray-400 hover:text-red-500"
-                          _="on click 
+                          _="on click
                              put {url: '/settings/profile/experience/{{.ID}}/delete', method: 'POST', type: 'work experience'} into window.itemToDelete
-                             set #delete-message.textContent to 'Are you sure you want to delete this work experience? This action cannot be undone.'
                              remove .hidden from #delete-modal-shared">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -244,7 +243,7 @@
     </div>
 
     <!-- Education Section -->
-    <div class="mb-10">
+    <div id="education-section" class="mb-10">
       <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Education</h3>
 
       <div id="education-list">
@@ -280,9 +279,8 @@
                     </svg>
                   </a>
                   <button type="button" class="text-gray-400 hover:text-red-500"
-                          _="on click 
+                          _="on click
                              put {url: '/settings/profile/education/{{.ID}}/delete', method: 'POST', type: 'education entry'} into window.itemToDelete
-                             set #delete-message.textContent to 'Are you sure you want to delete this education entry? This action cannot be undone.'
                              remove .hidden from #delete-modal-shared">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -306,7 +304,7 @@
     </div>
 
     <!-- Certifications Section -->
-    <div class="mb-10">
+    <div id="certification-section" class="mb-10">
       <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Certifications</h3>
 
       <div id="certification-list">
@@ -349,9 +347,8 @@
                     </svg>
                   </a>
                   <button type="button" class="text-gray-400 hover:text-red-500"
-                          _="on click 
+                          _="on click
                              put {url: '/settings/profile/certification/{{.ID}}/delete', method: 'POST', type: 'certification'} into window.itemToDelete
-                             set #delete-message.textContent to 'Are you sure you want to delete this certification? This action cannot be undone.'
                              remove .hidden from #delete-modal-shared">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -381,6 +378,33 @@
 
 <!-- Include auto-dismiss alerts script -->
 {{template "partials/auto-dismiss-alerts.html" .}}
+
+<!-- Scroll to section script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const scrollSection = urlParams.get('scroll');
+    
+    if (scrollSection) {
+        const sectionId = scrollSection + '-section';
+        const element = document.getElementById(sectionId);
+        
+        if (element) {
+            // Small delay to ensure page is fully loaded
+            setTimeout(() => {
+                element.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+                
+                // Clean up URL without anchor
+                const cleanUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, cleanUrl);
+            }, 100);
+        }
+    }
+});
+</script>
 
 {{end}}
 {{end}}

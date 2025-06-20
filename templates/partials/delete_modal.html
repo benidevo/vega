@@ -4,7 +4,8 @@
      _="on keydown[key=='Escape'] from window add .hidden to me
         on click if event.target.id == 'delete-modal-shared' add .hidden to me">
   <div class="bg-slate-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4 border border-slate-700">
-    <h3 class="text-xl font-semibold text-white mb-6">Are you sure?</h3>
+    <h3 class="text-xl font-semibold text-white mb-4">Are you sure?</h3>
+    <p id="delete-message" class="text-gray-300 mb-6">This action cannot be undone.</p>
     <div class="flex justify-end space-x-3">
       <button
         class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md"

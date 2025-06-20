@@ -11,7 +11,7 @@ import (
 	"github.com/benidevo/ascentio/internal/common/logger"
 	"github.com/benidevo/ascentio/internal/config"
 	settingsModels "github.com/benidevo/ascentio/internal/settings/models"
-	"github.com/go-playground/validator/v10"
+	"github.com/benidevo/ascentio/internal/settings/services"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -26,6 +26,41 @@ func init() {
 // MockProfileRepository mocks the ProfileRepository interface
 type MockProfileRepository struct {
 	mock.Mock
+}
+
+// Optimized methods
+func (m *MockProfileRepository) GetProfileOptimized(ctx context.Context, userID int) (*settingsModels.Profile, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*settingsModels.Profile), args.Error(1)
+}
+
+func (m *MockProfileRepository) GetProfileWithRelated(ctx context.Context, userID int) (*settingsModels.Profile, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*settingsModels.Profile), args.Error(1)
+}
+
+func (m *MockProfileRepository) UpdateProfileOptimized(ctx context.Context, profile *settingsModels.Profile) error {
+	args := m.Called(ctx, profile)
+	return args.Error(0)
+}
+
+func (m *MockProfileRepository) CreateProfileIfNotExists(ctx context.Context, userID int) (*settingsModels.Profile, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*settingsModels.Profile), args.Error(1)
+}
+
+func (m *MockProfileRepository) GetEntityByID(ctx context.Context, entityID, profileID int, entityType string) (interface{}, error) {
+	args := m.Called(ctx, entityID, profileID, entityType)
+	return args.Get(0), args.Error(1)
 }
 
 func (m *MockProfileRepository) GetProfile(ctx context.Context, userID int) (*settingsModels.Profile, error) {
@@ -179,11 +214,11 @@ func setupTestService() (*SettingsService, *MockProfileRepository, *MockUserRepo
 	mockUserRepo := new(MockUserRepository)
 
 	service := &SettingsService{
-		userRepo:     mockUserRepo,
-		settingsRepo: mockProfileRepo,
-		cfg:          cfg,
-		log:          logger.GetPrivacyLogger("settings-test"),
-		validator:    validator.New(),
+		userRepo:         mockUserRepo,
+		settingsRepo:     mockProfileRepo,
+		cfg:              cfg,
+		log:              logger.GetPrivacyLogger("settings-test"),
+		centralValidator: services.NewCentralizedValidator(),
 	}
 	return service, mockProfileRepo, mockUserRepo
 }
@@ -311,175 +346,6 @@ func TestGetSecuritySettings(t *testing.T) {
 	})
 }
 
-func TestWorkExperienceOperations(t *testing.T) {
-	ctx := context.Background()
-	service, mockProfileRepo, _ := setupTestService()
-
-	now := time.Now()
-	exp := &settingsModels.WorkExperience{
-		ProfileID:   1,
-		Company:     "Acme Corp",
-		Title:       "Senior Developer",
-		Location:    "Remote",
-		StartDate:   now.Add(-365 * 24 * time.Hour),
-		Description: "Building great software",
-		Current:     true,
-	}
-
-	t.Run("create work experience", func(t *testing.T) {
-		mockProfileRepo.On("AddWorkExperience", ctx, exp).Return(nil).Once()
-
-		err := service.CreateWorkExperience(ctx, exp)
-		require.NoError(t, err)
-		mockProfileRepo.AssertExpectations(t)
-	})
-
-	t.Run("create with validation error", func(t *testing.T) {
-		invalidExp := &settingsModels.WorkExperience{
-			ProfileID: 0, // Invalid
-			Company:   "Acme Corp",
-			Title:     "Senior Developer",
-			StartDate: now,
-		}
-
-		err := service.CreateWorkExperience(ctx, invalidExp)
-		assert.Error(t, err)
-		mockProfileRepo.AssertNotCalled(t, "AddWorkExperience")
-	})
-
-	t.Run("update work experience", func(t *testing.T) {
-		mockProfileRepo.On("UpdateWorkExperience", ctx, exp).Return(exp, nil).Once()
-
-		err := service.UpdateWorkExperience(ctx, exp)
-		require.NoError(t, err)
-		mockProfileRepo.AssertExpectations(t)
-	})
-
-	t.Run("delete work experience", func(t *testing.T) {
-		// Mock GetWorkExperiences to return the experience we want to delete
-		expWithID := *exp
-		expWithID.ID = 10
-		mockProfileRepo.On("GetWorkExperiences", ctx, 1).Return([]settingsModels.WorkExperience{expWithID}, nil).Once()
-		mockProfileRepo.On("DeleteWorkExperience", ctx, 10).Return(nil).Once()
-
-		err := service.DeleteWorkExperience(ctx, 10, 1)
-		require.NoError(t, err)
-		mockProfileRepo.AssertExpectations(t)
-	})
-}
-
-func TestEducationOperations(t *testing.T) {
-	ctx := context.Background()
-	service, mockProfileRepo, _ := setupTestService()
-
-	now := time.Now()
-	endDate := now.Add(-180 * 24 * time.Hour)
-	edu := &settingsModels.Education{
-		ProfileID:    1,
-		Institution:  "MIT",
-		Degree:       "BS Computer Science",
-		FieldOfStudy: "Computer Science",
-		StartDate:    now.Add(-4 * 365 * 24 * time.Hour),
-		EndDate:      &endDate,
-		Description:  "Graduated with honors",
-	}
-
-	t.Run("create education", func(t *testing.T) {
-		mockProfileRepo.On("AddEducation", ctx, edu).Return(nil).Once()
-
-		err := service.CreateEducation(ctx, edu)
-		require.NoError(t, err)
-		mockProfileRepo.AssertExpectations(t)
-	})
-
-	t.Run("create with validation error", func(t *testing.T) {
-		invalidEdu := &settingsModels.Education{
-			ProfileID:   1,
-			Institution: "", // Invalid - required
-			Degree:      "BS Computer Science",
-			StartDate:   now,
-		}
-
-		err := service.CreateEducation(ctx, invalidEdu)
-		assert.Error(t, err)
-		mockProfileRepo.AssertNotCalled(t, "AddEducation")
-	})
-
-	t.Run("update education", func(t *testing.T) {
-		mockProfileRepo.On("UpdateEducation", ctx, edu).Return(edu, nil).Once()
-
-		err := service.UpdateEducation(ctx, edu)
-		require.NoError(t, err)
-		mockProfileRepo.AssertExpectations(t)
-	})
-
-	t.Run("delete education", func(t *testing.T) {
-		mockProfileRepo.On("DeleteEducation", ctx, 20).Return(nil).Once()
-
-		err := service.DeleteEducation(ctx, 20, 1)
-		require.NoError(t, err)
-		mockProfileRepo.AssertExpectations(t)
-	})
-}
-
-func TestCertificationOperations(t *testing.T) {
-	ctx := context.Background()
-	service, mockProfileRepo, _ := setupTestService()
-
-	now := time.Now()
-	expiryDate := now.Add(365 * 24 * time.Hour)
-	cert := &settingsModels.Certification{
-		ProfileID:     1,
-		Name:          "AWS Solutions Architect",
-		IssuingOrg:    "Amazon Web Services",
-		IssueDate:     now.Add(-180 * 24 * time.Hour),
-		ExpiryDate:    &expiryDate,
-		CredentialID:  "AWS-123456",
-		CredentialURL: "https://aws.amazon.com/verify/AWS-123456",
-	}
-
-	t.Run("create certification", func(t *testing.T) {
-		mockProfileRepo.On("AddCertification", ctx, cert).Return(nil).Once()
-
-		err := service.CreateCertification(ctx, cert)
-		require.NoError(t, err)
-		mockProfileRepo.AssertExpectations(t)
-	})
-
-	t.Run("create with validation error", func(t *testing.T) {
-		invalidCert := &settingsModels.Certification{
-			ProfileID:  1,
-			Name:       "AWS Solutions Architect",
-			IssuingOrg: "", // Invalid - required
-			IssueDate:  now,
-		}
-
-		err := service.CreateCertification(ctx, invalidCert)
-		assert.Error(t, err)
-		mockProfileRepo.AssertNotCalled(t, "AddCertification")
-	})
-
-	t.Run("update certification", func(t *testing.T) {
-		mockProfileRepo.On("UpdateCertification", ctx, cert).Return(cert, nil).Once()
-
-		err := service.UpdateCertification(ctx, cert)
-		require.NoError(t, err)
-		mockProfileRepo.AssertExpectations(t)
-	})
-
-	t.Run("delete certification", func(t *testing.T) {
-		// Mock GetCertifications to return the certification we want to delete
-		certWithID := *cert
-		certWithID.ID = 30
-		mockProfileRepo.On("GetCertifications", ctx, 1).Return([]settingsModels.Certification{certWithID}, nil).Once()
-		mockProfileRepo.On("DeleteCertification", ctx, 30).Return(nil).Once()
-
-		err := service.DeleteCertification(ctx, 30, 1)
-		require.NoError(t, err)
-		mockProfileRepo.AssertExpectations(t)
-	})
-}
-
 func TestSanitizationInService(t *testing.T) {
 	ctx := context.Background()
 	service, mockProfileRepo, _ := setupTestService()
@@ -504,21 +370,4 @@ func TestSanitizationInService(t *testing.T) {
 		mockProfileRepo.AssertExpectations(t)
 	})
 
-	t.Run("work experience sanitization", func(t *testing.T) {
-		exp := &settingsModels.WorkExperience{
-			ProfileID: 1,
-			Company:   "  Acme Corp  ",
-			Title:     "  Senior Developer  ",
-			Location:  "  Remote  ",
-			StartDate: time.Now().Add(-365 * 24 * time.Hour),
-		}
-
-		mockProfileRepo.On("AddWorkExperience", ctx, mock.MatchedBy(func(e *settingsModels.WorkExperience) bool {
-			return e.Company == "Acme Corp" && e.Title == "Senior Developer" && e.Location == "Remote"
-		})).Return(nil).Once()
-
-		err := service.CreateWorkExperience(ctx, exp)
-		require.NoError(t, err)
-		mockProfileRepo.AssertExpectations(t)
-	})
 }

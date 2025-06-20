@@ -9,366 +9,295 @@ import (
 	"github.com/benidevo/ascentio/internal/config"
 	"github.com/benidevo/ascentio/internal/settings/interfaces"
 	"github.com/benidevo/ascentio/internal/settings/models"
-	"github.com/go-playground/validator/v10"
+	"github.com/benidevo/ascentio/internal/settings/repository"
+	"github.com/benidevo/ascentio/internal/settings/services"
+	"github.com/gin-gonic/gin"
 )
 
 // SettingsService provides business logic for user settings management
 type SettingsService struct {
-	userRepo     authrepo.UserRepository
-	settingsRepo interfaces.SettingsRepository
-	cfg          *config.Settings
-	log          *logger.PrivacyLogger
-	validator    *validator.Validate
+	userRepo         authrepo.UserRepository
+	settingsRepo     interfaces.SettingsRepository
+	cfg              *config.Settings
+	log              *logger.PrivacyLogger
+	centralValidator *services.CentralizedValidator
 }
 
 // NewSettingsService creates a new SettingsService instance
 func NewSettingsService(settingsRepo interfaces.SettingsRepository, cfg *config.Settings, userRepo authrepo.UserRepository) *SettingsService {
 	return &SettingsService{
-		userRepo:     userRepo,
-		settingsRepo: settingsRepo,
-		cfg:          cfg,
-		log:          logger.GetPrivacyLogger("settings"),
-		validator:    validator.New(),
+		userRepo:         userRepo,
+		settingsRepo:     settingsRepo,
+		cfg:              cfg,
+		log:              logger.GetPrivacyLogger("settings"),
+		centralValidator: services.NewCentralizedValidator(),
 	}
 }
 
 // GetProfileSettings retrieves a user's profile settings
-func (s *SettingsService) GetProfileSettings(ctx context.Context, userId int) (*models.Profile, error) {
-	profile, err := s.settingsRepo.GetProfile(ctx, userId)
-	if err != nil {
-		s.log.Error().Err(err).
-			Str("event", "profile_get_failed").
-			Str("user_ref", fmt.Sprintf("user_%d", userId)).
-			Msg("Failed to get profile settings")
-		return nil, models.WrapError(models.ErrFailedToGetSettings, err)
-	}
-
-	if profile == nil {
-		s.log.Info().
-			Str("event", "profile_empty_created").
-			Str("user_ref", fmt.Sprintf("user_%d", userId)).
-			Msg("Profile not found, creating empty profile")
-		return &models.Profile{
-			UserID:         userId,
-			Skills:         []string{},
-			WorkExperience: []models.WorkExperience{},
-			Education:      []models.Education{},
-			Certifications: []models.Certification{},
-		}, nil
-	}
-
-	return profile, nil
-}
-
-// GetWorkExperiences retrieves a user's work experiences
-func (s *SettingsService) GetWorkExperiences(ctx context.Context, profileID int) ([]*models.WorkExperience, error) {
-	// If the profile ID is 0, it means a profile doesn't exist yet
-	if profileID == 0 {
-		return []*models.WorkExperience{}, nil
-	}
-
-	experiences, err := s.settingsRepo.GetWorkExperiences(ctx, profileID)
-	if err != nil {
-		s.log.Error().Err(err).Int("profile_id", profileID).Msg("Failed to get work experiences")
-		return []*models.WorkExperience{}, err
-	}
-
-	result := make([]*models.WorkExperience, len(experiences))
-	for i := range experiences {
-		exp := experiences[i]
-		// Copy the value into a new variable to prevent pointer reuse in loop iterations
-		expCopy := exp
-		result[i] = &expCopy
-	}
-	return result, nil
-}
-
-// GetWorkExperienceByID retrieves a single work experience by its ID and verifies it belongs to the given profile
-func (s *SettingsService) GetWorkExperienceByID(ctx context.Context, experienceID, profileID int) (*models.WorkExperience, error) {
-	experiences, err := s.settingsRepo.GetWorkExperiences(ctx, profileID)
-	if err != nil {
-		s.log.Error().Err(err).Int("profile_id", profileID).Msg("Failed to get work experiences")
-		return nil, err
-	}
-
-	for _, exp := range experiences {
-		if exp.ID == experienceID {
-			return &exp, nil
+func (s *SettingsService) GetProfileSettings(ctx context.Context, userID int) (*models.Profile, error) {
+	// Use optimized method in production, standard interface in tests
+	if repo, ok := s.settingsRepo.(*repository.ProfileRepository); ok {
+		profile, err := repo.GetProfileOptimized(ctx, userID)
+		if err != nil {
+			s.log.Error().Err(err).
+				Str("event", "profile_get_failed").
+				Str("user_ref", fmt.Sprintf("user_%d", userID)).
+				Msg("Failed to get profile settings")
+			return nil, models.WrapError(models.ErrFailedToGetSettings, err)
+		}
+		if profile != nil {
+			return profile, nil
+		}
+	} else {
+		profile, err := s.settingsRepo.GetProfile(ctx, userID)
+		if err != nil {
+			s.log.Error().Err(err).
+				Str("event", "profile_get_failed").
+				Str("user_ref", fmt.Sprintf("user_%d", userID)).
+				Msg("Failed to get profile settings")
+			return nil, models.WrapError(models.ErrFailedToGetSettings, err)
+		}
+		if profile != nil {
+			return profile, nil
 		}
 	}
 
-	s.log.Warn().Int("experience_id", experienceID).Int("profile_id", profileID).Msg("Work experience not found or doesn't belong to profile")
-	return nil, models.ErrWorkExperienceNotFound
+	// Return empty profile if none exists
+	s.log.Info().
+		Str("event", "profile_empty_created").
+		Str("user_ref", fmt.Sprintf("user_%d", userID)).
+		Msg("Profile not found, creating empty profile")
+	return &models.Profile{
+		UserID:         userID,
+		Skills:         []string{},
+		WorkExperience: []models.WorkExperience{},
+		Education:      []models.Education{},
+		Certifications: []models.Certification{},
+	}, nil
 }
 
-// UpdateWorkExperience updates an existing work experience
-func (s *SettingsService) UpdateWorkExperience(ctx context.Context, experience *models.WorkExperience) error {
-	// Validate before updating
-	if err := experience.Validate(); err != nil {
-		s.log.Error().Err(err).Msg("Work experience validation failed")
-		return err
+// GetProfileWithRelated retrieves a user's profile with all related entities
+func (s *SettingsService) GetProfileWithRelated(ctx context.Context, userID int) (*models.Profile, error) {
+	if repo, ok := s.settingsRepo.(*repository.ProfileRepository); ok {
+		return repo.GetProfileWithRelated(ctx, userID)
 	}
-
-	// Sanitize the data
-	experience.Sanitize()
-
-	updated, err := s.settingsRepo.UpdateWorkExperience(ctx, experience)
-	if err != nil {
-		s.log.Error().Err(err).Int("experience_id", experience.ID).Msg("Failed to update work experience")
-		if err == models.ErrWorkExperienceNotFound {
-			return err
-		}
-		return models.WrapError(models.ErrFailedToUpdateWorkExperience, err)
-	}
-
-	// Copy updated fields back
-	experience.UpdatedAt = updated.UpdatedAt
-	return nil
+	return s.settingsRepo.GetProfile(ctx, userID)
 }
 
-// DeleteWorkExperience deletes a work experience by its ID
-// It first verifies the experience belongs to the specified profile
-func (s *SettingsService) DeleteWorkExperience(ctx context.Context, experienceID, profileID int) error {
-	// Verify the experience belongs to this profile
-	_, err := s.GetWorkExperienceByID(ctx, experienceID, profileID)
-	if err != nil {
-		s.log.Error().Err(err).Int("experience_id", experienceID).Int("profile_id", profileID).
-			Msg("Failed to verify work experience before deletion")
-		return err
-	}
-
-	// Delete the experience
-	if err := s.settingsRepo.DeleteWorkExperience(ctx, experienceID); err != nil {
-		s.log.Error().Err(err).Int("experience_id", experienceID).Msg("Failed to delete work experience")
-		if err == models.ErrWorkExperienceNotFound {
-			return err
-		}
-		return models.WrapError(models.ErrFailedToDeleteWorkExperience, err)
-	}
-
-	s.log.Info().Int("experience_id", experienceID).Int("profile_id", profileID).Msg("Successfully deleted work experience")
-	return nil
-}
-
-func (s *SettingsService) CreateWorkExperience(ctx context.Context, experience *models.WorkExperience) error {
-	if err := experience.Validate(); err != nil {
-		s.log.Error().Err(err).Msg("Work experience validation failed")
-		return err
-	}
-
-	experience.Sanitize()
-
-	if err := s.settingsRepo.AddWorkExperience(ctx, experience); err != nil {
-		s.log.Error().Err(err).Int("profile_id", experience.ProfileID).Msg("Failed to add work experience")
-		return models.WrapError(models.ErrFailedToCreateWorkExperience, err)
-	}
-	return nil
-}
-
-// GetEducation retrieves a user's education entries
-func (s *SettingsService) GetEducation(ctx context.Context, profileID int) ([]*models.Education, error) {
-	// If the profile ID is 0, it means a profile doesn't exist yet
-	if profileID == 0 {
-		return []*models.Education{}, nil
-	}
-
-	education, err := s.settingsRepo.GetEducation(ctx, profileID)
-	if err != nil {
-		s.log.Error().Err(err).Int("profile_id", profileID).Msg("Failed to get education entries")
-		return []*models.Education{}, err
-	}
-
-	result := make([]*models.Education, len(education))
-	for i := range education {
-		edu := education[i]
-		result[i] = &edu
-	}
-	return result, nil
-}
-
-// GetEducationByID retrieves a single education entry by its ID and verifies it belongs to the given profile
-func (s *SettingsService) GetEducationByID(ctx context.Context, educationID, profileID int) (*models.Education, error) {
-	educationEntries, err := s.settingsRepo.GetEducation(ctx, profileID)
-	if err != nil {
-		s.log.Error().Err(err).Int("profile_id", profileID).Msg("Failed to get education entries")
-		return nil, err
-	}
-
-	for _, edu := range educationEntries {
-		if edu.ID == educationID {
-			return &edu, nil
-		}
-	}
-
-	s.log.Warn().Int("education_id", educationID).Int("profile_id", profileID).Msg("Education entry not found or doesn't belong to profile")
-	return nil, models.ErrEducationNotFound
-}
-
-// CreateEducation adds a new education entry to a user's profile
-func (s *SettingsService) CreateEducation(ctx context.Context, education *models.Education) error {
-	if err := education.Validate(); err != nil {
-		s.log.Error().Err(err).Msg("Education validation failed")
-		return err
-	}
-
-	education.Sanitize()
-
-	if err := s.settingsRepo.AddEducation(ctx, education); err != nil {
-		s.log.Error().Err(err).Int("profile_id", education.ProfileID).Msg("Failed to add education entry")
-		return models.WrapError(models.ErrFailedToCreateEducation, err)
-	}
-	return nil
-}
-
-// UpdateEducation updates an existing education entry
-func (s *SettingsService) UpdateEducation(ctx context.Context, education *models.Education) error {
-	if err := education.Validate(); err != nil {
-		s.log.Error().Err(err).Msg("Education validation failed")
-		return err
-	}
-
-	education.Sanitize()
-
-	updated, err := s.settingsRepo.UpdateEducation(ctx, education)
-	if err != nil {
-		s.log.Error().Err(err).Int("education_id", education.ID).Msg("Failed to update education entry")
-		if err == models.ErrEducationNotFound {
-			return err
-		}
-		return models.WrapError(models.ErrFailedToUpdateEducation, err)
-	}
-
-	education.UpdatedAt = updated.UpdatedAt
-	return nil
-}
-
-// DeleteEducation deletes an education entry by its ID
-func (s *SettingsService) DeleteEducation(ctx context.Context, educationID, profileID int) error {
-	if err := s.settingsRepo.DeleteEducation(ctx, educationID); err != nil {
-		s.log.Error().Err(err).Int("education_id", educationID).Msg("Failed to delete education entry")
-		if err == models.ErrEducationNotFound {
-			return err
-		}
-		return models.WrapError(models.ErrFailedToDeleteEducation, err)
-	}
-
-	s.log.Info().Int("education_id", educationID).Int("profile_id", profileID).Msg("Successfully deleted education entry")
-	return nil
-}
-
-// GetCertifications retrieves a user's certifications
-func (s *SettingsService) GetCertifications(ctx context.Context, profileID int) ([]*models.Certification, error) {
-	// If the profile ID is 0, it means a profile doesn't exist yet
-	if profileID == 0 {
-		return []*models.Certification{}, nil
-	}
-
-	certifications, err := s.settingsRepo.GetCertifications(ctx, profileID)
-	if err != nil {
-		s.log.Error().Err(err).Int("profile_id", profileID).Msg("Failed to get certifications")
-		return []*models.Certification{}, err
-	}
-
-	result := make([]*models.Certification, len(certifications))
-	for i := range certifications {
-		cert := certifications[i]
-		result[i] = &cert
-	}
-	return result, nil
-}
-
-// GetCertificationByID retrieves a single certification by its ID and verifies it belongs to the given profile
-func (s *SettingsService) GetCertificationByID(ctx context.Context, certificationID, profileID int) (*models.Certification, error) {
-	certifications, err := s.settingsRepo.GetCertifications(ctx, profileID)
-	if err != nil {
-		s.log.Error().Err(err).Int("profile_id", profileID).Msg("Failed to get certifications")
-		return nil, err
-	}
-
-	for _, cert := range certifications {
-		if cert.ID == certificationID {
-			return &cert, nil
-		}
-	}
-
-	s.log.Warn().Int("certification_id", certificationID).Int("profile_id", profileID).Msg("Certification not found or doesn't belong to profile")
-	return nil, models.ErrCertificationNotFound
-}
-
-// CreateCertification adds a new certification to a user's profile
-func (s *SettingsService) CreateCertification(ctx context.Context, certification *models.Certification) error {
-	if err := certification.Validate(); err != nil {
-		s.log.Error().Err(err).Msg("Certification validation failed")
-		return err
-	}
-
-	certification.Sanitize()
-
-	if err := s.settingsRepo.AddCertification(ctx, certification); err != nil {
-		s.log.Error().Err(err).Int("profile_id", certification.ProfileID).Msg("Failed to add certification")
-		return models.WrapError(models.ErrFailedToCreateCertification, err)
-	}
-	return nil
-}
-
-// UpdateCertification updates an existing certification
-func (s *SettingsService) UpdateCertification(ctx context.Context, certification *models.Certification) error {
-	if err := certification.Validate(); err != nil {
-		s.log.Error().Err(err).Msg("Certification validation failed")
-		return err
-	}
-
-	certification.Sanitize()
-
-	updated, err := s.settingsRepo.UpdateCertification(ctx, certification)
-	if err != nil {
-		s.log.Error().Err(err).Int("certification_id", certification.ID).Msg("Failed to update certification")
-		if err == models.ErrCertificationNotFound {
-			return err
-		}
-		return models.WrapError(models.ErrFailedToUpdateCertification, err)
-	}
-
-	certification.UpdatedAt = updated.UpdatedAt
-	return nil
-}
-
-// DeleteCertification deletes a certification by its ID
-// It first verifies the certification belongs to the specified profile
-func (s *SettingsService) DeleteCertification(ctx context.Context, certificationID, profileID int) error {
-	_, err := s.GetCertificationByID(ctx, certificationID, profileID)
-	if err != nil {
-		s.log.Error().Err(err).Int("certification_id", certificationID).Int("profile_id", profileID).
-			Msg("Failed to verify certification before deletion")
-		return err
-	}
-
-	if err := s.settingsRepo.DeleteCertification(ctx, certificationID); err != nil {
-		s.log.Error().Err(err).Int("certification_id", certificationID).Msg("Failed to delete certification")
-		if err == models.ErrCertificationNotFound {
-			return err
-		}
-		return models.WrapError(models.ErrFailedToDeleteCertification, err)
-	}
-
-	s.log.Info().Int("certification_id", certificationID).Int("profile_id", profileID).Msg("Successfully deleted certification")
-	return nil
-}
-
-// UpdateProfile updates a user's profile in the database
+// UpdateProfile updates a user's profile with centralized validation
 func (s *SettingsService) UpdateProfile(ctx context.Context, profile *models.Profile) error {
-	if err := profile.Validate(); err != nil {
+	// Sanitize first
+	profile.Sanitize()
+
+	// Use centralized validation
+	if err := s.centralValidator.ValidateProfile(profile); err != nil {
 		s.log.Error().Err(err).Msg("Profile validation failed")
 		return err
 	}
 
-	profile.Sanitize()
+	// Use optimized update in production, standard interface in tests
+	if repo, ok := s.settingsRepo.(*repository.ProfileRepository); ok {
+		if err := repo.UpdateProfileOptimized(ctx, profile); err != nil {
+			s.log.Error().Err(err).Int("user_id", profile.UserID).Msg("Failed to update profile")
+			return models.WrapError(models.ErrFailedToUpdateSettings, err)
+		}
+		return nil
+	}
 
 	if err := s.settingsRepo.UpdateProfile(ctx, profile); err != nil {
 		s.log.Error().Err(err).Int("user_id", profile.UserID).Msg("Failed to update profile")
 		return models.WrapError(models.ErrFailedToUpdateSettings, err)
 	}
 	return nil
+}
+
+// CreateEntity creates a new entity (Experience, Education, or Certification)
+func (s *SettingsService) CreateEntity(ctx *gin.Context, entity CRUDEntity) error {
+	// Sanitize
+	entity.Sanitize()
+
+	// Validate based on type
+	if err := s.validateEntity(entity); err != nil {
+		s.log.Error().Err(err).Msg("Entity validation failed")
+		return err
+	}
+
+	// Create based on type
+	switch e := entity.(type) {
+	case *models.WorkExperience:
+		if err := s.settingsRepo.AddWorkExperience(ctx.Request.Context(), e); err != nil {
+			s.log.Error().Err(err).Int("profile_id", e.ProfileID).Msg("Failed to add work experience")
+			return models.WrapError(models.ErrFailedToCreateWorkExperience, err)
+		}
+		return nil
+	case *models.Education:
+		if err := s.settingsRepo.AddEducation(ctx.Request.Context(), e); err != nil {
+			s.log.Error().Err(err).Int("profile_id", e.ProfileID).Msg("Failed to add education entry")
+			return models.WrapError(models.ErrFailedToCreateEducation, err)
+		}
+		return nil
+	case *models.Certification:
+		if err := s.settingsRepo.AddCertification(ctx.Request.Context(), e); err != nil {
+			s.log.Error().Err(err).Int("profile_id", e.ProfileID).Msg("Failed to add certification")
+			return models.WrapError(models.ErrFailedToCreateCertification, err)
+		}
+		return nil
+	default:
+		return fmt.Errorf("unsupported entity type")
+	}
+}
+
+// UpdateEntity updates an existing entity with validation
+func (s *SettingsService) UpdateEntity(ctx *gin.Context, entity CRUDEntity) error {
+	// Sanitize
+	entity.Sanitize()
+
+	// Validate
+	if err := s.validateEntity(entity); err != nil {
+		s.log.Error().Err(err).Msg("Entity validation failed")
+		return err
+	}
+
+	// Update based on type
+	switch e := entity.(type) {
+	case *models.WorkExperience:
+		_, err := s.settingsRepo.UpdateWorkExperience(ctx.Request.Context(), e)
+		if err != nil {
+			s.log.Error().Err(err).Int("experience_id", e.ID).Msg("Failed to update work experience")
+			if err == models.ErrWorkExperienceNotFound {
+				return err
+			}
+			return models.WrapError(models.ErrFailedToUpdateWorkExperience, err)
+		}
+		return nil
+	case *models.Education:
+		_, err := s.settingsRepo.UpdateEducation(ctx.Request.Context(), e)
+		if err != nil {
+			s.log.Error().Err(err).Int("education_id", e.ID).Msg("Failed to update education entry")
+			if err == models.ErrEducationNotFound {
+				return err
+			}
+			return models.WrapError(models.ErrFailedToUpdateEducation, err)
+		}
+		return nil
+	case *models.Certification:
+		_, err := s.settingsRepo.UpdateCertification(ctx.Request.Context(), e)
+		if err != nil {
+			s.log.Error().Err(err).Int("certification_id", e.ID).Msg("Failed to update certification")
+			if err == models.ErrCertificationNotFound {
+				return err
+			}
+			return models.WrapError(models.ErrFailedToUpdateCertification, err)
+		}
+		return nil
+	default:
+		return fmt.Errorf("unsupported entity type")
+	}
+}
+
+// DeleteEntity deletes an entity with ownership verification
+func (s *SettingsService) DeleteEntity(ctx *gin.Context, entityID, profileID int, entityType string) error {
+	// Verify ownership first
+	_, err := s.GetEntityByID(ctx, entityID, profileID, entityType)
+	if err != nil {
+		return err
+	}
+
+	// Delete based on type
+	switch entityType {
+	case "Experience":
+		if err := s.settingsRepo.DeleteWorkExperience(ctx.Request.Context(), entityID); err != nil {
+			s.log.Error().Err(err).Int("experience_id", entityID).Msg("Failed to delete work experience")
+			if err == models.ErrWorkExperienceNotFound {
+				return err
+			}
+			return models.WrapError(models.ErrFailedToDeleteWorkExperience, err)
+		}
+		s.log.Info().Int("experience_id", entityID).Int("profile_id", profileID).Msg("Successfully deleted work experience")
+		return nil
+	case "Education":
+		if err := s.settingsRepo.DeleteEducation(ctx.Request.Context(), entityID); err != nil {
+			s.log.Error().Err(err).Int("education_id", entityID).Msg("Failed to delete education entry")
+			if err == models.ErrEducationNotFound {
+				return err
+			}
+			return models.WrapError(models.ErrFailedToDeleteEducation, err)
+		}
+		s.log.Info().Int("education_id", entityID).Int("profile_id", profileID).Msg("Successfully deleted education entry")
+		return nil
+	case "Certification":
+		if err := s.settingsRepo.DeleteCertification(ctx.Request.Context(), entityID); err != nil {
+			s.log.Error().Err(err).Int("certification_id", entityID).Msg("Failed to delete certification")
+			if err == models.ErrCertificationNotFound {
+				return err
+			}
+			return models.WrapError(models.ErrFailedToDeleteCertification, err)
+		}
+		s.log.Info().Int("certification_id", entityID).Int("profile_id", profileID).Msg("Successfully deleted certification")
+		return nil
+	default:
+		return fmt.Errorf("unsupported entity type")
+	}
+}
+
+// GetEntityByID retrieves an entity by ID with ownership verification
+func (s *SettingsService) GetEntityByID(ctx *gin.Context, entityID, profileID int, entityType string) (CRUDEntity, error) {
+	if repo, ok := s.settingsRepo.(*repository.ProfileRepository); ok {
+		entity, err := repo.GetEntityByID(ctx.Request.Context(), entityID, profileID, entityType)
+		if err != nil {
+			return nil, err
+		}
+		// Convert to CRUDEntity
+		if crudEntity, ok := entity.(CRUDEntity); ok {
+			return crudEntity, nil
+		}
+		return nil, fmt.Errorf("entity does not implement CRUDEntity interface")
+	}
+
+	// Use standard interface for tests
+	switch entityType {
+	case "Experience":
+		experiences, err := s.settingsRepo.GetWorkExperiences(ctx.Request.Context(), profileID)
+		if err != nil {
+			return nil, err
+		}
+		for _, exp := range experiences {
+			if exp.ID == entityID {
+				return &exp, nil
+			}
+		}
+		return nil, models.ErrWorkExperienceNotFound
+	case "Education":
+		education, err := s.settingsRepo.GetEducation(ctx.Request.Context(), profileID)
+		if err != nil {
+			return nil, err
+		}
+		for _, edu := range education {
+			if edu.ID == entityID {
+				return &edu, nil
+			}
+		}
+		return nil, models.ErrEducationNotFound
+	case "Certification":
+		certifications, err := s.settingsRepo.GetCertifications(ctx.Request.Context(), profileID)
+		if err != nil {
+			return nil, err
+		}
+		for _, cert := range certifications {
+			if cert.ID == entityID {
+				return &cert, nil
+			}
+		}
+		return nil, models.ErrCertificationNotFound
+	default:
+		return nil, fmt.Errorf("unsupported entity type")
+	}
+}
+
+// ValidateContext validates context with word count limit
+func (s *SettingsService) ValidateContext(context string) error {
+	return s.centralValidator.ValidateWordCount(context, 1000, "Context")
 }
 
 // GetSecuritySettings retrieves a user's security settings
@@ -380,4 +309,18 @@ func (s *SettingsService) GetSecuritySettings(ctx context.Context, username stri
 
 	activity := models.NewAccountActivity(user.LastLogin, user.CreatedAt)
 	return models.NewSecuritySettings(activity), nil
+}
+
+// validateEntity validates an entity based on its type
+func (s *SettingsService) validateEntity(entity CRUDEntity) error {
+	switch e := entity.(type) {
+	case *models.WorkExperience:
+		return s.centralValidator.ValidateWorkExperience(e)
+	case *models.Education:
+		return s.centralValidator.ValidateEducation(e)
+	case *models.Certification:
+		return s.centralValidator.ValidateCertification(e)
+	default:
+		return fmt.Errorf("unsupported entity type for validation")
+	}
 }
