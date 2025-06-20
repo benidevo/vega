@@ -198,13 +198,13 @@ func TestSQLiteJobRepository_GetByID(t *testing.T) {
 		rows := sqlmock.NewRows([]string{
 			"j.id", "j.title", "j.description", "j.location", "j.job_type",
 			"j.source_url", "j.required_skills",
-			"j.application_url", "j.company_id", "j.status",
+			"j.application_url", "j.company_id", "j.status", "j.match_score",
 			"j.notes", "j.created_at", "j.updated_at",
 			"c.id", "c.name", "c.created_at", "c.updated_at",
 		}).AddRow(
 			jobID, "Software Engineer", "Build awesome software", "Remote", int(models.FULL_TIME),
 			"https://example.com", `["Go","SQL"]`,
-			"https://apply.example.com", 2, int(models.INTERESTED),
+			"https://apply.example.com", 2, int(models.INTERESTED), 85,
 			"Great company", now.Add(-24*time.Hour), now,
 			2, "Acme Corp", now, now,
 		)
@@ -303,13 +303,13 @@ func TestSQLiteJobRepository_GetAll(t *testing.T) {
 		rows := sqlmock.NewRows([]string{
 			"j.id", "j.title", "j.description", "j.location", "j.job_type",
 			"j.source_url", "j.required_skills",
-			"j.application_url", "j.company_id", "j.status",
+			"j.application_url", "j.company_id", "j.status", "j.match_score",
 			"j.notes", "j.created_at", "j.updated_at",
 			"c.id", "c.name", "c.created_at", "c.updated_at",
 		}).AddRow(
 			1, "Software Engineer", "Build awesome software", "Remote", int(models.FULL_TIME),
 			"https://example.com", `["Go","SQL"]`,
-			"https://apply.example.com", companyID, int(models.INTERESTED),
+			"https://apply.example.com", companyID, int(models.INTERESTED), 92,
 			"Great company", now.Add(-24*time.Hour), now,
 			companyID, "Acme Corp", now, now,
 		)
