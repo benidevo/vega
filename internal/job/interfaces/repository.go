@@ -3,7 +3,7 @@ package interfaces
 import (
 	"context"
 
-	"github.com/benidevo/ascentio/internal/job/models"
+	"github.com/benidevo/vega/internal/job/models"
 )
 
 // CompanyRepository defines methods for interacting with company data

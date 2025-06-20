@@ -1,4 +1,4 @@
-module github.com/benidevo/ascentio
+module github.com/benidevo/vega
 
 go 1.24.0
 

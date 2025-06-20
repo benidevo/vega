@@ -3,8 +3,8 @@ package home
 import (
 	"database/sql"
 
-	"github.com/benidevo/ascentio/internal/config"
-	"github.com/benidevo/ascentio/internal/job/repository"
+	"github.com/benidevo/vega/internal/config"
+	"github.com/benidevo/vega/internal/job/repository"
 )
 
 // Setup initializes and returns a new home Handler.

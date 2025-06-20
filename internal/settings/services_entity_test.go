@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	settingsModels "github.com/benidevo/ascentio/internal/settings/models"
+	settingsModels "github.com/benidevo/vega/internal/settings/models"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

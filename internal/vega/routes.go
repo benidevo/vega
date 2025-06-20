@@ -1,15 +1,15 @@
-package ascentio
+package vega
 
 import (
 	"net/http"
 
-	authapi "github.com/benidevo/ascentio/internal/api/auth"
-	jobapi "github.com/benidevo/ascentio/internal/api/job"
-	"github.com/benidevo/ascentio/internal/auth"
-	"github.com/benidevo/ascentio/internal/health"
-	"github.com/benidevo/ascentio/internal/home"
-	"github.com/benidevo/ascentio/internal/job"
-	"github.com/benidevo/ascentio/internal/settings"
+	authapi "github.com/benidevo/vega/internal/api/auth"
+	jobapi "github.com/benidevo/vega/internal/api/job"
+	"github.com/benidevo/vega/internal/auth"
+	"github.com/benidevo/vega/internal/health"
+	"github.com/benidevo/vega/internal/home"
+	"github.com/benidevo/vega/internal/job"
+	"github.com/benidevo/vega/internal/settings"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 )

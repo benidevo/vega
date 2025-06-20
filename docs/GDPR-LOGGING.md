@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the GDPR-compliant logging practices implemented in Ascentio to protect user privacy and personal data.
+This document outlines the GDPR-compliant logging practices implemented in Vega to protect user privacy and personal data.
 
 ## Core Principles
 

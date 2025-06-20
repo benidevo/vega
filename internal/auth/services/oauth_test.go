@@ -5,10 +5,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/benidevo/ascentio/internal/auth/models"
-	commonerrors "github.com/benidevo/ascentio/internal/common/errors"
-	"github.com/benidevo/ascentio/internal/common/logger"
-	"github.com/benidevo/ascentio/internal/config"
+	"github.com/benidevo/vega/internal/auth/models"
+	commonerrors "github.com/benidevo/vega/internal/common/errors"
+	"github.com/benidevo/vega/internal/common/logger"
+	"github.com/benidevo/vega/internal/config"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 )

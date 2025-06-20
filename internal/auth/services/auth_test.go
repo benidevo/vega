@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benidevo/ascentio/internal/auth/models"
-	commonerrors "github.com/benidevo/ascentio/internal/common/errors"
-	"github.com/benidevo/ascentio/internal/config"
+	"github.com/benidevo/vega/internal/auth/models"
+	commonerrors "github.com/benidevo/vega/internal/common/errors"
+	"github.com/benidevo/vega/internal/config"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

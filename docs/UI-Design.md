@@ -1,6 +1,6 @@
-# Ascentio UI Design System
+# Vega UI Design System
 
-This document outlines the UI design system for Ascentio, providing guidelines for consistent styling and components across the application.
+This document outlines the UI design system for Vega, providing guidelines for consistent styling and components across the application.
 
 ## 1. Design Foundations
 

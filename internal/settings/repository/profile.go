@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/benidevo/ascentio/internal/settings/models"
+	"github.com/benidevo/vega/internal/settings/models"
 )
 
 type ProfileRepository struct {

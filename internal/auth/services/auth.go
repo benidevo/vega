@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/benidevo/ascentio/internal/auth/models"
-	"github.com/benidevo/ascentio/internal/auth/repository"
-	"github.com/benidevo/ascentio/internal/common/logger"
-	"github.com/benidevo/ascentio/internal/config"
+	"github.com/benidevo/vega/internal/auth/models"
+	"github.com/benidevo/vega/internal/auth/repository"
+	"github.com/benidevo/vega/internal/common/logger"
+	"github.com/benidevo/vega/internal/config"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )

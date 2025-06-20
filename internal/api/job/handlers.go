@@ -3,9 +3,9 @@ package job
 import (
 	"net/http"
 
-	apimodels "github.com/benidevo/ascentio/internal/api/job/models"
-	"github.com/benidevo/ascentio/internal/job"
-	"github.com/benidevo/ascentio/internal/job/models"
+	apimodels "github.com/benidevo/vega/internal/api/job/models"
+	"github.com/benidevo/vega/internal/job"
+	"github.com/benidevo/vega/internal/job/models"
 	"github.com/gin-gonic/gin"
 )
 

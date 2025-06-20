@@ -1,4 +1,4 @@
-package ascentio
+package vega
 
 import (
 	"net/http"
@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benidevo/ascentio/internal/config"
+	"github.com/benidevo/vega/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

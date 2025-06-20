@@ -3,7 +3,7 @@ package gemini
 import (
 	"testing"
 
-	"github.com/benidevo/ascentio/internal/config"
+	"github.com/benidevo/vega/internal/config"
 	"github.com/stretchr/testify/assert"
 )
 

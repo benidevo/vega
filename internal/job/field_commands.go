@@ -3,7 +3,7 @@ package job
 import (
 	"strings"
 
-	"github.com/benidevo/ascentio/internal/job/models"
+	"github.com/benidevo/vega/internal/job/models"
 	"github.com/gin-gonic/gin"
 )
 

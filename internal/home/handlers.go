@@ -3,8 +3,8 @@ package home
 import (
 	"net/http"
 
-	"github.com/benidevo/ascentio/internal/common/alerts"
-	"github.com/benidevo/ascentio/internal/config"
+	"github.com/benidevo/vega/internal/common/alerts"
+	"github.com/benidevo/vega/internal/config"
 	"github.com/gin-gonic/gin"
 )
 

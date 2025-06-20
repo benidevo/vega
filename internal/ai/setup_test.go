@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/benidevo/ascentio/internal/ai/llm"
-	"github.com/benidevo/ascentio/internal/ai/models"
-	"github.com/benidevo/ascentio/internal/config"
+	"github.com/benidevo/vega/internal/ai/llm"
+	"github.com/benidevo/vega/internal/ai/models"
+	"github.com/benidevo/vega/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

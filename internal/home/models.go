@@ -1,7 +1,7 @@
 package home
 
 import (
-	"github.com/benidevo/ascentio/internal/job/models"
+	"github.com/benidevo/vega/internal/job/models"
 )
 
 // HomePageData aggregates all data needed for the homepage

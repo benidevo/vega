@@ -1,8 +1,8 @@
-# Technical Design Document for Ascentio
+# Technical Design Document for Vega
 
 ## 1. System Architecture Overview
 
-Ascentio uses a **monolithic architecture** implemented entirely in Go, with a SQLite database for persistence. The application is containerized using Docker and configured via environment variables and mounted files.
+Vega uses a **monolithic architecture** implemented entirely in Go, with a SQLite database for persistence. The application is containerized using Docker and configured via environment variables and mounted files.
 
 ### 1.1 High-Level Architecture Diagram
 
@@ -139,14 +139,14 @@ GET /health/ready
 
 ```plaintext
 # Application Configuration
-APP_NAME=ascentio
+APP_NAME=vega
 SERVER_PORT=:8080
 IS_DEVELOPMENT=true
 LOG_LEVEL=info
 
 # Database Configuration
 DB_DRIVER=sqlite
-DB_CONNECTION_STRING=/app/data/ascentio.db?_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=ON
+DB_CONNECTION_STRING=/app/data/vega.db?_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=ON
 MIGRATIONS_DIR=migrations/sqlite
 
 # Authentication & Security
@@ -179,7 +179,7 @@ CORS_ALLOW_CREDENTIALS=true
 
 ```plaintext
 /app/data/
-  └── ascentio.db        # SQLite database file (with WAL journal)
+  └── vega.db        # SQLite database file (with WAL journal)
 
 /app/templates/
   ├── base.html          # Base template layout

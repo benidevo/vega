@@ -3,9 +3,9 @@ package settings
 import (
 	"database/sql"
 
-	authrepo "github.com/benidevo/ascentio/internal/auth/repository"
-	"github.com/benidevo/ascentio/internal/config"
-	"github.com/benidevo/ascentio/internal/settings/repository"
+	authrepo "github.com/benidevo/vega/internal/auth/repository"
+	"github.com/benidevo/vega/internal/config"
+	"github.com/benidevo/vega/internal/settings/repository"
 )
 
 // Setup creates a new settings handler

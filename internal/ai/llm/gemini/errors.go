@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	commonerrors "github.com/benidevo/ascentio/internal/common/errors"
+	commonerrors "github.com/benidevo/vega/internal/common/errors"
 )
 
 var (

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/benidevo/ascentio/internal/job/models"
+	"github.com/benidevo/vega/internal/job/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

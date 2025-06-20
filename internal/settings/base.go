@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/benidevo/ascentio/internal/settings/models"
+	"github.com/benidevo/vega/internal/settings/models"
 	"github.com/gin-gonic/gin"
 )
 

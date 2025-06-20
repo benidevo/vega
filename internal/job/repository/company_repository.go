@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	commonerrors "github.com/benidevo/ascentio/internal/common/errors"
-	"github.com/benidevo/ascentio/internal/job/models"
+	commonerrors "github.com/benidevo/vega/internal/common/errors"
+	"github.com/benidevo/vega/internal/job/models"
 )
 
 // SQLiteCompanyRepository is a SQLite implementation of CompanyRepository

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/benidevo/ascentio/internal/auth/services"
+	"github.com/benidevo/vega/internal/auth/services"
 	"github.com/gin-gonic/gin"
 )
 

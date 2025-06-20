@@ -9,4 +9,4 @@ RUN go mod download
 
 EXPOSE 8080
 
-CMD ["CompileDaemon", "--build=go build -o ./tmp/ascentio ./cmd/ascentio", "--command=./tmp/ascentio", "--color=true"]
+CMD ["CompileDaemon", "--build=go build -o ./tmp/vega ./cmd/vega", "--command=./tmp/vega", "--color=true"]

@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/benidevo/ascentio/internal/ai"
-	"github.com/benidevo/ascentio/internal/common/logger"
-	"github.com/benidevo/ascentio/internal/config"
-	"github.com/benidevo/ascentio/internal/job/interfaces"
-	"github.com/benidevo/ascentio/internal/job/models"
-	"github.com/benidevo/ascentio/internal/settings"
+	"github.com/benidevo/vega/internal/ai"
+	"github.com/benidevo/vega/internal/common/logger"
+	"github.com/benidevo/vega/internal/config"
+	"github.com/benidevo/vega/internal/job/interfaces"
+	"github.com/benidevo/vega/internal/job/models"
+	"github.com/benidevo/vega/internal/settings"
 	"github.com/go-playground/validator/v10"
 )
 

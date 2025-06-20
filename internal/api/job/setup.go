@@ -3,8 +3,8 @@ package job
 import (
 	"database/sql"
 
-	"github.com/benidevo/ascentio/internal/config"
-	"github.com/benidevo/ascentio/internal/job"
+	"github.com/benidevo/vega/internal/config"
+	"github.com/benidevo/vega/internal/job"
 )
 
 // Setup initializes the job API module with its dependencies

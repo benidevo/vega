@@ -7,9 +7,9 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/benidevo/ascentio/internal/ai/llm"
-	"github.com/benidevo/ascentio/internal/ai/models"
-	"github.com/benidevo/ascentio/internal/common/logger"
+	"github.com/benidevo/vega/internal/ai/llm"
+	"github.com/benidevo/vega/internal/ai/models"
+	"github.com/benidevo/vega/internal/common/logger"
 )
 
 // CoverLetterService provides methods to generate cover letters using a specified LLM provider.

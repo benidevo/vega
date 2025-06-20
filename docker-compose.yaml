@@ -7,11 +7,11 @@ services:
     env_file:
       - .env
     environment:
-      - DB_CONNECTION_STRING=/app/data/ascentio.db?_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=ON&_cache_size=10000&_synchronous=NORMAL
+      - DB_CONNECTION_STRING=/app/data/vega.db?_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=ON&_cache_size=10000&_synchronous=NORMAL
       - IS_DEVELOPMENT=true
     volumes:
       - .:/app
-      - ascentio-data:/app/data
+      - vega-data:/app/data
     ports:
       - "8000:8080"
     healthcheck:
@@ -21,26 +21,26 @@ services:
       retries: 3
       start_period: 40s
     networks:
-      - ascentio
+      - vega
 
 
   db-dashboard:
     image: coleifer/sqlite-web:latest
     container_name: db-dashboard
     volumes:
-      - ascentio-data:/data
-    command: sqlite_web -H 0.0.0.0 -p 8080 /data/ascentio.db
+      - vega-data:/data
+    command: sqlite_web -H 0.0.0.0 -p 8080 /data/vega.db
     depends_on:
       - app
     ports:
       - "8080:8080"
     networks:
-      - ascentio
+      - vega
 
 
 networks:
-  ascentio:
+  vega:
 
 
 volumes:
-  ascentio-data:
+  vega-data:

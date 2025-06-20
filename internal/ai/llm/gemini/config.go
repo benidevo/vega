@@ -1,6 +1,6 @@
 package gemini
 
-import "github.com/benidevo/ascentio/internal/config"
+import "github.com/benidevo/vega/internal/config"
 
 // Config holds the configuration for the Gemini LLM client.
 type Config struct {

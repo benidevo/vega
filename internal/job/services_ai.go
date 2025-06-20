@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	aimodels "github.com/benidevo/ascentio/internal/ai/models"
-	"github.com/benidevo/ascentio/internal/job/models"
-	settingsmodels "github.com/benidevo/ascentio/internal/settings/models"
+	aimodels "github.com/benidevo/vega/internal/ai/models"
+	"github.com/benidevo/vega/internal/job/models"
+	settingsmodels "github.com/benidevo/vega/internal/settings/models"
 )
 
 // AnalyzeJobMatch performs AI-powered job matching analysis between a user profile and a job.

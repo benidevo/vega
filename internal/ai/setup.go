@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/benidevo/ascentio/internal/ai/llm"
-	"github.com/benidevo/ascentio/internal/ai/llm/gemini"
-	"github.com/benidevo/ascentio/internal/ai/models"
-	"github.com/benidevo/ascentio/internal/ai/services"
-	"github.com/benidevo/ascentio/internal/config"
+	"github.com/benidevo/vega/internal/ai/llm"
+	"github.com/benidevo/vega/internal/ai/llm/gemini"
+	"github.com/benidevo/vega/internal/ai/models"
+	"github.com/benidevo/vega/internal/ai/services"
+	"github.com/benidevo/vega/internal/config"
 )
 
 const (

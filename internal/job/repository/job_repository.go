@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	commonerrors "github.com/benidevo/ascentio/internal/common/errors"
-	"github.com/benidevo/ascentio/internal/job/interfaces"
-	"github.com/benidevo/ascentio/internal/job/models"
+	commonerrors "github.com/benidevo/vega/internal/common/errors"
+	"github.com/benidevo/vega/internal/job/interfaces"
+	"github.com/benidevo/vega/internal/job/models"
 )
 
 // SQLiteJobRepository is a SQLite implementation of JobRepository

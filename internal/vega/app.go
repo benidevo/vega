@@ -1,4 +1,4 @@
-package ascentio
+package vega
 
 import (
 	"context"
@@ -10,10 +10,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/benidevo/ascentio/internal/auth"
-	"github.com/benidevo/ascentio/internal/common/logger"
-	"github.com/benidevo/ascentio/internal/config"
-	"github.com/benidevo/ascentio/internal/db"
+	"github.com/benidevo/vega/internal/auth"
+	"github.com/benidevo/vega/internal/common/logger"
+	"github.com/benidevo/vega/internal/config"
+	"github.com/benidevo/vega/internal/db"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"

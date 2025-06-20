@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/benidevo/ascentio/internal/ai/models"
+	"github.com/benidevo/vega/internal/ai/models"
 )
 
 // Provider defines the interface for interacting with a Large Language Model (LLM).

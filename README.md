@@ -1,10 +1,10 @@
-# Ascentio
+# Vega
 
-![Build Status](https://github.com/benidevo/ascentio/workflows/CI/badge.svg)
+![Build Status](https://github.com/benidevo/vega/workflows/CI/badge.svg)
 
 ## Overview
 
-Ascentio is a self-hosted job prospecting and management application designed to help users organize their job search process. Built with simplicity and privacy in mind, it provides a clean web interface for tracking job applications, managing opportunities, and maintaining your job search workflow.
+Vega is a self-hosted job prospecting and management application designed to help users organize their job search process. Built with simplicity and privacy in mind, it provides a clean web interface for tracking job applications, managing opportunities, and maintaining your job search workflow.
 
 ## ✨ Features
 
@@ -34,8 +34,8 @@ Built with Go, SQLite, and modern web technologies. See [Technical Design Docume
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/benidevo/ascentio.git
-   cd ascentio
+   git clone https://github.com/benidevo/vega.git
+   cd vega
    ```
 
 2. **Configure environment**:
@@ -56,7 +56,7 @@ Built with Go, SQLite, and modern web technologies. See [Technical Design Docume
    * Create an admin user or sign in with Google OAuth
 
 5. **Install the browser extension** (optional):
-   * Download from the [Ascentio Extension repository](https://github.com/benidevo/ascentio-extension)
+   * Download from the [Vega Extension repository](https://github.com/benidevo/vega-extension)
    * Load the extension in Chrome for one-click job capture from LinkedIn
 
 ### 🔑 Admin User Setup
@@ -134,7 +134,7 @@ make test
 
 ## 📊 API Documentation
 
-Ascentio provides RESTful APIs for job management, authentication, and system health. See [Technical Design Document](docs/TDD.md) for complete API reference.
+Vega provides RESTful APIs for job management, authentication, and system health. See [Technical Design Document](docs/TDD.md) for complete API reference.
 
 ## 🔮 Roadmap
 

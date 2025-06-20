@@ -1,4 +1,4 @@
-package ascentio
+package vega
 
 import (
 	"database/sql"
@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/benidevo/ascentio/internal/config"
+	"github.com/benidevo/vega/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

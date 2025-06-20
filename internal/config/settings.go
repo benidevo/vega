@@ -91,13 +91,13 @@ func NewSettings() Settings {
 	isTest := getEnv("GO_ENV", "") == "test"
 
 	// Use in-memory database for tests by default
-	dbConnectionString := getEnv("DB_CONNECTION_STRING", "/app/data/ascentio.db?_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=ON&_cache_size=10000&_synchronous=NORMAL")
+	dbConnectionString := getEnv("DB_CONNECTION_STRING", "/app/data/vega.db?_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=ON&_cache_size=10000&_synchronous=NORMAL")
 	if isTest && getEnv("DB_CONNECTION_STRING", "") == "" {
 		dbConnectionString = ":memory:"
 	}
 
 	return Settings{
-		AppName:            "ascentio",
+		AppName:            "vega",
 		ServerPort:         getEnv("SERVER_PORT", ":8080"),
 		DBConnectionString: dbConnectionString,
 		DBDriver:           getEnv("DB_DRIVER", "sqlite"),
@@ -151,7 +151,7 @@ func NewTestSettings() Settings {
 // The caller is responsible for cleaning up the returned temp file path
 func NewTestSettingsWithTempDB() (Settings, string) {
 	tempDir := os.TempDir()
-	tempFile := filepath.Join(tempDir, fmt.Sprintf("ascentio_test_%d.db", time.Now().UnixNano()))
+	tempFile := filepath.Join(tempDir, fmt.Sprintf("vega_test_%d.db", time.Now().UnixNano()))
 
 	settings := NewSettings()
 	settings.IsTest = true

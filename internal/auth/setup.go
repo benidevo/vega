@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/benidevo/ascentio/internal/auth/repository"
-	"github.com/benidevo/ascentio/internal/auth/services"
-	"github.com/benidevo/ascentio/internal/common/logger"
-	"github.com/benidevo/ascentio/internal/config"
+	"github.com/benidevo/vega/internal/auth/repository"
+	"github.com/benidevo/vega/internal/auth/services"
+	"github.com/benidevo/vega/internal/common/logger"
+	"github.com/benidevo/vega/internal/config"
 	"github.com/rs/zerolog/log"
 )
 

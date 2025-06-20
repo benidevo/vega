@@ -10,8 +10,8 @@ import (
 
 	"google.golang.org/genai"
 
-	"github.com/benidevo/ascentio/internal/ai/llm"
-	"github.com/benidevo/ascentio/internal/ai/models"
+	"github.com/benidevo/vega/internal/ai/llm"
+	"github.com/benidevo/vega/internal/ai/models"
 )
 
 // Gemini represents a client for interacting with the Gemini AI service.

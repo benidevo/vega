@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/benidevo/ascentio/internal/common/alerts"
-	"github.com/benidevo/ascentio/internal/config"
-	"github.com/benidevo/ascentio/internal/job/models"
+	"github.com/benidevo/vega/internal/common/alerts"
+	"github.com/benidevo/vega/internal/config"
+	"github.com/benidevo/vega/internal/job/models"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )

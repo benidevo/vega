@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/benidevo/ascentio/internal/job/models"
-	"github.com/benidevo/ascentio/internal/job/repository"
+	"github.com/benidevo/vega/internal/job/models"
+	"github.com/benidevo/vega/internal/job/repository"
 )
 
 // Service handles business logic for homepage data aggregation

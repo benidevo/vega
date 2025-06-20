@@ -3,9 +3,9 @@ package auth
 import (
 	"database/sql"
 
-	"github.com/benidevo/ascentio/internal/auth/repository"
-	"github.com/benidevo/ascentio/internal/auth/services"
-	"github.com/benidevo/ascentio/internal/config"
+	"github.com/benidevo/vega/internal/auth/repository"
+	"github.com/benidevo/vega/internal/auth/services"
+	"github.com/benidevo/vega/internal/config"
 )
 
 // Setup initializes the authentication API handler with the provided database connection and configuration settings.

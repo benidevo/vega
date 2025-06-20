@@ -3,13 +3,13 @@ package job
 import (
 	"database/sql"
 
-	"github.com/benidevo/ascentio/internal/ai"
-	authrepo "github.com/benidevo/ascentio/internal/auth/repository"
-	"github.com/benidevo/ascentio/internal/config"
-	"github.com/benidevo/ascentio/internal/job/interfaces"
-	"github.com/benidevo/ascentio/internal/job/repository"
-	"github.com/benidevo/ascentio/internal/settings"
-	settingsrepo "github.com/benidevo/ascentio/internal/settings/repository"
+	"github.com/benidevo/vega/internal/ai"
+	authrepo "github.com/benidevo/vega/internal/auth/repository"
+	"github.com/benidevo/vega/internal/config"
+	"github.com/benidevo/vega/internal/job/interfaces"
+	"github.com/benidevo/vega/internal/job/repository"
+	"github.com/benidevo/vega/internal/settings"
+	settingsrepo "github.com/benidevo/vega/internal/settings/repository"
 )
 
 // Setup initializes the job package dependencies and returns a JobHandler.

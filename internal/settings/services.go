@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	authrepo "github.com/benidevo/ascentio/internal/auth/repository"
-	"github.com/benidevo/ascentio/internal/common/logger"
-	"github.com/benidevo/ascentio/internal/config"
-	"github.com/benidevo/ascentio/internal/settings/interfaces"
-	"github.com/benidevo/ascentio/internal/settings/models"
-	"github.com/benidevo/ascentio/internal/settings/services"
+	authrepo "github.com/benidevo/vega/internal/auth/repository"
+	"github.com/benidevo/vega/internal/common/logger"
+	"github.com/benidevo/vega/internal/config"
+	"github.com/benidevo/vega/internal/settings/interfaces"
+	"github.com/benidevo/vega/internal/settings/models"
+	"github.com/benidevo/vega/internal/settings/services"
 	"github.com/gin-gonic/gin"
 )
 
