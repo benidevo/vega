@@ -122,19 +122,6 @@ func (h *SettingsHandler) formatValidationError(err error) string {
 	return err.Error()
 }
 
-// GetSettingsHomePage handles the request to display the settings home page
-func (h *SettingsHandler) GetSettingsHomePage(c *gin.Context) {
-	username, _ := c.Get("username")
-	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-		"title":       "Settings",
-		"page":        "settings-home",
-		"activeNav":   "settings",
-		"pageTitle":   "Settings",
-		"currentYear": time.Now().Year(),
-		"username":    username,
-	})
-}
-
 // GetProfileSettingsPage handles the request to display the profile settings page
 func (h *SettingsHandler) GetProfileSettingsPage(c *gin.Context) {
 	username, _ := c.Get("username")
@@ -151,11 +138,11 @@ func (h *SettingsHandler) GetProfileSettingsPage(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-		"title":          "Profile Settings",
+		"title":          "Profile",
 		"page":           "settings-profile",
-		"activeNav":      "settings",
+		"activeNav":      "profile",
 		"activeSettings": "profile",
-		"pageTitle":      "Profile Settings",
+		"pageTitle":      "Profile",
 		"currentYear":    time.Now().Year(),
 		"username":       username,
 		"profile":        profile,
@@ -333,11 +320,11 @@ func (h *SettingsHandler) GetSecuritySettingsPage(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-		"title":          "Security Settings",
+		"title":          "Security",
 		"page":           "settings-security",
-		"activeNav":      "settings",
+		"activeNav":      "security",
 		"activeSettings": "security",
-		"pageTitle":      "Security Settings",
+		"pageTitle":      "Security",
 		"currentYear":    time.Now().Year(),
 		"username":       username,
 		"security":       security,
@@ -349,11 +336,11 @@ func (h *SettingsHandler) GetNotificationSettingsPage(c *gin.Context) {
 	username, _ := c.Get("username")
 
 	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-		"title":          "Notification Settings",
+		"title":          "Notifications",
 		"page":           "settings-notifications",
-		"activeNav":      "settings",
+		"activeNav":      "notifications",
 		"activeSettings": "notifications",
-		"pageTitle":      "Notification Settings",
+		"pageTitle":      "Notifications",
 		"currentYear":    time.Now().Year(),
 		"username":       username,
 	})

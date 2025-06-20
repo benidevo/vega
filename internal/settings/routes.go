@@ -4,8 +4,10 @@ import "github.com/gin-gonic/gin"
 
 // RegisterRoutes registers settings-related routes on the given router group
 func RegisterRoutes(settingsGroup *gin.RouterGroup, handler *SettingsHandler) {
-	// Main settings page
-	settingsGroup.GET("", handler.GetSettingsHomePage)
+	// Redirect main settings page to profile (default)
+	settingsGroup.GET("", func(c *gin.Context) {
+		c.Redirect(302, "/settings/profile")
+	})
 
 	// Profile settings
 	settingsGroup.GET("/profile", handler.GetProfileSettingsPage)

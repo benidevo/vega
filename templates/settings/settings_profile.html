@@ -17,40 +17,39 @@
   <div class="absolute -inset-1 rounded-xl bg-gradient-to-r from-primary via-secondary to-primary opacity-20 blur-xl"></div>
 
   <!-- Alert container for form responses -->
-  <div id="form-alert-container" class="mb-6" hx-swap-oob="true"></div>
+  <div id="form-alert-container" class="mb-4 md:mb-6" hx-swap-oob="true"></div>
 
   <!-- Content container -->
-  <div class="relative p-6 bg-slate-800 bg-opacity-70 backdrop-blur-xl rounded-xl shadow-2xl border border-white border-opacity-10">
-    <h2 class="text-2xl font-bold mb-6 text-white">Profile Settings</h2>
+  <div class="relative p-4 md:p-6 bg-slate-800 bg-opacity-70 backdrop-blur-xl rounded-xl shadow-2xl border border-white border-opacity-10">
 
     <!-- Personal Information Section -->
-    <div class="mb-10">
-      <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Personal Information</h3>
+    <div class="mb-6 pb-6 border-b border-slate-700 border-opacity-50">
+      <h3 class="text-lg md:text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Personal Information</h3>
 
-      <form class="space-y-6" hx-post="/settings/profile/personal" hx-target="#form-alert-container" hx-swap="innerHTML">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <form class="space-y-4 md:space-y-6" hx-post="/settings/profile/personal" hx-target="#form-alert-container" hx-swap="innerHTML" hx-indicator=".personal-indicator">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
           <div class="space-y-1">
             <label for="first_name" class="block text-sm font-medium text-gray-300">First Name</label>
             <input type="text" id="first_name" name="first_name" value="{{.profile.FirstName}}"
-                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                  class="w-full px-3 py-3 md:py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base md:text-sm touch-manipulation">
           </div>
 
           <div class="space-y-1">
             <label for="last_name" class="block text-sm font-medium text-gray-300">Last Name</label>
             <input type="text" id="last_name" name="last_name" value="{{.profile.LastName}}"
-                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                  class="w-full px-3 py-3 md:py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base md:text-sm touch-manipulation">
           </div>
 
           <div class="space-y-1">
             <label for="title" class="block text-sm font-medium text-gray-300">Professional Title</label>
             <input type="text" id="title" name="title" value="{{.profile.Title}}"
-                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                  class="w-full px-3 py-3 md:py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base md:text-sm touch-manipulation">
           </div>
 
           <div class="space-y-1">
             <label for="industry" class="block text-sm font-medium text-gray-300">Industry</label>
             <select id="industry" name="industry"
-                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                  class="w-full px-3 py-3 md:py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base md:text-sm touch-manipulation">
               <option value="">Select Industry</option>
               {{range .industries}}
               <option value="{{.Name}}" {{if eq $.profile.Industry.String .Name}}selected{{end}}>{{.Name}}</option>
@@ -61,86 +60,109 @@
           <div class="space-y-1">
             <label for="location" class="block text-sm font-medium text-gray-300">Location</label>
             <input type="text" id="location" name="location" value="{{.profile.Location}}"
-                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                  class="w-full px-3 py-3 md:py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base md:text-sm touch-manipulation">
           </div>
 
           <div class="space-y-1">
-            <label for="phone_number" class="block text-sm font-medium text-gray-300">Phone Number</label>
+            <label for="phone_number" class="block text-sm font-medium text-gray-300">Phone</label>
             <input type="tel" id="phone_number" name="phone_number" value="{{.profile.PhoneNumber}}"
-                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                  class="w-full px-3 py-3 md:py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base md:text-sm touch-manipulation">
           </div>
         </div>
 
         <div class="space-y-1">
           <label for="career_summary" class="block text-sm font-medium text-gray-300">Career Summary</label>
           <textarea id="career_summary" name="career_summary" rows="4"
-                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">{{.profile.CareerSummary}}</textarea>
+                  class="w-full px-3 py-3 md:py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base md:text-sm touch-manipulation resize-none">{{.profile.CareerSummary}}</textarea>
         </div>
 
         <div class="space-y-1">
-          <label for="skills" class="block text-sm font-medium text-gray-300">Skills (comma separated)</label>
-          <textarea id="skills" name="skills" rows="2"
-                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">{{range $index, $skill := .profile.Skills}}{{if $index}}, {{end}}{{$skill}}{{end}}</textarea>
+          <label for="skills" class="block text-sm font-medium text-gray-300">Skills</label>
+          <div class="skills-input-container">
+            <div id="skills-tags" class="flex flex-wrap gap-2 mb-2 min-h-[2rem]">
+              {{range .profile.Skills}}
+              <span class="skill-tag inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-primary bg-opacity-20 text-primary border border-primary border-opacity-30">
+                {{.}}
+                <button type="button" class="ml-1 inline-flex items-center justify-center w-4 h-4 text-primary hover:text-red-400 focus:outline-none" 
+                        _="on click remove closest .skill-tag then call updateSkills()">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </span>
+              {{end}}
+            </div>
+            <div class="flex gap-2">
+              <input type="text" id="skills-input" placeholder="Add a skill and press Enter"
+                     class="flex-1 px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-sm"
+                     _="on keydown[key=='Enter'] prevent default then call addSkill()">
+              <button type="button" class="px-3 py-2 bg-slate-600 hover:bg-slate-500 text-white text-sm rounded-md transition-colors"
+                      _="on click call addSkill()">
+                Add
+              </button>
+            </div>
+            <textarea id="skills" name="skills" class="hidden">{{range $index, $skill := .profile.Skills}}{{if $index}}, {{end}}{{$skill}}{{end}}</textarea>
+          </div>
         </div>
 
-        <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-slate-700">
-          <button type="submit" class="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors duration-300 flex items-center justify-center">
-              <span class="htmx-indicator mr-2">
+        <div class="flex flex-col sm:flex-row justify-end gap-4 pt-4 md:pt-6 border-t border-slate-700">
+          <button type="submit" class="px-4 py-2 bg-primary hover:bg-primary-dark text-white font-medium rounded-md transition-colors duration-300 flex items-center justify-center touch-manipulation text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+              <span class="personal-indicator hidden mr-2">
                 <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
               </span>
-              Save Personal Information
+              Save
           </button>
         </div>
       </form>
     </div>
 
     <!-- Online Presence Section -->
-    <div class="mb-10">
-      <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Online Presence</h3>
+    <div class="mb-6 pb-6 border-b border-slate-700 border-opacity-50">
+      <h3 class="text-lg md:text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Online Presence</h3>
 
-      <form class="space-y-6" hx-post="/settings/profile/online" hx-target="#form-alert-container" hx-swap="innerHTML" hx-indicator=".htmx-indicator">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <form class="space-y-4 md:space-y-6" hx-post="/settings/profile/online" hx-target="#form-alert-container" hx-swap="innerHTML" hx-indicator=".online-indicator">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
           <div class="space-y-1">
             <label for="linkedin_profile" class="block text-sm font-medium text-gray-300">LinkedIn Profile</label>
             <input type="url" id="linkedin_profile" name="linkedin_profile" value="{{.profile.LinkedInProfile}}"
-                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                  class="w-full px-3 py-3 md:py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base md:text-sm touch-manipulation">
           </div>
 
           <div class="space-y-1">
             <label for="github_profile" class="block text-sm font-medium text-gray-300">GitHub Profile</label>
             <input type="url" id="github_profile" name="github_profile" value="{{.profile.GitHubProfile}}"
-                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                  class="w-full px-3 py-3 md:py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base md:text-sm touch-manipulation">
           </div>
 
           <div class="space-y-1 sm:col-span-2">
             <label for="website" class="block text-sm font-medium text-gray-300">Personal Website</label>
             <input type="url" id="website" name="website" value="{{.profile.Website}}"
-                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                  class="w-full px-3 py-3 md:py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base md:text-sm touch-manipulation">
           </div>
         </div>
 
-        <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-slate-700">
-          <button type="submit" class="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors duration-300 flex items-center justify-center">
-              <span class="htmx-indicator mr-2">
+        <div class="flex flex-col sm:flex-row justify-end gap-4 pt-4 md:pt-6 border-t border-slate-700">
+          <button type="submit" class="px-4 py-2 bg-primary hover:bg-primary-dark text-white font-medium rounded-md transition-colors duration-300 flex items-center justify-center touch-manipulation text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+              <span class="online-indicator hidden mr-2">
                 <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
               </span>
-              Save Online Profiles
+              Save
           </button>
         </div>
       </form>
     </div>
 
     <!-- Personal Context Section -->
-    <div class="mb-10">
-      <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Personal Context</h3>
+    <div class="mb-6 pb-6 border-b border-slate-700 border-opacity-50">
+      <h3 class="text-lg md:text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Personal Context</h3>
 
-      <form class="space-y-6" hx-post="/settings/profile/context" hx-target="#form-alert-container" hx-swap="innerHTML" hx-indicator=".htmx-indicator">
+      <form class="space-y-4 md:space-y-6" hx-post="/settings/profile/context" hx-target="#form-alert-container" hx-swap="innerHTML" hx-indicator=".context-indicator">
         <div class="space-y-1">
           <label for="context" class="block text-sm font-medium text-gray-300">About You</label>
           <p class="text-xs text-gray-400 mb-2">
@@ -151,44 +173,39 @@
           <textarea
             id="context"
             name="context"
-            rows="8"
+            rows="5"
             maxlength="6000"
-            class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors whitespace-pre-wrap"
+            class="w-full px-3 py-3 md:py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors whitespace-pre-wrap text-base md:text-sm touch-manipulation resize-none"
             placeholder="Example: I'm passionate about sustainable technology and renewable energy. In my free time, I volunteer at local coding bootcamps teaching underprivileged youth. I'm also an avid rock climber which has taught me persistence and problem-solving. I value work-life balance and prefer companies with strong environmental commitments...">{{.profile.Context}}</textarea>
           <div class="text-xs text-gray-400 mt-1">Maximum 1000 words</div>
         </div>
 
         <div class="flex justify-end">
-          <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary flex items-center">
-            <span class="htmx-indicator hidden mr-2">
+          <button type="submit" class="px-4 py-2 bg-primary hover:bg-primary-dark text-white font-medium rounded-md transition-colors duration-300 flex items-center justify-center touch-manipulation text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+            <span class="context-indicator hidden mr-2">
               <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             </span>
-            Save Context
+            Save
           </button>
         </div>
       </form>
     </div>
 
     <!-- Work Experience Section -->
-    <div id="experience-section" class="mb-10">
-      <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Work Experience</h3>
+    <div id="experience-section" class="mb-6 pb-6 border-b border-slate-700 border-opacity-50">
+      <h3 class="text-lg md:text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Work Experience</h3>
 
       <div id="work-experience-list">
         {{if eq (len .profile.WorkExperience) 0}}
-        <div class="bg-slate-700 bg-opacity-40 rounded-lg p-6 mb-6">
-          <p class="text-gray-300 text-center">You haven't added any work experience yet.</p>
-          <div class="flex justify-center mt-4">
-            <a href="/settings/profile/experience/new"
-               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Add Work Experience
-            </a>
-          </div>
+        <div class="text-center py-4">
+          <p class="text-gray-400 mb-3">No experience added yet</p>
+          <a href="/settings/profile/experience/new"
+             class="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary-dark text-white font-medium rounded-md transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+            Add
+          </a>
         </div>
         {{else}}
           {{range .profile.WorkExperience}}
@@ -212,7 +229,7 @@
                 </div>
                 <div class="flex space-x-2">
                   <a href="/settings/profile/experience/{{.ID}}/edit" class="text-gray-400 hover:text-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                   </a>
@@ -220,7 +237,7 @@
                           _="on click
                              put {url: '/settings/profile/experience/{{.ID}}/delete', method: 'POST', type: 'work experience'} into window.itemToDelete
                              remove .hidden from #delete-modal-shared">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
@@ -231,11 +248,8 @@
           {{end}}
           <div class="flex justify-end mt-4">
             <a href="/settings/profile/experience/new"
-               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Add Another Experience
+               class="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary-dark text-white font-medium rounded-md transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+              Add
             </a>
           </div>
         {{end}}
@@ -243,22 +257,17 @@
     </div>
 
     <!-- Education Section -->
-    <div id="education-section" class="mb-10">
+    <div id="education-section" class="mb-6 pb-6 border-b border-slate-700 border-opacity-50">
       <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Education</h3>
 
       <div id="education-list">
         {{if eq (len .profile.Education) 0}}
-        <div class="bg-slate-700 bg-opacity-40 rounded-lg p-6 mb-6">
-          <p class="text-gray-300 text-center">You haven't added any education yet.</p>
-          <div class="flex justify-center mt-4">
-            <a href="/settings/profile/education/new"
-               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Add Education
-            </a>
-          </div>
+        <div class="text-center py-4">
+          <p class="text-gray-400 mb-3">No education added yet</p>
+          <a href="/settings/profile/education/new"
+             class="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary-dark text-white font-medium rounded-md transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+            Add
+          </a>
         </div>
         {{else}}
           {{range .profile.Education}}
@@ -274,7 +283,7 @@
                 </div>
                 <div class="flex space-x-2">
                   <a href="/settings/profile/education/{{.ID}}/edit" class="text-gray-400 hover:text-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                   </a>
@@ -282,7 +291,7 @@
                           _="on click
                              put {url: '/settings/profile/education/{{.ID}}/delete', method: 'POST', type: 'education entry'} into window.itemToDelete
                              remove .hidden from #delete-modal-shared">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                   </button>
@@ -292,11 +301,8 @@
           {{end}}
           <div class="flex justify-end mt-4">
             <a href="/settings/profile/education/new"
-               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Add Another Education
+               class="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary-dark text-white font-medium rounded-md transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+              Add
             </a>
           </div>
         {{end}}
@@ -304,22 +310,17 @@
     </div>
 
     <!-- Certifications Section -->
-    <div id="certification-section" class="mb-10">
+    <div id="certification-section" class="mb-6">
       <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Certifications</h3>
 
       <div id="certification-list">
         {{if eq (len .profile.Certifications) 0}}
-        <div class="bg-slate-700 bg-opacity-40 rounded-lg p-6 mb-6">
-          <p class="text-gray-300 text-center">You haven't added any certifications yet.</p>
-          <div class="flex justify-center mt-4">
-            <a href="/settings/profile/certification/new"
-               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Add Certification
-            </a>
-          </div>
+        <div class="text-center py-4">
+          <p class="text-gray-400 mb-3">No certifications added yet</p>
+          <a href="/settings/profile/certification/new"
+             class="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary-dark text-white font-medium rounded-md transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+            Add
+          </a>
         </div>
         {{else}}
           {{range .profile.Certifications}}
@@ -342,7 +343,7 @@
                 </div>
                 <div class="flex space-x-2">
                   <a href="/settings/profile/certification/{{.ID}}/edit" class="text-gray-400 hover:text-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                   </a>
@@ -350,7 +351,7 @@
                           _="on click
                              put {url: '/settings/profile/certification/{{.ID}}/delete', method: 'POST', type: 'certification'} into window.itemToDelete
                              remove .hidden from #delete-modal-shared">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                   </button>
@@ -360,11 +361,8 @@
           {{end}}
           <div class="flex justify-end mt-4">
             <a href="/settings/profile/certification/new"
-               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Add Another Certification
+               class="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary-dark text-white font-medium rounded-md transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+              Add
             </a>
           </div>
         {{end}}
@@ -379,24 +377,82 @@
 <!-- Include auto-dismiss alerts script -->
 {{template "partials/auto-dismiss-alerts.html" .}}
 
+<!-- Skills Tag Styling -->
+<style>
+.skill-tag {
+  padding: 2px 4px !important;
+}
+
+@media (max-width: 768px) {
+  .skill-tag {
+    padding: 1px 3px !important;
+    font-size: 0.6875rem !important; /* 11px */
+  }
+}
+</style>
+
+<!-- Skills functionality -->
+<script>
+function addSkill() {
+    const input = document.getElementById('skills-input');
+    const skill = input.value.trim();
+    
+    if (skill && !hasSkill(skill)) {
+        createSkillTag(skill);
+        input.value = '';
+        updateSkills();
+    }
+}
+
+function hasSkill(skill) {
+    const tags = document.querySelectorAll('.skill-tag');
+    return Array.from(tags).some(tag => 
+        tag.textContent.trim().toLowerCase() === skill.toLowerCase()
+    );
+}
+
+function createSkillTag(skill) {
+    const container = document.getElementById('skills-tags');
+    const tag = document.createElement('span');
+    tag.className = 'skill-tag inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-primary bg-opacity-20 text-primary border border-primary border-opacity-30';
+    tag.innerHTML = `
+        ${skill}
+        <button type="button" class="ml-1 inline-flex items-center justify-center w-4 h-4 text-primary hover:text-red-400 focus:outline-none" 
+                _="on click remove closest .skill-tag then call updateSkills()">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    `;
+    container.appendChild(tag);
+}
+
+function updateSkills() {
+    const tags = document.querySelectorAll('.skill-tag');
+    const skills = Array.from(tags).map(tag => tag.textContent.trim());
+    document.getElementById('skills').value = skills.join(', ');
+}
+</script>
+
+
 <!-- Scroll to section script -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
     const scrollSection = urlParams.get('scroll');
-    
+
     if (scrollSection) {
         const sectionId = scrollSection + '-section';
         const element = document.getElementById(sectionId);
-        
+
         if (element) {
             // Small delay to ensure page is fully loaded
             setTimeout(() => {
-                element.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'start' 
+                element.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
                 });
-                
+
                 // Clean up URL without anchor
                 const cleanUrl = window.location.pathname;
                 window.history.replaceState({}, document.title, cleanUrl);

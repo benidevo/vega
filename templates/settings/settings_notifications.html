@@ -4,14 +4,13 @@
   <div class="absolute -inset-1 rounded-xl bg-gradient-to-r from-primary via-secondary to-primary opacity-20 blur-xl"></div>
 
   <!-- Alert container for form responses -->
-  <div id="form-alert-container" class="mb-6" hx-swap-oob="true"></div>
+  <div id="form-alert-container" class="mb-4 md:mb-6" hx-swap-oob="true"></div>
 
   <!-- Content container -->
-  <div class="relative p-6 bg-slate-800 bg-opacity-70 backdrop-blur-xl rounded-xl shadow-2xl border border-white border-opacity-10">
-    <h2 class="text-2xl font-bold mb-6 text-white">Notification Settings</h2>
+  <div class="relative p-4 md:p-6 bg-slate-800 bg-opacity-70 backdrop-blur-xl rounded-xl shadow-2xl border border-white border-opacity-10">
 
     <!-- Coming Soon Banner -->
-    <div class="bg-yellow-800 bg-opacity-30 text-yellow-100 p-4 rounded-lg mb-8">
+    <div class="bg-yellow-800 bg-opacity-30 text-yellow-100 p-3 md:p-4 rounded-lg mb-6 md:mb-8">
       <h3 class="text-sm font-medium text-yellow-200">Coming Soon</h3>
       <div class="mt-2 text-sm text-yellow-100">
         <p>Notification features are currently under development and will be available in a future update.</p>
@@ -20,36 +19,36 @@
 
     <form hx-post="/settings/notifications" hx-target="#form-alert-container" hx-swap="innerHTML">
       <!-- Email Notification Settings -->
-      <div class="mb-10 opacity-60">
-        <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Email Notifications</h3>
+      <div class="mb-6 pb-6 border-b border-slate-700 border-opacity-50 opacity-60">
+        <h3 class="text-lg md:text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Email Notifications</h3>
 
         <div class="space-y-4">
           <div class="flex items-start">
-            <div class="flex items-center h-5">
+            <div class="flex items-center h-5 pt-1">
               <input id="email_notifications" name="email_notifications" type="checkbox" disabled
-                    class="focus:ring-primary h-4 w-4 text-primary border-gray-600 rounded bg-slate-700">
+                    class="focus:ring-primary h-5 w-5 md:h-4 md:w-4 text-primary border-gray-600 rounded bg-slate-700 touch-manipulation">
             </div>
-            <div class="ml-3 text-sm">
-              <label for="email_notifications" class="font-medium text-white">Enable Email Notifications</label>
-              <p class="text-gray-400">Receive notifications via email for important updates.</p>
+            <div class="ml-3 md:ml-4 text-sm md:text-base">
+              <label for="email_notifications" class="font-medium text-white cursor-pointer touch-manipulation block py-1">Enable Email Notifications</label>
+              <p class="text-gray-400 text-sm">Receive notifications via email for important updates.</p>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Job Alert Settings -->
-      <div class="mb-10 opacity-60">
-        <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Job Alerts</h3>
+      <div class="mb-6 pb-6 border-b border-slate-700 border-opacity-50 opacity-60">
+        <h3 class="text-lg md:text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Job Alerts</h3>
 
         <div class="space-y-4">
           <div class="flex items-start">
-            <div class="flex items-center h-5">
+            <div class="flex items-center h-5 pt-1">
               <input id="job_alerts" name="job_alerts" type="checkbox" disabled
-                    class="focus:ring-primary h-4 w-4 text-primary border-gray-600 rounded bg-slate-700">
+                    class="focus:ring-primary h-5 w-5 md:h-4 md:w-4 text-primary border-gray-600 rounded bg-slate-700 touch-manipulation">
             </div>
-            <div class="ml-3 text-sm">
-              <label for="job_alerts" class="font-medium text-white">Job Match Alerts</label>
-              <p class="text-gray-400">Receive notifications when new job matches are found.</p>
+            <div class="ml-3 md:ml-4 text-sm md:text-base">
+              <label for="job_alerts" class="font-medium text-white cursor-pointer touch-manipulation block py-1">Job Match Alerts</label>
+              <p class="text-gray-400 text-sm">Receive notifications when new job matches are found.</p>
             </div>
           </div>
         </div>
@@ -57,26 +56,26 @@
 
 
       <!-- Digest Settings -->
-      <div class="mb-10 opacity-60">
-        <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Digest Emails</h3>
+      <div class="mb-6 opacity-60">
+        <h3 class="text-lg md:text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Digest Emails</h3>
 
         <div class="space-y-4">
           <div class="flex items-start">
-            <div class="flex items-center h-5">
+            <div class="flex items-center h-5 pt-1">
               <input id="weekly_digest" name="weekly_digest" type="checkbox" disabled
-                    class="focus:ring-primary h-4 w-4 text-primary border-gray-600 rounded bg-slate-700">
+                    class="focus:ring-primary h-5 w-5 md:h-4 md:w-4 text-primary border-gray-600 rounded bg-slate-700 touch-manipulation">
             </div>
-            <div class="ml-3 text-sm">
-              <label for="weekly_digest" class="font-medium text-white">Weekly Digest</label>
-              <p class="text-gray-400">Receive a weekly summary of your job search activities and recommendations.</p>
+            <div class="ml-3 md:ml-4 text-sm md:text-base">
+              <label for="weekly_digest" class="font-medium text-white cursor-pointer touch-manipulation block py-1">Weekly Digest</label>
+              <p class="text-gray-400 text-sm">Receive a weekly summary of your job search activities and recommendations.</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-slate-700">
-        <button type="button" disabled class="px-6 py-2.5 bg-slate-600 text-white font-semibold rounded-lg cursor-not-allowed flex items-center justify-center opacity-60">
-            Save Notification Settings
+      <div class="flex flex-col sm:flex-row justify-end gap-4 pt-4 md:pt-6 border-t border-slate-700">
+        <button type="button" disabled class="px-4 py-2 bg-slate-600 text-white font-medium rounded-md cursor-not-allowed flex items-center justify-center opacity-60 text-sm touch-manipulation focus:outline-none">
+            Save
         </button>
       </div>
     </form>

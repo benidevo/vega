@@ -5,7 +5,7 @@
   {{template "sidebar" .}}
 
   <!-- Main Content Area -->
-  <div class="flex-1 overflow-auto bg-slate-900 min-h-0">
+  <div class="flex-1 overflow-auto bg-slate-900 min-h-0 scroll-smooth overscroll-contain">
     <!-- Header -->
     <header class="bg-slate-800 shadow-md">
       <div class="px-4 py-6 sm:px-6 lg:px-8">
@@ -13,37 +13,10 @@
       </div>
     </header>
 
-    <!-- Settings navigation pills -->
-    <div class="bg-slate-800 border-b border-slate-700">
-      <div class="px-4 sm:px-6 lg:px-8">
-        <nav class="flex space-x-4 overflow-x-auto py-4 scrollbar-none">
-          <a href="/settings/profile" class="{{if eq .activeSettings "profile"}}bg-primary text-white{{else}}text-gray-300 hover:text-white hover:bg-slate-700{{end}} px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 whitespace-nowrap flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-            Profile
-          </a>
-          <a href="/settings/security" class="{{if eq .activeSettings "security"}}bg-primary text-white{{else}}text-gray-300 hover:text-white hover:bg-slate-700{{end}} px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 whitespace-nowrap flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            Security
-          </a>
-          <a href="/settings/notifications" class="{{if eq .activeSettings "notifications"}}bg-primary text-white{{else}}text-gray-300 hover:text-white hover:bg-slate-700{{end}} px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 whitespace-nowrap flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
-            Notifications
-          </a>
-        </nav>
-      </div>
-    </div>
 
     <!-- Content -->
     <main class="px-4 py-6 sm:px-6 lg:px-8">
-      {{if eq .page "settings-home"}}
-        {{template "settings-home-content" .}}
-      {{else if eq .page "settings-profile"}}
+      {{if eq .page "settings-profile"}}
         {{template "settings-profile-content" .}}
       {{else if eq .page "settings-security"}}
         {{template "settings-security-content" .}}
@@ -60,4 +33,90 @@
 </div>
 
 {{template "mobile-menu-script" .}}
+
+<!-- Enhanced Mobile Settings Styles -->
+<style>
+/* Smooth scrolling and touch optimization */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Better touch targets for mobile */
+@media (max-width: 768px) {
+  /* Ensure all interactive elements meet minimum touch target size */
+  input, button, select, textarea, label, a {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  
+  /* Better checkbox and radio button touch targets */
+  input[type="checkbox"], input[type="radio"] {
+    min-width: 20px;
+    min-height: 20px;
+    margin: 4px;
+  }
+  
+  /* Improve form field focus for mobile */
+  input:focus, textarea:focus, select:focus {
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+  }
+  
+  /* Better button press feedback */
+  button:active, .touch-manipulation:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+  
+  /* Prevent zoom on input focus for iOS */
+  input[type="text"], 
+  input[type="email"], 
+  input[type="tel"], 
+  input[type="url"], 
+  input[type="password"], 
+  textarea, 
+  select {
+    font-size: 16px;
+  }
+  
+  /* Better scroll performance */
+  .scroll-container {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* Enhanced focus indicators for better accessibility */
+button:focus-visible, 
+input:focus-visible, 
+textarea:focus-visible, 
+select:focus-visible,
+a:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Smooth animations for form validation */
+.htmx-request {
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.htmx-request button {
+  pointer-events: none;
+}
+</style>
+
 {{end}}
