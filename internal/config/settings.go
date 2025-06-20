@@ -40,10 +40,11 @@ type Settings struct {
 	CORSAllowedOrigins   []string
 	CORSAllowCredentials bool
 
-	CreateAdminUser bool
-	AdminUsername   string
-	AdminPassword   string
-	AdminEmail      string
+	CreateAdminUser    bool
+	AdminUsername      string
+	AdminPassword      string
+	AdminEmail         string
+	ResetAdminPassword bool
 
 	AIProvider   string
 	GeminiAPIKey string
@@ -125,13 +126,14 @@ func NewSettings() Settings {
 		CORSAllowedOrigins:   getCORSOrigins(),
 		CORSAllowCredentials: getEnv("CORS_ALLOW_CREDENTIALS", "false") == "true",
 
-		CreateAdminUser: getEnv("CREATE_ADMIN_USER", "false") == "true",
-		AdminUsername:   getEnv("ADMIN_USERNAME", ""),
-		AdminPassword:   getEnv("ADMIN_PASSWORD", ""),
-		AdminEmail:      getEnv("ADMIN_EMAIL", ""),
-		AIProvider:      getEnv("AI_PROVIDER", "gemini"),
-		GeminiAPIKey:    getEnv("GEMINI_API_KEY", ""),
-		GeminiModel:     "gemini-2.5-flash",
+		CreateAdminUser:    getEnv("CREATE_ADMIN_USER", "false") == "true",
+		AdminUsername:      getEnv("ADMIN_USERNAME", ""),
+		AdminPassword:      getEnv("ADMIN_PASSWORD", ""),
+		ResetAdminPassword: getEnv("RESET_ADMIN_PASSWORD", "false") == "true",
+		AdminEmail:         getEnv("ADMIN_EMAIL", ""),
+		AIProvider:         getEnv("AI_PROVIDER", "gemini"),
+		GeminiAPIKey:       getEnv("GEMINI_API_KEY", ""),
+		GeminiModel:        "gemini-2.5-flash",
 	}
 }
 

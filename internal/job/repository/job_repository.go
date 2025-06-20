@@ -649,3 +649,99 @@ func (r *SQLiteJobRepository) GetStats(ctx context.Context) (*models.JobStats, e
 	}
 	return &stats, nil
 }
+
+// GetStatsByUserID returns aggregate statistics about jobs for a specific user.
+func (r *SQLiteJobRepository) GetStatsByUserID(ctx context.Context, userID int) (*models.JobStats, error) {
+	query := `
+        SELECT
+            COUNT(*) AS total_jobs,
+            COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS applied,
+            COALESCE(SUM(CASE WHEN match_score >= 70 THEN 1 ELSE 0 END), 0) AS high_match
+        FROM jobs
+    `
+	// TODO: Add WHERE user_id = ? when user association is implemented
+
+	rows, err := r.db.QueryContext(ctx, query, int(models.APPLIED))
+	if err != nil {
+		return nil, models.WrapError(models.ErrFailedToGetJobStats, err)
+	}
+	defer rows.Close()
+
+	var stats models.JobStats
+	if rows.Next() {
+		if err := rows.Scan(&stats.TotalJobs, &stats.TotalApplied, &stats.HighMatch); err != nil {
+			return nil, models.WrapError(models.ErrFailedToGetJobStats, err)
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, models.WrapError(models.ErrFailedToGetJobStats, err)
+	}
+	return &stats, nil
+}
+
+// GetRecentJobsByUserID returns recent jobs for a specific user, limited by count.
+// Jobs are ordered by updated_at DESC to show most recently modified first.
+func (r *SQLiteJobRepository) GetRecentJobsByUserID(ctx context.Context, userID int, limit int) ([]*models.Job, error) {
+	if limit <= 0 {
+		limit = 10 // Default limit
+	}
+
+	filter := models.JobFilter{
+		Limit: limit,
+		// TODO: Add UserID field to JobFilter when user association is implemented
+	}
+
+	jobs, err := r.GetAll(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	return jobs, nil
+}
+
+// GetJobStatsByStatus returns job counts grouped by status for a specific user.
+// This is useful for homepage pipeline visualization.
+func (r *SQLiteJobRepository) GetJobStatsByStatus(ctx context.Context, userID int) (map[models.JobStatus]int, error) {
+	query := `
+        SELECT
+            status,
+            COUNT(*) as count
+        FROM jobs
+        GROUP BY status
+        ORDER BY status
+    `
+	// TODO: Add WHERE user_id = ? when user association is implemented
+
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, models.WrapError(models.ErrFailedToGetJobStats, err)
+	}
+	defer rows.Close()
+
+	statusCounts := make(map[models.JobStatus]int)
+
+	// Initialize all statuses to 0
+	for status := models.INTERESTED; status <= models.NOT_INTERESTED; status++ {
+		statusCounts[status] = 0
+	}
+
+	for rows.Next() {
+		var status int
+		var count int
+
+		if err := rows.Scan(&status, &count); err != nil {
+			return nil, models.WrapError(models.ErrFailedToGetJobStats, err)
+		}
+
+		if status >= int(models.INTERESTED) && status <= int(models.NOT_INTERESTED) {
+			statusCounts[models.JobStatus(status)] = count
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, models.WrapError(models.ErrFailedToGetJobStats, err)
+	}
+
+	return statusCounts, nil
+}

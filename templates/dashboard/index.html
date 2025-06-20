@@ -43,11 +43,11 @@
         <option value="not interested" {{if eq .statusFilter "not interested"}}selected{{end}}>Not Interested</option>
       </select>
       <button
-        class="bg-primary text-white px-4 py-3 rounded-md text-base font-medium hover:bg-primary-dark transition-colors w-full sm:w-auto"
+        class="bg-primary text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-primary-dark transition-colors w-full sm:w-auto"
         hx-get="/jobs"
         hx-target="#jobs-container"
       >
-        Refresh Matches
+        Refresh
       </button>
     </div>
   </div>

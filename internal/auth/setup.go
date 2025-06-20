@@ -51,11 +51,27 @@ func CreateAdminUserIfRequired(db *sql.DB, cfg *config.Settings) error {
 
 	ctx := context.Background()
 
-	_, err := repo.FindByUsername(ctx, cfg.AdminUsername)
+	admin, err := repo.FindByUsername(ctx, cfg.AdminUsername)
 	if err == nil {
 		log.Info().
 			Str("hashed_id", logger.HashIdentifier(cfg.AdminUsername)).
 			Msg("Admin user already exists, skipping creation")
+
+		if cfg.ResetAdminPassword {
+			log.Info().
+				Str("hashed_id", logger.HashIdentifier(cfg.AdminUsername)).
+				Msg("Resetting admin user password")
+			err = authService.ChangePassword(ctx, admin.ID, cfg.AdminPassword)
+			if err != nil {
+				log.Error().Err(err).
+					Str("hashed_id", logger.HashIdentifier(cfg.AdminUsername)).
+					Msg("Failed to reset admin user password")
+				return err
+			}
+			log.Info().
+				Str("hashed_id", logger.HashIdentifier(cfg.AdminUsername)).
+				Msg("Admin user password reset successfully")
+		}
 		return nil
 	}
 

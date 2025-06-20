@@ -1,183 +1,338 @@
 {{define "home-content"}}
-<!-- Modern homepage with enhanced visual effects -->
-<div class="w-full max-w-7xl z-10 relative px-4 py-8 lg:py-16">
-  
-  <!-- Background accent elements -->
-  <div class="absolute inset-0 -z-10 overflow-hidden">
-    <!-- Floating tech-inspired shapes -->
-    <div class="absolute top-32 left-10 w-2 h-32 bg-gradient-to-b from-primary/40 to-transparent rotate-12 animate-pulse" style="animation-delay: 1s;"></div>
-    <div class="absolute top-64 right-16 w-4 h-4 bg-secondary/60 rounded-full animate-pulse" style="animation-delay: 2s;"></div>
-    <div class="absolute bottom-40 left-1/4 w-16 h-1 bg-gradient-to-r from-primary/30 to-transparent animate-pulse" style="animation-delay: 3s;"></div>
-    
-    <!-- Subtle geometric accents -->
-    <div class="absolute top-1/3 right-1/4 w-24 h-24 border border-primary/10 rounded-lg rotate-45 animate-drift"></div>
-    <div class="absolute bottom-1/3 left-1/5 w-32 h-32 border border-secondary/10 rounded-full animate-drift" style="animation-delay: 10s;"></div>
-  </div>
-  
-  <!-- Hero Section -->
-  <div class="text-center mb-16 lg:mb-24">
-    <!-- Logo with enhanced effects -->
-    <div class="flex justify-center mb-8 lg:mb-12">
-      <div class="animate-float">
-        <div class="relative group">
-          <!-- Main logo container -->
-          <div class="relative p-6 lg:p-8 bg-gradient-to-br from-slate-800/40 to-slate-700/30 backdrop-blur-xl rounded-3xl border border-primary/40 shadow-2xl shadow-primary/30 overflow-hidden">
-            <!-- Shimmer effect overlay -->
-            <div class="absolute inset-0 animate-shimmer"></div>
-            
-            <!-- Logo icon -->
-            <svg class="h-12 w-12 lg:h-16 lg:w-16 text-primary relative z-10 drop-shadow-lg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M12 3L4 9V21H9V14H15V21H20V9L12 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M12 8L8 11V16H16V11L12 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          
-          <!-- Multi-layer glow effects -->
-          <div class="absolute -inset-3 bg-primary/20 blur-2xl rounded-3xl animate-pulse-slow"></div>
-          <div class="absolute -inset-4 bg-gradient-to-br from-primary/10 via-blue-400/10 to-secondary/10 blur-3xl rounded-3xl animate-pulse-slow" style="animation-delay: 1s;"></div>
-        </div>
-      </div>
-    </div>
+<!-- User Dashboard -->
+<main id="main-content" class="w-full max-w-7xl z-10 relative px-4 py-8 lg:py-12" role="main">
 
-    <!-- Title and tagline -->
-    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 lg:mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-400 to-secondary leading-tight tracking-tight font-heading">
-      Ascentio
-    </h1>
-    <p class="text-lg sm:text-xl lg:text-2xl text-gray-300 mb-12 lg:mb-16 max-w-3xl mx-auto leading-relaxed">
-      Your intelligent job prospecting assistant powered by advanced AI technology
-    </p>
-
-    <!-- CTA Button -->
-    <div class="mb-16 lg:mb-20">
-      <a href="/auth/login" 
-         class="group relative inline-flex items-center justify-center py-4 px-8 lg:py-5 lg:px-12 bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white font-semibold text-lg rounded-xl transition-all duration-500 focus:outline-none focus:ring-4 focus:ring-primary focus:ring-opacity-50 shadow-xl shadow-primary/25 hover:shadow-2xl hover:shadow-primary/40 transform hover:-translate-y-1 hover:scale-105"
-         aria-label="Get started with Ascentio">
-        <span class="relative z-10 font-heading tracking-wide">Get Started</span>
-        <div class="absolute inset-0 bg-gradient-to-r from-white/10 to-white/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-        <svg class="ml-3 h-5 w-5 lg:h-6 lg:w-6 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+  <!-- Welcome Section -->
+  <div class="mb-12">
+    <!-- Logo and Brand -->
+    <div class="flex items-center mb-6">
+      <div class="p-3 bg-slate-800 rounded-xl border border-slate-700 mr-4">
+        <svg class="h-12 w-12 sm:h-14 sm:w-14 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
         </svg>
-      </a>
-    </div>
-  </div>
-
-  <!-- Features Grid - Redesigned for all devices -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-16 lg:mb-20">
-    <div class="group relative text-center">
-      <div class="relative p-6 lg:p-8 bg-gradient-to-br from-slate-800/40 via-slate-700/30 to-slate-800/40 backdrop-blur-xl rounded-2xl border border-slate-600/30 hover:border-primary/50 transition-all duration-500 transform hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/20">
-        <!-- Icon -->
-        <div class="flex justify-center mb-4 lg:mb-6">
-          <div class="relative p-3 lg:p-4 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl group-hover:from-primary/30 group-hover:to-secondary/30 transition-all duration-500">
-            <svg class="h-8 w-8 lg:h-10 lg:w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <div class="absolute inset-0 bg-primary/20 blur-xl rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          </div>
-        </div>
-        <!-- Content -->
-        <h3 class="text-xl lg:text-2xl font-bold text-white mb-3 lg:mb-4 font-heading group-hover:text-primary transition-colors duration-300">
-          Find Relevant Jobs
-        </h3>
-        <p class="text-base lg:text-lg text-gray-300 leading-relaxed group-hover:text-gray-200 transition-colors duration-300">
-          Smart job matching based on your skills and experience
+      </div>
+      <div>
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white font-heading">
+          Ascentio
+        </h1>
+        <p class="text-primary text-sm sm:text-base font-medium">
+          AI-Powered Job Search Platform
         </p>
       </div>
     </div>
 
-    <div class="group relative text-center">
-      <div class="relative p-6 lg:p-8 bg-gradient-to-br from-slate-800/40 via-slate-700/30 to-slate-800/40 backdrop-blur-xl rounded-2xl border border-slate-600/30 hover:border-primary/50 transition-all duration-500 transform hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/20">
-        <!-- Icon -->
-        <div class="flex justify-center mb-4 lg:mb-6">
-          <div class="relative p-3 lg:p-4 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl group-hover:from-primary/30 group-hover:to-secondary/30 transition-all duration-500">
-            <svg class="h-8 w-8 lg:h-10 lg:w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+    <h2 class="text-xl sm:text-2xl lg:text-3xl font-semibold mb-3 text-gray-200">
+      Welcome back{{if .username}}, {{.username}}{{end}}!
+    </h2>
+    <p class="text-gray-300 text-base lg:text-lg mb-6 max-w-3xl">
+      Ready to accelerate your career? <br/>Track opportunities, generate personalized cover letters, and manage your entire application pipeline in one place.
+    </p>
+    <div class="flex flex-wrap gap-4 text-sm">
+      <div class="flex items-center text-gray-400">
+        <svg class="h-5 w-5 text-primary mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        Smart job matching
+      </div>
+      <div class="flex items-center text-gray-400">
+        <svg class="h-5 w-5 text-primary mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        AI-generated cover letters
+      </div>
+      <div class="flex items-center text-gray-400">
+        <svg class="h-5 w-5 text-primary mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        Application tracking
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Stats -->
+  <section class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-12" aria-label="Dashboard statistics">
+    <div class="bg-slate-800 rounded-lg p-3 sm:p-4 lg:p-6 border border-slate-700">
+      <div class="flex items-center justify-between">
+        <div class="min-w-0 flex-1">
+          <p class="text-gray-400 text-xs sm:text-sm mb-1 truncate">Jobs Found</p>
+          <p class="text-lg sm:text-xl lg:text-2xl font-bold text-white">{{if .stats}}{{.stats.TotalJobs}}{{else}}0{{end}}</p>
+        </div>
+        <svg class="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-primary opacity-50 flex-shrink-0 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+    </div>
+
+    <div class="bg-slate-800 rounded-lg p-3 sm:p-4 lg:p-6 border border-slate-700">
+      <div class="flex items-center justify-between">
+        <div class="min-w-0 flex-1">
+          <p class="text-gray-400 text-xs sm:text-sm mb-1 truncate">Applications</p>
+          <p class="text-lg sm:text-xl lg:text-2xl font-bold text-white">{{if .stats}}{{.stats.Applied}}{{else}}0{{end}}</p>
+        </div>
+        <svg class="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-secondary opacity-50 flex-shrink-0 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </div>
+    </div>
+
+    <div class="bg-slate-800 rounded-lg p-3 sm:p-4 lg:p-6 border border-slate-700">
+      <div class="flex items-center justify-between">
+        <div class="min-w-0 flex-1">
+          <p class="text-gray-400 text-xs sm:text-sm mb-1 truncate">Interviewing</p>
+          <p class="text-lg sm:text-xl lg:text-2xl font-bold text-white">{{if .stats}}{{.stats.Interviewing}}{{else}}0{{end}}</p>
+        </div>
+        <svg class="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-green-500 opacity-50 flex-shrink-0 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      </div>
+    </div>
+
+    <div class="bg-slate-800 rounded-lg p-3 sm:p-4 lg:p-6 border border-slate-700">
+      <div class="flex items-center justify-between">
+        <div class="min-w-0 flex-1">
+          <p class="text-gray-400 text-xs sm:text-sm mb-1 truncate">Active Jobs</p>
+          <p class="text-lg sm:text-xl lg:text-2xl font-bold text-white">{{if .stats}}{{.stats.ActiveJobs}}{{else}}0{{end}}</p>
+        </div>
+        <svg class="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-blue-500 opacity-50 flex-shrink-0 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Actions -->
+  <section class="mb-8 sm:mb-12" aria-labelledby="quick-actions-heading">
+    <h2 id="quick-actions-heading" class="text-lg sm:text-xl font-semibold text-white mb-4 font-heading">Quick Actions</h2>
+    <nav class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4" aria-label="Quick action navigation">
+      <a href="/jobs/new" class="bg-slate-800 hover:bg-slate-700 rounded-lg p-4 sm:p-6 border border-slate-700 hover:border-primary group min-h-[100px] sm:min-h-[120px] flex items-center">
+        <div class="flex items-center w-full">
+          <svg class="h-8 w-8 sm:h-10 sm:w-10 text-primary mr-3 sm:mr-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          <div class="min-w-0">
+            <h3 class="text-base sm:text-lg font-semibold text-white group-hover:text-primary">Create New Job</h3>
+            <p class="text-xs sm:text-sm text-gray-300 mt-1">Start tracking a new opportunity</p>
+          </div>
+        </div>
+      </a>
+
+      <a href="/jobs" class="bg-slate-800 hover:bg-slate-700 rounded-lg p-4 sm:p-6 border border-slate-700 hover:border-primary group min-h-[100px] sm:min-h-[120px] flex items-center">
+        <div class="flex items-center w-full">
+          <svg class="h-8 w-8 sm:h-10 sm:w-10 text-primary mr-3 sm:mr-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          <div class="min-w-0">
+            <h3 class="text-base sm:text-lg font-semibold text-white group-hover:text-primary">View All Jobs</h3>
+            <p class="text-xs sm:text-sm text-gray-300 mt-1">See and manage all your job prospects</p>
+          </div>
+        </div>
+      </a>
+
+      <a href="/settings/profile" class="bg-slate-800 hover:bg-slate-700 rounded-lg p-4 sm:p-6 border border-slate-700 hover:border-primary group min-h-[100px] sm:min-h-[120px] flex items-center sm:col-span-2 lg:col-span-1">
+        <div class="flex items-center w-full">
+          <svg class="h-8 w-8 sm:h-10 sm:w-10 text-primary mr-3 sm:mr-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <div class="min-w-0">
+            <h3 class="text-base sm:text-lg font-semibold text-white group-hover:text-primary">Settings</h3>
+            <p class="text-xs sm:text-sm text-gray-300 mt-1">Manage your profile</p>
+          </div>
+        </div>
+      </a>
+    </nav>
+  </section>
+
+  <!-- How It Works with Enhanced Visuals -->
+  <section class="mb-8 sm:mb-12" aria-labelledby="how-it-works-heading">
+    <h2 id="how-it-works-heading" class="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6 font-heading">How It Works</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+      <!-- Step 1 -->
+      <div class="bg-slate-800 rounded-lg p-4 sm:p-6 border border-slate-700 hover:border-slate-600 group">
+        <div class="mb-4">
+          <!-- Simple illustration for adding jobs -->
+          <div class="w-full h-32 bg-slate-700 rounded-lg p-4 group-hover:bg-slate-600/50">
+            <svg viewBox="0 0 200 100" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Browser window -->
+              <rect x="20" y="10" width="160" height="80" rx="4" stroke="#0D9488" stroke-width="2"/>
+              <line x1="20" y1="25" x2="180" y2="25" stroke="#0D9488" stroke-width="2"/>
+              <circle cx="35" cy="17.5" r="3" fill="#F59E0B"/>
+              <circle cx="45" cy="17.5" r="3" fill="#F59E0B"/>
+              <circle cx="55" cy="17.5" r="3" fill="#F59E0B"/>
+              <!-- URL bar -->
+              <rect x="70" y="15" width="100" height="5" rx="2.5" fill="#0D9488" opacity="0.3"/>
+              <!-- Content lines -->
+              <rect x="30" y="35" width="80" height="3" rx="1.5" fill="#0D9488" opacity="0.5"/>
+              <rect x="30" y="45" width="100" height="3" rx="1.5" fill="#0D9488" opacity="0.3"/>
+              <rect x="30" y="55" width="60" height="3" rx="1.5" fill="#0D9488" opacity="0.3"/>
+              <!-- Plus icon -->
+              <circle cx="150" cy="60" r="15" fill="#0D9488"/>
+              <path d="M150 52V68M142 60H158" stroke="white" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+        <h3 class="text-lg font-semibold text-white mb-2 group-hover:text-primary">1. Add Job Postings</h3>
+        <p class="text-sm text-gray-300">Paste job URLs or manually enter job details you're interested in</p>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="bg-slate-800 rounded-lg p-4 sm:p-6 border border-slate-700 hover:border-slate-600 group">
+        <div class="mb-4">
+          <!-- AI analysis illustration -->
+          <div class="w-full h-32 bg-slate-700 rounded-lg p-4 group-hover:bg-slate-600/50">
+            <svg viewBox="0 0 200 100" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Brain/AI icon -->
+              <circle cx="100" cy="50" r="30" stroke="#0D9488" stroke-width="2" opacity="0.3"/>
+              <circle cx="100" cy="50" r="20" stroke="#0D9488" stroke-width="2" opacity="0.5"/>
+              <circle cx="100" cy="50" r="10" fill="#0D9488"/>
+              <!-- Connection lines -->
+              <path d="M70 50H30M130 50H170M100 20V10M100 80V90M75 25L50 10M125 25L150 10M75 75L50 90M125 75L150 90" stroke="#0D9488" stroke-width="1.5" opacity="0.5" stroke-linecap="round"/>
+              <!-- Dots at ends -->
+              <circle cx="30" cy="50" r="4" fill="#F59E0B"/>
+              <circle cx="170" cy="50" r="4" fill="#F59E0B"/>
+              <circle cx="100" cy="10" r="4" fill="#F59E0B"/>
+              <circle cx="100" cy="90" r="4" fill="#F59E0B"/>
+              <circle cx="50" cy="10" r="4" fill="#F59E0B"/>
+              <circle cx="150" cy="10" r="4" fill="#F59E0B"/>
+              <circle cx="50" cy="90" r="4" fill="#F59E0B"/>
+              <circle cx="150" cy="90" r="4" fill="#F59E0B"/>
+            </svg>
+          </div>
+        </div>
+        <h3 class="text-lg font-semibold text-white mb-2 group-hover:text-primary">2. AI Analysis</h3>
+        <p class="text-sm text-gray-300">Our AI analyzes job requirements and matches them with your profile</p>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="bg-slate-800 rounded-lg p-4 sm:p-6 border border-slate-700 hover:border-slate-600 group">
+        <div class="mb-4">
+          <!-- Success illustration -->
+          <div class="w-full h-32 bg-slate-700 rounded-lg p-4 group-hover:bg-slate-600/50">
+            <svg viewBox="0 0 200 100" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Document -->
+              <rect x="60" y="15" width="80" height="70" rx="4" fill="white" opacity="0.1"/>
+              <rect x="60" y="15" width="80" height="70" rx="4" stroke="#0D9488" stroke-width="2"/>
+              <!-- Document lines -->
+              <rect x="70" y="25" width="60" height="3" rx="1.5" fill="#0D9488" opacity="0.5"/>
+              <rect x="70" y="35" width="40" height="3" rx="1.5" fill="#0D9488" opacity="0.3"/>
+              <rect x="70" y="45" width="50" height="3" rx="1.5" fill="#0D9488" opacity="0.3"/>
+              <rect x="70" y="55" width="45" height="3" rx="1.5" fill="#0D9488" opacity="0.3"/>
+              <!-- Checkmark -->
+              <circle cx="120" cy="65" r="15" fill="#10B981"/>
+              <path d="M112 65L117 70L128 59" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        <h3 class="text-lg font-semibold text-white mb-2 group-hover:text-primary">3. Apply with Confidence</h3>
+        <p class="text-sm text-gray-300">Get personalized cover letters and application insights</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why Ascentio -->
+  <section class="mb-12" aria-labelledby="why-heading">
+    <h2 id="why-heading" class="text-xl font-semibold text-white mb-6 font-heading">Why Choose Ascentio?</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Track Everything -->
+      <div class="bg-slate-800 rounded-lg p-4 sm:p-6 border border-slate-700">
+        <div class="mb-4">
+          <div class="bg-primary/10 rounded-full p-3 w-12 h-12 flex items-center justify-center">
+            <svg class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            <div class="absolute inset-0 bg-primary/20 blur-xl rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
           </div>
         </div>
-        <!-- Content -->
-        <h3 class="text-xl lg:text-2xl font-bold text-white mb-3 lg:mb-4 font-heading group-hover:text-primary transition-colors duration-300">
-          AI-Powered Matching
-        </h3>
-        <p class="text-base lg:text-lg text-gray-300 leading-relaxed group-hover:text-gray-200 transition-colors duration-300">
-          Intelligent compatibility analysis with confidence scoring
-        </p>
+        <h3 class="text-lg font-semibold text-white mb-2">Track Your Pipeline</h3>
+        <p class="text-sm text-gray-300">Keep all your job applications organized in one place. Track status from "Interested" to "Offer Received".</p>
       </div>
-    </div>
 
-    <div class="group relative text-center md:col-span-3 md:max-w-md md:mx-auto lg:col-span-1 lg:max-w-none">
-      <div class="relative p-6 lg:p-8 bg-gradient-to-br from-slate-800/40 via-slate-700/30 to-slate-800/40 backdrop-blur-xl rounded-2xl border border-slate-600/30 hover:border-primary/50 transition-all duration-500 transform hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/20">
-        <!-- Icon -->
-        <div class="flex justify-center mb-4 lg:mb-6">
-          <div class="relative p-3 lg:p-4 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl group-hover:from-primary/30 group-hover:to-secondary/30 transition-all duration-500">
-            <svg class="h-8 w-8 lg:h-10 lg:w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+      <!-- AI-Powered -->
+      <div class="bg-slate-800 rounded-lg p-4 sm:p-6 border border-slate-700">
+        <div class="mb-4">
+          <div class="bg-primary/10 rounded-full p-3 w-12 h-12 flex items-center justify-center">
+            <svg class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
-            <div class="absolute inset-0 bg-primary/20 blur-xl rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
           </div>
         </div>
-        <!-- Content -->
-        <h3 class="text-xl lg:text-2xl font-bold text-white mb-3 lg:mb-4 font-heading group-hover:text-primary transition-colors duration-300">
-          Generate Cover Letters
-        </h3>
-        <p class="text-base lg:text-lg text-gray-300 leading-relaxed group-hover:text-gray-200 transition-colors duration-300">
-          Personalized cover letters tailored to each job
-        </p>
+        <h3 class="text-lg font-semibold text-white mb-2">AI-Powered Insights</h3>
+        <p class="text-sm text-gray-300">Get intelligent job matching and personalized cover letters that help you stand out from other applicants.</p>
       </div>
-    </div>
-  </div>
 
-  <!-- Setup Instructions - Streamlined -->
-  <div class="max-w-4xl mx-auto p-6 lg:p-8 bg-gradient-to-br from-slate-800/30 via-slate-700/20 to-slate-800/30 backdrop-blur-xl rounded-2xl border border-slate-600/30 shadow-2xl">
-    <div class="text-center mb-6 lg:mb-8">
-      <h2 class="text-2xl lg:text-3xl font-bold text-white mb-3 font-heading">
-        Getting Started
-      </h2>
-      <p class="text-base lg:text-lg text-gray-300 leading-relaxed">
-        Create your admin account to start using Ascentio
-      </p>
-    </div>
-    
-    <!-- Simplified setup steps -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="p-5 lg:p-6 bg-slate-700/20 rounded-xl border border-slate-600/20">
-        <div class="flex items-center mb-4">
-          <div class="w-7 h-7 bg-primary rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-            <span class="text-white font-bold text-sm">1</span>
+      <!-- Land Interviews -->
+      <div class="bg-slate-800 rounded-lg p-4 sm:p-6 border border-slate-700">
+        <div class="mb-4">
+          <div class="bg-primary/10 rounded-full p-3 w-12 h-12 flex items-center justify-center">
+            <svg class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
           </div>
-          <h3 class="text-lg lg:text-xl font-semibold text-white font-heading">Environment Setup</h3>
         </div>
-        <div class="space-y-2">
-          <code class="block px-3 py-2 bg-slate-800/50 rounded-lg text-primary font-mono text-sm break-all">CREATE_ADMIN_USER=true</code>
-          <code class="block px-3 py-2 bg-slate-800/50 rounded-lg text-primary font-mono text-sm break-all">ADMIN_USERNAME=admin</code>
-          <code class="block px-3 py-2 bg-slate-800/50 rounded-lg text-primary font-mono text-sm break-all">ADMIN_PASSWORD=your_password</code>
-        </div>
-      </div>
-      
-      <div class="p-5 lg:p-6 bg-slate-700/20 rounded-xl border border-slate-600/20">
-        <div class="flex items-center mb-4">
-          <div class="w-7 h-7 bg-primary rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-            <span class="text-white font-bold text-sm">2</span>
-          </div>
-          <h3 class="text-lg lg:text-xl font-semibold text-white font-heading">Launch Application</h3>
-        </div>
-        <div class="space-y-3">
-          <code class="block px-3 py-2 bg-slate-800/50 rounded-lg text-primary font-mono text-sm">make run</code>
-          <p class="text-gray-300 text-sm lg:text-base leading-relaxed">
-            Your admin account will be created automatically, then sign in with your credentials or Google OAuth.
-          </p>
-        </div>
+        <h3 class="text-lg font-semibold text-white mb-2">Land More Interviews</h3>
+        <p class="text-sm text-gray-300">Focus on what matters - preparing for interviews. Let Ascentio handle the tedious parts of job searching.</p>
       </div>
     </div>
-  </div>
-</div>
+  </section>
 
-<!-- Footer -->
-<div class="w-full max-w-7xl z-10 text-center mt-16 lg:mt-20 px-4">
-  <div class="border-t border-gray-700/50 pt-6 lg:pt-8">
-    <p class="text-gray-400 text-sm lg:text-base leading-relaxed">
-      &copy; {{.currentYear}} <span class="text-primary font-semibold">Ascentio</span> | Your intelligent job prospecting assistant
-    </p>
-  </div>
-</div>
+  <!-- Recent Activity -->
+  <section class="mb-8 sm:mb-12" aria-labelledby="recent-activity-heading">
+    <h2 id="recent-activity-heading" class="text-lg sm:text-xl font-semibold text-white mb-4 font-heading">Recent Activity</h2>
+    <div class="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
+      {{if .showOnboarding}}
+      <!-- When there are no jobs -->
+      <div class="p-6 sm:p-8 text-center">
+        <div class="max-w-md mx-auto">
+          <svg class="h-12 w-12 sm:h-16 sm:w-16 text-gray-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+          </svg>
+          <h3 class="text-base sm:text-lg font-semibold text-gray-300 mb-2">No Jobs in Your Pipeline</h3>
+          <p class="text-sm sm:text-base text-gray-400 mb-4 sm:mb-6">Start building your job pipeline by adding positions you're interested in. Track each opportunity from discovery to offer.</p>
+          <a href="/jobs/new" class="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg font-medium text-sm sm:text-base">
+            Add Job
+          </a>
+        </div>
+      </div>
+      {{else}}
+      <!-- When there are jobs - show last 3 job cards -->
+      <div class="p-4 sm:p-6">
+        <div class="space-y-2 sm:space-y-3">
+          {{range .recentJobs}}
+          <a href="/jobs/{{.ID}}/details" class="block p-3 sm:p-4 bg-slate-700 rounded hover:bg-slate-600 transition-colors">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0 flex-1">
+                <h4 class="font-semibold text-white text-sm sm:text-base truncate" title="{{.Title}}">{{.Title}}</h4>
+                <div class="text-xs sm:text-sm text-gray-400 mt-1 flex items-center gap-2">
+                  <span class="truncate max-w-[120px] sm:max-w-[200px]" title="{{.Company}}">{{.Company}}</span>
+                  {{if .Location}}
+                  <span class="flex-shrink-0">•</span>
+                  <span class="truncate max-w-[80px] sm:max-w-[150px]" title="{{.Location}}">{{.Location}}</span>
+                  {{end}}
+                </div>
+              </div>
+              <div class="flex-shrink-0">
+                {{if eq .Status 0}}
+                <span class="px-2 sm:px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-medium rounded-full whitespace-nowrap">{{.StatusText}}</span>
+                {{else if eq .Status 1}}
+                <span class="px-2 sm:px-3 py-1 bg-primary/20 text-primary text-xs font-medium rounded-full whitespace-nowrap">{{.StatusText}}</span>
+                {{else if eq .Status 2}}
+                <span class="px-2 sm:px-3 py-1 bg-green-500/20 text-green-400 text-xs font-medium rounded-full whitespace-nowrap">{{.StatusText}}</span>
+                {{else if eq .Status 3}}
+                <span class="px-2 sm:px-3 py-1 bg-secondary/20 text-secondary text-xs font-medium rounded-full whitespace-nowrap">{{.StatusText}}</span>
+                {{else}}
+                <span class="px-2 sm:px-3 py-1 bg-gray-500/20 text-gray-400 text-xs font-medium rounded-full whitespace-nowrap">{{.StatusText}}</span>
+                {{end}}
+              </div>
+            </div>
+          </a>
+          {{end}}
+        </div>
+
+        <div class="mt-4 text-center">
+          <a href="/jobs" class="text-primary hover:text-primary-dark text-sm font-medium">View All Jobs</a>
+        </div>
+      </div>
+      {{end}}
+    </div>
+  </section>
+</main>
 {{end}}

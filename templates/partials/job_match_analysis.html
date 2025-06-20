@@ -88,9 +88,21 @@
 <!-- Navigation -->
 <div class="text-center mt-4 md:mt-6">
   <button class="w-full md:w-auto px-4 py-3 md:py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-md text-sm transition-colors"
-          data-action="scroll-to-top">
+          onclick="scrollToAIActions()">
     Back to Top
   </button>
 </div>
+
+<script>
+function scrollToAIActions() {
+  const aiActionsSection = document.getElementById('ai-actions-section');
+  if (aiActionsSection) {
+    aiActionsSection.scrollIntoView({behavior: 'smooth', block: 'start'});
+  } else {
+    // Fallback to top if section not found
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+}
+</script>
   </div>
 </div>

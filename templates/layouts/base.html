@@ -94,52 +94,46 @@
       animation: fade-out 0.3s ease-in-out forwards;
     }
 
-    /* Custom animation keyframes */
-    @keyframes float {
-      0% { transform: translateY(0px) translateX(0px); }
-      33% { transform: translateY(-10px) translateX(5px); }
-      66% { transform: translateY(-5px) translateX(-5px); }
-      100% { transform: translateY(0px) translateX(0px); }
+    /* Subtle transitions for interactive elements */
+    a, button, input, textarea, select, .hover\:bg-slate-700 {
+      transition-property: color, background-color, border-color, box-shadow, transform;
+      transition-timing-function: ease;
+      transition-duration: 300ms;
+    }
+    
+    /* Focus states */
+    :focus {
+      outline: none;
+    }
+    
+    :focus-visible {
+      outline: 2px solid #0D9488;
+      outline-offset: 2px;
+    }
+    
+    /* Screen reader only text */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
     }
 
-    .animate-float {
-      animation: float 8s ease-in-out infinite;
-    }
-
-    @keyframes pulse-slow {
-      0% { opacity: 0.8; }
-      50% { opacity: 0.3; }
-      100% { opacity: 0.8; }
-    }
-
-    .animate-pulse-slow {
-      animation: pulse-slow 6s ease-in-out infinite;
-    }
-
-    /* Modern background effects */
-    @keyframes drift {
-      0% { transform: translateX(0px) translateY(0px) rotate(0deg); }
-      33% { transform: translateX(30px) translateY(-30px) rotate(120deg); }
-      66% { transform: translateX(-20px) translateY(20px) rotate(240deg); }
-      100% { transform: translateX(0px) translateY(0px) rotate(360deg); }
-    }
-
-    .animate-drift {
-      animation: drift 20s ease-in-out infinite;
-    }
-
-    @keyframes shimmer {
-      0% { background-position: -200px 0; }
-      100% { background-position: calc(200px + 100%) 0; }
-    }
-
-    .animate-shimmer {
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-      background-size: 200px 100%;
-      animation: shimmer 3s ease-in-out infinite;
+    /* Respect reduced motion preference */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <!-- Particles.js removed for performance -->
 </head>
 <body class="bg-slate-900 text-gray-100 font-sans">
   <!-- Use template switching based on page variable -->
@@ -188,54 +182,17 @@
     <!-- Modern layout with enhanced backgrounds for home and login pages -->
     <div class="{{if eq .page "login"}}h-screen overflow-hidden{{else}}min-h-screen{{end}} flex {{if eq .page "home"}}flex-col{{end}} items-center justify-center relative overflow-hidden">
       
-      <!-- Multi-layer background system -->
-      <div class="absolute inset-0 z-0">
-        <!-- Base gradient -->
-        <div class="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"></div>
-        
-        <!-- Animated mesh gradient -->
-        <div class="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent via-transparent to-secondary/10 animate-pulse-slow"></div>
-        
-        <!-- Dynamic geometric shapes -->
-        <div class="absolute inset-0 overflow-hidden">
-          <!-- Large floating orbs -->
-          <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-float" style="animation-delay: 0s;"></div>
-          <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-secondary/5 rounded-full blur-3xl animate-float" style="animation-delay: 2s;"></div>
-          <div class="absolute top-1/2 right-1/3 w-64 h-64 bg-blue-400/5 rounded-full blur-3xl animate-float" style="animation-delay: 4s;"></div>
-          
-          <!-- Geometric grid pattern -->
-          <div class="absolute inset-0 opacity-10">
-            <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" stroke-width="1" class="text-primary/20"/>
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#grid)" />
-            </svg>
-          </div>
-          
-          <!-- Floating abstract shapes -->
-          <div class="absolute top-20 left-20 w-32 h-32 border border-primary/20 rounded-lg rotate-45 animate-pulse"></div>
-          <div class="absolute bottom-32 left-1/3 w-24 h-24 border border-secondary/20 rounded-full animate-pulse" style="animation-delay: 1s;"></div>
-          <div class="absolute top-1/3 right-20 w-40 h-2 bg-gradient-to-r from-primary/20 to-transparent rounded-full animate-pulse" style="animation-delay: 3s;"></div>
-        </div>
-        
-        <!-- Particles overlay -->
-        <div id="particles-js" class="h-full w-full"></div>
-        
-        <!-- Subtle noise texture overlay -->
-        <div class="absolute inset-0 opacity-20 bg-gradient-to-br from-transparent via-slate-700/5 to-transparent"></div>
-      </div>
+      <!-- Simple gradient background -->
+      <div class="absolute inset-0 z-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"></div>
 
       <!-- Content area with backdrop blur -->
       <div class="relative z-10 w-full {{if eq .page "home"}}{{else}}h-full{{end}}">
         {{if eq .page "home"}}
-          <div class="backdrop-blur-sm bg-black/5 min-h-screen flex flex-col items-center justify-center">
+          <div class="min-h-screen flex flex-col items-center justify-center">
             {{template "home-content" .}}
           </div>
         {{else if eq .page "login"}}
-          <div class="w-full h-full flex items-center justify-center py-4 sm:py-8 backdrop-blur-sm">
+          <div class="w-full h-full flex items-center justify-center py-4 sm:py-8">
             {{template "login-content" .}}
           </div>
         {{else}}
@@ -338,105 +295,8 @@
       formatUTCDates();
     });
 
-    // Initialize particles.js on all pages that have a particles-js element
+    // Setup page functionality
     document.addEventListener('DOMContentLoaded', function() {
-      const particlesContainer = document.getElementById('particles-js');
-      if (particlesContainer) {
-        // Detect mobile devices and reduce particle count for performance
-        const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        
-        // Mobile-optimized configuration
-        const particleConfig = {
-          particles: {
-            number: {
-              value: isMobile ? 40 : 100,
-              density: { enable: true, value_area: isMobile ? 600 : 800 }
-            },
-            color: {
-              value: ["#0D9488", "#F59E0B", "#0EA5E9", "#8B5CF6"]
-            },
-            shape: {
-              type: "circle",
-              stroke: { width: 0, color: "#000000" },
-              polygon: { nb_sides: 5 }
-            },
-            opacity: {
-              value: isMobile ? 0.1 : 0.15,
-              random: true,
-              anim: { 
-                enable: !isReducedMotion, 
-                speed: isMobile ? 0.5 : 0.8, 
-                opacity_min: 0.05, 
-                sync: false 
-              }
-            },
-            size: {
-              value: isMobile ? 3 : 4,
-              random: true,
-              anim: { 
-                enable: !isReducedMotion, 
-                speed: isMobile ? 1 : 1.5, 
-                size_min: 0.1, 
-                sync: false 
-              }
-            },
-            line_linked: {
-              enable: !isMobile,
-              distance: 150,
-              color: "#0D9488",
-              opacity: 0.12,
-              width: 1
-            },
-            move: {
-              enable: !isReducedMotion,
-              speed: isMobile ? 0.5 : 0.8,
-              direction: "none",
-              random: true,
-              straight: false,
-              out_mode: "out",
-              bounce: false,
-              attract: { enable: !isMobile, rotateX: 600, rotateY: 1200 }
-            }
-          },
-          interactivity: {
-            detect_on: "canvas",
-            events: {
-              onhover: { enable: !isMobile, mode: "grab" },
-              onclick: { enable: true, mode: "push" },
-              resize: true
-            },
-            modes: {
-              grab: {
-                distance: 180,
-                line_linked: { opacity: 0.25 }
-              },
-              bubble: {
-                distance: 250,
-                size: 6,
-                duration: 2,
-                opacity: 0.2,
-                speed: 3
-              },
-              repulse: {
-                distance: 150,
-                duration: 0.4
-              },
-              push: {
-                particles_nb: isMobile ? 2 : 4
-              },
-              remove: {
-                particles_nb: 2
-              }
-            }
-          },
-          retina_detect: true
-        };
-        
-        // Initialize particles with mobile-optimized config
-        particlesJS('particles-js', particleConfig);
-      }
-
       // Handle HTMX events for any page using HTMX
       if (typeof htmx !== 'undefined') {
         // Handle different response statuses

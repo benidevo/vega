@@ -2,7 +2,6 @@ package ascentio
 
 import (
 	"net/http"
-	"time"
 
 	authapi "github.com/benidevo/ascentio/internal/api/auth"
 	jobapi "github.com/benidevo/ascentio/internal/api/job"
@@ -22,7 +21,7 @@ func SetupRoutes(a *App) {
 	health.RegisterRoutes(a.router, a.db)
 
 	authHandler := auth.SetupAuth(a.db, &a.config)
-	homeHandler := home.Setup(&a.config)
+	homeHandler := home.Setup(a.db, &a.config)
 	jobHandler := job.Setup(a.db, &a.config)
 	settingsHandler := settings.Setup(&a.config, a.db)
 	authAPIHandler := authapi.Setup(a.db, &a.config)
@@ -34,8 +33,6 @@ func SetupRoutes(a *App) {
 		log.Error().Err(err).Msg("Failed to setup Google Auth")
 	}
 
-	a.router.GET("/", homeHandler.GetHomePage)
-
 	authGroup := a.router.Group("/auth")
 	auth.RegisterPublicRoutes(authGroup, authHandler)
 
@@ -46,6 +43,9 @@ func SetupRoutes(a *App) {
 
 	authGroup.Use(authHandler.AuthMiddleware())
 	auth.RegisterPrivateRoutes(authGroup, authHandler)
+
+	// Homepage route with optional auth (accessible to all, populates context when authenticated)
+	a.router.GET("/", authHandler.OptionalAuthMiddleware(), homeHandler.GetHomePage)
 
 	jobGroup := a.router.Group("/jobs")
 	jobGroup.Use(authHandler.AuthMiddleware())
@@ -64,9 +64,8 @@ func SetupRoutes(a *App) {
 
 	a.router.NoRoute(func(c *gin.Context) {
 		c.HTML(http.StatusNotFound, "layouts/base.html", gin.H{
-			"title":       "Page Not Found",
-			"page":        "404",
-			"currentYear": time.Now().Year(),
+			"title": "Page Not Found",
+			"page":  "404",
 		})
 	})
 }
@@ -82,9 +81,8 @@ func globalErrorHandler(c *gin.Context) {
 			log.Error().Err(err.(error)).Msg("Recovered from panic")
 
 			c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
-				"title":       "Something Went Wrong",
-				"page":        "500",
-				"currentYear": time.Now().Year(),
+				"title": "Something Went Wrong",
+				"page":  "500",
 			})
 			c.Abort()
 		}
@@ -94,9 +92,8 @@ func globalErrorHandler(c *gin.Context) {
 
 	if len(c.Errors) > 0 || c.Writer.Status() == http.StatusInternalServerError {
 		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
-			"title":       "Something Went Wrong",
-			"page":        "500",
-			"currentYear": time.Now().Year(),
+			"title": "Something Went Wrong",
+			"page":  "500",
 		})
 		c.Abort()
 	}

@@ -1,59 +1,33 @@
 {{define "login-content"}}
-<!-- Modern login container with enhanced effects -->
-<div class="w-full max-w-sm sm:max-w-md lg:max-w-lg z-10 relative px-4 sm:px-0">
+<!-- Clean login container -->
+<main id="main-content" class="w-full max-w-sm sm:max-w-md lg:max-w-lg z-10 relative px-4 sm:px-0" role="main">
 
-  <!-- Background accent elements for login -->
-  <div class="absolute inset-0 -z-10 overflow-hidden">
-    <!-- Floating elements around login -->
-    <div class="absolute -top-20 -left-20 w-40 h-40 bg-primary/5 rounded-full blur-2xl animate-float"></div>
-    <div class="absolute -bottom-20 -right-20 w-32 h-32 bg-secondary/5 rounded-full blur-2xl animate-float" style="animation-delay: 3s;"></div>
-    <div class="absolute top-10 -right-32 w-1 h-24 bg-gradient-to-b from-primary/30 to-transparent rotate-12 animate-pulse" style="animation-delay: 2s;"></div>
-    <div class="absolute -bottom-10 -left-32 w-20 h-1 bg-gradient-to-r from-secondary/30 to-transparent animate-pulse" style="animation-delay: 4s;"></div>
-  </div>
+  <!-- Simple shadow for depth -->
+  <div class="absolute -inset-0.5 bg-slate-700/20 rounded-2xl blur-sm"></div>
 
-  <!-- Enhanced glow effect system -->
-  <div class="absolute -inset-3 rounded-3xl bg-gradient-to-r from-primary/20 via-blue-400/20 to-secondary/20 blur-3xl animate-pulse-slow"></div>
-  <div class="absolute -inset-2 rounded-2xl bg-gradient-to-r from-primary/40 via-secondary/40 to-primary/40 opacity-60 blur-2xl"></div>
-  <div class="absolute -inset-1 rounded-2xl bg-gradient-to-r from-primary/60 via-secondary/60 to-primary/60 opacity-40 blur-xl"></div>
-
-  <!-- Main content container with enhanced backdrop -->
-  <div class="relative p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-slate-900/85 via-slate-800/75 to-slate-900/85 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/30 overflow-hidden">
-    <!-- Dynamic gradient overlays -->
-    <div class="absolute inset-0 bg-gradient-to-br from-primary/8 via-transparent to-secondary/8 rounded-2xl"></div>
-    <div class="absolute inset-0 animate-shimmer rounded-2xl"></div>
-    <!-- Logo/Brand with premium effects -->
-    <div class="relative flex justify-center mb-4 sm:mb-6 lg:mb-8 z-10">
-      <div class="animate-float">
-        <div class="relative group">
-          <!-- Main logo container -->
-          <div class="relative p-3 sm:p-4 lg:p-5 bg-gradient-to-br from-slate-800/60 to-slate-700/40 backdrop-blur-xl rounded-2xl border border-primary/50 shadow-2xl shadow-primary/40 overflow-hidden">
-            <!-- Shimmer overlay -->
-            <div class="absolute inset-0 animate-shimmer"></div>
-
-            <!-- Logo icon -->
-            <svg class="h-10 w-10 sm:h-12 sm:w-12 lg:h-16 lg:w-16 text-primary relative z-10 drop-shadow-lg filter" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M12 3L4 9V21H9V14H15V21H20V9L12 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M12 8L8 11V16H16V11L12 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-
-          <!-- Enhanced glow layers -->
-          <div class="absolute -inset-2 bg-primary/30 blur-2xl rounded-2xl animate-pulse-slow"></div>
-          <div class="absolute -inset-3 bg-gradient-to-br from-primary/15 via-blue-400/15 to-secondary/15 blur-3xl rounded-2xl animate-pulse-slow" style="animation-delay: 1.5s;"></div>
-        </div>
+  <!-- Clean login container -->
+  <div class="relative p-4 sm:p-6 lg:p-8 bg-slate-800 rounded-2xl shadow-xl border border-slate-700">
+    <!-- Logo -->
+    <div class="flex justify-center mb-6 lg:mb-8">
+      <div class="p-4 bg-slate-700 rounded-xl">
+        <svg class="h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14 text-primary" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M12 3L4 9V21H9V14H15V21H20V9L12 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 8L8 11V16H16V11L12 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </div>
     </div>
 
-    <!-- Title with enhanced gradient text -->
+    <!-- Title -->
     <div class="relative z-10">
-      <h2 class="text-xl sm:text-2xl lg:text-3xl font-bold text-center mb-4 sm:mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-400 to-secondary leading-tight tracking-tight font-heading">Welcome</h2>
+      <h2 class="text-xl sm:text-2xl lg:text-3xl font-bold text-center mb-4 sm:mb-6 text-white font-heading">Welcome Back</h2>
 
       <!-- Login Form with HTMX -->
       <form hx-post="/auth/login"
             hx-target="#form-response"
             hx-swap="outerHTML"
             hx-indicator="#spinner"
-            class="relative z-10">
+            class="relative z-10"
+            aria-label="Login form">
         <div class="space-y-4 sm:space-y-5 lg:space-y-6">
           <!-- Username field with premium styling -->
           <div class="group">
@@ -65,7 +39,7 @@
                 </svg>
               </div>
               <input type="text" id="username" name="username" required
-                     class="w-full pl-10 sm:pl-11 pr-4 py-3 sm:py-4 rounded-xl bg-gradient-to-br from-slate-800/60 to-slate-700/40 backdrop-blur-xl border border-slate-600/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/60 focus:border-primary/60 transition-all duration-500 shadow-lg hover:shadow-xl text-base min-h-[48px] group-focus-within:from-slate-700/60 group-focus-within:to-slate-600/40"
+                     class="w-full pl-10 sm:pl-11 pr-4 py-3 sm:py-4 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-base min-h-[48px]"
                      placeholder="Enter your username"
                      autocomplete="username"
                      hx-trigger="keyup[keyCode==13]"
@@ -84,33 +58,35 @@
                 </svg>
               </div>
               <input type="password" id="password" name="password" required
-                     class="w-full pl-10 sm:pl-11 pr-4 py-3 sm:py-4 rounded-xl bg-gradient-to-br from-slate-800/60 to-slate-700/40 backdrop-blur-xl border border-slate-600/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/60 focus:border-primary/60 transition-all duration-500 shadow-lg hover:shadow-xl text-base min-h-[48px] group-focus-within:from-slate-700/60 group-focus-within:to-slate-600/40"
+                     class="w-full pl-10 sm:pl-11 pr-4 py-3 sm:py-4 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-base min-h-[48px]"
                      placeholder="Enter your password"
                      autocomplete="current-password">
             </div>
           </div>
 
-        <!-- Form response area - error message container with improved styling -->
-        <div id="form-response" class="text-center text-sm {{ if .error }}bg-red-900 bg-opacity-50 text-white rounded-lg border border-red-800 p-3 mb-4{{ else }}hidden{{ end }}">
-          <!-- Error messages from server will be placed here and styled via JS -->
-          {{ .error }}
+          <!-- Form response area -->
+          <div id="form-response" class="text-center text-sm {{ if .error }}bg-red-900 bg-opacity-50 text-white rounded-lg border border-red-800 p-3{{ else }}hidden{{ end }}">
+            <!-- Error messages from server will be placed here -->
+            {{ .error }}
+          </div>
         </div>
 
-        <!-- Submit button with solid background -->
-        <div class="pt-2 relative">
-          <button type="submit" class="w-full py-3 sm:py-4 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors duration-300 flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-primary focus:ring-opacity-50 min-h-[48px] text-base">
+        <!-- Submit button -->
+        <div class="pt-4 relative">
+          <button type="submit" class="w-full py-3 sm:py-4 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-slate-800 min-h-[48px] text-base" aria-label="Sign in to your account">
             Sign in
-            <span id="spinner" class="htmx-indicator">
-                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+            <span id="spinner" class="htmx-indicator" aria-hidden="true">
+                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
+                <span class="sr-only">Loading...</span>
               </span>
           </button>
         </div>
 
         <!-- OR divider -->
-        <div class="flex items-center my-4 sm:my-6">
+        <div class="flex items-center my-4 sm:my-6" role="separator" aria-label="Or continue with">
           <div class="flex-grow h-px bg-gray-700"></div>
           <div class="px-3 sm:px-4 text-sm text-gray-400">OR</div>
           <div class="flex-grow h-px bg-gray-700"></div>
@@ -119,7 +95,7 @@
         <!-- Google Sign-in button -->
         <div class="relative">
           <a href="/auth/google/login"
-             class="w-full flex items-center justify-center px-4 py-3 sm:py-4 bg-white hover:bg-gray-100 text-gray-800 font-medium rounded-lg border border-gray-200 transition-colors duration-300 shadow-sm focus:outline-none focus:ring-4 focus:ring-gray-300 focus:ring-opacity-50 min-h-[48px] text-base"
+             class="w-full flex items-center justify-center px-4 py-3 sm:py-4 bg-white hover:bg-gray-100 text-gray-800 font-medium rounded-lg border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 focus:ring-offset-slate-800 min-h-[48px] text-base"
              aria-label="Sign in with Google">
             <svg class="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -134,7 +110,7 @@
         <!-- Return to home link -->
         <div class="text-center mt-4 sm:mt-6">
           <a href="/"
-             class="text-gray-400 hover:text-primary transition-colors text-sm flex items-center justify-center gap-1 sm:gap-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 rounded min-h-[40px]"
+             class="text-gray-400 hover:text-primary text-sm flex items-center justify-center gap-1 sm:gap-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-slate-800 rounded min-h-[40px]"
              aria-label="Return to homepage">
             <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -145,5 +121,5 @@
       </div>
     </form>
   </div>
-</div>
+</main>
 {{end}}

@@ -128,53 +128,67 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": true})
 }
 
-// AuthMiddleware is a Gin middleware that checks for a valid JWT token in the "token" cookie.
-// If the token is valid, it sets user information (userID, username, role) in the context.
-// If the token is missing or invalid, it attempts to use refresh token, or redirects to login.
-func (h *AuthHandler) AuthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		tokenString, err := c.Cookie("token")
+// authMiddleware is the core authentication logic shared by different middleware functions.
+// It attempts to get and verify a token, refresh if needed, and populate context.
+func (h *AuthHandler) authMiddleware(c *gin.Context) (*services.Claims, error) {
+	tokenString, err := c.Cookie("token")
 
-		// If access token is missing or invalid, try to refresh it
-		if err != nil || tokenString == "" {
-			refreshToken, refreshErr := c.Cookie("refresh_token")
-			if refreshErr == nil && refreshToken != "" {
-				newAccessToken, refreshErr := h.service.RefreshAccessToken(c.Request.Context(), refreshToken)
-				if refreshErr == nil {
-					sameSite := parseSameSiteMode(h.cfg.CookieSameSite)
-					c.SetSameSite(sameSite)
-					c.SetCookie(
-						"token",
-						newAccessToken,
-						int(h.cfg.AccessTokenExpiry.Seconds()),
-						"/",
-						h.cfg.CookieDomain,
-						h.cfg.CookieSecure,
-						true,
-					)
-
-					tokenString = newAccessToken
-				}
-			}
-
-			// If still no valid token, redirect to login
-			if tokenString == "" {
-				c.Redirect(http.StatusFound, "/auth/login")
-				c.Abort()
-				return
+	// If access token is missing or invalid, try to refresh it
+	if err != nil || tokenString == "" {
+		refreshToken, refreshErr := c.Cookie("refresh_token")
+		if refreshErr == nil && refreshToken != "" {
+			newAccessToken, refreshErr := h.service.RefreshAccessToken(c.Request.Context(), refreshToken)
+			if refreshErr == nil {
+				sameSite := parseSameSiteMode(h.cfg.CookieSameSite)
+				c.SetSameSite(sameSite)
+				c.SetCookie(
+					"token",
+					newAccessToken,
+					int(h.cfg.AccessTokenExpiry.Seconds()),
+					"/",
+					h.cfg.CookieDomain,
+					h.cfg.CookieSecure,
+					true,
+				)
+				tokenString = newAccessToken
 			}
 		}
+	}
 
-		claims, err := h.service.VerifyToken(tokenString)
+	if tokenString == "" {
+		return nil, fmt.Errorf("no token found")
+	}
+
+	claims, err := h.service.VerifyToken(tokenString)
+	if err != nil {
+		return nil, fmt.Errorf("invalid token: %w", err)
+	}
+
+	c.Set("userID", claims.UserID)
+	c.Set("username", claims.Username)
+	c.Set("role", claims.Role)
+
+	return claims, nil
+}
+
+// AuthMiddleware requires authentication and redirects to login if not authenticated.
+func (h *AuthHandler) AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		_, err := h.authMiddleware(c)
 		if err != nil {
 			c.Redirect(http.StatusFound, "/auth/login")
 			c.Abort()
 			return
 		}
+		c.Next()
+	}
+}
 
-		c.Set("userID", claims.UserID)
-		c.Set("username", claims.Username)
-		c.Set("role", claims.Role)
+// OptionalAuthMiddleware attempts authentication but continues regardless.
+// Useful for pages accessible to both authenticated and unauthenticated users.
+func (h *AuthHandler) OptionalAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		h.authMiddleware(c) // Ignore error
 		c.Next()
 	}
 }
