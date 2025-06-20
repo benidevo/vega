@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -153,6 +154,7 @@ type Job struct {
 	ApplicationURL string    `json:"application_url" db:"application_url" sql:"type:text" validate:"omitempty,url"`
 	Company        Company   `json:"company" sql:"-" validate:"required"` // Not stored directly, company_id is used instead
 	Status         JobStatus `json:"status" db:"status" sql:"type:integer;not null;default:0;index" validate:"min=0,max=5"`
+	MatchScore     *int      `json:"match_score,omitempty" db:"match_score" sql:"type:integer;index" validate:"omitempty,min=0,max=100"`
 	Notes          string    `json:"notes,omitempty" db:"notes" sql:"type:text" validate:"max=5000"`
 	CreatedAt      time.Time `json:"created_at" db:"created_at" sql:"type:timestamp;not null;default:current_timestamp"`
 	UpdatedAt      time.Time `json:"updated_at" db:"updated_at" sql:"type:timestamp;not null;default:current_timestamp"`
@@ -251,12 +253,34 @@ func (j *Job) Validate() error {
 	return nil
 }
 
+// IsMatched returns true if the job has a match score >= 70
+func (j *Job) IsMatched() bool {
+	return j.MatchScore != nil && *j.MatchScore >= 70
+}
+
+// GetMatchScoreString returns the match score as a string, or "Unmatched" if no score
+func (j *Job) GetMatchScoreString() string {
+	if j.MatchScore == nil {
+		return "Unmatched"
+	}
+	return fmt.Sprintf("%d%% Match", *j.MatchScore)
+}
+
+// GetMatchStatus returns "Matched" or "Unmatched" based on the score
+func (j *Job) GetMatchStatus() string {
+	if j.IsMatched() {
+		return "Matched"
+	}
+	return "Unmatched"
+}
+
 // JobFilter defines filters for querying jobs
 type JobFilter struct {
 	CompanyID *int
 	Status    *JobStatus
 	JobType   *JobType
 	Search    string
+	Matched   *bool
 	Limit     int
 	Offset    int
 }

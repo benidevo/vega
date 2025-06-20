@@ -233,5 +233,23 @@ func templateFuncMap() template.FuncMap {
 			}
 			return pages
 		},
+		"matchColors": func(score *int) string {
+			if score == nil {
+				return "bg-gray-500 bg-opacity-20 text-gray-400"
+			}
+			s := *score
+			switch {
+			case s >= 75:
+				return "bg-primary bg-opacity-20 text-primary"
+			case s >= 60:
+				return "bg-green-500 bg-opacity-20 text-green-400"
+			case s >= 40:
+				return "bg-yellow-500 bg-opacity-20 text-yellow-400"
+			case s >= 25:
+				return "bg-amber-500 bg-opacity-20 text-amber-400"
+			default:
+				return "bg-gray-500 bg-opacity-20 text-gray-400"
+			}
+		},
 	}
 }

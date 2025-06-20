@@ -81,6 +81,23 @@ func (s *JobService) AnalyzeJobMatch(ctx context.Context, userID, jobID int) (*m
 
 	result := s.convertToJobMatchAnalysis(aiResult, userID, jobID)
 
+	err = s.jobRepo.UpdateMatchScore(ctx, jobID, &result.MatchScore)
+	if err != nil {
+		s.log.Warn().Err(err).
+			Str("user_ref", userRef).
+			Int("job_id", jobID).
+			Int("match_score", result.MatchScore).
+			Str("error_type", "match_score_update_failed").
+			Msg("Failed to update job match score, but analysis completed")
+		// Don't fail the entire operation if score update fails
+	} else {
+		s.log.Debug().
+			Str("user_ref", userRef).
+			Int("job_id", jobID).
+			Int("match_score", result.MatchScore).
+			Msg("Job match score updated successfully")
+	}
+
 	s.log.Info().
 		Str("user_ref", userRef).
 		Int("job_id", jobID).

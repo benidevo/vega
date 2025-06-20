@@ -75,8 +75,8 @@
           <div id="header-response"></div>
         </div>
       </div>
-      <div class="px-4 py-1.5 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-        92% Match
+      <div class="px-4 py-1.5 {{matchColors .job.MatchScore}} rounded-full text-sm font-medium">
+        {{.job.GetMatchScoreString}}
       </div>
     </div>
 

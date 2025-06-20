@@ -69,7 +69,7 @@ func (r *SQLiteJobRepository) GetBySourceURL(ctx context.Context, sourceURL stri
 		SELECT
 			j.id, j.title, j.description, j.location, j.job_type,
 			j.source_url, j.required_skills,
-			j.application_url, j.company_id, j.status,
+			j.application_url, j.company_id, j.status, j.match_score,
 			j.notes, j.created_at, j.updated_at,
 			c.id, c.name, c.created_at, c.updated_at
 		FROM jobs j
@@ -83,12 +83,13 @@ func (r *SQLiteJobRepository) GetBySourceURL(ctx context.Context, sourceURL stri
 	var company models.Company
 	var skillsJSON string
 	var jobType, status int
+	var matchScore sql.NullInt64
 	var notes, jobSourceURL, applicationURL, location sql.NullString
 
 	err := row.Scan(
 		&j.ID, &j.Title, &j.Description, &location, &jobType,
 		&jobSourceURL, &skillsJSON,
-		&applicationURL, &company.ID, &status,
+		&applicationURL, &company.ID, &status, &matchScore,
 		&notes, &j.CreatedAt, &j.UpdatedAt,
 		&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt,
 	)
@@ -111,6 +112,10 @@ func (r *SQLiteJobRepository) GetBySourceURL(ctx context.Context, sourceURL stri
 	}
 	if notes.Valid {
 		j.Notes = notes.String
+	}
+	if matchScore.Valid {
+		score := int(matchScore.Int64)
+		j.MatchScore = &score
 	}
 
 	if err := json.Unmarshal([]byte(skillsJSON), &j.RequiredSkills); err != nil {
@@ -215,7 +220,7 @@ func (r *SQLiteJobRepository) GetByID(ctx context.Context, id int) (*models.Job,
 		SELECT
 			j.id, j.title, j.description, j.location, j.job_type,
 			j.source_url, j.required_skills,
-			j.application_url, j.company_id, j.status,
+			j.application_url, j.company_id, j.status, j.match_score,
 			j.notes, j.created_at, j.updated_at,
 			c.id, c.name, c.created_at, c.updated_at
 		FROM jobs j
@@ -229,12 +234,13 @@ func (r *SQLiteJobRepository) GetByID(ctx context.Context, id int) (*models.Job,
 	var company models.Company
 	var skillsJSON string
 	var jobType, status int
+	var matchScore sql.NullInt64
 	var notes, sourceURL, applicationURL, location sql.NullString
 
 	err := row.Scan(
 		&j.ID, &j.Title, &j.Description, &location, &jobType,
 		&sourceURL, &skillsJSON,
-		&applicationURL, &company.ID, &status,
+		&applicationURL, &company.ID, &status, &matchScore,
 		&notes, &j.CreatedAt, &j.UpdatedAt,
 		&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt,
 	)
@@ -261,6 +267,10 @@ func (r *SQLiteJobRepository) GetByID(ctx context.Context, id int) (*models.Job,
 	if notes.Valid {
 		j.Notes = notes.String
 	}
+	if matchScore.Valid {
+		score := int(matchScore.Int64)
+		j.MatchScore = &score
+	}
 
 	if err := json.Unmarshal([]byte(skillsJSON), &j.RequiredSkills); err != nil {
 		j.RequiredSkills = []string{}
@@ -280,7 +290,7 @@ func (r *SQLiteJobRepository) GetAll(ctx context.Context, filter models.JobFilte
 		SELECT
 			j.id, j.title, j.description, j.location, j.job_type,
 			j.source_url, j.required_skills,
-			j.application_url, j.company_id, j.status,
+			j.application_url, j.company_id, j.status, j.match_score,
 			j.notes, j.created_at, j.updated_at,
 			c.id, c.name, c.created_at, c.updated_at
 		FROM jobs j
@@ -309,6 +319,14 @@ func (r *SQLiteJobRepository) GetAll(ctx context.Context, filter models.JobFilte
 		conditions = append(conditions, "(j.title LIKE ? OR j.description LIKE ? OR c.name LIKE ?)")
 		searchPattern := "%" + filter.Search + "%"
 		args = append(args, searchPattern, searchPattern, searchPattern)
+	}
+
+	if filter.Matched != nil {
+		if *filter.Matched {
+			conditions = append(conditions, "j.match_score >= 70")
+		} else {
+			conditions = append(conditions, "(j.match_score IS NULL OR j.match_score < 70)")
+		}
 	}
 
 	if len(conditions) > 0 {
@@ -340,12 +358,13 @@ func (r *SQLiteJobRepository) GetAll(ctx context.Context, filter models.JobFilte
 		var company models.Company
 		var skillsJSON string
 		var jobType, status int
+		var matchScore sql.NullInt64
 		var notes, sourceURL, applicationURL, location sql.NullString
 
 		err := rows.Scan(
 			&j.ID, &j.Title, &j.Description, &location, &jobType,
 			&sourceURL, &skillsJSON,
-			&applicationURL, &company.ID, &status,
+			&applicationURL, &company.ID, &status, &matchScore,
 			&notes, &j.CreatedAt, &j.UpdatedAt,
 			&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt,
 		)
@@ -365,6 +384,10 @@ func (r *SQLiteJobRepository) GetAll(ctx context.Context, filter models.JobFilte
 		}
 		if notes.Valid {
 			j.Notes = notes.String
+		}
+		if matchScore.Valid {
+			score := int(matchScore.Int64)
+			j.MatchScore = &score
 		}
 
 		if err := json.Unmarshal([]byte(skillsJSON), &j.RequiredSkills); err != nil {
@@ -428,7 +451,7 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, job *models.Job) error
 			title = ?, description = ?, location = ?, job_type = ?,
 			source_url = ?, required_skills = ?,
 			application_url = ?, company_id = ?,
-			status = ?, notes = ?, updated_at = ?
+			status = ?, match_score = ?, notes = ?, updated_at = ?
 		WHERE id = ?
 	`
 
@@ -444,6 +467,7 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, job *models.Job) error
 		job.ApplicationURL,
 		company.ID,
 		int(job.Status),
+		job.MatchScore,
 		job.Notes,
 		job.UpdatedAt,
 		job.ID,
@@ -468,6 +492,31 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, job *models.Job) error
 	tx = nil
 
 	job.Company = *company
+
+	return nil
+}
+
+// UpdateMatchScore updates only the match score for a job
+func (r *SQLiteJobRepository) UpdateMatchScore(ctx context.Context, jobID int, matchScore *int) error {
+	if jobID <= 0 {
+		return models.ErrInvalidJobID
+	}
+
+	query := `UPDATE jobs SET match_score = ?, updated_at = ? WHERE id = ?`
+
+	result, err := r.db.ExecContext(ctx, query, matchScore, time.Now().UTC(), jobID)
+	if err != nil {
+		return models.WrapError(models.ErrFailedToUpdateJob, err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return models.ErrFailedToUpdateJob
+	}
+
+	if rowsAffected == 0 {
+		return models.ErrJobNotFound
+	}
 
 	return nil
 }
@@ -573,12 +622,13 @@ func (r *SQLiteJobRepository) GetCount(ctx context.Context, filter models.JobFil
 }
 
 // GetStats returns aggregate statistics about jobs in the database.
-// It currently returns the total number of jobs and the number of jobs with status APPLIED.
+// It returns the total number of jobs, jobs with status APPLIED, and jobs with high match scores (>=70).
 func (r *SQLiteJobRepository) GetStats(ctx context.Context) (*models.JobStats, error) {
 	query := `
         SELECT
             COUNT(*) AS total_jobs,
-            COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS applied
+            COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS applied,
+            COALESCE(SUM(CASE WHEN match_score >= 70 THEN 1 ELSE 0 END), 0) AS high_match
         FROM jobs
     `
 	rows, err := r.db.QueryContext(ctx, query, int(models.APPLIED))
@@ -589,7 +639,7 @@ func (r *SQLiteJobRepository) GetStats(ctx context.Context) (*models.JobStats, e
 
 	var stats models.JobStats
 	if rows.Next() {
-		if err := rows.Scan(&stats.TotalJobs, &stats.TotalApplied); err != nil {
+		if err := rows.Scan(&stats.TotalJobs, &stats.TotalApplied, &stats.HighMatch); err != nil {
 			return nil, models.WrapError(models.ErrFailedToGetJobStats, err)
 		}
 	}

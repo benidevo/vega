@@ -281,7 +281,7 @@ func (h *JobHandler) ListJobsPage(c *gin.Context) {
 		"pagination":   jobsWithPagination.Pagination,
 		"totalJobs":    stats.TotalJobs,
 		"applied":      stats.TotalApplied,
-		"highMatch":    1, // Keeping this dummy data for now
+		"highMatch":    stats.HighMatch,
 		"statusFilter": statusParam,
 	}
 
