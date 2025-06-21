@@ -2,18 +2,18 @@
 CREATE TABLE IF NOT EXISTS profiles (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL UNIQUE,
-    first_name TEXT,
-    last_name TEXT,
-    title TEXT,
-    industry INTEGER NOT NULL DEFAULT 64, -- Default to IndustryUnspecified (64)
-    career_summary TEXT,
-    skills TEXT, -- Stored as JSON string
-    phone_number TEXT,
-    location TEXT,
-    linkedin_profile TEXT,
-    github_profile TEXT,
-    website TEXT,
-    context TEXT,
+    first_name TEXT DEFAULT '',
+    last_name TEXT DEFAULT '',
+    title TEXT DEFAULT '',
+    industry INTEGER DEFAULT 64, -- Default to IndustryUnspecified (64)
+    career_summary TEXT DEFAULT '',
+    skills TEXT DEFAULT '', -- Stored as JSON string
+    phone_number TEXT DEFAULT '',
+    location TEXT DEFAULT '',
+    linkedin_profile TEXT DEFAULT '',
+    github_profile TEXT DEFAULT '',
+    website TEXT DEFAULT '',
+    context TEXT DEFAULT '',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -73,3 +73,11 @@ CREATE INDEX IF NOT EXISTS idx_education_profile_id ON education(profile_id);
 CREATE INDEX IF NOT EXISTS idx_education_start_date ON education(start_date);
 CREATE INDEX IF NOT EXISTS idx_certifications_profile_id ON certifications(profile_id);
 CREATE INDEX IF NOT EXISTS idx_certifications_issue_date ON certifications(issue_date);
+
+-- Create trigger to automatically create a profile when a user is created
+CREATE TRIGGER create_profile_after_user_insert
+AFTER INSERT ON users
+FOR EACH ROW
+BEGIN
+  INSERT INTO profiles (user_id, created_at) VALUES (NEW.id, CURRENT_TIMESTAMP);
+END;

@@ -161,8 +161,8 @@ func (w *WorkExperience) Validate() error {
 type Education struct {
 	ID           int        `json:"id" db:"id" sql:"primary_key;auto_increment"`
 	ProfileID    int        `json:"profile_id" db:"profile_id" sql:"type:integer;not null;index;references:profiles(id)" validate:"required,min=1"`
-	Institution  string     `json:"institution" db:"institution" sql:"type:text;not null" validate:"required,min=1,max=200"`
-	Degree       string     `json:"degree" db:"degree" sql:"type:text;not null" validate:"required,min=1,max=200"`
+	Institution  string     `json:"institution" db:"institution" sql:"type:text;not null" validate:"max=200"`
+	Degree       string     `json:"degree" db:"degree" sql:"type:text;not null" validate:"max=200"`
 	FieldOfStudy string     `json:"field_of_study" db:"field_of_study" sql:"type:text" validate:"max=200"`
 	StartDate    time.Time  `json:"start_date" db:"start_date" sql:"type:timestamp;not null" validate:"required,notfuture"`
 	EndDate      *time.Time `json:"end_date,omitempty" db:"end_date" sql:"type:timestamp" validate:"omitempty,notfuture,gtfield=StartDate"`

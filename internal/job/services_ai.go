@@ -233,8 +233,14 @@ func (s *JobService) buildProfileSummary(profile *settingsmodels.Profile) string
 		summary.WriteString(fmt.Sprintf("\nCareer Summary:\n%s\n", profile.CareerSummary))
 	}
 
-	if len(profile.Skills) > 0 {
-		summary.WriteString(fmt.Sprintf("\nSkills: %s\n", strings.Join(profile.Skills, ", ")))
+	validSkills := make([]string, 0, len(profile.Skills))
+	for _, skill := range profile.Skills {
+		if trimmed := strings.TrimSpace(skill); trimmed != "" {
+			validSkills = append(validSkills, trimmed)
+		}
+	}
+	if len(validSkills) > 0 {
+		summary.WriteString(fmt.Sprintf("\nSkills: %s\n", strings.Join(validSkills, ", ")))
 	}
 
 	if len(profile.WorkExperience) > 0 {
@@ -263,15 +269,26 @@ func (s *JobService) buildProfileSummary(profile *settingsmodels.Profile) string
 		}
 	}
 
-	if len(profile.Education) > 0 {
+	validEducation := make([]settingsmodels.Education, 0, len(profile.Education))
+	for _, edu := range profile.Education {
+		if strings.TrimSpace(edu.Institution) != "" && strings.TrimSpace(edu.Degree) != "" {
+			validEducation = append(validEducation, edu)
+		}
+	}
+	if len(validEducation) > 0 {
 		summary.WriteString("\nEducation:\n")
-		for i, edu := range profile.Education {
+		for i, edu := range validEducation {
 			if i >= 3 { // Limit to most recent 3 education entries
 				break
 			}
 
-			summary.WriteString(fmt.Sprintf("- %s in %s from %s (%s)\n",
-				edu.Degree, edu.FieldOfStudy, edu.Institution, edu.StartDate.Format("2006")))
+			fieldOfStudy := ""
+			if strings.TrimSpace(edu.FieldOfStudy) != "" {
+				fieldOfStudy = fmt.Sprintf(" in %s", edu.FieldOfStudy)
+			}
+
+			summary.WriteString(fmt.Sprintf("- %s%s from %s (%s)\n",
+				edu.Degree, fieldOfStudy, edu.Institution, edu.StartDate.Format("2006")))
 		}
 	}
 
@@ -331,10 +348,6 @@ func (s *JobService) convertToCoverLetter(aiResult *aimodels.CoverLetter, userID
 func (s *JobService) ValidateProfileForAI(profile *settingsmodels.Profile) error {
 	if profile.FirstName == "" && profile.LastName == "" {
 		return models.ErrProfileIncomplete
-	}
-
-	if len(profile.Skills) == 0 {
-		return models.ErrProfileSkillsRequired
 	}
 
 	hasCareerInfo := profile.CareerSummary != "" ||

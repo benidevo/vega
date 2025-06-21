@@ -188,16 +188,8 @@ func (v *CentralizedValidator) ValidateEducation(ed *models.Education) error {
 			Message: "Profile ID must be positive",
 		},
 		{
-			Check:   func() bool { return len(strings.TrimSpace(ed.Institution)) > 0 },
-			Message: "Institution is required",
-		},
-		{
 			Check:   func() bool { return len(ed.Institution) <= 200 },
 			Message: "Institution name must not exceed 200 characters",
-		},
-		{
-			Check:   func() bool { return len(strings.TrimSpace(ed.Degree)) > 0 },
-			Message: "Degree is required",
 		},
 		{
 			Check:   func() bool { return len(ed.Degree) <= 200 },

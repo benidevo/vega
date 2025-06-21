@@ -169,15 +169,6 @@ func TestJobService_ValidateProfileForAI(t *testing.T) {
 			expectedError: models.ErrProfileIncomplete,
 		},
 		{
-			name: "Missing skills",
-			profile: &settingsmodels.Profile{
-				FirstName:     "John",
-				LastName:      "Doe",
-				CareerSummary: "Experienced developer",
-			},
-			expectedError: models.ErrProfileSkillsRequired,
-		},
-		{
 			name: "Missing career info",
 			profile: &settingsmodels.Profile{
 				FirstName: "John",
