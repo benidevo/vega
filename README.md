@@ -1,20 +1,23 @@
-# Vega
+# Vega - Navigate Your Career Journey
 
 ![Build Status](https://github.com/benidevo/vega/workflows/CI/badge.svg)
 
 ## Overview
 
-Vega is a self-hosted job prospecting and management application designed to help users organize their job search process. Built with simplicity and privacy in mind, it provides a clean web interface for tracking job applications, managing opportunities, and maintaining your job search workflow.
+Like ancient navigators used the star Vega to find their way, Vega helps you navigate your career journey with confidence. Vega is an AI-powered job search platform that combines intelligent job matching, automated cover letter generation, and comprehensive application tracking to help you reach your professional destination.
 
 ## ✨ Features
 
-* **🤖 AI-Powered Matching**: Google Gemini integration for intelligent job-resume compatibility scoring
+* **⭐ Intelligent Career Navigation**: AI-powered job matching and personalized guidance
+* **🤖 AI Cover Letter Generation**: Automatically create tailored cover letters for each opportunity
+* **📊 Smart Job Matching**: AI analyzes job requirements against your profile for compatibility scoring
 * **🔗 Browser Extension**: One-click job capture from LinkedIn with automated data extraction
+* **🗺️ Application Pipeline Tracking**: Visualize your journey from "Interested" to "Offer Received"
 * **🔐 Secure Authentication**: Google OAuth and username/password options
-* **📋 Job Management**: Create, edit, and organize job postings with detailed tracking
-* **🎨 Modern UI**: Responsive design with Tailwind CSS and HTMX interactivity
+* **📋 Comprehensive Profile Builder**: Education, experience, skills, and certifications management
+* **🎨 Modern UI**: Sleek, dark-themed interface with star navigation metaphors
 * **🔧 Easy Setup**: One-command deployment with Docker Compose
-* **🛡️ Privacy-First**: Self-hosted with GDPR-compliant logging
+* **🛡️ Privacy-First**: Self-hosted solution with GDPR-compliant logging
 * **⚡ Fast & Lightweight**: Efficient SQLite database with optimized performance
 * **🔌 API-Ready**: RESTful endpoints for automation and integrations
 
@@ -28,6 +31,7 @@ Built with Go, SQLite, and modern web technologies. See [Technical Design Docume
 
 * Docker
 * Docker Compose
+* Google Gemini API key (for AI features)
 
 ### Installation
 
@@ -42,7 +46,11 @@ Built with Go, SQLite, and modern web technologies. See [Technical Design Docume
 
    ```bash
    cp .env.example .env
-   # Edit .env with your settings (Google OAuth, admin credentials, etc.)
+   # Edit .env with your settings:
+   # - Google OAuth credentials (for social login)
+   # - Google Gemini API key (for AI features)
+   # - Admin credentials
+   # - Other configuration options
    ```
 
 3. **Start the application**:
@@ -57,7 +65,7 @@ Built with Go, SQLite, and modern web technologies. See [Technical Design Docume
 
 5. **Install the browser extension** (optional):
    * Download from the [Vega Extension repository](https://github.com/benidevo/vega-extension)
-   * Load the extension in Chrome for one-click job capture from LinkedIn
+   * Load the extension in Chrome or Edge for one-click job capture from LinkedIn
 
 ### 🔑 Admin User Setup
 
@@ -141,22 +149,27 @@ Vega provides RESTful APIs for job management, authentication, and system health
 ### Current Status ✅
 
 * [x] User authentication (Google OAuth + username/password)
-* [x] Job management CRUD operations
+* [x] Job management with status tracking
+* [x] AI-powered job matching with Google Gemini
+* [x] Automated cover letter generation
 * [x] Browser extension for LinkedIn job capture
-* [x] Responsive web interface
+* [x] Profile management (education, experience, skills, certifications)
+* [x] Responsive, dark-themed web interface
 * [x] RESTful API endpoints
 * [x] Environment-based configuration
-* [x] Automated migrations
+* [x] Automated database migrations
 * [x] GDPR-compliant logging
+* [x] Application pipeline visualization
 
 ### Future Plans 🚧
 
-* [ ] AI-powered job matching with Google Gemini
-* [ ] Automated cover letter generation
-* [ ] Support for additional job boards (Indeed, etc.)
+* [ ] Support for additional job boards (Indeed, AngelList, etc.)
 * [ ] Email notifications and alerts
-* [ ] Analytics and insights dashboard
-* [ ] Advanced AI scoring and recommendations
+* [ ] Advanced analytics and insights dashboard
+* [ ] Interview preparation tools
+* [ ] Resume parsing and optimization
+* [ ] Calendar integration for interview scheduling
+* [ ] Mobile application
 
 ## 🤝 Contributing
 
