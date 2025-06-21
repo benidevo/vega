@@ -1,7 +1,7 @@
 
 FROM golang:1.24-alpine AS builder
 
-RUN apk add --no-cache ca-certificates tzdata
+RUN apk add --no-cache ca-certificates tzdata gcc musl-dev
 
 WORKDIR /build
 
