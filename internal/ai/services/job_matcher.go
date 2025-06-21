@@ -64,13 +64,14 @@ func (j *JobMatcherService) AnalyzeMatch(ctx context.Context, req models.Request
 		return nil, err
 	}
 
-	prompt := models.Prompt{
-		Instructions: "Analyze the job match between the candidate and position",
-		Request:      req,
-	}
+	prompt := models.NewPrompt(
+		"Analyze the job match between the candidate and position",
+		req,
+		true,
+	)
 
 	response, err := j.model.Generate(ctx, llm.GenerateRequest{
-		Prompt:       prompt,
+		Prompt:       *prompt,
 		ResponseType: llm.ResponseTypeMatchResult,
 	})
 	if err != nil {
@@ -95,6 +96,7 @@ func (j *JobMatcherService) AnalyzeMatch(ctx context.Context, req models.Request
 		Int("match_score", result.MatchScore).
 		Int("strengths_count", len(result.Strengths)).
 		Int("weaknesses_count", len(result.Weaknesses)).
+		Bool("enhanced", true).
 		Msg("Match analysis completed")
 
 	return &result, nil

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/benidevo/vega/internal/common/alerts"
 	"github.com/benidevo/vega/internal/settings/models"
 	"github.com/gin-gonic/gin"
 )
@@ -138,22 +139,14 @@ func (h *BaseSettingsHandler) HandleCreate(c *gin.Context) {
 
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
-			"type":    "error",
-			"context": "dashboard",
-			"message": "Failed to load profile settings",
-		})
+		alerts.RenderError(c, http.StatusInternalServerError, "Failed to load profile settings", alerts.ContextDashboard)
 		return
 	}
 
 	entity := h.metadata.CreateFunc()
 	if bindable, ok := entity.(FormBindable); ok {
 		if err := bindable.BindFromForm(c); err != nil {
-			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
-				"type":    "error",
-				"context": "dashboard",
-				"message": err.Error(),
-			})
+			alerts.RenderError(c, http.StatusBadRequest, err.Error(), alerts.ContextDashboard)
 			return
 		}
 	}
@@ -168,11 +161,7 @@ func (h *BaseSettingsHandler) HandleCreate(c *gin.Context) {
 	}
 
 	if err := h.service.CreateEntity(c, entity); err != nil {
-		c.HTML(http.StatusInternalServerError, "partials/alert.html", gin.H{
-			"type":    "error",
-			"context": "dashboard",
-			"message": fmt.Sprintf("Failed to create %s: %s", h.metadata.Name, err.Error()),
-		})
+		alerts.RenderError(c, http.StatusInternalServerError, fmt.Sprintf("Failed to create %s: %s", h.metadata.Name, err.Error()), alerts.ContextDashboard)
 		return
 	}
 
@@ -199,51 +188,31 @@ func (h *BaseSettingsHandler) HandleUpdate(c *gin.Context) {
 
 	entityID, err := strconv.Atoi(entityIDStr)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
-			"type":    "error",
-			"context": "dashboard",
-			"message": fmt.Sprintf("Invalid %s ID format", h.metadata.Name),
-		})
+		alerts.RenderError(c, http.StatusBadRequest, fmt.Sprintf("Invalid %s ID format", h.metadata.Name), alerts.ContextDashboard)
 		return
 	}
 
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
-			"type":    "error",
-			"context": "dashboard",
-			"message": "Failed to load profile settings",
-		})
+		alerts.RenderError(c, http.StatusInternalServerError, "Failed to load profile settings", alerts.ContextDashboard)
 		return
 	}
 
 	entity, err := h.service.GetEntityByID(c, entityID, profile.ID, h.metadata.Name)
 	if err != nil {
-		c.HTML(http.StatusNotFound, "partials/alert.html", gin.H{
-			"type":    "error",
-			"context": "dashboard",
-			"message": fmt.Sprintf("%s not found or you don't have permission to edit it", h.metadata.Name),
-		})
+		alerts.RenderError(c, http.StatusNotFound, fmt.Sprintf("%s not found or you don't have permission to edit it", h.metadata.Name), alerts.ContextDashboard)
 		return
 	}
 
 	if bindable, ok := entity.(FormBindable); ok {
 		if err := bindable.BindFromForm(c); err != nil {
-			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
-				"type":    "error",
-				"context": "dashboard",
-				"message": err.Error(),
-			})
+			alerts.RenderError(c, http.StatusBadRequest, err.Error(), alerts.ContextDashboard)
 			return
 		}
 	}
 
 	if err := h.service.UpdateEntity(c, entity); err != nil {
-		c.HTML(http.StatusInternalServerError, "partials/alert.html", gin.H{
-			"type":    "error",
-			"context": "dashboard",
-			"message": fmt.Sprintf("Failed to update %s: %s", h.metadata.Name, err.Error()),
-		})
+		alerts.RenderError(c, http.StatusInternalServerError, fmt.Sprintf("Failed to update %s: %s", h.metadata.Name, err.Error()), alerts.ContextDashboard)
 		return
 	}
 
@@ -262,21 +231,13 @@ func (h *BaseSettingsHandler) HandleDelete(c *gin.Context) {
 
 	entityID, err := strconv.Atoi(entityIDStr)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
-			"type":    "error",
-			"context": "dashboard",
-			"message": fmt.Sprintf("Invalid %s ID format", h.metadata.Name),
-		})
+		alerts.RenderError(c, http.StatusBadRequest, fmt.Sprintf("Invalid %s ID format", h.metadata.Name), alerts.ContextDashboard)
 		return
 	}
 
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
-			"type":    "error",
-			"context": "dashboard",
-			"message": "Failed to load profile settings",
-		})
+		alerts.RenderError(c, http.StatusInternalServerError, "Failed to load profile settings", alerts.ContextDashboard)
 		return
 	}
 

@@ -1,6 +1,10 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/benidevo/vega/internal/ai/prompts"
+)
 
 // Request represents a generic request containing information needed for AI operations.
 type Request struct {
@@ -14,10 +18,61 @@ type Request struct {
 type Prompt struct {
 	Instructions string
 	Request
+	UseEnhancedTemplates bool
+	Temperature          *float32
+	promptEnhancer       *prompts.PromptEnhancer
+}
+
+// NewPrompt creates a new prompt with optional enhanced features
+func NewPrompt(instructions string, request Request, useEnhanced bool) *Prompt {
+	p := &Prompt{
+		Instructions:         instructions,
+		Request:              request,
+		UseEnhancedTemplates: useEnhanced,
+	}
+
+	if useEnhanced {
+		p.promptEnhancer = prompts.NewPromptEnhancer()
+	}
+
+	return p
+}
+
+// SetTemperature sets a custom temperature for this prompt
+func (p *Prompt) SetTemperature(temp float32) {
+	p.Temperature = &temp
+}
+
+// GetOptimalTemperature returns the optimal temperature for the prompt type
+func (p *Prompt) GetOptimalTemperature(promptType string) float32 {
+	if p.Temperature != nil {
+		return *p.Temperature
+	}
+
+	// Dynamic temperature based on task type
+	switch promptType {
+	case "cover_letter":
+		return 0.65 // Higher creativity for writing
+	case "job_match":
+		return 0.25 // Lower for analytical consistency
+	default:
+		return 0.4 // Default balanced temperature
+	}
 }
 
 // ToCoverLetterPrompt builds a cover letter generation prompt.
 func (p Prompt) ToCoverLetterPrompt(defaultWordRange string) string {
+	if p.UseEnhancedTemplates && p.promptEnhancer != nil {
+		return p.promptEnhancer.EnhanceCoverLetterPrompt(
+			p.Instructions,
+			p.ApplicantName,
+			p.JobDescription,
+			p.ApplicantProfile,
+			p.ExtraContext,
+			defaultWordRange,
+		)
+	}
+
 	return fmt.Sprintf(`%s
 
 Generate a professional cover letter with the following details:
@@ -51,6 +106,18 @@ Return a JSON object with ONLY this field:
 
 // ToMatchAnalysisPrompt builds a job match analysis prompt from this Prompt
 func (p Prompt) ToMatchAnalysisPrompt(minMatchScore, maxMatchScore int) string {
+	if p.UseEnhancedTemplates && p.promptEnhancer != nil {
+		return p.promptEnhancer.EnhanceJobMatchPrompt(
+			p.Instructions,
+			p.ApplicantName,
+			p.JobDescription,
+			p.ApplicantProfile,
+			p.ExtraContext,
+			minMatchScore,
+			maxMatchScore,
+		)
+	}
+
 	return fmt.Sprintf(`%s
 
 Analyze the match between this applicant and job opportunity:

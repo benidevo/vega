@@ -90,7 +90,8 @@ func globalErrorHandler(c *gin.Context) {
 
 	c.Next()
 
-	if len(c.Errors) > 0 || c.Writer.Status() == http.StatusInternalServerError {
+	// Only handle errors if no response has been written yet
+	if !c.Writer.Written() && (len(c.Errors) > 0 || c.Writer.Status() == http.StatusInternalServerError) {
 		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
 			"title": "Something Went Wrong",
 			"page":  "500",

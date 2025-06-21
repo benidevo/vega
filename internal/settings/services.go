@@ -62,7 +62,26 @@ func (s *SettingsService) GetProfileSettings(ctx context.Context, userID int) (*
 
 // GetProfileWithRelated retrieves a user's profile with all related entities
 func (s *SettingsService) GetProfileWithRelated(ctx context.Context, userID int) (*models.Profile, error) {
-	return s.settingsRepo.GetProfileWithRelated(ctx, userID)
+	profile, err := s.settingsRepo.GetProfileWithRelated(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if profile == nil {
+		s.log.Info().
+			Str("event", "profile_empty_created").
+			Str("user_ref", fmt.Sprintf("user_%d", userID)).
+			Msg("Profile not found, creating empty profile")
+		return &models.Profile{
+			UserID:         userID,
+			Skills:         []string{},
+			WorkExperience: []models.WorkExperience{},
+			Education:      []models.Education{},
+			Certifications: []models.Certification{},
+		}, nil
+	}
+
+	return profile, nil
 }
 
 // UpdateProfile updates a user's profile with centralized validation

@@ -34,4 +34,5 @@ type GenerateResponse struct {
 	Data     any // Will be CoverLetter or MatchResult
 	Tokens   int
 	Duration time.Duration
+	Metadata map[string]any // Additional metadata like temperature used
 }

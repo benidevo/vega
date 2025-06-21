@@ -58,9 +58,11 @@ func (g *Gemini) Generate(ctx context.Context, request llm.GenerateRequest) (llm
 func (g *Gemini) generateCoverLetter(ctx context.Context, prompt models.Prompt, start time.Time) (llm.GenerateResponse, error) {
 	coverLetterPrompt := prompt.ToCoverLetterPrompt(g.cfg.DefaultWordRange)
 
+	temperature := prompt.GetOptimalTemperature("cover_letter")
+
 	result, err := g.executeWithRetry(ctx, func() (string, error) {
 		resp, err := g.client.Models.GenerateContent(ctx, g.cfg.Model, genai.Text(coverLetterPrompt), &genai.GenerateContentConfig{
-			Temperature:       g.cfg.Temperature,
+			Temperature:       &temperature,
 			ResponseMIMEType:  g.cfg.ResponseMIMEType,
 			ResponseSchema:    g.getCoverLetterSchema(),
 			MaxOutputTokens:   g.cfg.MaxOutputTokens,
@@ -104,6 +106,10 @@ func (g *Gemini) generateCoverLetter(ctx context.Context, prompt models.Prompt, 
 		Data:     coverLetter,
 		Duration: time.Since(start),
 		Tokens:   0,
+		Metadata: map[string]interface{}{
+			"temperature": temperature,
+			"enhanced":    prompt.UseEnhancedTemplates,
+		},
 	}, nil
 }
 
@@ -111,9 +117,11 @@ func (g *Gemini) generateCoverLetter(ctx context.Context, prompt models.Prompt, 
 func (g *Gemini) generateMatchResult(ctx context.Context, prompt models.Prompt, start time.Time) (llm.GenerateResponse, error) {
 	matchPrompt := prompt.ToMatchAnalysisPrompt(g.cfg.MinMatchScore, g.cfg.MaxMatchScore)
 
+	temperature := prompt.GetOptimalTemperature("job_match")
+
 	result, err := g.executeWithRetry(ctx, func() (string, error) {
 		resp, err := g.client.Models.GenerateContent(ctx, g.cfg.Model, genai.Text(matchPrompt), &genai.GenerateContentConfig{
-			Temperature:       g.cfg.Temperature,
+			Temperature:       &temperature,
 			ResponseMIMEType:  g.cfg.ResponseMIMEType,
 			ResponseSchema:    g.getMatchAnalysisSchema(),
 			MaxOutputTokens:   g.cfg.MaxOutputTokens,
@@ -157,6 +165,10 @@ func (g *Gemini) generateMatchResult(ctx context.Context, prompt models.Prompt, 
 		Data:     matchResult,
 		Duration: time.Since(start),
 		Tokens:   0,
+		Metadata: map[string]interface{}{
+			"temperature": temperature,
+			"enhanced":    prompt.UseEnhancedTemplates,
+		},
 	}, nil
 }
 

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/benidevo/vega/internal/common/alerts"
 	"github.com/benidevo/vega/internal/settings/models"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -129,10 +130,17 @@ func (h *SettingsHandler) GetProfileSettingsPage(c *gin.Context) {
 
 	profile, err := h.service.GetProfileWithRelated(c.Request.Context(), userID.(int))
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "partials/alert.html", gin.H{
-			"type":    "error",
-			"context": "general",
-			"message": "Failed to load profile settings",
+		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
+			"title": "Something Went Wrong",
+			"page":  "500",
+		})
+		return
+	}
+
+	if profile == nil {
+		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
+			"title": "Something Went Wrong",
+			"page":  "500",
 		})
 		return
 	}
@@ -178,11 +186,7 @@ func (h *SettingsHandler) HandleCreateProfile(c *gin.Context) {
 
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
-			"type":    "error",
-			"context": "dashboard",
-			"message": "Failed to load profile settings",
-		})
+		alerts.RenderError(c, http.StatusInternalServerError, "Failed to load profile settings", alerts.ContextDashboard)
 		return
 	}
 
@@ -200,18 +204,10 @@ func (h *SettingsHandler) HandleCreateProfile(c *gin.Context) {
 		// Check if it's a validation error
 		if _, ok := err.(validator.ValidationErrors); ok {
 			errorMessage := h.formatValidationError(err)
-			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
-				"type":    "error",
-				"context": "dashboard",
-				"message": errorMessage,
-			})
+			alerts.RenderError(c, http.StatusBadRequest, errorMessage, alerts.ContextDashboard)
 			return
 		}
-		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
-			"type":    "error",
-			"context": "dashboard",
-			"message": "Failed to update profile: " + err.Error(),
-		})
+		alerts.RenderError(c, http.StatusInternalServerError, "Failed to update profile: "+err.Error(), alerts.ContextDashboard)
 		return
 	}
 
@@ -232,11 +228,7 @@ func (h *SettingsHandler) HandleUpdateOnlineProfile(c *gin.Context) {
 
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
-			"type":    "error",
-			"context": "dashboard",
-			"message": "Failed to load profile settings",
-		})
+		alerts.RenderError(c, http.StatusInternalServerError, "Failed to load profile settings", alerts.ContextDashboard)
 		return
 	}
 
@@ -246,11 +238,7 @@ func (h *SettingsHandler) HandleUpdateOnlineProfile(c *gin.Context) {
 
 	err = h.service.UpdateProfile(c.Request.Context(), profile)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
-			"type":    "error",
-			"context": "dashboard",
-			"message": "Failed to update online profiles",
-		})
+		alerts.RenderError(c, http.StatusInternalServerError, "Failed to update online profiles", alerts.ContextDashboard)
 		return
 	}
 
@@ -268,21 +256,13 @@ func (h *SettingsHandler) HandleUpdateContext(c *gin.Context) {
 	context := strings.TrimSpace(c.PostForm("context"))
 
 	if err := h.service.ValidateContext(context); err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
-			"type":    "error",
-			"context": "dashboard",
-			"message": err.Error(),
-		})
+		alerts.RenderError(c, http.StatusBadRequest, err.Error(), alerts.ContextDashboard)
 		return
 	}
 
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
-			"type":    "error",
-			"context": "dashboard",
-			"message": "Failed to load profile settings",
-		})
+		alerts.RenderError(c, http.StatusInternalServerError, "Failed to load profile settings", alerts.ContextDashboard)
 		return
 	}
 

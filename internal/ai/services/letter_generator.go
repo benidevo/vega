@@ -44,13 +44,15 @@ func (c *CoverLetterGeneratorService) GenerateCoverLetter(ctx context.Context, r
 		return nil, err
 	}
 
-	prompt := models.Prompt{
-		Instructions: "You are a professional career advisor and expert cover letter writer.",
-		Request:      req,
-	}
+	// Use enhanced prompting by default
+	prompt := models.NewPrompt(
+		"You are a professional career advisor and expert cover letter writer.",
+		req,
+		true,
+	)
 
 	response, err := c.model.Generate(ctx, llm.GenerateRequest{
-		Prompt:       prompt,
+		Prompt:       *prompt,
 		ResponseType: llm.ResponseTypeCoverLetter,
 	})
 	if err != nil {
@@ -79,6 +81,7 @@ func (c *CoverLetterGeneratorService) GenerateCoverLetter(ctx context.Context, r
 		Dur("duration", time.Since(start)).
 		Int("content_length", len(result.Content)).
 		Str("format", string(result.Format)).
+		Bool("enhanced", true).
 		Msg("Cover letter generation completed")
 
 	return &result, nil

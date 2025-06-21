@@ -40,7 +40,18 @@ type AlertData struct {
 }
 
 // RenderError renders an error alert with the appropriate context
+// For 500 errors on non-HTMX requests, it renders a full error page
 func RenderError(c *gin.Context, statusCode int, message string, context AlertContext) {
+	// For 500 errors on non-HTMX requests, always show full error page
+	if statusCode >= 500 && c.GetHeader("HX-Request") != "true" {
+		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
+			"title": "Something Went Wrong",
+			"page":  "500",
+		})
+		return
+	}
+
+	// For all other cases (HTMX requests or non-500 errors), return a partial alert
 	c.HTML(statusCode, "partials/alert.html", gin.H{
 		"type":    string(TypeError),
 		"context": string(context),
