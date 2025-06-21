@@ -35,8 +35,6 @@ The application provides privacy-aware logging utilities in `internal/common/log
 
 ### PrivacyLogger
 
-A wrapper around zerolog that provides GDPR-compliant logging methods:
-
 ```go
 // Get a privacy-aware logger
 log := logger.GetPrivacyLogger("module_name")
@@ -53,10 +51,10 @@ log.WithUserContext(userID, correlationID).Info().Msg("Action completed")
 
 ### Helper Functions
 
-- `HashIdentifier(identifier string)`: Creates a one-way hash for correlation
-- `RedactEmail(email string)`: Redacts email to `j***e@example.com`
-- `RedactUsername(username string)`: Redacts username to `j***e`
-- `SanitizeLogMessage(message string)`: Removes PII from log messages
+- `HashIdentifier(identifier)` - One-way hash for correlation
+- `RedactEmail(email)` - Redacts to `j***e@example.com`
+- `RedactUsername(username)` - Redacts to `j***e`
+- `SanitizeLogMessage(message)` - Removes PII from messages
 
 ## Implementation Examples
 

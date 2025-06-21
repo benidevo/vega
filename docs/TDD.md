@@ -1,195 +1,183 @@
-# Technical Design Document for Vega
+# Vega AI Technical Design
 
-## 1. System Architecture Overview
+Go web application for AI-powered job search and application tracking.
 
-Vega uses a **monolithic architecture** implemented entirely in Go, with a SQLite database for persistence. The application is containerized using Docker and configured via environment variables and mounted files.
+## Architecture
 
-### 1.1 High-Level Architecture Diagram
-
-![Architecture Diagram](architecture.jpg)
-
-### 1.2 Component Responsibilities
-
-1. **Web UI & Admin Dashboard**
-   * Responsive web interface built with Go templates
-   * HTMX-powered interactive elements
-   * Tailwind CSS for modern styling
-   * Home page with authentication options
-
-2. **Authentication System**
-   * Google OAuth integration for user registration
-   * Username/password authentication (legacy support)
-   * Environment-based admin user creation
-   * JWT token management for sessions
-
-3. **Job Management**
-   * Job CRUD operations via web UI and API
-   * Job posting creation, editing, and deletion
-   * Status tracking and filtering
-   * Application status management
-
-4. **Settings Management**
-   * User preferences and configuration
-   * Application settings storage
-   * Environment-based configuration
-
-5. **API Layer**
-   * RESTful endpoints for job management
-   * Authentication API endpoints
-   * Health check and monitoring endpoints
-
-6. **Database Layer**
-   * SQLite for data persistence
-   * Automated migration system
-   * User, job, and settings data storage
-
-## 2. Technology Stack
-
-### 2.1 Core Technologies
-
-* **Language**: Go 1.24+
-* **Web Framework**: Gin
-* **Database**: SQLite3 with WAL mode
-* **Authentication**: Google OAuth 2.0, JWT tokens
-* **UI Framework**:
-  * Go templates with template inheritance
-  * HTMX for interactive UI elements and form submissions
-  * Tailwind CSS for responsive styling
-  * Particles.js for background animations
-  * Minimal JavaScript approach
-* **Migration System**: golang-migrate for database schema management
-* **Configuration**: Environment variables and file-based configuration
-
-### 2.2 Development & Deployment
-
-* **Containerization**: Docker
-* **Orchestration**: Docker Compose
-* **Configuration**: Environment variables + mounted files
-
-## 3. API Endpoints
-
-### 3.1 Job Management API
+**Pattern:** Layered architecture with clean domain separation
+**Database:** SQLite with migrations
+**Authentication:** JWT + Google OAuth
+**Frontend:** Go templates + HTMX + Tailwind CSS
+**AI:** Google Gemini API integration
 
 ```plaintext
-POST /api/jobs
-- Add a new job posting
-- Body: Job details (title, company, description, etc.)
-- Returns: Created job with ID
-
-GET /api/jobs
-- Get list of jobs with optional filters
-- Query params: status, search, page, limit
-- Returns: Paginated job list
-
-GET /api/jobs/{id}
-- Get details for a specific job
-- Returns: Complete job details
-
-PATCH /api/jobs/{id}
-- Update job details or status
-- Body: Fields to update
-- Returns: Updated job
-
-DELETE /api/jobs/{id}
-- Remove a job from the system
-- Returns: Success confirmation
+cmd/vega/           # Entry point
+internal/
+  ├── vega/         # App setup & routing
+  ├── auth/         # Authentication domain
+  ├── job/          # Job management domain
+  ├── settings/     # User settings domain
+  ├── ai/           # AI services (Gemini)
+  └── api/          # REST handlers
+templates/          # HTML templates
+migrations/         # Database migrations
 ```
 
-### 3.2 Authentication API
+## Key Components
+
+### **Handlers → Services → Repositories → Database**
+
+**Handlers:** HTTP request/response, template rendering
+**Services:** Business logic, AI integration
+**Repositories:** Data access with interfaces
+**Database:** SQLite with WAL mode
+
+### **Authentication Flow**
+
+1. Google OAuth or username/password
+2. JWT tokens (access + refresh)
+3. Cookie-based session storage
+4. Middleware protection for routes
+
+### **AI Integration**
+
+- **JobMatcherService:** Calculates compatibility scores
+- **CoverLetterGeneratorService:** Generates personalized letters
+- **LLM Interface:** Pluggable AI providers (currently Gemini)
+
+## API Endpoints
+
+### Jobs
 
 ```plaintext
-POST /api/auth/login
-- Authenticate user with username/password
-- Body: { username, password }
-- Returns: Access and refresh tokens
-
-POST /api/auth/refresh
-- Refresh access token using refresh token
-- Body: { refresh_token }
-- Returns: New access token
-
-POST /api/auth/logout
-- Invalidate current session
-- Returns: Success confirmation
-
-GET /auth/google
-- Initiate Google OAuth flow
-- Redirects to Google authorization
-
-GET /auth/google/callback
-- Handle Google OAuth callback
-- Returns: Authenticated session
+POST   /api/jobs           # Create job
+GET    /api/jobs           # List jobs (with filtering)
+GET    /api/jobs/{id}      # Get job details
+PATCH  /api/jobs/{id}      # Update job
+DELETE /api/jobs/{id}      # Delete job
 ```
 
-### 3.3 Health & Monitoring API
+### Authentication
 
 ```plaintext
-GET /health
-- Application health check
-- Returns: System status and database connectivity
-
-GET /health/ready
-- Readiness probe for container orchestration
-- Returns: Service readiness status
+POST   /api/auth/login     # Username/password login
+POST   /api/auth/refresh   # Refresh token
+POST   /api/auth/logout    # Logout
+GET    /auth/google        # OAuth initiate
+GET    /auth/google/callback # OAuth callback
 ```
 
-## 4. Configuration Architecture
-
-### 4.1 Environment Variables
+### System
 
 ```plaintext
-# Application Configuration
-APP_NAME=vega
+GET    /health             # Health check
+GET    /health/ready       # Readiness probe
+```
+
+## Database Schema
+
+**Core Entities:**
+
+- `users` - Authentication, roles
+- `companies` - Company information
+- `jobs` - Job postings with AI match scores
+- `profiles` - User experience, education, skills
+
+**Relationships:**
+
+- User → Profile (1:1)
+- User → Jobs (1:many)
+- Company → Jobs (1:many)
+
+## Configuration
+
+**Environment Variables:**
+
+```bash
+# App
 SERVER_PORT=:8080
 IS_DEVELOPMENT=true
 LOG_LEVEL=info
 
-# Database Configuration
-DB_DRIVER=sqlite
-DB_CONNECTION_STRING=/app/data/vega.db?_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=ON
+# Database
+DB_CONNECTION_STRING=/app/data/vega.db?_journal_mode=WAL
 MIGRATIONS_DIR=migrations/sqlite
 
-# Authentication & Security
-TOKEN_SECRET=your-super-secret-jwt-key-here
+# Auth
+TOKEN_SECRET=your-jwt-secret
 ACCESS_TOKEN_EXPIRY=60
 REFRESH_TOKEN_EXPIRY=168
-COOKIE_DOMAIN=
-COOKIE_SECURE=false
-COOKIE_SAME_SITE=lax
 
-# Google OAuth Configuration
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
+# Google OAuth
+GOOGLE_CLIENT_ID=your-client-id
+GOOGLE_CLIENT_SECRET=your-client-secret
 GOOGLE_CLIENT_REDIRECT_URL=http://localhost:8000/auth/google/callback
-GOOGLE_AUTH_USER_INFO_URL=https://www.googleapis.com/oauth2/v3/userinfo
-GOOGLE_AUTH_USER_INFO_SCOPE=https://www.googleapis.com/auth/userinfo.email
 
-# Admin User Creation (set CREATE_ADMIN_USER=true to create admin on startup)
-CREATE_ADMIN_USER=false
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=change-this-secure-password
-ADMIN_EMAIL=admin@example.com
-
-# CORS Configuration
-CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
-CORS_ALLOW_CREDENTIALS=true
+# AI
+GEMINI_API_KEY=your-gemini-key
 ```
 
-### 4.2 Mounted Volumes & Files
+## Testing Strategy
 
-```plaintext
-/app/data/
-  └── vega.db        # SQLite database file (with WAL journal)
+**Unit Tests:** Services and repositories with mocks
+**Integration Tests:** Full workflows with test database
+**Test Framework:** testify + go-sqlmock
+**Coverage:** Custom scripts for coverage tracking
 
-/app/templates/
-  ├── base.html          # Base template layout
-  ├── home/              # Home page templates
-  ├── auth/              # Authentication templates
-  ├── jobs/              # Job management templates
-  └── settings/          # Settings page templates
-
-/app/static/
-  ├── css/              # Compiled CSS assets
-  ├── js/               # JavaScript files
-  └── images/           # Static images and assets
+```bash
+make test           # Run all tests
 ```
+
+## Deployment
+
+**Development:**
+
+```bash
+docker-compose up
+```
+
+**Production:**
+
+```bash
+docker build -t vega .
+docker run -p 8080:8080 -v ./data:/app/data vega
+```
+
+**Database Migrations:**
+
+```bash
+make migrate-up     # Apply migrations
+make migrate-down   # Rollback migrations
+```
+
+## Key Dependencies
+
+- **gin-gonic/gin** - HTTP framework
+- **modernc.org/sqlite** - SQLite driver
+- **golang-jwt/jwt** - JWT tokens
+- **rs/zerolog** - Structured logging
+- **golang-migrate/migrate** - Database migrations
+- **google.golang.org/genai** - Gemini AI client
+
+## Security Features
+
+- bcrypt password hashing
+- JWT with secure cookies
+- CORS configuration
+- GDPR-compliant logging
+- Input validation
+- SQL injection prevention
+
+## AI Prompt Templates
+
+**Job Matching:**
+
+- User profile analysis
+- Job requirements parsing
+- Compatibility scoring (0-100)
+
+**Cover Letter Generation:**
+
+- User experience integration
+- Job-specific customization
+- Professional tone adaptation
