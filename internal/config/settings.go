@@ -91,7 +91,7 @@ func NewSettings() Settings {
 		cookieSecure = envSecure == "true"
 	}
 
-	corsOrigins := []string{}
+	corsOrigins := []string{"http://localhost:8080"}
 	if isDevelopment {
 		corsOrigins = []string{"http://localhost:8080", "http://localhost:8000"}
 	}
