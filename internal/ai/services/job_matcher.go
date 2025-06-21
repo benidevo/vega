@@ -7,43 +7,33 @@ import (
 
 	"github.com/rs/zerolog"
 
+	"github.com/benidevo/vega/internal/ai/constants"
+	"github.com/benidevo/vega/internal/ai/helpers"
 	"github.com/benidevo/vega/internal/ai/llm"
 	"github.com/benidevo/vega/internal/ai/models"
+	"github.com/benidevo/vega/internal/ai/validation"
 	"github.com/benidevo/vega/internal/common/logger"
-)
-
-const (
-	// Match categories
-	MatchCategoryExcellent = "Excellent Match"
-	MatchCategoryStrong    = "Strong Match"
-	MatchCategoryGood      = "Good Match"
-	MatchCategoryFair      = "Fair Match"
-	MatchCategoryPartial   = "Partial Match"
-	MatchCategoryPoor      = "Poor Match"
-
-	// Match descriptions
-	MatchDescExcellent = "You are an outstanding fit for the role with minimal gaps."
-	MatchDescStrong    = "You have strong qualifications with only minor areas for development."
-	MatchDescGood      = "You meet most requirements with some skill gaps that can be addressed."
-	MatchDescFair      = "You have potential but may need significant development in key areas."
-	MatchDescPartial   = "You have some relevant qualifications but significant gaps exist."
-	MatchDescPoor      = "You do not meet the core requirements for this position."
 )
 
 // JobMatcherService provides services for matching jobs using a language model provider.
 // The 'model' field represents the LLM provider used for job matching operations.
 type JobMatcherService struct {
-	model llm.Provider
-	log   zerolog.Logger
+	model     llm.Provider
+	log       zerolog.Logger
+	validator *validation.AIRequestValidator
+	helper    *helpers.ServiceHelper
 }
 
 // NewJobMatcherService creates and returns a new instance of JobMatcherService
 // using the provided llm.Provider as the model.
 // The returned JobMatcherService can be used to perform job matching operations.
 func NewJobMatcherService(model llm.Provider) *JobMatcherService {
+	log := logger.GetLogger("ai_job_matcher")
 	return &JobMatcherService{
-		model: model,
-		log:   logger.GetLogger("ai_job_matcher"),
+		model:     model,
+		log:       log,
+		validator: validation.NewAIRequestValidator(),
+		helper:    helpers.NewServiceHelper(log),
 	}
 }
 
@@ -51,17 +41,10 @@ func NewJobMatcherService(model llm.Provider) *JobMatcherService {
 func (j *JobMatcherService) AnalyzeMatch(ctx context.Context, req models.Request) (*models.MatchResult, error) {
 	start := time.Now()
 
-	j.log.Info().
-		Str("applicant", req.ApplicantName).
-		Str("operation", "match_analysis").
-		Msg("Starting job match analysis")
+	j.helper.LogOperationStart(constants.OperationMatchAnalysis, req.ApplicantName)
 
-	if req.ApplicantName == "" || req.ApplicantProfile == "" || req.JobDescription == "" {
-		err := models.WrapError(models.ErrValidationFailed, fmt.Errorf("missing required fields: applicant name, profile, and job description are required"))
-		j.log.Error().
-			Err(err).
-			Msg("Match analysis validation failed")
-		return nil, err
+	if err := j.validator.ValidateRequest(req); err != nil {
+		return nil, j.helper.LogValidationError(constants.OperationMatchAnalysis, req.ApplicantName, err)
 	}
 
 	prompt := models.NewPrompt(
@@ -75,29 +58,24 @@ func (j *JobMatcherService) AnalyzeMatch(ctx context.Context, req models.Request
 		ResponseType: llm.ResponseTypeMatchResult,
 	})
 	if err != nil {
-		j.log.Error().
-			Err(err).
-			Dur("duration", time.Since(start)).
-			Msg("Match analysis failed")
-		return nil, err
+		return nil, j.helper.LogOperationError(constants.OperationMatchAnalysis, req.ApplicantName, constants.ErrorTypeAIAnalysisFailed, time.Since(start), err)
 	}
 
 	result, ok := response.Data.(models.MatchResult)
 	if !ok {
 		err := fmt.Errorf("unexpected response type: expected MatchResult, got %T", response.Data)
-		j.log.Error().Err(err).Msg("Type assertion failed")
-		return nil, err
+		return nil, j.helper.LogOperationError(constants.OperationMatchAnalysis, req.ApplicantName, constants.ErrorTypeResponseParseFailed, time.Since(start), err)
 	}
 
 	j.validateMatchResult(&result)
 
-	j.log.Info().
-		Dur("duration", time.Since(start)).
-		Int("match_score", result.MatchScore).
-		Int("strengths_count", len(result.Strengths)).
-		Int("weaknesses_count", len(result.Weaknesses)).
-		Bool("enhanced", true).
-		Msg("Match analysis completed")
+	metadata := j.helper.CreateOperationMetadata(prompt.GetOptimalTemperature("job_match"), prompt.UseEnhancedTemplates, map[string]interface{}{
+		"match_score":      result.MatchScore,
+		"strengths_count":  len(result.Strengths),
+		"weaknesses_count": len(result.Weaknesses),
+	})
+
+	j.helper.LogOperationSuccess(constants.OperationMatchAnalysis, req.ApplicantName, time.Since(start), prompt.UseEnhancedTemplates, metadata)
 
 	return &result, nil
 }
@@ -133,19 +111,18 @@ func (j *JobMatcherService) validateMatchResult(result *models.MatchResult) {
 //   - 50 to 59: Partial
 //   - Below 50: Poor
 func (j *JobMatcherService) GetMatchCategories(score int) (string, string) {
-
 	switch {
-	case score >= 90:
-		return MatchCategoryExcellent, MatchDescExcellent
-	case score >= 80:
-		return MatchCategoryStrong, MatchDescStrong
-	case score >= 70:
-		return MatchCategoryGood, MatchDescGood
-	case score >= 60:
-		return MatchCategoryFair, MatchDescFair
-	case score >= 50:
-		return MatchCategoryPartial, MatchDescPartial
+	case score >= constants.ScoreThresholdExcellent:
+		return constants.MatchCategoryExcellent, constants.MatchDescExcellent
+	case score >= constants.ScoreThresholdStrong:
+		return constants.MatchCategoryStrong, constants.MatchDescStrong
+	case score >= constants.ScoreThresholdGood:
+		return constants.MatchCategoryGood, constants.MatchDescGood
+	case score >= constants.ScoreThresholdFair:
+		return constants.MatchCategoryFair, constants.MatchDescFair
+	case score >= constants.ScoreThresholdPartial:
+		return constants.MatchCategoryPartial, constants.MatchDescPartial
 	default:
-		return MatchCategoryPoor, MatchDescPoor
+		return constants.MatchCategoryPoor, constants.MatchDescPoor
 	}
 }

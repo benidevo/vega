@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/benidevo/vega/internal/ai/constants"
 	"github.com/benidevo/vega/internal/ai/llm"
 	"github.com/benidevo/vega/internal/ai/models"
 	"github.com/rs/zerolog"
@@ -321,86 +322,86 @@ func TestJobMatcherService_GetMatchCategories(t *testing.T) {
 		{
 			name:             "excellent match - score 90",
 			score:            90,
-			expectedCategory: MatchCategoryExcellent,
-			expectedDesc:     MatchDescExcellent,
+			expectedCategory: constants.MatchCategoryExcellent,
+			expectedDesc:     constants.MatchDescExcellent,
 		},
 		{
 			name:             "excellent match - score 100",
 			score:            100,
-			expectedCategory: MatchCategoryExcellent,
-			expectedDesc:     MatchDescExcellent,
+			expectedCategory: constants.MatchCategoryExcellent,
+			expectedDesc:     constants.MatchDescExcellent,
 		},
 		{
 			name:             "strong match - score 80",
 			score:            80,
-			expectedCategory: MatchCategoryStrong,
-			expectedDesc:     MatchDescStrong,
+			expectedCategory: constants.MatchCategoryStrong,
+			expectedDesc:     constants.MatchDescStrong,
 		},
 		{
 			name:             "strong match - score 89",
 			score:            89,
-			expectedCategory: MatchCategoryStrong,
-			expectedDesc:     MatchDescStrong,
+			expectedCategory: constants.MatchCategoryStrong,
+			expectedDesc:     constants.MatchDescStrong,
 		},
 		{
 			name:             "good match - score 70",
 			score:            70,
-			expectedCategory: MatchCategoryGood,
-			expectedDesc:     MatchDescGood,
+			expectedCategory: constants.MatchCategoryGood,
+			expectedDesc:     constants.MatchDescGood,
 		},
 		{
 			name:             "good match - score 79",
 			score:            79,
-			expectedCategory: MatchCategoryGood,
-			expectedDesc:     MatchDescGood,
+			expectedCategory: constants.MatchCategoryGood,
+			expectedDesc:     constants.MatchDescGood,
 		},
 		{
 			name:             "fair match - score 60",
 			score:            60,
-			expectedCategory: MatchCategoryFair,
-			expectedDesc:     MatchDescFair,
+			expectedCategory: constants.MatchCategoryFair,
+			expectedDesc:     constants.MatchDescFair,
 		},
 		{
 			name:             "fair match - score 69",
 			score:            69,
-			expectedCategory: MatchCategoryFair,
-			expectedDesc:     MatchDescFair,
+			expectedCategory: constants.MatchCategoryFair,
+			expectedDesc:     constants.MatchDescFair,
 		},
 		{
 			name:             "partial match - score 50",
 			score:            50,
-			expectedCategory: MatchCategoryPartial,
-			expectedDesc:     MatchDescPartial,
+			expectedCategory: constants.MatchCategoryPartial,
+			expectedDesc:     constants.MatchDescPartial,
 		},
 		{
 			name:             "partial match - score 59",
 			score:            59,
-			expectedCategory: MatchCategoryPartial,
-			expectedDesc:     MatchDescPartial,
+			expectedCategory: constants.MatchCategoryPartial,
+			expectedDesc:     constants.MatchDescPartial,
 		},
 		{
 			name:             "poor match - score 49",
 			score:            49,
-			expectedCategory: MatchCategoryPoor,
-			expectedDesc:     MatchDescPoor,
+			expectedCategory: constants.MatchCategoryPoor,
+			expectedDesc:     constants.MatchDescPoor,
 		},
 		{
 			name:             "poor match - score 0",
 			score:            0,
-			expectedCategory: MatchCategoryPoor,
-			expectedDesc:     MatchDescPoor,
+			expectedCategory: constants.MatchCategoryPoor,
+			expectedDesc:     constants.MatchDescPoor,
 		},
 		{
 			name:             "poor match - negative score",
 			score:            -10,
-			expectedCategory: MatchCategoryPoor,
-			expectedDesc:     MatchDescPoor,
+			expectedCategory: constants.MatchCategoryPoor,
+			expectedDesc:     constants.MatchDescPoor,
 		},
 		{
 			name:             "excellent match - very high score",
 			score:            150,
-			expectedCategory: MatchCategoryExcellent,
-			expectedDesc:     MatchDescExcellent,
+			expectedCategory: constants.MatchCategoryExcellent,
+			expectedDesc:     constants.MatchDescExcellent,
 		},
 	}
 

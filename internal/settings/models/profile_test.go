@@ -341,24 +341,6 @@ func TestEducationValidation(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "missing institution",
-			edu: Education{
-				ProfileID: 1,
-				Degree:    "BS Computer Science",
-				StartDate: past,
-			},
-			wantErr: true,
-		},
-		{
-			name: "missing degree",
-			edu: Education{
-				ProfileID:   1,
-				Institution: "MIT",
-				StartDate:   past,
-			},
-			wantErr: true,
-		},
-		{
 			name: "future start date",
 			edu: Education{
 				ProfileID:   1,

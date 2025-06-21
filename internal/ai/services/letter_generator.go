@@ -7,23 +7,31 @@ import (
 
 	"github.com/rs/zerolog"
 
+	"github.com/benidevo/vega/internal/ai/constants"
+	"github.com/benidevo/vega/internal/ai/helpers"
 	"github.com/benidevo/vega/internal/ai/llm"
 	"github.com/benidevo/vega/internal/ai/models"
+	"github.com/benidevo/vega/internal/ai/validation"
 	"github.com/benidevo/vega/internal/common/logger"
 )
 
 // CoverLetterService provides methods to generate cover letters using a specified LLM provider.
 type CoverLetterGeneratorService struct {
-	model llm.Provider
-	log   zerolog.Logger
+	model     llm.Provider
+	log       zerolog.Logger
+	validator *validation.AIRequestValidator
+	helper    *helpers.ServiceHelper
 }
 
 // NewCoverLetterGeneratorService creates and returns a new instance of CoverLetterGeneratorService
 // using the provided llm.Provider as the underlying model.
 func NewCoverLetterGeneratorService(model llm.Provider) *CoverLetterGeneratorService {
+	log := logger.GetLogger("ai_cover_letter")
 	return &CoverLetterGeneratorService{
-		model: model,
-		log:   logger.GetLogger("ai_cover_letter"),
+		model:     model,
+		log:       log,
+		validator: validation.NewAIRequestValidator(),
+		helper:    helpers.NewServiceHelper(log),
 	}
 }
 
@@ -31,17 +39,10 @@ func NewCoverLetterGeneratorService(model llm.Provider) *CoverLetterGeneratorSer
 func (c *CoverLetterGeneratorService) GenerateCoverLetter(ctx context.Context, req models.Request) (*models.CoverLetter, error) {
 	start := time.Now()
 
-	c.log.Info().
-		Str("applicant", req.ApplicantName).
-		Str("operation", "cover_letter_generation").
-		Msg("Starting cover letter generation")
+	c.helper.LogOperationStart(constants.OperationCoverLetter, req.ApplicantName)
 
-	if req.ApplicantName == "" || req.ApplicantProfile == "" || req.JobDescription == "" {
-		err := models.WrapError(models.ErrValidationFailed, fmt.Errorf("missing required fields: applicant name, profile, and job description are required"))
-		c.log.Error().
-			Err(err).
-			Msg("Cover letter generation validation failed")
-		return nil, err
+	if err := c.validator.ValidateRequest(req); err != nil {
+		return nil, c.helper.LogValidationError(constants.OperationCoverLetter, req.ApplicantName, err)
 	}
 
 	// Use enhanced prompting by default
@@ -56,33 +57,25 @@ func (c *CoverLetterGeneratorService) GenerateCoverLetter(ctx context.Context, r
 		ResponseType: llm.ResponseTypeCoverLetter,
 	})
 	if err != nil {
-		c.log.Error().
-			Err(err).
-			Dur("duration", time.Since(start)).
-			Msg("Cover letter generation failed")
-		return nil, err
+		return nil, c.helper.LogOperationError(constants.OperationCoverLetter, req.ApplicantName, constants.ErrorTypeAIGenerationFailed, time.Since(start), err)
 	}
 
 	result, ok := response.Data.(models.CoverLetter)
 	if !ok {
 		err := fmt.Errorf("unexpected response type: expected CoverLetter, got %T", response.Data)
-		c.log.Error().Err(err).Msg("Type assertion failed")
-		return nil, err
+		return nil, c.helper.LogOperationError(constants.OperationCoverLetter, req.ApplicantName, constants.ErrorTypeResponseParseFailed, time.Since(start), err)
 	}
 
 	if err := c.validateCoverLetter(&result); err != nil {
-		c.log.Error().
-			Err(err).
-			Msg("Cover letter validation failed")
-		return nil, err
+		return nil, c.helper.LogOperationError(constants.OperationCoverLetter, req.ApplicantName, constants.ErrorTypeValidationFailed, time.Since(start), err)
 	}
 
-	c.log.Info().
-		Dur("duration", time.Since(start)).
-		Int("content_length", len(result.Content)).
-		Str("format", string(result.Format)).
-		Bool("enhanced", true).
-		Msg("Cover letter generation completed")
+	metadata := c.helper.CreateOperationMetadata(prompt.GetOptimalTemperature("cover_letter"), prompt.UseEnhancedTemplates, map[string]interface{}{
+		"content_length": len(result.Content),
+		"format":         string(result.Format),
+	})
+
+	c.helper.LogOperationSuccess(constants.OperationCoverLetter, req.ApplicantName, time.Since(start), prompt.UseEnhancedTemplates, metadata)
 
 	return &result, nil
 }

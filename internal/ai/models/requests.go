@@ -54,7 +54,7 @@ func (p *Prompt) GetOptimalTemperature(promptType string) float32 {
 	case "cover_letter":
 		return 0.65 // Higher creativity for writing
 	case "job_match":
-		return 0.25 // Lower for analytical consistency
+		return 0.2 // Lower for analytical consistency
 	default:
 		return 0.4 // Default balanced temperature
 	}
