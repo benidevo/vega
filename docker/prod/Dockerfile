@@ -13,7 +13,7 @@ COPY . .
 
 RUN CGO_ENABLED=1 GOOS=linux go build \
     -a -installsuffix cgo \
-    -ldflags='-w -s -extldflags "-static"' \
+    -ldflags='-w -s' \
     -o vega ./cmd/vega/
 
 FROM alpine:3.20
