@@ -62,7 +62,7 @@ func NewConfig(cfg *config.Settings) *Config {
 		ResponseMIMEType: "application/json",
 
 		// Cover letter configuration
-		DefaultWordRange: "100-150",
+		DefaultWordRange: "200-300",
 
 		// Match score configuration
 		MinMatchScore: 0,

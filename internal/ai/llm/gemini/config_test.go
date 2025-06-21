@@ -35,7 +35,7 @@ func TestNewConfig(t *testing.T) {
 				assert.Equal(t, "application/json", cfg.ResponseMIMEType)
 
 				// Cover letter configuration
-				assert.Equal(t, "250-400", cfg.DefaultWordRange)
+				assert.Equal(t, "200-300", cfg.DefaultWordRange)
 
 				// Match score configuration
 				assert.Equal(t, 0, cfg.MinMatchScore)

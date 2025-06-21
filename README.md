@@ -1,10 +1,10 @@
-# Vega - Navigate Your Career Journey
+# Vega AI - Navigate Your Career Journey
 
 ![Build Status](https://github.com/benidevo/vega/workflows/CI/badge.svg)
 
 ## Overview
 
-Like ancient navigators used the star Vega to find their way, Vega helps you navigate your career journey with confidence. Vega is an AI-powered job search platform that combines intelligent job matching, automated cover letter generation, and comprehensive application tracking to help you reach your professional destination.
+Like ancient navigators used the star Vega to find their way, Vega AI helps you navigate your career journey with confidence. Vega AI is an AI-powered job search platform that combines intelligent job matching, automated cover letter generation, and comprehensive application tracking to help you reach your professional destination.
 
 ## ✨ Features
 
@@ -64,7 +64,7 @@ Built with Go, SQLite, and modern web technologies. See [Technical Design Docume
    * Create an admin user or sign in with Google OAuth
 
 5. **Install the browser extension** (optional):
-   * Download from the [Vega Extension repository](https://github.com/benidevo/vega-extension)
+   * Download from the [Vega AI Extension repository](https://github.com/benidevo/vega-extension)
    * Load the extension in Chrome or Edge for one-click job capture from LinkedIn
 
 ### 🔑 Admin User Setup
@@ -142,7 +142,7 @@ make test
 
 ## 📊 API Documentation
 
-Vega provides RESTful APIs for job management, authentication, and system health. See [Technical Design Document](docs/TDD.md) for complete API reference.
+Vega AI provides RESTful APIs for job management, authentication, and system health. See [Technical Design Document](docs/TDD.md) for complete API reference.
 
 ## 🔮 Roadmap
 
