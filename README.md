@@ -1,10 +1,16 @@
-# Vega AI
+# 🌟 Vega AI
 
-Vega AI helps you navigate your career journey with AI-powered job search tools. Track job applications, generate tailored cover letters and documents using AI, get intelligent job matching based on your profile, and capture opportunities from LinkedIn with the browser extension. Self-hosted for complete data privacy.
+> Navigate your career journey with AI-powered precision
 
-## Quick Start
+Just as ancient navigators used the star Vega to find their way, Vega AI helps you navigate your career journey with intelligent job search tools. Track applications, generate tailored documents using AI, get smart job matching based on your profile, and capture opportunities from LinkedIn with our browser extension. Self-hosted for complete data privacy.
 
-**1. Create environment file (`.env.prod`):**
+---
+
+## 🚀 Quick Start
+
+### Option 1: Docker Run
+
+**1. Create environment file (`.env`):**
 
 ```bash
 # Required
@@ -15,7 +21,7 @@ GEMINI_API_KEY=your-gemini-api-key
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 
-# Recommended - First-time admin setup  
+# Recommended - First-time admin setup
 CREATE_ADMIN_USER=true
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=your-admin-password
@@ -29,15 +35,48 @@ docker run -d \
   --name vega-ai \
   -p 8080:8080 \
   -v vega-data:/app/data \
-  --env-file .env.prod \
+  --env-file .env \
   ghcr.io/benidevo/vega-ai:latest
 ```
 
-**3. Access:** <http://localhost:8080>
+### Option 2: Docker Compose
 
-That's it! 🚀
+**1. Create `docker-compose.yml`:**
 
-## Features
+```yaml
+services:
+  vega-ai:
+    image: ghcr.io/benidevo/vega-ai:latest
+    container_name: vega-ai
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - vega-data:/app/data
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 2m
+      timeout: 15s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  vega-data:
+```
+
+**2. Start the application:**
+
+```bash
+docker compose up -d
+```
+
+**3. Access:** <http://localhost:8080> 🎉
+
+---
+
+## ✨ Features
 
 * **🤖 AI Document Generation**: Automatically create tailored application documents
 * **📊 Smart Job Matching**: AI analyzes job requirements vs your profile
@@ -46,7 +85,9 @@ That's it! 🚀
 * **🔐 Secure Auth**: Google OAuth + local accounts
 * **⚡ Self-Hosted**: Your data stays with you
 
-## Development
+---
+
+## 🛠️ Development
 
 **Prerequisites:** Docker, Docker Compose, [Gemini API key](https://ai.google.dev/)
 
@@ -58,13 +99,7 @@ cp .env.example .env
 make run
 ```
 
-Access at <http://localhost:8000>
-
-## Browser Extension
-
-Install the [Vega AI Extension](https://github.com/benidevo/vega-ai-extension) for one-click job capture from LinkedIn.
-
-## Development Commands
+**Access:** <http://localhost:8000>
 
 | Command | Description |
 |---------|-------------|
@@ -73,7 +108,15 @@ Install the [Vega AI Extension](https://github.com/benidevo/vega-ai-extension) f
 | `make restart` | Rebuild and restart |
 | `make logs` | View container logs |
 
-## Production Build
+---
+
+## 🔗 Extensions
+
+Install the [**Vega AI Extension**](https://github.com/benidevo/vega-ai-extension) for one-click job capture from LinkedIn.
+
+---
+
+## 🏗️ Production Build
 
 ```bash
 # Build locally
@@ -85,6 +128,8 @@ Install the [Vega AI Extension](https://github.com/benidevo/vega-ai-extension) f
 
 Images are built automatically on version tags and can be manually triggered via GitHub Actions.
 
-## License
+---
+
+## 📄 License
 
 MIT License - see [LICENSE](LICENSE) file.
