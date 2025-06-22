@@ -91,9 +91,9 @@ func NewSettings() Settings {
 		cookieSecure = envSecure == "true"
 	}
 
-	corsOrigins := []string{"http://localhost:8080"}
+	corsOrigins := []string{"http://localhost:8765"}
 	if isDevelopment {
-		corsOrigins = []string{"http://localhost:8080", "http://localhost:8000"}
+		corsOrigins = []string{"http://localhost:8765"}
 	}
 	if envCORS := getEnv("CORS_ALLOWED_ORIGINS", ""); envCORS != "" {
 		corsOrigins = strings.Split(envCORS, ",")
@@ -104,7 +104,7 @@ func NewSettings() Settings {
 
 	return Settings{
 		AppName:            "vega",
-		ServerPort:         ":8080",
+		ServerPort:         ":8765",
 		DBConnectionString: dbConnectionString,
 		DBDriver:           "sqlite",
 		LogLevel:           getEnv("LOG_LEVEL", getDefaultLogLevel(isDevelopment)),
@@ -125,7 +125,7 @@ func NewSettings() Settings {
 
 		GoogleClientID:          getEnv("GOOGLE_CLIENT_ID", ""),
 		GoogleClientSecret:      getEnv("GOOGLE_CLIENT_SECRET", ""),
-		GoogleClientRedirectURL: getEnv("GOOGLE_CLIENT_REDIRECT_URL", "http://localhost:8000/auth/google/callback"),
+		GoogleClientRedirectURL: getEnv("GOOGLE_CLIENT_REDIRECT_URL", "http://localhost:8765/auth/google/callback"),
 		GoogleAuthUserInfoURL:   "https://www.googleapis.com/oauth2/v3/userinfo",
 		GoogleAuthUserInfoScope: "https://www.googleapis.com/auth/userinfo.email",
 

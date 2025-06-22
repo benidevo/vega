@@ -7,6 +7,6 @@ RUN go install github.com/githubnemo/CompileDaemon@latest
 COPY go.mod go.sum ./
 RUN go mod download
 
-EXPOSE 8080
+EXPOSE 8765
 
 CMD ["CompileDaemon", "--build=go build -o ./tmp/vega ./cmd/vega", "--command=./tmp/vega", "--color=true"]

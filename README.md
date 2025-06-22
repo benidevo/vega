@@ -33,7 +33,7 @@ ADMIN_EMAIL=admin@yourdomain.com
 ```bash
 docker run -d \
   --name vega-ai \
-  -p 8080:8080 \
+  -p 8765:8765 \
   -v vega-data:/app/data \
   --env-file .env \
   ghcr.io/benidevo/vega-ai:latest
@@ -50,13 +50,13 @@ services:
     container_name: vega-ai
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "8765:8765"
     volumes:
       - vega-data:/app/data
     env_file:
       - .env
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8765/health"]
       interval: 2m
       timeout: 15s
       retries: 3
@@ -72,7 +72,7 @@ volumes:
 docker compose up -d
 ```
 
-**3. Access:** <http://localhost:8080> 🎉
+**3. Access:** <http://localhost:8765> 🎉
 
 ---
 
@@ -99,7 +99,7 @@ cp .env.example .env
 make run
 ```
 
-**Access:** <http://localhost:8000>
+**Access:** <http://localhost:8765>
 
 | Command | Description |
 |---------|-------------|

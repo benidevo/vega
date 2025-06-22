@@ -70,3 +70,28 @@ func (h *AuthAPIHandler) RefreshToken(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"token": accessToken})
 }
+
+// Login handles user login requests. It expects a JSON payload containing a username and password.
+//
+// On successful authentication, it returns an access token and a refresh token in the response body.
+func (h *AuthAPIHandler) Login(ctx *gin.Context) {
+	var request struct {
+		Username string `json:"username" binding:"required"`
+		Password string `json:"password" binding:"required"`
+	}
+
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		h.oauthService.LogError(fmt.Errorf("failed to bind request body: %v", err))
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+		return
+	}
+
+	accessToken, refreshToken, err := h.authService.Login(ctx.Request.Context(), request.Username, request.Password)
+	if err != nil {
+		h.oauthService.LogError(fmt.Errorf("failed to login: %v", err))
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid username or password"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"token": accessToken, "refresh_token": refreshToken})
+}

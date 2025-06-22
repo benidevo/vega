@@ -34,9 +34,9 @@ RUN mkdir -p /app/data && \
 
 USER appuser
 
-EXPOSE 8080
+EXPOSE 8765
 
 HEALTHCHECK --interval=2m --timeout=15s --start-period=30s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8765/health || exit 1
 
 CMD ["./vega"]

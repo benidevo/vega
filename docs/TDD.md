@@ -95,7 +95,7 @@ GET    /health/ready       # Readiness probe
 
 ```bash
 # App
-SERVER_PORT=:8080
+SERVER_PORT=:8765
 IS_DEVELOPMENT=true
 LOG_LEVEL=info
 
@@ -111,7 +111,7 @@ REFRESH_TOKEN_EXPIRY=168
 # Google OAuth
 GOOGLE_CLIENT_ID=your-client-id
 GOOGLE_CLIENT_SECRET=your-client-secret
-GOOGLE_CLIENT_REDIRECT_URL=http://localhost:8000/auth/google/callback
+GOOGLE_CLIENT_REDIRECT_URL=http://localhost:8765/auth/google/callback
 
 # AI
 GEMINI_API_KEY=your-gemini-key
@@ -140,7 +140,7 @@ docker-compose up
 
 ```bash
 docker build -t vega .
-docker run -p 8080:8080 -v ./data:/app/data vega
+docker run -p 8765:8765 -v ./data:/app/data vega
 ```
 
 **Database Migrations:**
