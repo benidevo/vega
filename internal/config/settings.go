@@ -1,3 +1,21 @@
+/*
+Vega AI Job Capture Extension
+Copyright (C) 2025 Benjamin Idewor
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 package config
 
 import (
@@ -91,15 +109,14 @@ func NewSettings() Settings {
 		cookieSecure = envSecure == "true"
 	}
 
-	corsOrigins := []string{"http://localhost:8765"}
-	if isDevelopment {
-		corsOrigins = []string{"http://localhost:8765"}
-	}
+	var corsOrigins []string
 	if envCORS := getEnv("CORS_ALLOWED_ORIGINS", ""); envCORS != "" {
 		corsOrigins = strings.Split(envCORS, ",")
 		for i, origin := range corsOrigins {
 			corsOrigins[i] = strings.TrimSpace(origin)
 		}
+	} else {
+		corsOrigins = []string{"*"}
 	}
 
 	return Settings{

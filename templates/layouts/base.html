@@ -138,18 +138,27 @@
   <!-- Use template switching based on page variable -->
   {{if eq .page "dashboard"}}
     <!-- Dashboard has a different layout -->
-    <div class="min-h-screen bg-slate-900">
-      {{template "dashboard-content" .}}
+    <div class="min-h-screen bg-slate-900 flex flex-col">
+      <div class="flex-1">
+        {{template "dashboard-content" .}}
+      </div>
+      {{template "footer" .}}
     </div>
   {{else if eq .page "job-new"}}
     <!-- Job form uses the job-specific template -->
-    <div class="min-h-screen bg-slate-900">
-      {{template "job-new-content" .}}
+    <div class="min-h-screen bg-slate-900 flex flex-col">
+      <div class="flex-1">
+        {{template "job-new-content" .}}
+      </div>
+      {{template "footer" .}}
     </div>
   {{else if eq .page "job-details"}}
     <!-- Job details page -->
-    <div class="min-h-screen bg-slate-900">
-      {{template "job-details-content" .}}
+    <div class="min-h-screen bg-slate-900 flex flex-col">
+      <div class="flex-1">
+        {{template "job-details-content" .}}
+      </div>
+      {{template "footer" .}}
     </div>
   {{else if eq .page "404"}}
     <!-- 404 Not Found page -->
@@ -159,23 +168,35 @@
     {{template "500-content" .}}
   {{else if eq .page "settings-home" }}
     <!-- Settings home page -->
-    <div class="min-h-screen bg-slate-900">
-      {{template "settings-layout" .}}
+    <div class="min-h-screen bg-slate-900 flex flex-col">
+      <div class="flex-1">
+        {{template "settings-layout" .}}
+      </div>
+      {{template "footer" .}}
     </div>
   {{else if eq .page "settings-profile" }}
     <!-- Settings profile page -->
-    <div class="min-h-screen bg-slate-900">
-      {{template "settings-layout" .}}
+    <div class="min-h-screen bg-slate-900 flex flex-col">
+      <div class="flex-1">
+        {{template "settings-layout" .}}
+      </div>
+      {{template "footer" .}}
     </div>
   {{else if eq .page "settings-security" }}
     <!-- Settings security page -->
-    <div class="min-h-screen bg-slate-900">
-      {{template "settings-layout" .}}
+    <div class="min-h-screen bg-slate-900 flex flex-col">
+      <div class="flex-1">
+        {{template "settings-layout" .}}
+      </div>
+      {{template "footer" .}}
     </div>
   {{else if eq .page "settings-notifications" }}
     <!-- Settings notifications page -->
-    <div class="min-h-screen bg-slate-900">
-      {{template "settings-layout" .}}
+    <div class="min-h-screen bg-slate-900 flex flex-col">
+      <div class="flex-1">
+        {{template "settings-layout" .}}
+      </div>
+      {{template "footer" .}}
     </div>
   {{else}}
     <!-- Modern layout with enhanced backgrounds for home and login pages -->
@@ -185,11 +206,12 @@
       <div class="absolute inset-0 z-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"></div>
 
       <!-- Content area with backdrop blur -->
-      <div class="relative z-10 w-full {{if eq .page "home"}}{{else}}h-full{{end}}">
+      <div class="relative z-10 w-full {{if eq .page "home"}}flex flex-col{{else}}h-full{{end}}">
         {{if eq .page "home"}}
-          <div class="min-h-screen flex flex-col items-center justify-center">
+          <div class="min-h-screen flex flex-col items-center justify-center flex-1">
             {{template "home-content" .}}
           </div>
+          {{template "footer" .}}
         {{else if eq .page "login"}}
           <div class="w-full h-full flex items-center justify-center py-4 sm:py-8">
             {{template "login-content" .}}
