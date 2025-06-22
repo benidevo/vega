@@ -250,6 +250,11 @@ func (s *SettingsService) GetSecuritySettings(ctx context.Context, username stri
 	return models.NewSecuritySettings(activity), nil
 }
 
+// GetConfig returns the configuration settings
+func (s *SettingsService) GetConfig() *config.Settings {
+	return s.cfg
+}
+
 // validateEntity validates an entity based on its type
 func (s *SettingsService) validateEntity(entity CRUDEntity) error {
 	switch e := entity.(type) {

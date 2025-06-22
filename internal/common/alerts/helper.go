@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/benidevo/vega/internal/config"
 	"github.com/gin-gonic/gin"
 )
 
@@ -43,13 +44,26 @@ type AlertData struct {
 // RenderError renders an error alert with the appropriate context
 // For 500 errors on non-HTMX requests, it renders a full error page
 func RenderError(c *gin.Context, statusCode int, message string, context AlertContext) {
+	RenderErrorWithConfig(c, statusCode, message, context, nil)
+}
+
+// RenderErrorWithConfig renders an error alert with the appropriate context and optional config
+// For 500 errors on non-HTMX requests, it renders a full error page
+func RenderErrorWithConfig(c *gin.Context, statusCode int, message string, context AlertContext, cfg *config.Settings) {
 	// For 500 errors on non-HTMX requests, always show full error page
 	if statusCode >= 500 && c.GetHeader("HX-Request") != "true" {
-		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
+		templateData := gin.H{
 			"title":       "Something Went Wrong",
 			"page":        "500",
 			"currentYear": time.Now().Year(),
-		})
+		}
+
+		// Add security page enabled flag if config is provided
+		if cfg != nil {
+			templateData["securityPageEnabled"] = cfg.SecurityPageEnabled
+		}
+
+		c.HTML(http.StatusInternalServerError, "layouts/base.html", templateData)
 		return
 	}
 

@@ -31,13 +31,14 @@ func (h *Handler) GetHomePage(c *gin.Context) {
 		emptyHomeData := NewHomePageData(0, "")
 
 		c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-			"title":          emptyHomeData.Title,
-			"page":           emptyHomeData.Page,
-			"currentYear":    time.Now().Year(),
-			"showOnboarding": emptyHomeData.ShowOnboarding,
-			"stats":          emptyHomeData.Stats,
-			"recentJobs":     emptyHomeData.RecentJobs,
-			"hasJobs":        emptyHomeData.HasJobs,
+			"title":               emptyHomeData.Title,
+			"page":                emptyHomeData.Page,
+			"currentYear":         time.Now().Year(),
+			"securityPageEnabled": h.cfg.SecurityPageEnabled,
+			"showOnboarding":      emptyHomeData.ShowOnboarding,
+			"stats":               emptyHomeData.Stats,
+			"recentJobs":          emptyHomeData.RecentJobs,
+			"hasJobs":             emptyHomeData.HasJobs,
 		})
 		return
 	}
@@ -58,12 +59,13 @@ func (h *Handler) GetHomePage(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-		"title":       homeData.Title,
-		"page":        homeData.Page,
-		"username":    homeData.Username,
-		"activeNav":   "home",
-		"pageTitle":   "Dashboard",
-		"currentYear": time.Now().Year(),
+		"title":               homeData.Title,
+		"page":                homeData.Page,
+		"username":            homeData.Username,
+		"activeNav":           "home",
+		"pageTitle":           "Dashboard",
+		"currentYear":         time.Now().Year(),
+		"securityPageEnabled": h.cfg.SecurityPageEnabled,
 
 		"stats":          homeData.Stats,
 		"recentJobs":     homeData.RecentJobs,

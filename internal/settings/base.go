@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/benidevo/vega/internal/common/alerts"
+	"github.com/benidevo/vega/internal/config"
 	"github.com/benidevo/vega/internal/settings/models"
 	"github.com/gin-gonic/gin"
 )
@@ -46,6 +47,7 @@ type CRUDService interface {
 	UpdateEntity(ctx *gin.Context, entity CRUDEntity) error
 	DeleteEntity(ctx *gin.Context, entityID, profileID int, entityType string) error
 	GetEntityByID(ctx *gin.Context, entityID, profileID int, entityType string) (CRUDEntity, error)
+	GetConfig() *config.Settings
 }
 
 // NewBaseSettingsHandler creates a new base settings handler
@@ -67,14 +69,15 @@ func (h *BaseSettingsHandler) GetAddPage(c *gin.Context) {
 	}
 
 	templateData := gin.H{
-		"title":          fmt.Sprintf("Add %s", h.metadata.Name),
-		"page":           "settings-profile",
-		"activeNav":      "settings",
-		"activeSettings": "profile",
-		"pageTitle":      "Profile Settings",
-		"currentYear":    time.Now().Year(),
-		"username":       username,
-		"profile":        profile,
+		"title":               fmt.Sprintf("Add %s", h.metadata.Name),
+		"page":                "settings-profile",
+		"activeNav":           "settings",
+		"activeSettings":      "profile",
+		"pageTitle":           "Profile Settings",
+		"currentYear":         time.Now().Year(),
+		"securityPageEnabled": h.service.GetConfig().SecurityPageEnabled,
+		"username":            username,
+		"profile":             profile,
 		fmt.Sprintf("isAdding%s", h.metadata.Name): true,
 	}
 
@@ -90,9 +93,10 @@ func (h *BaseSettingsHandler) GetEditPage(c *gin.Context) {
 	entityID, err := strconv.Atoi(entityIDStr)
 	if err != nil {
 		c.HTML(http.StatusBadRequest, "layouts/base.html", gin.H{
-			"title":       "Bad Request",
-			"page":        "404",
-			"currentYear": time.Now().Year(),
+			"title":               "Bad Request",
+			"page":                "404",
+			"currentYear":         time.Now().Year(),
+			"securityPageEnabled": h.service.GetConfig().SecurityPageEnabled,
 		})
 		return
 	}
@@ -100,9 +104,10 @@ func (h *BaseSettingsHandler) GetEditPage(c *gin.Context) {
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
-			"title":       "Something Went Wrong",
-			"page":        "500",
-			"currentYear": time.Now().Year(),
+			"title":               "Something Went Wrong",
+			"page":                "500",
+			"currentYear":         time.Now().Year(),
+			"securityPageEnabled": h.service.GetConfig().SecurityPageEnabled,
 		})
 		return
 	}
@@ -110,22 +115,24 @@ func (h *BaseSettingsHandler) GetEditPage(c *gin.Context) {
 	entity, err := h.service.GetEntityByID(c, entityID, profile.ID, h.metadata.Name)
 	if err != nil {
 		c.HTML(http.StatusNotFound, "layouts/base.html", gin.H{
-			"title":       "Not Found",
-			"page":        "404",
-			"currentYear": time.Now().Year(),
+			"title":               "Not Found",
+			"page":                "404",
+			"currentYear":         time.Now().Year(),
+			"securityPageEnabled": h.service.GetConfig().SecurityPageEnabled,
 		})
 		return
 	}
 
 	templateData := gin.H{
-		"title":          fmt.Sprintf("Edit %s", h.metadata.Name),
-		"page":           "settings-profile",
-		"activeNav":      "settings",
-		"activeSettings": "profile",
-		"pageTitle":      "Profile Settings",
-		"currentYear":    time.Now().Year(),
-		"username":       username,
-		"profile":        profile,
+		"title":               fmt.Sprintf("Edit %s", h.metadata.Name),
+		"page":                "settings-profile",
+		"activeNav":           "settings",
+		"activeSettings":      "profile",
+		"pageTitle":           "Profile Settings",
+		"currentYear":         time.Now().Year(),
+		"securityPageEnabled": h.service.GetConfig().SecurityPageEnabled,
+		"username":            username,
+		"profile":             profile,
 		fmt.Sprintf("isEditing%s", h.metadata.Name): true,
 		strings.ToLower(h.metadata.Name):            entity,
 	}

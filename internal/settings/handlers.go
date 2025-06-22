@@ -131,30 +131,35 @@ func (h *SettingsHandler) GetProfileSettingsPage(c *gin.Context) {
 	profile, err := h.service.GetProfileWithRelated(c.Request.Context(), userID.(int))
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
-			"title": "Something Went Wrong",
-			"page":  "500",
+			"title":               "Something Went Wrong",
+			"page":                "500",
+			"currentYear":         time.Now().Year(),
+			"securityPageEnabled": h.service.cfg.SecurityPageEnabled,
 		})
 		return
 	}
 
 	if profile == nil {
 		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
-			"title": "Something Went Wrong",
-			"page":  "500",
+			"title":               "Something Went Wrong",
+			"page":                "500",
+			"currentYear":         time.Now().Year(),
+			"securityPageEnabled": h.service.cfg.SecurityPageEnabled,
 		})
 		return
 	}
 
 	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-		"title":          "Profile",
-		"page":           "settings-profile",
-		"activeNav":      "profile",
-		"activeSettings": "profile",
-		"pageTitle":      "Profile",
-		"currentYear":    time.Now().Year(),
-		"username":       username,
-		"profile":        profile,
-		"industries":     models.GetAllIndustries(),
+		"title":               "Profile",
+		"page":                "settings-profile",
+		"activeNav":           "profile",
+		"activeSettings":      "profile",
+		"pageTitle":           "Profile",
+		"currentYear":         time.Now().Year(),
+		"securityPageEnabled": h.service.cfg.SecurityPageEnabled,
+		"username":            username,
+		"profile":             profile,
+		"industries":          models.GetAllIndustries(),
 	})
 }
 
@@ -287,6 +292,16 @@ func (h *SettingsHandler) HandleUpdateContext(c *gin.Context) {
 
 // GetSecuritySettings handles the request to display the security settings page
 func (h *SettingsHandler) GetSecuritySettingsPage(c *gin.Context) {
+	// Return 404 if security page is disabled
+	if !h.service.cfg.SecurityPageEnabled {
+		c.HTML(http.StatusNotFound, "layouts/base.html", gin.H{
+			"title":       "Page Not Found",
+			"page":        "404",
+			"currentYear": time.Now().Year(),
+		})
+		return
+	}
+
 	username, _ := c.Get("username")
 
 	security, err := h.service.GetSecuritySettings(c.Request.Context(), username.(string))
@@ -316,13 +331,14 @@ func (h *SettingsHandler) GetNotificationSettingsPage(c *gin.Context) {
 	username, _ := c.Get("username")
 
 	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-		"title":          "Notifications",
-		"page":           "settings-notifications",
-		"activeNav":      "notifications",
-		"activeSettings": "notifications",
-		"pageTitle":      "Notifications",
-		"currentYear":    time.Now().Year(),
-		"username":       username,
+		"title":               "Notifications",
+		"page":                "settings-notifications",
+		"activeNav":           "notifications",
+		"activeSettings":      "notifications",
+		"pageTitle":           "Notifications",
+		"currentYear":         time.Now().Year(),
+		"securityPageEnabled": h.service.cfg.SecurityPageEnabled,
+		"username":            username,
 	})
 }
 

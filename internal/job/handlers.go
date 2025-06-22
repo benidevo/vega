@@ -239,14 +239,15 @@ func (h *JobHandler) ListJobsPage(c *gin.Context) {
 	jobsWithPagination, err := h.service.GetJobsWithPagination(c.Request.Context(), filter)
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
-			"title":        "Dashboard",
-			"page":         "dashboard",
-			"activeNav":    "jobs",
-			"pageTitle":    "Jobs",
-			"currentYear":  time.Now().Year(),
-			"username":     username,
-			"jobs":         []*models.Job{},
-			"statusFilter": statusParam,
+			"title":               "Dashboard",
+			"page":                "dashboard",
+			"activeNav":           "jobs",
+			"pageTitle":           "Jobs",
+			"currentYear":         time.Now().Year(),
+			"securityPageEnabled": h.cfg.SecurityPageEnabled,
+			"username":            username,
+			"jobs":                []*models.Job{},
+			"statusFilter":        statusParam,
 		})
 		return
 	}
@@ -270,18 +271,19 @@ func (h *JobHandler) ListJobsPage(c *gin.Context) {
 	stats := h.service.GetJobStats(c.Request.Context())
 
 	templateData := gin.H{
-		"title":        "Dashboard",
-		"page":         "dashboard",
-		"activeNav":    "jobs",
-		"pageTitle":    "Jobs",
-		"currentYear":  time.Now().Year(),
-		"username":     username,
-		"jobs":         jobsWithPagination.Jobs,
-		"pagination":   jobsWithPagination.Pagination,
-		"totalJobs":    stats.TotalJobs,
-		"applied":      stats.TotalApplied,
-		"highMatch":    stats.HighMatch,
-		"statusFilter": statusParam,
+		"title":               "Dashboard",
+		"page":                "dashboard",
+		"activeNav":           "jobs",
+		"pageTitle":           "Jobs",
+		"currentYear":         time.Now().Year(),
+		"securityPageEnabled": h.cfg.SecurityPageEnabled,
+		"username":            username,
+		"jobs":                jobsWithPagination.Jobs,
+		"pagination":          jobsWithPagination.Pagination,
+		"totalJobs":           stats.TotalJobs,
+		"applied":             stats.TotalApplied,
+		"highMatch":           stats.HighMatch,
+		"statusFilter":        statusParam,
 	}
 
 	// Check if this is an HTMX request
@@ -300,12 +302,13 @@ func (h *JobHandler) ListJobsPage(c *gin.Context) {
 func (h *JobHandler) GetNewJobForm(c *gin.Context) {
 	username, _ := c.Get("username")
 	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-		"title":       "New Job",
-		"page":        "job-new",
-		"activeNav":   "newjob",
-		"pageTitle":   "New Job",
-		"currentYear": time.Now().Year(),
-		"username":    username,
+		"title":               "New Job",
+		"page":                "job-new",
+		"activeNav":           "newjob",
+		"pageTitle":           "New Job",
+		"currentYear":         time.Now().Year(),
+		"securityPageEnabled": h.cfg.SecurityPageEnabled,
+		"username":            username,
 	})
 }
 
@@ -391,9 +394,10 @@ func (h *JobHandler) GetJobDetails(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, models.ErrJobNotFound) {
 			c.HTML(http.StatusNotFound, "layouts/base.html", gin.H{
-				"title":       "Page Not Found",
-				"page":        "404",
-				"currentYear": time.Now().Year(),
+				"title":               "Page Not Found",
+				"page":                "404",
+				"currentYear":         time.Now().Year(),
+				"securityPageEnabled": h.cfg.SecurityPageEnabled,
 			})
 			return
 		}
@@ -422,6 +426,7 @@ func (h *JobHandler) GetJobDetails(c *gin.Context) {
 		"activeNav":              "jobs",
 		"pageTitle":              "Job Details",
 		"currentYear":            time.Now().Year(),
+		"securityPageEnabled":    h.cfg.SecurityPageEnabled,
 		"username":               username,
 		"job":                    job,
 		"jobID":                  jobIDStr,

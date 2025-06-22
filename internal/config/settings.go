@@ -49,6 +49,7 @@ type Settings struct {
 	CookieSecure       bool
 	CookieSameSite     string
 
+	GoogleOAuthEnabled      bool
 	GoogleClientID          string
 	GoogleClientSecret      string
 	GoogleClientRedirectURL string
@@ -63,6 +64,8 @@ type Settings struct {
 	AdminPassword      string
 	AdminEmail         string
 	ResetAdminPassword bool
+
+	SecurityPageEnabled bool
 
 	AIProvider   string
 	GeminiAPIKey string
@@ -140,6 +143,7 @@ func NewSettings() Settings {
 		CookieSecure:       cookieSecure,
 		CookieSameSite:     "lax",
 
+		GoogleOAuthEnabled:      getEnv("GOOGLE_OAUTH_ENABLED", "false") == "true",
 		GoogleClientID:          getEnv("GOOGLE_CLIENT_ID", ""),
 		GoogleClientSecret:      getEnv("GOOGLE_CLIENT_SECRET", ""),
 		GoogleClientRedirectURL: getEnv("GOOGLE_CLIENT_REDIRECT_URL", "http://localhost:8765/auth/google/callback"),
@@ -154,9 +158,12 @@ func NewSettings() Settings {
 		AdminPassword:      getEnv("ADMIN_PASSWORD", ""),
 		ResetAdminPassword: getEnv("RESET_ADMIN_PASSWORD", "false") == "true",
 		AdminEmail:         getEnv("ADMIN_EMAIL", ""),
-		AIProvider:         "gemini",
-		GeminiAPIKey:       getEnv("GEMINI_API_KEY", ""),
-		GeminiModel:        "gemini-2.5-flash",
+
+		SecurityPageEnabled: getEnv("SECURITY_PAGE_ENABLED", "false") == "true",
+
+		AIProvider:   "gemini",
+		GeminiAPIKey: getEnv("GEMINI_API_KEY", ""),
+		GeminiModel:  "gemini-2.5-flash",
 	}
 }
 

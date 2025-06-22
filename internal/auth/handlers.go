@@ -29,9 +29,11 @@ func NewAuthHandler(service *services.AuthService, cfg *config.Settings) *AuthHa
 // GetLoginPage renders the login page template.
 func (h *AuthHandler) GetLoginPage(c *gin.Context) {
 	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-		"title":       "Login",
-		"page":        "login",
-		"currentYear": time.Now().Year(),
+		"title":               "Login",
+		"page":                "login",
+		"currentYear":         time.Now().Year(),
+		"securityPageEnabled": h.cfg.SecurityPageEnabled,
+		"googleOAuthEnabled":  h.cfg.GoogleOAuthEnabled,
 	})
 }
 
@@ -224,10 +226,12 @@ func (h *GoogleAuthHandler) HandleCallback(c *gin.Context) {
 		h.service.LogError(fmt.Errorf("missing code in callback"))
 		// Redirect to login page with error message
 		c.HTML(http.StatusBadRequest, "layouts/base.html", gin.H{
-			"title":       "Login",
-			"page":        "login",
-			"currentYear": time.Now().Year(),
-			"error":       "Invalid authentication request. Please try again.",
+			"title":               "Login",
+			"page":                "login",
+			"currentYear":         time.Now().Year(),
+			"securityPageEnabled": h.cfg.SecurityPageEnabled,
+			"googleOAuthEnabled":  h.cfg.GoogleOAuthEnabled,
+			"error":               "Invalid authentication request. Please try again.",
 		})
 		return
 	}
@@ -239,10 +243,12 @@ func (h *GoogleAuthHandler) HandleCallback(c *gin.Context) {
 		errorMessage := "Authentication failed. Please try again later."
 
 		c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-			"title":       "Login",
-			"page":        "login",
-			"currentYear": time.Now().Year(),
-			"error":       errorMessage,
+			"title":               "Login",
+			"page":                "login",
+			"currentYear":         time.Now().Year(),
+			"securityPageEnabled": h.cfg.SecurityPageEnabled,
+			"googleOAuthEnabled":  h.cfg.GoogleOAuthEnabled,
+			"error":               errorMessage,
 		})
 		return
 	}
