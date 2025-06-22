@@ -1,5 +1,11 @@
 # 🌟 Vega AI
 
+[![CI](https://github.com/benidevo/vega-ai/workflows/CI/badge.svg)](https://github.com/benidevo/vega-ai/actions/workflows/ci.yaml)
+[![Docker](https://github.com/benidevo/vega-ai/workflows/Build%20and%20Push%20Docker%20Image/badge.svg)](https://github.com/benidevo/vega-ai/actions/workflows/docker-build.yml)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![Go Version](https://img.shields.io/badge/Go-1.24+-blue.svg)](https://golang.org/)
+[![GitHub Container Registry](https://img.shields.io/badge/ghcr.io-vega--ai-blue)](https://github.com/benidevo/vega-ai/pkgs/container/vega-ai)
+
 > Navigate your career journey with AI-powered precision
 
 Just as ancient navigators used the star Vega to find their way, Vega AI helps you navigate your career journey with intelligent job search tools. Track applications, generate tailored documents using AI, get smart job matching based on your profile, and capture opportunities from LinkedIn with our browser extension. Self-hosted for complete data privacy.
@@ -130,6 +136,14 @@ Images are built automatically on version tags and can be manually triggered via
 
 ---
 
-## 📄 License
+## 📝 License
 
-MIT License - see [LICENSE](LICENSE) file.
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+
+What this means:
+
+✅ You can use, study, modify, and distribute the code
+✅ If you run this software on a server, you must make your source code available to users
+✅ Any modifications must also be released under AGPL-3.0
+
+**Commercial licensing:** For commercial use without AGPL restrictions, contact <benjaminidewor@gmail.com> for licensing options.
