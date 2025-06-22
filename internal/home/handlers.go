@@ -2,6 +2,7 @@ package home
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/benidevo/vega/internal/common/alerts"
 	"github.com/benidevo/vega/internal/config"
@@ -32,6 +33,7 @@ func (h *Handler) GetHomePage(c *gin.Context) {
 		c.HTML(http.StatusOK, "layouts/base.html", gin.H{
 			"title":          emptyHomeData.Title,
 			"page":           emptyHomeData.Page,
+			"currentYear":    time.Now().Year(),
 			"showOnboarding": emptyHomeData.ShowOnboarding,
 			"stats":          emptyHomeData.Stats,
 			"recentJobs":     emptyHomeData.RecentJobs,
@@ -56,11 +58,12 @@ func (h *Handler) GetHomePage(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-		"title":     homeData.Title,
-		"page":      homeData.Page,
-		"username":  homeData.Username,
-		"activeNav": "home",
-		"pageTitle": "Dashboard",
+		"title":       homeData.Title,
+		"page":        homeData.Page,
+		"username":    homeData.Username,
+		"activeNav":   "home",
+		"pageTitle":   "Dashboard",
+		"currentYear": time.Now().Year(),
 
 		"stats":          homeData.Stats,
 		"recentJobs":     homeData.RecentJobs,

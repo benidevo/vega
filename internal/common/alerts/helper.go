@@ -2,6 +2,7 @@ package alerts
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -45,8 +46,9 @@ func RenderError(c *gin.Context, statusCode int, message string, context AlertCo
 	// For 500 errors on non-HTMX requests, always show full error page
 	if statusCode >= 500 && c.GetHeader("HX-Request") != "true" {
 		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
-			"title": "Something Went Wrong",
-			"page":  "500",
+			"title":       "Something Went Wrong",
+			"page":        "500",
+			"currentYear": time.Now().Year(),
 		})
 		return
 	}

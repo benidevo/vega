@@ -2,6 +2,7 @@ package vega
 
 import (
 	"net/http"
+	"time"
 
 	authapi "github.com/benidevo/vega/internal/api/auth"
 	jobapi "github.com/benidevo/vega/internal/api/job"
@@ -64,8 +65,9 @@ func SetupRoutes(a *App) {
 
 	a.router.NoRoute(func(c *gin.Context) {
 		c.HTML(http.StatusNotFound, "layouts/base.html", gin.H{
-			"title": "Page Not Found",
-			"page":  "404",
+			"title":       "Page Not Found",
+			"page":        "404",
+			"currentYear": time.Now().Year(),
 		})
 	})
 }
@@ -81,8 +83,9 @@ func globalErrorHandler(c *gin.Context) {
 			log.Error().Err(err.(error)).Msg("Recovered from panic")
 
 			c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
-				"title": "Something Went Wrong",
-				"page":  "500",
+				"title":       "Something Went Wrong",
+				"page":        "500",
+				"currentYear": time.Now().Year(),
 			})
 			c.Abort()
 		}
@@ -93,8 +96,9 @@ func globalErrorHandler(c *gin.Context) {
 	// Only handle errors if no response has been written yet
 	if !c.Writer.Written() && (len(c.Errors) > 0 || c.Writer.Status() == http.StatusInternalServerError) {
 		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
-			"title": "Something Went Wrong",
-			"page":  "500",
+			"title":       "Something Went Wrong",
+			"page":        "500",
+			"currentYear": time.Now().Year(),
 		})
 		c.Abort()
 	}
