@@ -147,7 +147,6 @@
       <div class="flex-1">
         {{template "dashboard-content" .}}
       </div>
-      {{template "footer" .}}
     </div>
   {{else if eq .page "job-new"}}
     <!-- Job form uses the job-specific template -->
@@ -155,7 +154,6 @@
       <div class="flex-1">
         {{template "job-new-content" .}}
       </div>
-      {{template "footer" .}}
     </div>
   {{else if eq .page "job-details"}}
     <!-- Job details page -->
@@ -163,7 +161,6 @@
       <div class="flex-1">
         {{template "job-details-content" .}}
       </div>
-      {{template "footer" .}}
     </div>
   {{else if eq .page "404"}}
     <!-- 404 Not Found page -->
@@ -177,7 +174,6 @@
       <div class="flex-1">
         {{template "settings-layout" .}}
       </div>
-      {{template "footer" .}}
     </div>
   {{else if eq .page "settings-profile" }}
     <!-- Settings profile page -->
@@ -185,7 +181,6 @@
       <div class="flex-1">
         {{template "settings-layout" .}}
       </div>
-      {{template "footer" .}}
     </div>
   {{else if eq .page "settings-security" }}
     <!-- Settings security page -->
@@ -193,7 +188,6 @@
       <div class="flex-1">
         {{template "settings-layout" .}}
       </div>
-      {{template "footer" .}}
     </div>
   {{else if eq .page "settings-notifications" }}
     <!-- Settings notifications page -->
@@ -201,7 +195,6 @@
       <div class="flex-1">
         {{template "settings-layout" .}}
       </div>
-      {{template "footer" .}}
     </div>
   {{else}}
     <!-- Modern layout with enhanced backgrounds for home and login pages -->
