@@ -4,7 +4,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vega AI - {{.title}}</title>
+  <title>Vega AI • {{.title}}</title>
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/images/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/images/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -142,7 +147,6 @@
       <div class="flex-1">
         {{template "dashboard-content" .}}
       </div>
-      {{template "footer" .}}
     </div>
   {{else if eq .page "job-new"}}
     <!-- Job form uses the job-specific template -->
@@ -150,7 +154,6 @@
       <div class="flex-1">
         {{template "job-new-content" .}}
       </div>
-      {{template "footer" .}}
     </div>
   {{else if eq .page "job-details"}}
     <!-- Job details page -->
@@ -158,7 +161,6 @@
       <div class="flex-1">
         {{template "job-details-content" .}}
       </div>
-      {{template "footer" .}}
     </div>
   {{else if eq .page "404"}}
     <!-- 404 Not Found page -->
@@ -172,7 +174,6 @@
       <div class="flex-1">
         {{template "settings-layout" .}}
       </div>
-      {{template "footer" .}}
     </div>
   {{else if eq .page "settings-profile" }}
     <!-- Settings profile page -->
@@ -180,7 +181,6 @@
       <div class="flex-1">
         {{template "settings-layout" .}}
       </div>
-      {{template "footer" .}}
     </div>
   {{else if eq .page "settings-security" }}
     <!-- Settings security page -->
@@ -188,7 +188,6 @@
       <div class="flex-1">
         {{template "settings-layout" .}}
       </div>
-      {{template "footer" .}}
     </div>
   {{else if eq .page "settings-notifications" }}
     <!-- Settings notifications page -->
@@ -196,7 +195,6 @@
       <div class="flex-1">
         {{template "settings-layout" .}}
       </div>
-      {{template "footer" .}}
     </div>
   {{else}}
     <!-- Modern layout with enhanced backgrounds for home and login pages -->
