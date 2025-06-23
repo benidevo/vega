@@ -18,6 +18,7 @@ import (
 // SetupRoutes configures all application routes and middleware
 func SetupRoutes(a *App) {
 	a.router.Use(globalErrorHandler)
+	a.router.Static("/static", "./static")
 
 	health.RegisterRoutes(a.router, a.db)
 
