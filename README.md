@@ -12,6 +12,14 @@ Just as ancient navigators used the star Vega to find their way, Vega AI helps y
 
 ---
 
+## 📋 What You'll Need
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed
+- A [Google Gemini API key](https://aistudio.google.com/app/apikey) (free tier available)
+- Basic comfort with copy/paste commands in terminal
+
+---
+
 ## 🚀 Quick Start
 
 ### Option 1: Docker Run
@@ -20,8 +28,8 @@ Just as ancient navigators used the star Vega to find their way, Vega AI helps y
 
 ```bash
 # Required
-TOKEN_SECRET=your-secure-jwt-secret-here
-GEMINI_API_KEY=your-gemini-api-key
+TOKEN_SECRET=your-secure-jwt-secret-here  # Any secure random string (used for user sessions)
+GEMINI_API_KEY=your-gemini-api-key        # Your Google AI API key for document generation
 
 # Optional - Google OAuth
 GOOGLE_CLIENT_ID=your-google-client-id
@@ -37,7 +45,7 @@ ADMIN_EMAIL=admin@yourdomain.com
 **2. Run with Docker:**
 
 ```bash
-docker run -d \
+docker run --pull always -d \
   --name vega-ai \
   -p 8765:8765 \
   -v vega-data:/app/data \
@@ -80,22 +88,35 @@ docker compose up -d
 
 **3. Access:** <http://localhost:8765> 🎉
 
+## 🎯 What Happens Next
+
+Once running, you'll have:
+
+- A web application at <http://localhost:8765>
+- User registration/login system
+- Job tracking dashboard
+- AI-powered document generation
+
+## 🔗 Browser Extension
+
+Enhance your workflow with the [**Vega AI Extension**](https://github.com/benidevo/vega-ai-extension) for one-click job capture from LinkedIn.
+
 ---
 
 ## ✨ Features
 
-* **🤖 AI Document Generation**: Automatically create tailored application documents
-* **📊 Smart Job Matching**: AI analyzes job requirements vs your profile
-* **🗺️ Application Tracking**: Visualize your pipeline from "Interested" to "Offer"
-* **🔗 Browser Extension**: One-click job capture from LinkedIn
-* **🔐 Secure Auth**: Google OAuth + local accounts
-* **⚡ Self-Hosted**: Your data stays with you
+- **🤖 AI Document Generation**: Automatically create tailored application documents
+- **📊 Smart Job Matching**: AI analyzes job requirements vs your profile
+- **🗺️ Application Tracking**: Visualize your pipeline from "Interested" to "Offer"
+- **🔗 Browser Extension**: One-click job capture from LinkedIn
+- **🔐 Secure Auth**: Google OAuth + local accounts
+- **⚡ Self-Hosted**: Your data stays with you
 
 ---
 
 ## 🛠️ Development
 
-**Prerequisites:** Docker, Docker Compose, [Gemini API key](https://ai.google.dev/)
+**Prerequisites:** Docker, Docker Compose, [Gemini API key](https://aistudio.google.com/app/apikey)
 
 ```bash
 git clone https://github.com/benidevo/vega-ai.git
@@ -113,12 +134,6 @@ make run
 | `make test` | Run test suite |
 | `make restart` | Rebuild and restart |
 | `make logs` | View container logs |
-
----
-
-## 🔗 Extensions
-
-Install the [**Vega AI Extension**](https://github.com/benidevo/vega-ai-extension) for one-click job capture from LinkedIn.
 
 ---
 
@@ -142,8 +157,8 @@ This project is licensed under the GNU Affero General Public License v3.0 (AGPL-
 
 What this means:
 
-✅ You can use, study, modify, and distribute the code
-✅ If you run this software on a server, you must make your source code available to users
-✅ Any modifications must also be released under AGPL-3.0
+- ✅ You can use, study, modify, and distribute the code
+- ✅ If you run this software on a server, you must make your source code available to users
+- ✅ Any modifications must also be released under AGPL-3.0
 
 **Commercial licensing:** For commercial use without AGPL restrictions, contact <benjaminidewor@gmail.com> for licensing options.
