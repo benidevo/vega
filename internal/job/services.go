@@ -311,29 +311,9 @@ func (s *JobService) UpdateJob(ctx context.Context, job *models.Job) error {
 		return err
 	}
 
-	currentJob, err := s.jobRepo.GetByID(ctx, job.ID)
-	if err != nil {
-		s.log.Error().
-			Int("job_id", job.ID).
-			Err(err).
-			Msg("Failed to get current job state")
-		return err
-	}
-
-	if currentJob.Status != job.Status {
-		if !models.IsValidTransition(currentJob.Status, job.Status) {
-			s.log.Error().
-				Int("job_id", job.ID).
-				Str("current_status", currentJob.Status.String()).
-				Str("new_status", job.Status.String()).
-				Msg("Invalid job status transition")
-			return models.ErrInvalidStatusTransition
-		}
-	}
-
 	job.UpdatedAt = time.Now().UTC()
 
-	err = s.jobRepo.Update(ctx, job)
+	err := s.jobRepo.Update(ctx, job)
 	if err != nil {
 		s.log.Error().
 			Int("job_id", job.ID).

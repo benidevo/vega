@@ -299,7 +299,6 @@ func TestJobService(t *testing.T) {
 
 	t.Run("should update job successfully", func(t *testing.T) {
 		mockRepo := new(MockJobRepository)
-		mockRepo.On("GetByID", ctx, job.ID).Return(job, nil)
 		mockRepo.On("Update", ctx, mock.AnythingOfType("*models.Job")).Return(nil)
 
 		service := NewJobService(mockRepo, nil, nil, cfg)

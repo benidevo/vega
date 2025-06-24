@@ -210,27 +210,3 @@ func TestJob_Validate(t *testing.T) {
 		})
 	}
 }
-
-func TestIsValidTransition(t *testing.T) {
-	tests := []struct {
-		name    string
-		current JobStatus
-		new     JobStatus
-		want    bool
-	}{
-		{"Same status", INTERESTED, INTERESTED, true},
-		{"Forward progression", INTERESTED, APPLIED, true},
-		{"Multiple forward steps", INTERVIEWING, OFFER_RECEIVED, true},
-		{"Backward progression", APPLIED, INTERESTED, false},
-		{"Terminal state cannot transition", REJECTED, APPLIED, false},
-		{"Offer can be rejected", OFFER_RECEIVED, REJECTED, true},
-		{"Any state to not interested", APPLIED, NOT_INTERESTED, true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := IsValidTransition(tt.current, tt.new)
-			assert.Equal(t, tt.want, got)
-		})
-	}
-}
