@@ -164,10 +164,10 @@ func (v *CentralizedValidator) ValidateWorkExperience(we *models.WorkExperience)
 
 	if we.EndDate != nil {
 		if we.EndDate.After(time.Now()) {
-			return fmt.Errorf("end date cannot be in the future")
+			return fmt.Errorf("End date cannot be in the future")
 		}
 		if we.EndDate.Before(we.StartDate) {
-			return fmt.Errorf("end date must be after start date")
+			return fmt.Errorf("End date must be after start date")
 		}
 	}
 
@@ -211,10 +211,10 @@ func (v *CentralizedValidator) ValidateEducation(ed *models.Education) error {
 
 	if ed.EndDate != nil {
 		if ed.EndDate.After(time.Now()) {
-			return fmt.Errorf("end date cannot be in the future")
+			return fmt.Errorf("End date cannot be in the future")
 		}
 		if ed.EndDate.Before(ed.StartDate) {
-			return fmt.Errorf("end date must be after start date")
+			return fmt.Errorf("End date must be after start date")
 		}
 	}
 
@@ -270,7 +270,7 @@ func (v *CentralizedValidator) ValidateCertification(cert *models.Certification)
 
 	if cert.ExpiryDate != nil {
 		if cert.ExpiryDate.Before(cert.IssueDate) {
-			return fmt.Errorf("expiry date must be after issue date")
+			return fmt.Errorf("Expiry date must be after issue date")
 		}
 	}
 

@@ -35,22 +35,34 @@
 
   <!-- Page Header -->
   <div class="mb-8">
-    <h2 class="text-2xl font-bold text-white mb-2">Add</h2>
+    <h2 class="text-2xl font-bold text-white mb-2">Add Certification</h2>
     <p class="text-gray-400">Add professional certifications to your profile. This information will be visible to potential employers.</p>
   </div>
 
   <!-- Certification Form -->
   <div>
+    <!-- Error Alert -->
+    {{if .error}}
+    <div class="text-center text-sm block mb-4 p-4 rounded-md bg-red-900 bg-opacity-50 border border-red-700 text-red-200">
+      <div class="flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span class="leading-5">{{.error}}</span>
+      </div>
+    </div>
+    {{end}}
+    
     <form action="/settings/profile/certification" method="post" class="space-y-6">
       <div>
         <label for="name" class="block text-sm font-medium text-gray-300 mb-2">Certification Name *</label>
-        <input type="text" id="name" name="name" required
+        <input type="text" id="name" name="name" required value="{{if .certification}}{{.certification.Name}}{{end}}"
                class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
       </div>
 
       <div>
         <label for="issuing_org" class="block text-sm font-medium text-gray-300 mb-2">Issuing Organization *</label>
-        <input type="text" id="issuing_org" name="issuing_org" required
+        <input type="text" id="issuing_org" name="issuing_org" required value="{{if .certification}}{{.certification.IssuingOrg}}{{end}}"
                class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
       </div>
 
@@ -71,13 +83,13 @@
 
       <div>
         <label for="credential_id" class="block text-sm font-medium text-gray-300 mb-2">Credential ID</label>
-        <input type="text" id="credential_id" name="credential_id"
+        <input type="text" id="credential_id" name="credential_id" value="{{if .certification}}{{.certification.CredentialID}}{{end}}"
                class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
       </div>
 
       <div>
         <label for="credential_url" class="block text-sm font-medium text-gray-300 mb-2">Credential URL</label>
-        <input type="url" id="credential_url" name="credential_url"
+        <input type="url" id="credential_url" name="credential_url" value="{{if .certification}}{{.certification.CredentialURL}}{{end}}"
                class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                placeholder="https://example.com/credential">
       </div>
