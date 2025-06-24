@@ -35,45 +35,49 @@
 
   <!-- Page Header -->
   <div class="mb-8">
-    <h2 class="text-2xl font-bold text-white mb-2">Add</h2>
+    <h2 class="text-2xl font-bold text-white mb-2">Add Education</h2>
     <p class="text-gray-400">Add educational qualifications to your profile. This information will be visible to potential employers.</p>
   </div>
 
   <!-- Education Form -->
   <div>
+    <!-- Error Alert -->
+    {{template "error_alert" .}}
+    
     <form action="/settings/profile/education" method="post" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label for="institution" class="block text-sm font-medium text-gray-300 mb-2">School/Institution *</label>
-          <input type="text" id="institution" name="institution" required
+          <input type="text" id="institution" name="institution" required value="{{if .education}}{{.education.Institution}}{{end}}"
                  class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
         </div>
 
         <div>
           <label for="degree" class="block text-sm font-medium text-gray-300 mb-2">Degree *</label>
-          <input type="text" id="degree" name="degree" required
+          <input type="text" id="degree" name="degree" required value="{{if .education}}{{.education.Degree}}{{end}}"
                  class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
         </div>
       </div>
 
       <div>
         <label for="field_of_study" class="block text-sm font-medium text-gray-300 mb-2">Field of Study</label>
-        <input type="text" id="field_of_study" name="field_of_study"
+        <input type="text" id="field_of_study" name="field_of_study" value="{{if .education}}{{.education.FieldOfStudy}}{{end}}"
                class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label for="start_date" class="block text-sm font-medium text-gray-300 mb-2">Start Date *</label>
+          <p class="text-xs text-gray-400 mb-2">Format: MM/YYYY (e.g., 09/2019)</p>
           <input type="month" id="start_date" name="start_date" required
                  class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
         </div>
 
         <div>
           <label for="end_date" class="block text-sm font-medium text-gray-300 mb-2">End Date</label>
+          <p class="text-xs text-gray-400 mb-2">Format: MM/YYYY - Leave blank if still studying</p>
           <input type="month" id="end_date" name="end_date"
                  class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-          <p class="mt-1 text-xs text-gray-400">Leave blank if still studying</p>
         </div>
       </div>
 
@@ -81,7 +85,7 @@
         <label for="description" class="block text-sm font-medium text-gray-300 mb-2">Description</label>
         <textarea id="description" name="description" rows="4"
                   class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                  placeholder="Optional: Add any relevant coursework, achievements, or other details"></textarea>
+                  placeholder="Optional: Add any relevant coursework, achievements, or other details">{{if .education}}{{.education.Description}}{{end}}</textarea>
       </div>
 
       <!-- Form Actions -->

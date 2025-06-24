@@ -2,6 +2,7 @@ package settings
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -168,7 +169,32 @@ func (h *BaseSettingsHandler) HandleCreate(c *gin.Context) {
 	}
 
 	if err := h.service.CreateEntity(c, entity); err != nil {
-		alerts.RenderError(c, http.StatusInternalServerError, fmt.Sprintf("Failed to create %s: %s", h.metadata.Name, err.Error()), alerts.ContextDashboard)
+		statusCode, message := h.getErrorDetails(err)
+
+		// For non-HTMX requests, render the form page with the error
+		if c.GetHeader("HX-Request") != "true" {
+			username, _ := c.Get("username")
+			templateData := gin.H{
+				"title":               fmt.Sprintf("Add %s", h.metadata.Name),
+				"page":                "settings-profile",
+				"activeNav":           "settings",
+				"activeSettings":      "profile",
+				"pageTitle":           "Profile Settings",
+				"currentYear":         time.Now().Year(),
+				"securityPageEnabled": h.service.GetConfig().SecurityPageEnabled,
+				"username":            username,
+				"profile":             profile,
+				fmt.Sprintf("isAdding%s", h.metadata.Name): true,
+				"error":                          message,
+				strings.ToLower(h.metadata.Name): entity,
+			}
+
+			c.HTML(statusCode, "layouts/base.html", templateData)
+			return
+		}
+
+		// For HTMX requests, render the error alert
+		alerts.RenderError(c, statusCode, message, alerts.ContextDashboard)
 		return
 	}
 
@@ -219,7 +245,8 @@ func (h *BaseSettingsHandler) HandleUpdate(c *gin.Context) {
 	}
 
 	if err := h.service.UpdateEntity(c, entity); err != nil {
-		alerts.RenderError(c, http.StatusInternalServerError, fmt.Sprintf("Failed to update %s: %s", h.metadata.Name, err.Error()), alerts.ContextDashboard)
+		statusCode, message := h.getErrorDetails(err)
+		alerts.RenderError(c, statusCode, message, alerts.ContextDashboard)
 		return
 	}
 
@@ -229,6 +256,61 @@ func (h *BaseSettingsHandler) HandleUpdate(c *gin.Context) {
 		"context": "general",
 		"message": fmt.Sprintf("%s updated successfully", h.metadata.Name),
 	})
+}
+
+// getErrorDetails determines the appropriate status code and message for an error
+func (h *BaseSettingsHandler) getErrorDetails(err error) (int, string) {
+	if err == nil {
+		return http.StatusInternalServerError, "Unknown error occurred"
+	}
+
+	var unwrapped error
+	if errors.Is(err, models.ErrFailedToCreateWorkExperience) ||
+		errors.Is(err, models.ErrFailedToUpdateWorkExperience) ||
+		errors.Is(err, models.ErrFailedToCreateEducation) ||
+		errors.Is(err, models.ErrFailedToUpdateEducation) ||
+		errors.Is(err, models.ErrFailedToCreateCertification) ||
+		errors.Is(err, models.ErrFailedToUpdateCertification) {
+		unwrapped = errors.Unwrap(err)
+		if unwrapped != nil {
+			// Use the unwrapped error for checking
+			err = unwrapped
+		}
+	}
+
+	// Get the error message
+	errMsg := err.Error()
+
+	// List of validation error patterns
+	validationPatterns := []string{
+		"cannot be in the future",
+		"must be after",
+		"must not exceed",
+		"is required",
+		"must be positive",
+		"cannot be empty",
+		"must be a valid",
+		"invalid",
+		"contains invalid characters",
+		"field is required",
+		"expiry date must be after issue date",
+		"end date must be empty when position is current",
+	}
+
+	// Check if the error message contains any validation patterns
+	for _, pattern := range validationPatterns {
+		if strings.Contains(strings.ToLower(errMsg), strings.ToLower(pattern)) {
+			// For validation errors, return just the validation message
+			// If it was wrapped, use the unwrapped error message
+			if unwrapped != nil {
+				return http.StatusBadRequest, unwrapped.Error()
+			}
+			return http.StatusBadRequest, errMsg
+		}
+	}
+
+	// For all other errors, return 500 with a generic message
+	return http.StatusInternalServerError, fmt.Sprintf("Failed to process %s", h.metadata.Name)
 }
 
 // HandleDelete processes the deletion of an entity

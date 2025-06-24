@@ -35,49 +35,53 @@
 
   <!-- Page Header -->
   <div class="mb-8">
-    <h2 class="text-2xl font-bold text-white mb-2">Add</h2>
+    <h2 class="text-2xl font-bold text-white mb-2">Add Certification</h2>
     <p class="text-gray-400">Add professional certifications to your profile. This information will be visible to potential employers.</p>
   </div>
 
   <!-- Certification Form -->
   <div>
+    <!-- Error Alert -->
+    {{template "error_alert" .}}
+    
     <form action="/settings/profile/certification" method="post" class="space-y-6">
       <div>
         <label for="name" class="block text-sm font-medium text-gray-300 mb-2">Certification Name *</label>
-        <input type="text" id="name" name="name" required
+        <input type="text" id="name" name="name" required value="{{if .certification}}{{.certification.Name}}{{end}}"
                class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
       </div>
 
       <div>
         <label for="issuing_org" class="block text-sm font-medium text-gray-300 mb-2">Issuing Organization *</label>
-        <input type="text" id="issuing_org" name="issuing_org" required
+        <input type="text" id="issuing_org" name="issuing_org" required value="{{if .certification}}{{.certification.IssuingOrg}}{{end}}"
                class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label for="issue_date" class="block text-sm font-medium text-gray-300 mb-2">Issue Date *</label>
+          <p class="text-xs text-gray-400 mb-2">Format: MM/YYYY (e.g., 06/2022)</p>
           <input type="month" id="issue_date" name="issue_date" required
                  class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
         </div>
 
         <div>
           <label for="expiry_date" class="block text-sm font-medium text-gray-300 mb-2">Expiry Date</label>
+          <p class="text-xs text-gray-400 mb-2">Format: MM/YYYY - Leave blank if no expiration</p>
           <input type="month" id="expiry_date" name="expiry_date"
                  class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-          <p class="mt-1 text-xs text-gray-400">Leave blank if no expiration</p>
         </div>
       </div>
 
       <div>
         <label for="credential_id" class="block text-sm font-medium text-gray-300 mb-2">Credential ID</label>
-        <input type="text" id="credential_id" name="credential_id"
+        <input type="text" id="credential_id" name="credential_id" value="{{if .certification}}{{.certification.CredentialID}}{{end}}"
                class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
       </div>
 
       <div>
         <label for="credential_url" class="block text-sm font-medium text-gray-300 mb-2">Credential URL</label>
-        <input type="url" id="credential_url" name="credential_url"
+        <input type="url" id="credential_url" name="credential_url" value="{{if .certification}}{{.certification.CredentialURL}}{{end}}"
                class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                placeholder="https://example.com/credential">
       </div>

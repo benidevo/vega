@@ -133,7 +133,6 @@ func (h *JobHandler) renderError(c *gin.Context, err error) {
 		errors.Is(err, models.ErrStatusRequired) ||
 		errors.Is(err, models.ErrJobTitleRequired) ||
 		errors.Is(err, models.ErrCompanyNameRequired) ||
-		errors.Is(err, models.ErrInvalidStatusTransition) ||
 		errors.Is(err, models.ErrJobDescriptionRequired) ||
 		errors.Is(err, models.ErrCompanyRequired) ||
 		errors.Is(err, models.ErrInvalidURLFormat) ||
@@ -163,8 +162,7 @@ func (h *JobHandler) renderDashboardError(c *gin.Context, err error) {
 
 	// Determine appropriate status code based on error type
 	if errors.Is(err, models.ErrInvalidJobStatus) ||
-		errors.Is(err, models.ErrStatusRequired) ||
-		errors.Is(err, models.ErrInvalidStatusTransition) {
+		errors.Is(err, models.ErrStatusRequired) {
 		statusCode = http.StatusBadRequest
 	}
 
