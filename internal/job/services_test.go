@@ -130,6 +130,11 @@ func (m *MockJobRepository) DeleteMatchResult(ctx context.Context, matchID int) 
 	return args.Error(0)
 }
 
+func (m *MockJobRepository) MatchResultBelongsToJob(ctx context.Context, matchID, jobID int) (bool, error) {
+	args := m.Called(ctx, matchID, jobID)
+	return args.Bool(0), args.Error(1)
+}
+
 func setupTestConfig() *config.Settings {
 	return &config.Settings{
 		IsTest:   true,

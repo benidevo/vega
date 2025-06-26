@@ -416,25 +416,17 @@ func (s *JobService) DeleteMatchResult(ctx context.Context, jobID, matchID int) 
 	}
 
 	// Verify the match result belongs to the specified job
-	matchResults, err := s.jobRepo.GetJobMatchHistory(ctx, jobID)
+	belongsToJob, err := s.jobRepo.MatchResultBelongsToJob(ctx, matchID, jobID)
 	if err != nil {
 		s.log.Error().
 			Int("job_id", jobID).
+			Int("match_id", matchID).
 			Err(err).
-			Msg("Failed to get match history")
+			Msg("Failed to verify match ownership")
 		return err
 	}
 
-	// Check if the match result exists and belongs to this job
-	matchFound := false
-	for _, result := range matchResults {
-		if result.ID == matchID {
-			matchFound = true
-			break
-		}
-	}
-
-	if !matchFound {
+	if !belongsToJob {
 		s.log.Error().
 			Int("job_id", jobID).
 			Int("match_id", matchID).

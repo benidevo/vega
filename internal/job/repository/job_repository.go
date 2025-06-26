@@ -1018,3 +1018,20 @@ func (r *SQLiteJobRepository) DeleteMatchResult(ctx context.Context, matchID int
 
 	return nil
 }
+
+// MatchResultBelongsToJob checks if a match result belongs to a specific job
+func (r *SQLiteJobRepository) MatchResultBelongsToJob(ctx context.Context, matchID, jobID int) (bool, error) {
+	if matchID <= 0 || jobID <= 0 {
+		return false, models.ErrInvalidJobID
+	}
+
+	query := `SELECT EXISTS(SELECT 1 FROM match_results WHERE id = ? AND job_id = ?)`
+
+	var exists bool
+	err := r.db.QueryRowContext(ctx, query, matchID, jobID).Scan(&exists)
+	if err != nil {
+		return false, models.WrapError(models.ErrFailedToGetJob, err)
+	}
+
+	return exists, nil
+}
