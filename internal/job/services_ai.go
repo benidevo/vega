@@ -81,6 +81,23 @@ func (s *JobService) AnalyzeJobMatch(ctx context.Context, userID, jobID int) (*m
 
 	result := s.convertToJobMatchAnalysis(aiResult, userID, jobID)
 
+	matchResult := &models.MatchResult{
+		JobID:      jobID,
+		MatchScore: aiResult.MatchScore,
+		Strengths:  aiResult.Strengths,
+		Weaknesses: aiResult.Weaknesses,
+		Highlights: aiResult.Highlights,
+		Feedback:   aiResult.Feedback,
+	}
+
+	if err := s.jobRepo.CreateMatchResult(ctx, matchResult); err != nil {
+		s.log.Warn().Err(err).
+			Str("user_ref", userRef).
+			Int("job_id", jobID).
+			Str("error_type", "match_result_store_failed").
+			Msg("Failed to store match result history, but continuing with analysis")
+	}
+
 	err = s.jobRepo.UpdateMatchScore(ctx, jobID, &result.MatchScore)
 	if err != nil {
 		s.log.Warn().Err(err).

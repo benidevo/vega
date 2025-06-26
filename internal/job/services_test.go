@@ -96,6 +96,27 @@ func (m *MockJobRepository) GetStats(ctx context.Context) (*models.JobStats, err
 	return args.Get(0).(*models.JobStats), args.Error(1)
 }
 
+func (m *MockJobRepository) CreateMatchResult(ctx context.Context, matchResult *models.MatchResult) error {
+	args := m.Called(ctx, matchResult)
+	return args.Error(0)
+}
+
+func (m *MockJobRepository) GetJobMatchHistory(ctx context.Context, jobID int) ([]*models.MatchResult, error) {
+	args := m.Called(ctx, jobID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.MatchResult), args.Error(1)
+}
+
+func (m *MockJobRepository) GetRecentMatchResults(ctx context.Context, limit int) ([]*models.MatchResult, error) {
+	args := m.Called(ctx, limit)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.MatchResult), args.Error(1)
+}
+
 func setupTestConfig() *config.Settings {
 	return &config.Settings{
 		IsTest:   true,

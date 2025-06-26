@@ -29,4 +29,8 @@ type JobRepository interface {
 	GetStats(ctx context.Context) (*models.JobStats, error)
 	GetBySourceURL(ctx context.Context, sourceURL string) (*models.Job, error)
 	GetOrCreate(ctx context.Context, job *models.Job) (*models.Job, error)
+
+	CreateMatchResult(ctx context.Context, matchResult *models.MatchResult) error
+	GetJobMatchHistory(ctx context.Context, jobID int) ([]*models.MatchResult, error)
+	GetRecentMatchResults(ctx context.Context, limit int) ([]*models.MatchResult, error)
 }

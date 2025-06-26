@@ -609,3 +609,270 @@ func TestGetRecentJobsByUserID(t *testing.T) {
 func intPtr(i int) *int {
 	return &i
 }
+
+func TestSQLiteJobRepository_CreateMatchResult(t *testing.T) {
+	tests := []struct {
+		name        string
+		matchResult *models.MatchResult
+		setupMock   func(sqlmock.Sqlmock)
+		wantErr     bool
+		errMsg      string
+	}{
+		{
+			name: "successful creation",
+			matchResult: &models.MatchResult{
+				JobID:      1,
+				MatchScore: 85,
+				Strengths:  []string{"Strong technical skills", "Relevant experience"},
+				Weaknesses: []string{"Limited industry experience"},
+				Highlights: []string{"Led similar project"},
+				Feedback:   "Great match overall",
+			},
+			setupMock: func(mock sqlmock.Sqlmock) {
+				strengthsJSON, _ := json.Marshal([]string{"Strong technical skills", "Relevant experience"})
+				weaknessesJSON, _ := json.Marshal([]string{"Limited industry experience"})
+				highlightsJSON, _ := json.Marshal([]string{"Led similar project"})
+
+				mock.ExpectExec("INSERT INTO match_results").
+					WithArgs(1, 85, string(strengthsJSON), string(weaknessesJSON), string(highlightsJSON), "Great match overall").
+					WillReturnResult(sqlmock.NewResult(123, 1))
+			},
+			wantErr: false,
+		},
+		{
+			name:        "nil match result",
+			matchResult: nil,
+			setupMock:   func(mock sqlmock.Sqlmock) {},
+			wantErr:     true,
+			errMsg:      "invalid job ID",
+		},
+		{
+			name: "database error",
+			matchResult: &models.MatchResult{
+				JobID:      1,
+				MatchScore: 85,
+				Strengths:  []string{"Strong skills"},
+				Weaknesses: []string{},
+				Highlights: []string{},
+				Feedback:   "Good match",
+			},
+			setupMock: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec("INSERT INTO match_results").
+					WillReturnError(errors.New("database error"))
+			},
+			wantErr: true,
+			errMsg:  "failed to create job",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo, mock, _ := setupJobRepositoryTest(t)
+
+			tt.setupMock(mock)
+
+			err := repo.CreateMatchResult(context.Background(), tt.matchResult)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+				if tt.errMsg != "" {
+					assert.Contains(t, err.Error(), tt.errMsg)
+				}
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, 123, tt.matchResult.ID)
+			}
+
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}
+
+func TestSQLiteJobRepository_GetJobMatchHistory(t *testing.T) {
+	tests := []struct {
+		name      string
+		jobID     int
+		setupMock func(sqlmock.Sqlmock)
+		want      []*models.MatchResult
+		wantErr   bool
+	}{
+		{
+			name:  "successful retrieval",
+			jobID: 1,
+			setupMock: func(mock sqlmock.Sqlmock) {
+				strengths1, _ := json.Marshal([]string{"Good fit", "Strong skills"})
+				weaknesses1, _ := json.Marshal([]string{"Needs training"})
+				highlights1, _ := json.Marshal([]string{"Great experience"})
+
+				strengths2, _ := json.Marshal([]string{"Excellent match"})
+				weaknesses2, _ := json.Marshal([]string{})
+				highlights2, _ := json.Marshal([]string{"Perfect fit"})
+
+				rows := sqlmock.NewRows([]string{"id", "job_id", "match_score", "strengths", "weaknesses", "highlights", "feedback", "created_at"}).
+					AddRow(2, 1, 90, string(strengths2), string(weaknesses2), string(highlights2), "Latest analysis", time.Now()).
+					AddRow(1, 1, 75, string(strengths1), string(weaknesses1), string(highlights1), "First analysis", time.Now().Add(-24*time.Hour))
+
+				mock.ExpectQuery("SELECT .* FROM match_results WHERE job_id = \\? ORDER BY created_at DESC").
+					WithArgs(1).
+					WillReturnRows(rows)
+			},
+			want: []*models.MatchResult{
+				{
+					ID:         2,
+					JobID:      1,
+					MatchScore: 90,
+					Strengths:  []string{"Excellent match"},
+					Weaknesses: []string{},
+					Highlights: []string{"Perfect fit"},
+					Feedback:   "Latest analysis",
+				},
+				{
+					ID:         1,
+					JobID:      1,
+					MatchScore: 75,
+					Strengths:  []string{"Good fit", "Strong skills"},
+					Weaknesses: []string{"Needs training"},
+					Highlights: []string{"Great experience"},
+					Feedback:   "First analysis",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:  "no results found",
+			jobID: 999,
+			setupMock: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "job_id", "match_score", "strengths", "weaknesses", "highlights", "feedback", "created_at"})
+				mock.ExpectQuery("SELECT .* FROM match_results WHERE job_id = \\? ORDER BY created_at DESC").
+					WithArgs(999).
+					WillReturnRows(rows)
+			},
+			want:    []*models.MatchResult{},
+			wantErr: false,
+		},
+		{
+			name:  "database error",
+			jobID: 1,
+			setupMock: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery("SELECT .* FROM match_results WHERE job_id = \\? ORDER BY created_at DESC").
+					WithArgs(1).
+					WillReturnError(errors.New("database error"))
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo, mock, _ := setupJobRepositoryTest(t)
+
+			tt.setupMock(mock)
+
+			got, err := repo.GetJobMatchHistory(context.Background(), tt.jobID)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Len(t, got, len(tt.want))
+
+				for i, result := range got {
+					assert.Equal(t, tt.want[i].ID, result.ID)
+					assert.Equal(t, tt.want[i].JobID, result.JobID)
+					assert.Equal(t, tt.want[i].MatchScore, result.MatchScore)
+					assert.Equal(t, tt.want[i].Strengths, result.Strengths)
+					assert.Equal(t, tt.want[i].Weaknesses, result.Weaknesses)
+					assert.Equal(t, tt.want[i].Highlights, result.Highlights)
+					assert.Equal(t, tt.want[i].Feedback, result.Feedback)
+				}
+			}
+
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}
+
+func TestSQLiteJobRepository_GetRecentMatchResults(t *testing.T) {
+	tests := []struct {
+		name      string
+		limit     int
+		setupMock func(sqlmock.Sqlmock)
+		want      []*models.MatchResult
+		wantErr   bool
+	}{
+		{
+			name:  "successful retrieval with limit",
+			limit: 5,
+			setupMock: func(mock sqlmock.Sqlmock) {
+				strengths, _ := json.Marshal([]string{"Strong match"})
+				weaknesses, _ := json.Marshal([]string{"Minor gaps"})
+				highlights, _ := json.Marshal([]string{"Excellent fit"})
+
+				rows := sqlmock.NewRows([]string{"id", "job_id", "match_score", "strengths", "weaknesses", "highlights", "feedback", "created_at"}).
+					AddRow(3, 2, 88, string(strengths), string(weaknesses), string(highlights), "Recent match", time.Now()).
+					AddRow(2, 1, 92, string(strengths), string(weaknesses), string(highlights), "Great match", time.Now().Add(-1*time.Hour)).
+					AddRow(1, 3, 75, string(strengths), string(weaknesses), string(highlights), "Good match", time.Now().Add(-2*time.Hour))
+
+				mock.ExpectQuery("SELECT mr\\.id, mr\\.job_id, mr\\.match_score, mr\\.strengths, mr\\.weaknesses, mr\\.highlights, mr\\.feedback, mr\\.created_at FROM match_results mr ORDER BY mr\\.created_at DESC LIMIT \\?").
+					WithArgs(5).
+					WillReturnRows(rows)
+			},
+			want: []*models.MatchResult{
+				{ID: 3, JobID: 2, MatchScore: 88, Strengths: []string{"Strong match"}, Weaknesses: []string{"Minor gaps"}, Highlights: []string{"Excellent fit"}, Feedback: "Recent match"},
+				{ID: 2, JobID: 1, MatchScore: 92, Strengths: []string{"Strong match"}, Weaknesses: []string{"Minor gaps"}, Highlights: []string{"Excellent fit"}, Feedback: "Great match"},
+				{ID: 1, JobID: 3, MatchScore: 75, Strengths: []string{"Strong match"}, Weaknesses: []string{"Minor gaps"}, Highlights: []string{"Excellent fit"}, Feedback: "Good match"},
+			},
+			wantErr: false,
+		},
+		{
+			name:  "default limit when zero",
+			limit: 0,
+			setupMock: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"id", "job_id", "match_score", "strengths", "weaknesses", "highlights", "feedback", "created_at"})
+				mock.ExpectQuery("SELECT mr\\.id, mr\\.job_id, mr\\.match_score, mr\\.strengths, mr\\.weaknesses, mr\\.highlights, mr\\.feedback, mr\\.created_at FROM match_results mr ORDER BY mr\\.created_at DESC LIMIT \\?").
+					WithArgs(10). // Default limit
+					WillReturnRows(rows)
+			},
+			want:    []*models.MatchResult{},
+			wantErr: false,
+		},
+		{
+			name:  "database error",
+			limit: 5,
+			setupMock: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery("SELECT mr\\.id, mr\\.job_id, mr\\.match_score, mr\\.strengths, mr\\.weaknesses, mr\\.highlights, mr\\.feedback, mr\\.created_at FROM match_results mr ORDER BY mr\\.created_at DESC LIMIT \\?").
+					WithArgs(5).
+					WillReturnError(errors.New("database error"))
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo, mock, _ := setupJobRepositoryTest(t)
+
+			tt.setupMock(mock)
+
+			got, err := repo.GetRecentMatchResults(context.Background(), tt.limit)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Len(t, got, len(tt.want))
+
+				for i, result := range got {
+					assert.Equal(t, tt.want[i].ID, result.ID)
+					assert.Equal(t, tt.want[i].JobID, result.JobID)
+					assert.Equal(t, tt.want[i].MatchScore, result.MatchScore)
+					assert.Equal(t, tt.want[i].Feedback, result.Feedback)
+				}
+			}
+
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}
