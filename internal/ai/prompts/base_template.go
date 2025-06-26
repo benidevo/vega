@@ -45,6 +45,7 @@ func (t *PromptTemplate) BuildPrompt(systemInstruction, applicantName, jobDescri
 
 	// Current task details
 	promptBuilder.WriteString("# Current Task\n\n")
+	promptBuilder.WriteString(fmt.Sprintf("**Applicant Name:** %s\n\n", applicantName))
 	promptBuilder.WriteString(fmt.Sprintf("**Job Description:**\n%s\n\n", jobDescription))
 	promptBuilder.WriteString(fmt.Sprintf("**Applicant Profile:**\n%s\n\n", applicantProfile))
 
