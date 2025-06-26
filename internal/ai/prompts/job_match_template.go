@@ -9,6 +9,26 @@ func JobMatchTemplate() *PromptTemplate {
 		Context: "You're conducting a comprehensive analysis to determine how well a candidate matches a specific job opportunity. Your assessment considers industry-specific requirements, transferable skills, growth potential, and overall fit.",
 		Examples: []Example{
 			{
+				Input: "Candidate: Name: John, Title: Developer, Career Summary: I am a developer in technology industry\nJob: Senior Python Engineer requiring 5+ years Python, distributed systems, and AI/ML experience",
+				Output: `{
+  "matchScore": 12,
+  "strengths": [
+    "You're in the technology field, which aligns with this role",
+    "Your developer title suggests some technical background"
+  ],
+  "weaknesses": [
+    "Your profile lacks any work experience details - can't assess your Python expertise",
+    "No skills listed to verify your technical capabilities",
+    "Missing education background to understand your foundational knowledge",
+    "No information about distributed systems or AI/ML experience"
+  ],
+  "highlights": [
+    "You identify as a developer in the tech industry"
+  ],
+  "feedback": "Your profile is incomplete. You have no work experience, no skills, and no education listed. This makes you unqualified for any senior engineering position. A one-line summary saying 'I am a developer' provides zero evidence of your capabilities."
+}`,
+			},
+			{
 				Input: "Candidate: Financial Analyst with 5 years experience in corporate finance and MBA\nJob: Senior Financial Analyst at a tech startup requiring startup experience and financial modeling expertise",
 				Output: `{
   "matchScore": 75,
@@ -28,7 +48,7 @@ func JobMatchTemplate() *PromptTemplate {
     "You developed complex financial models that were adopted company-wide",
     "Your MBA from a top-tier program included entrepreneurship focus"
   ],
-  "feedback": "You've got a really strong analytical foundation that would serve you well here, though there's definitely room to grow in the startup context. Your corporate experience actually brings valuable structure, but you'll want to be ready for a much faster pace and more ambiguity. The good news? Your MBA's entrepreneurship focus shows you're genuinely interested in this world."
+  "feedback": "Strong financial analysis background but zero startup experience. Your corporate background is the opposite of what they're looking for. You'll struggle with the pace and chaos of startup life. The entrepreneurship MBA focus doesn't compensate for lack of real startup experience."
 }`,
 			},
 			{
@@ -51,23 +71,29 @@ func JobMatchTemplate() *PromptTemplate {
     "You achieved 100% parent satisfaction in IEP meetings - that's incredible",
     "You reduced special education referrals by 30% through early intervention strategies"
   ],
-  "feedback": "This looks like an excellent match! Your practical experience and proven results really stand out. Sure, you might not have formal leadership titles, but you've already been leading through mentoring and developing programs that others adopted. Your ability to connect with parents and get results with students is exactly what they're looking for in this coordinator role."
+  "feedback": "Good match overall. You have the certifications and classroom experience needed. Your lack of formal leadership experience is a weakness - mentoring isn't the same as managing. Budget management skills are completely absent from your profile, which is concerning for a coordinator role."
 }`,
 			},
 		},
 		Task: "Provide a data-driven analysis of candidate-job fit using multiple evaluation criteria.",
 		Constraints: []string{
-			"Write in a conversational, second-person tone addressing the candidate directly",
-			"Be objective and balanced in assessment across all industries",
-			"Consider both current capabilities and growth potential",
-			"Identify specific, actionable strengths and gaps relevant to the field",
-			"Provide constructive feedback that helps the candidate understand their fit",
-			"Look beyond surface-level keyword matching to assess true fit",
-			"Consider soft skills, cultural indicators, and industry-specific requirements",
-			"Be honest about concerns without being discouraging - frame as opportunities",
-			"Account for transferable skills from other industries or roles",
-			"Recognize industry-specific qualifications (certifications, licenses, etc.)",
-			"Use encouraging, supportive language while maintaining professional honesty",
+			"Use direct, uncompromising language with 'you' and 'your' - no sugar-coating",
+			"NEVER mention the candidate's name and NEVER use 'the candidate' - use 'you/your'",
+			"Be brutally honest about profile deficiencies - no patronizing or feelings-based feedback",
+			"State facts bluntly: incomplete profiles are unqualified, period",
+			"Profile completeness is CRITICAL - incomplete profiles must score VERY LOW (15% or less)",
+			"A profile with ONLY name/title/one-line summary scores 10-15% MAX regardless of title match",
+			"Missing work experience: cap at 20% | Missing work experience AND education: cap at 15%",
+			"Missing skills when job requires them: reduce score by 20%+ | Minimal summaries (<50 words): cap at 25%",
+			"To score above 50%, MUST have substantial work experience, skills, AND education/certifications",
+			"Previous match history is supplementary only - score based on CURRENT profile content",
+			"Be objective and clinical in assessment - no emotional language",
+			"Point out gaps and weaknesses directly without softening the message",
+			"Don't frame weaknesses as 'opportunities' - call them what they are: deficiencies",
+			"If someone is unqualified, say they're unqualified - don't dance around it",
+			"Focus on what's missing, not potential - employers hire based on evidence, not hope",
+			"Account for transferable skills but don't overstate their value",
+			"Recognize industry-specific qualifications but don't inflate their importance",
 		},
 		OutputSpec: "Return ONLY a valid JSON object with: matchScore (0-100), strengths (array), weaknesses (array), highlights (array), and feedback (string)",
 	}

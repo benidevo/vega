@@ -68,7 +68,33 @@ func (s *JobService) AnalyzeJobMatch(ctx context.Context, userID, jobID int) (*m
 		return nil, err
 	}
 
+	previousMatches, err := s.jobRepo.GetRecentMatchResultsWithDetails(ctx, 3, jobID)
+	if err != nil {
+		s.log.Warn().Err(err).
+			Str("user_ref", userRef).
+			Int("job_id", jobID).
+			Str("error_type", "previous_matches_fetch_failed").
+			Msg("Failed to fetch previous match results, continuing without context")
+		// Don't fail the operation, just proceed without context
+		previousMatches = nil
+	}
+
 	aiRequest := s.buildAIRequest(job, profile)
+
+	// Convert match summaries to AI request format
+	if len(previousMatches) > 0 {
+		aiRequest.PreviousMatches = make([]aimodels.PreviousMatch, len(previousMatches))
+		for i, match := range previousMatches {
+			aiRequest.PreviousMatches[i] = aimodels.PreviousMatch{
+				JobTitle:    match.JobTitle,
+				Company:     match.Company,
+				MatchScore:  match.MatchScore,
+				KeyInsights: match.KeyInsights,
+				DaysAgo:     match.DaysAgo,
+			}
+		}
+	}
+
 	aiResult, err := s.aiService.JobMatcher.AnalyzeMatch(ctx, aiRequest)
 	if err != nil {
 		s.log.Error().Err(err).
@@ -80,6 +106,23 @@ func (s *JobService) AnalyzeJobMatch(ctx context.Context, userID, jobID int) (*m
 	}
 
 	result := s.convertToJobMatchAnalysis(aiResult, userID, jobID)
+
+	matchResult := &models.MatchResult{
+		JobID:      jobID,
+		MatchScore: aiResult.MatchScore,
+		Strengths:  aiResult.Strengths,
+		Weaknesses: aiResult.Weaknesses,
+		Highlights: aiResult.Highlights,
+		Feedback:   aiResult.Feedback,
+	}
+
+	if err := s.jobRepo.CreateMatchResult(ctx, matchResult); err != nil {
+		s.log.Warn().Err(err).
+			Str("user_ref", userRef).
+			Int("job_id", jobID).
+			Str("error_type", "match_result_store_failed").
+			Msg("Failed to store match result history, but continuing with analysis")
+	}
 
 	err = s.jobRepo.UpdateMatchScore(ctx, jobID, &result.MatchScore)
 	if err != nil {

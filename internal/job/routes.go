@@ -12,6 +12,8 @@ func RegisterRoutes(router *gin.RouterGroup, handler *JobHandler) {
 	jobRoutes.Use(handler.ValidateJobID())
 	{
 		jobRoutes.GET("/:id/details", handler.GetJobDetails)
+		jobRoutes.GET("/:id/match-history", handler.GetMatchHistory)
+		jobRoutes.DELETE("/:id/match-history/:matchId", handler.DeleteMatchResult)
 		jobRoutes.PUT("/:id/:field", handler.UpdateJobField)
 		jobRoutes.DELETE("/:id", handler.DeleteJob)
 		jobRoutes.POST("/:id/analyze", handler.AnalyzeJobMatch)

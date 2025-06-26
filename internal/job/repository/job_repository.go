@@ -745,3 +745,293 @@ func (r *SQLiteJobRepository) GetJobStatsByStatus(ctx context.Context, userID in
 
 	return statusCounts, nil
 }
+
+// CreateMatchResult stores a new match analysis result for a job
+func (r *SQLiteJobRepository) CreateMatchResult(ctx context.Context, matchResult *models.MatchResult) error {
+	if matchResult == nil {
+		return models.ErrInvalidJobID
+	}
+
+	strengthsJSON, err := json.Marshal(matchResult.Strengths)
+	if err != nil {
+		return models.WrapError(models.ErrFailedToCreateJob, err)
+	}
+
+	weaknessesJSON, err := json.Marshal(matchResult.Weaknesses)
+	if err != nil {
+		return models.WrapError(models.ErrFailedToCreateJob, err)
+	}
+
+	highlightsJSON, err := json.Marshal(matchResult.Highlights)
+	if err != nil {
+		return models.WrapError(models.ErrFailedToCreateJob, err)
+	}
+
+	query := `
+		INSERT INTO match_results (job_id, match_score, strengths, weaknesses, highlights, feedback)
+		VALUES (?, ?, ?, ?, ?, ?)
+	`
+
+	result, err := r.db.ExecContext(
+		ctx,
+		query,
+		matchResult.JobID,
+		matchResult.MatchScore,
+		string(strengthsJSON),
+		string(weaknessesJSON),
+		string(highlightsJSON),
+		matchResult.Feedback,
+	)
+	if err != nil {
+		return models.WrapError(models.ErrFailedToCreateJob, err)
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return models.WrapError(models.ErrFailedToCreateJob, err)
+	}
+
+	matchResult.ID = int(id)
+	return nil
+}
+
+// GetJobMatchHistory retrieves all match results for a specific job
+func (r *SQLiteJobRepository) GetJobMatchHistory(ctx context.Context, jobID int) ([]*models.MatchResult, error) {
+	query := `
+		SELECT id, job_id, match_score, strengths, weaknesses, highlights, feedback, created_at
+		FROM match_results
+		WHERE job_id = ?
+		ORDER BY created_at DESC
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, jobID)
+	if err != nil {
+		return nil, models.WrapError(models.ErrFailedToGetJob, err)
+	}
+	defer rows.Close()
+
+	var results []*models.MatchResult
+	for rows.Next() {
+		var mr models.MatchResult
+		var strengthsJSON, weaknessesJSON, highlightsJSON string
+
+		err := rows.Scan(
+			&mr.ID,
+			&mr.JobID,
+			&mr.MatchScore,
+			&strengthsJSON,
+			&weaknessesJSON,
+			&highlightsJSON,
+			&mr.Feedback,
+			&mr.CreatedAt,
+		)
+		if err != nil {
+			return nil, models.WrapError(models.ErrFailedToGetJob, err)
+		}
+
+		if err := json.Unmarshal([]byte(strengthsJSON), &mr.Strengths); err != nil {
+			mr.Strengths = []string{}
+		}
+		if err := json.Unmarshal([]byte(weaknessesJSON), &mr.Weaknesses); err != nil {
+			mr.Weaknesses = []string{}
+		}
+		if err := json.Unmarshal([]byte(highlightsJSON), &mr.Highlights); err != nil {
+			mr.Highlights = []string{}
+		}
+
+		results = append(results, &mr)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, models.WrapError(models.ErrFailedToGetJob, err)
+	}
+
+	return results, nil
+}
+
+// GetRecentMatchResultsWithDetails retrieves recent match results with job details for context
+func (r *SQLiteJobRepository) GetRecentMatchResultsWithDetails(ctx context.Context, limit int, currentJobID int) ([]*models.MatchSummary, error) {
+	if limit <= 0 {
+		limit = 5
+	}
+
+	query := `
+		SELECT mr.job_id, j.title, c.name, mr.match_score, mr.strengths,
+		       mr.weaknesses, mr.created_at
+		FROM match_results mr
+		JOIN jobs j ON mr.job_id = j.id
+		JOIN companies c ON j.company_id = c.id
+		WHERE mr.job_id != ?
+		ORDER BY
+			CASE WHEN c.name = (SELECT c2.name FROM jobs j2 JOIN companies c2 ON j2.company_id = c2.id WHERE j2.id = ?) THEN 0 ELSE 1 END,
+			mr.created_at DESC
+		LIMIT ?
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, currentJobID, currentJobID, limit)
+	if err != nil {
+		return nil, models.WrapError(models.ErrFailedToGetJob, err)
+	}
+	defer rows.Close()
+
+	var summaries []*models.MatchSummary
+	for rows.Next() {
+		var jobID int
+		var jobTitle, companyName string
+		var matchScore int
+		var strengthsJSON, weaknessesJSON string
+		var createdAt time.Time
+
+		err := rows.Scan(
+			&jobID,
+			&jobTitle,
+			&companyName,
+			&matchScore,
+			&strengthsJSON,
+			&weaknessesJSON,
+			&createdAt,
+		)
+		if err != nil {
+			return nil, models.WrapError(models.ErrFailedToGetJob, err)
+		}
+
+		var strengths, weaknesses []string
+		if err := json.Unmarshal([]byte(strengthsJSON), &strengths); err != nil {
+			strengths = []string{}
+		}
+		if err := json.Unmarshal([]byte(weaknessesJSON), &weaknesses); err != nil {
+			weaknesses = []string{}
+		}
+
+		// Create key insights by combining top strengths and weaknesses
+		var insights []string
+		if len(strengths) > 0 {
+			insights = append(insights, "Strengths: "+strengths[0])
+			if len(strengths) > 1 {
+				insights = append(insights, strengths[1])
+			}
+		}
+		if len(weaknesses) > 0 {
+			insights = append(insights, "Gap: "+weaknesses[0])
+		}
+
+		daysAgo := int(time.Since(createdAt).Hours() / 24)
+
+		summary := &models.MatchSummary{
+			JobTitle:    jobTitle,
+			Company:     companyName,
+			MatchScore:  matchScore,
+			KeyInsights: strings.Join(insights, "; "),
+			DaysAgo:     daysAgo,
+		}
+
+		summaries = append(summaries, summary)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, models.WrapError(models.ErrFailedToGetJob, err)
+	}
+
+	return summaries, nil
+}
+
+// GetRecentMatchResults retrieves the most recent match results across all jobs
+func (r *SQLiteJobRepository) GetRecentMatchResults(ctx context.Context, limit int) ([]*models.MatchResult, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+
+	query := `
+		SELECT mr.id, mr.job_id, mr.match_score, mr.strengths, mr.weaknesses,
+		       mr.highlights, mr.feedback, mr.created_at
+		FROM match_results mr
+		ORDER BY mr.created_at DESC
+		LIMIT ?
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, limit)
+	if err != nil {
+		return nil, models.WrapError(models.ErrFailedToGetJob, err)
+	}
+	defer rows.Close()
+
+	var results []*models.MatchResult
+	for rows.Next() {
+		var mr models.MatchResult
+		var strengthsJSON, weaknessesJSON, highlightsJSON string
+
+		err := rows.Scan(
+			&mr.ID,
+			&mr.JobID,
+			&mr.MatchScore,
+			&strengthsJSON,
+			&weaknessesJSON,
+			&highlightsJSON,
+			&mr.Feedback,
+			&mr.CreatedAt,
+		)
+		if err != nil {
+			return nil, models.WrapError(models.ErrFailedToGetJob, err)
+		}
+
+		if err := json.Unmarshal([]byte(strengthsJSON), &mr.Strengths); err != nil {
+			mr.Strengths = []string{}
+		}
+		if err := json.Unmarshal([]byte(weaknessesJSON), &mr.Weaknesses); err != nil {
+			mr.Weaknesses = []string{}
+		}
+		if err := json.Unmarshal([]byte(highlightsJSON), &mr.Highlights); err != nil {
+			mr.Highlights = []string{}
+		}
+
+		results = append(results, &mr)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, models.WrapError(models.ErrFailedToGetJob, err)
+	}
+
+	return results, nil
+}
+
+// DeleteMatchResult deletes a specific match result by ID
+func (r *SQLiteJobRepository) DeleteMatchResult(ctx context.Context, matchID int) error {
+	if matchID <= 0 {
+		return models.ErrInvalidJobID
+	}
+
+	query := `DELETE FROM match_results WHERE id = ?`
+
+	result, err := r.db.ExecContext(ctx, query, matchID)
+	if err != nil {
+		return models.WrapError(models.ErrFailedToDeleteJob, err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return models.WrapError(models.ErrFailedToDeleteJob, err)
+	}
+
+	if rowsAffected == 0 {
+		return models.ErrJobNotFound
+	}
+
+	return nil
+}
+
+// MatchResultBelongsToJob checks if a match result belongs to a specific job
+func (r *SQLiteJobRepository) MatchResultBelongsToJob(ctx context.Context, matchID, jobID int) (bool, error) {
+	if matchID <= 0 || jobID <= 0 {
+		return false, models.ErrInvalidJobID
+	}
+
+	query := `SELECT EXISTS(SELECT 1 FROM match_results WHERE id = ? AND job_id = ?)`
+
+	var exists bool
+	err := r.db.QueryRowContext(ctx, query, matchID, jobID).Scan(&exists)
+	if err != nil {
+		return false, models.WrapError(models.ErrFailedToGetJob, err)
+	}
+
+	return exists, nil
+}

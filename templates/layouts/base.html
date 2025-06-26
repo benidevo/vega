@@ -162,6 +162,13 @@
         {{template "job-details-content" .}}
       </div>
     </div>
+  {{else if eq .page "match-history"}}
+    <!-- Match history page -->
+    <div class="min-h-screen bg-slate-900 flex flex-col">
+      <div class="flex-1">
+        {{template "match-history-content" .}}
+      </div>
+    </div>
   {{else if eq .page "404"}}
     <!-- 404 Not Found page -->
     {{template "404-content" .}}

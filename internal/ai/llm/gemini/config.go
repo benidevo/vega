@@ -62,7 +62,7 @@ func NewConfig(cfg *config.Settings) *Config {
 		ResponseMIMEType: "application/json",
 
 		// Cover letter configuration
-		DefaultWordRange: "200-300",
+		DefaultWordRange: "150-250",
 
 		// Match score configuration
 		MinMatchScore: 0,
@@ -75,7 +75,7 @@ func NewConfig(cfg *config.Settings) *Config {
 		DefaultFeedbackMsg:  "Unable to provide detailed feedback at this time.",
 
 		// Advanced generation parameters
-		MaxOutputTokens:   8192,
+		MaxOutputTokens:   6000,
 		TopP:              floatPtr(0.9),
 		TopK:              floatPtr(40),
 		SystemInstruction: "You are a professional career advisor and expert writer. Always provide helpful, accurate, and constructive feedback. When responding with JSON, output ONLY valid JSON without any preamble, explanation, or additional text. Do not include phrases like 'Here is the JSON' or any other text before or after the JSON object.",
