@@ -856,13 +856,13 @@ func (r *SQLiteJobRepository) GetRecentMatchResultsWithDetails(ctx context.Conte
 	}
 
 	query := `
-		SELECT mr.job_id, j.title, c.name, mr.match_score, mr.strengths, 
+		SELECT mr.job_id, j.title, c.name, mr.match_score, mr.strengths,
 		       mr.weaknesses, mr.created_at
 		FROM match_results mr
 		JOIN jobs j ON mr.job_id = j.id
 		JOIN companies c ON j.company_id = c.id
 		WHERE mr.job_id != ?
-		ORDER BY 
+		ORDER BY
 			CASE WHEN c.name = (SELECT c2.name FROM jobs j2 JOIN companies c2 ON j2.company_id = c2.id WHERE j2.id = ?) THEN 0 ELSE 1 END,
 			mr.created_at DESC
 		LIMIT ?
@@ -992,4 +992,29 @@ func (r *SQLiteJobRepository) GetRecentMatchResults(ctx context.Context, limit i
 	}
 
 	return results, nil
+}
+
+// DeleteMatchResult deletes a specific match result by ID
+func (r *SQLiteJobRepository) DeleteMatchResult(ctx context.Context, matchID int) error {
+	if matchID <= 0 {
+		return models.ErrInvalidJobID
+	}
+
+	query := `DELETE FROM match_results WHERE id = ?`
+
+	result, err := r.db.ExecContext(ctx, query, matchID)
+	if err != nil {
+		return models.WrapError(models.ErrFailedToDeleteJob, err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return models.WrapError(models.ErrFailedToDeleteJob, err)
+	}
+
+	if rowsAffected == 0 {
+		return models.ErrJobNotFound
+	}
+
+	return nil
 }

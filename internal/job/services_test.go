@@ -125,6 +125,11 @@ func (m *MockJobRepository) GetRecentMatchResultsWithDetails(ctx context.Context
 	return args.Get(0).([]*models.MatchSummary), args.Error(1)
 }
 
+func (m *MockJobRepository) DeleteMatchResult(ctx context.Context, matchID int) error {
+	args := m.Called(ctx, matchID)
+	return args.Error(0)
+}
+
 func setupTestConfig() *config.Settings {
 	return &config.Settings{
 		IsTest:   true,

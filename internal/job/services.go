@@ -364,3 +364,97 @@ func (s *JobService) DeleteJob(ctx context.Context, id int) error {
 
 	return nil
 }
+
+// GetJobMatchHistory retrieves the match analysis history for a specific job
+func (s *JobService) GetJobMatchHistory(ctx context.Context, jobID int) ([]*models.MatchResult, error) {
+	s.log.Debug().Int("job_id", jobID).Msg("Getting job match history")
+
+	if jobID <= 0 {
+		s.log.Error().Int("job_id", jobID).Msg("Invalid job ID")
+		return nil, models.ErrInvalidJobID
+	}
+
+	_, err := s.jobRepo.GetByID(ctx, jobID)
+	if err != nil {
+		s.log.Error().
+			Int("job_id", jobID).
+			Err(err).
+			Msg("Job not found")
+		return nil, err
+	}
+
+	history, err := s.jobRepo.GetJobMatchHistory(ctx, jobID)
+	if err != nil {
+		s.log.Error().
+			Int("job_id", jobID).
+			Err(err).
+			Msg("Failed to get match history")
+		return nil, err
+	}
+
+	s.log.Info().
+		Int("job_id", jobID).
+		Int("history_count", len(history)).
+		Msg("Retrieved job match history")
+
+	return history, nil
+}
+
+// DeleteMatchResult deletes a specific match result
+func (s *JobService) DeleteMatchResult(ctx context.Context, jobID, matchID int) error {
+	s.log.Debug().
+		Int("job_id", jobID).
+		Int("match_id", matchID).
+		Msg("Deleting match result")
+
+	if jobID <= 0 || matchID <= 0 {
+		s.log.Error().
+			Int("job_id", jobID).
+			Int("match_id", matchID).
+			Msg("Invalid job or match ID")
+		return models.ErrInvalidJobID
+	}
+
+	// Verify the match result belongs to the specified job
+	matchResults, err := s.jobRepo.GetJobMatchHistory(ctx, jobID)
+	if err != nil {
+		s.log.Error().
+			Int("job_id", jobID).
+			Err(err).
+			Msg("Failed to get match history")
+		return err
+	}
+
+	// Check if the match result exists and belongs to this job
+	matchFound := false
+	for _, result := range matchResults {
+		if result.ID == matchID {
+			matchFound = true
+			break
+		}
+	}
+
+	if !matchFound {
+		s.log.Error().
+			Int("job_id", jobID).
+			Int("match_id", matchID).
+			Msg("Match result not found for this job")
+		return models.ErrJobNotFound
+	}
+
+	err = s.jobRepo.DeleteMatchResult(ctx, matchID)
+	if err != nil {
+		s.log.Error().
+			Int("match_id", matchID).
+			Err(err).
+			Msg("Failed to delete match result")
+		return err
+	}
+
+	s.log.Info().
+		Int("job_id", jobID).
+		Int("match_id", matchID).
+		Msg("Match result deleted successfully")
+
+	return nil
+}

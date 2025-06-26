@@ -631,3 +631,81 @@ func (h *JobHandler) renderTemplate(templateName string, data interface{}) (stri
 
 	return buf.String(), nil
 }
+
+// GetMatchHistory handles the request to display match analysis history page for a specific job
+func (h *JobHandler) GetMatchHistory(c *gin.Context) {
+	jobIDValue, exists := c.Get("jobID")
+	if !exists {
+		h.renderError(c, models.ErrInvalidJobIDFormat)
+		return
+	}
+	jobID := jobIDValue.(int)
+	jobIDStr := c.Param("id")
+
+	job, err := h.service.GetJob(c.Request.Context(), jobID)
+	if err != nil {
+		if errors.Is(err, models.ErrJobNotFound) {
+			c.HTML(http.StatusNotFound, "layouts/base.html", gin.H{
+				"title":               "Page Not Found",
+				"page":                "404",
+				"currentYear":         time.Now().Year(),
+				"securityPageEnabled": h.cfg.SecurityPageEnabled,
+			})
+			return
+		}
+		h.renderError(c, err)
+		return
+	}
+
+	matchHistory, err := h.service.GetJobMatchHistory(c.Request.Context(), jobID)
+	if err != nil {
+		h.renderError(c, err)
+		return
+	}
+
+	username, _ := c.Get("username")
+
+	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
+		"title":               "Match History",
+		"page":                "match-history",
+		"activeNav":           "jobs",
+		"pageTitle":           "Match History",
+		"currentYear":         time.Now().Year(),
+		"securityPageEnabled": h.cfg.SecurityPageEnabled,
+		"username":            username,
+		"job":                 job,
+		"jobID":               jobIDStr,
+		"matchHistory":        matchHistory,
+	})
+}
+
+// DeleteMatchResult handles the request to delete a specific match result
+func (h *JobHandler) DeleteMatchResult(c *gin.Context) {
+	jobIDValue, exists := c.Get("jobID")
+	if !exists {
+		h.renderError(c, models.ErrInvalidJobIDFormat)
+		return
+	}
+	jobID := jobIDValue.(int)
+
+	matchIDStr := c.Param("matchId")
+	matchID, err := strconv.Atoi(matchIDStr)
+	if err != nil {
+		h.renderError(c, models.ErrInvalidJobIDFormat)
+		return
+	}
+
+	err = h.service.DeleteMatchResult(c.Request.Context(), jobID, matchID)
+	if err != nil {
+		h.renderError(c, err)
+		return
+	}
+
+	if c.GetHeader("HX-Request") == "true" {
+		c.Header("HX-Redirect", fmt.Sprintf("/jobs/%d/match-history", jobID))
+		c.String(http.StatusOK, "")
+		return
+	}
+
+	c.Redirect(http.StatusFound, fmt.Sprintf("/jobs/%d/match-history", jobID))
+}
