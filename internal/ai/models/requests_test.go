@@ -116,7 +116,6 @@ func TestPrompt_ToMatchAnalysisPrompt(t *testing.T) {
 			maxMatchScore: 100,
 			expectedContains: []string{
 				"Analyze the job match",
-				"Alice Johnson",
 				"Full-stack developer with React and Node.js",
 				"React developer position at startup",
 				"Startup environment experience preferred",
@@ -145,7 +144,6 @@ func TestPrompt_ToMatchAnalysisPrompt(t *testing.T) {
 			expectedContains: []string{
 				"integer from 10-90",
 				"where 10 is no match and 90 is perfect match",
-				"Charlie Brown",
 				"Project Manager",
 				"PM role",
 			},
@@ -164,7 +162,6 @@ func TestPrompt_ToMatchAnalysisPrompt(t *testing.T) {
 			minMatchScore: 0,
 			maxMatchScore: 100,
 			expectedContains: []string{
-				"David Lee",
 				"Data Scientist",
 				"ML Engineer role",
 				"Skills alignment",
@@ -183,16 +180,15 @@ func TestPrompt_ToMatchAnalysisPrompt(t *testing.T) {
 				assert.Contains(t, result, expected)
 			}
 
-			// Ensure analysis criteria are present
 			assert.Contains(t, result, "Skills alignment")
 			assert.Contains(t, result, "Experience level")
 			assert.Contains(t, result, "Industry knowledge")
 			assert.Contains(t, result, "Cultural fit")
 			assert.Contains(t, result, "Growth potential")
 
-			// Ensure JSON structure requirements are present
 			assert.Contains(t, result, "JSON object")
 			assert.Contains(t, result, "EXACTLY this structure")
+			assert.Contains(t, result, "do NOT mention the applicant's name")
 		})
 	}
 }

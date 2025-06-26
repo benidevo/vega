@@ -849,6 +849,92 @@ func (r *SQLiteJobRepository) GetJobMatchHistory(ctx context.Context, jobID int)
 	return results, nil
 }
 
+// GetRecentMatchResultsWithDetails retrieves recent match results with job details for context
+func (r *SQLiteJobRepository) GetRecentMatchResultsWithDetails(ctx context.Context, limit int, currentJobID int) ([]*models.MatchSummary, error) {
+	if limit <= 0 {
+		limit = 5
+	}
+
+	query := `
+		SELECT mr.job_id, j.title, c.name, mr.match_score, mr.strengths, 
+		       mr.weaknesses, mr.created_at
+		FROM match_results mr
+		JOIN jobs j ON mr.job_id = j.id
+		JOIN companies c ON j.company_id = c.id
+		WHERE mr.job_id != ?
+		ORDER BY 
+			CASE WHEN c.name = (SELECT c2.name FROM jobs j2 JOIN companies c2 ON j2.company_id = c2.id WHERE j2.id = ?) THEN 0 ELSE 1 END,
+			mr.created_at DESC
+		LIMIT ?
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, currentJobID, currentJobID, limit)
+	if err != nil {
+		return nil, models.WrapError(models.ErrFailedToGetJob, err)
+	}
+	defer rows.Close()
+
+	var summaries []*models.MatchSummary
+	for rows.Next() {
+		var jobID int
+		var jobTitle, companyName string
+		var matchScore int
+		var strengthsJSON, weaknessesJSON string
+		var createdAt time.Time
+
+		err := rows.Scan(
+			&jobID,
+			&jobTitle,
+			&companyName,
+			&matchScore,
+			&strengthsJSON,
+			&weaknessesJSON,
+			&createdAt,
+		)
+		if err != nil {
+			return nil, models.WrapError(models.ErrFailedToGetJob, err)
+		}
+
+		var strengths, weaknesses []string
+		if err := json.Unmarshal([]byte(strengthsJSON), &strengths); err != nil {
+			strengths = []string{}
+		}
+		if err := json.Unmarshal([]byte(weaknessesJSON), &weaknesses); err != nil {
+			weaknesses = []string{}
+		}
+
+		// Create key insights by combining top strengths and weaknesses
+		var insights []string
+		if len(strengths) > 0 {
+			insights = append(insights, "Strengths: "+strengths[0])
+			if len(strengths) > 1 {
+				insights = append(insights, strengths[1])
+			}
+		}
+		if len(weaknesses) > 0 {
+			insights = append(insights, "Gap: "+weaknesses[0])
+		}
+
+		daysAgo := int(time.Since(createdAt).Hours() / 24)
+
+		summary := &models.MatchSummary{
+			JobTitle:    jobTitle,
+			Company:     companyName,
+			MatchScore:  matchScore,
+			KeyInsights: strings.Join(insights, "; "),
+			DaysAgo:     daysAgo,
+		}
+
+		summaries = append(summaries, summary)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, models.WrapError(models.ErrFailedToGetJob, err)
+	}
+
+	return summaries, nil
+}
+
 // GetRecentMatchResults retrieves the most recent match results across all jobs
 func (r *SQLiteJobRepository) GetRecentMatchResults(ctx context.Context, limit int) ([]*models.MatchResult, error) {
 	if limit <= 0 {

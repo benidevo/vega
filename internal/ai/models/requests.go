@@ -12,6 +12,16 @@ type Request struct {
 	ApplicantProfile string
 	JobDescription   string
 	ExtraContext     string
+	PreviousMatches  []PreviousMatch
+}
+
+// PreviousMatch represents a summary of a previous match result for context
+type PreviousMatch struct {
+	JobTitle    string
+	Company     string
+	MatchScore  int
+	KeyInsights string
+	DaysAgo     int
 }
 
 // Prompt represents the structure for a prompt used in the application.
@@ -118,34 +128,58 @@ func (p Prompt) ToMatchAnalysisPrompt(minMatchScore, maxMatchScore int) string {
 		)
 	}
 
+	previousMatchContext := ""
+	if len(p.PreviousMatches) > 0 {
+		previousMatchContext = "\n\nPrevious Match History (for context):\n"
+		for i, match := range p.PreviousMatches {
+			if i >= 3 { // Limit to 3 previous matches
+				break
+			}
+			previousMatchContext += fmt.Sprintf("- %s at %s (%d days ago): Score %d/100. %s\n",
+				match.JobTitle, match.Company, match.DaysAgo, match.MatchScore, match.KeyInsights)
+		}
+		previousMatchContext += "\nNote: These are for minor context only - base your score on the CURRENT profile content, not historical scores.\n"
+	}
+
 	return fmt.Sprintf(`%s
 
 Analyze the match between this applicant and job opportunity:
 
-Applicant: %s
 Job Description: %s
 Applicant Profile: %s
-%s
+%s%s
+
+CRITICAL SCORING GUIDELINES:
+- Profile completeness is ESSENTIAL - incomplete profiles MUST receive VERY LOW scores (15%% or less)
+- A profile with ONLY name, title, and a one-line summary should score 10-15%% MAX
+- Missing work experience section: automatic cap at 20%% (even with good title match)
+- Missing BOTH work experience AND education: automatic cap at 15%%
+- Missing skills section when job lists required skills: reduce score by at least 20%%
+- Previous match history is ONLY supplementary context - base your score primarily on the CURRENT profile content
+- Empty or minimal career summaries (under 50 words) should cap score at 25%%
+- To score above 50%%, profile MUST have substantial work experience, skills, AND either education or certifications
 
 Provide a comprehensive analysis focusing on:
 - Skills alignment with job requirements
-- Experience level and relevance
+- Experience level and relevance  
 - Industry knowledge fit
 - Cultural fit indicators
 - Growth potential
 - Any concerns or red flags
+
+IMPORTANT: In your feedback, do NOT mention the applicant's name. Use "you" and "your" directly. Be brutally honest and direct - no sugar-coating or patronizing language. State facts bluntly about what's missing or inadequate.
 
 Return the analysis as a JSON object with EXACTLY this structure:
 - matchScore: integer from %d-%d where %d is no match and %d is perfect match
 - strengths: array of 3-5 key strengths that align with job requirements
 - weaknesses: array of 2-4 areas for improvement or skill gaps
 - highlights: array of 3-5 standout qualifications that make this candidate attractive
-- feedback: overall assessment and recommendations in 2-3 sentences`,
+- feedback: overall assessment and recommendations in 2-3 sentences (do NOT include the applicant's name)`,
 		p.Instructions,
-		p.ApplicantName,
 		p.JobDescription,
 		p.ApplicantProfile,
 		p.ExtraContext,
+		previousMatchContext,
 		minMatchScore,
 		maxMatchScore,
 		minMatchScore,

@@ -117,6 +117,14 @@ func (m *MockJobRepository) GetRecentMatchResults(ctx context.Context, limit int
 	return args.Get(0).([]*models.MatchResult), args.Error(1)
 }
 
+func (m *MockJobRepository) GetRecentMatchResultsWithDetails(ctx context.Context, limit int, currentJobID int) ([]*models.MatchSummary, error) {
+	args := m.Called(ctx, limit, currentJobID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.MatchSummary), args.Error(1)
+}
+
 func setupTestConfig() *config.Settings {
 	return &config.Settings{
 		IsTest:   true,
