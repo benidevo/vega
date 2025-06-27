@@ -27,12 +27,13 @@ type ResponseType string
 const (
 	ResponseTypeCoverLetter ResponseType = "cover_letter"
 	ResponseTypeMatchResult ResponseType = "match_result"
+	ResponseTypeCVParsing   ResponseType = "cv_parsing"
 )
 
 // GenerateResponse wraps the LLM response with metadata
 type GenerateResponse struct {
-	Data     any // Will be CoverLetter or MatchResult
+	Data     any // Will be CoverLetter, MatchResult, etc
 	Tokens   int
 	Duration time.Duration
-	Metadata map[string]any // Additional metadata like temperature used
+	Metadata map[string]any
 }

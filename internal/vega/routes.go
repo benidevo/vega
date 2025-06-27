@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/benidevo/vega/internal/ai"
 	authapi "github.com/benidevo/vega/internal/api/auth"
 	jobapi "github.com/benidevo/vega/internal/api/job"
 	"github.com/benidevo/vega/internal/auth"
@@ -22,10 +23,16 @@ func SetupRoutes(a *App) {
 
 	health.RegisterRoutes(a.router, a.db)
 
+	aiService, err := ai.Setup(&a.config)
+	if err != nil {
+		log.Warn().Err(err).Msg("AI service initialization failed, AI features will be disabled")
+		aiService = nil
+	}
+
 	authHandler := auth.SetupAuth(a.db, &a.config)
 	homeHandler := home.Setup(a.db, &a.config)
 	jobHandler := job.Setup(a.db, &a.config)
-	settingsHandler := settings.Setup(&a.config, a.db)
+	settingsHandler := settings.Setup(&a.config, a.db, aiService)
 	authAPIHandler := authapi.Setup(a.db, &a.config)
 	jobAPIHandler := jobapi.Setup(a.db, &a.config)
 

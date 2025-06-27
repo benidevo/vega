@@ -14,6 +14,7 @@ func RegisterRoutes(settingsGroup *gin.RouterGroup, handler *SettingsHandler) {
 	settingsGroup.POST("/profile/personal", handler.HandleCreateProfile)
 	settingsGroup.POST("/profile/online", handler.HandleUpdateOnlineProfile)
 	settingsGroup.POST("/profile/context", handler.HandleUpdateContext)
+	settingsGroup.POST("/profile/parse-cv", handler.HandleCVUpload)
 
 	// Security settings
 	settingsGroup.GET("/security", handler.GetSecuritySettingsPage)

@@ -1,21 +1,3 @@
-/*
-Vega AI Job Capture Extension
-Copyright (C) 2025 Benjamin Idewor
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as published
-by the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
-
 package config
 
 import (
@@ -67,9 +49,12 @@ type Settings struct {
 
 	SecurityPageEnabled bool
 
-	AIProvider   string
-	GeminiAPIKey string
-	GeminiModel  string
+	AIProvider             string
+	GeminiAPIKey           string
+	GeminiModel            string // Default model (deprecated, use specific models)
+	GeminiModelCVParsing   string // Fast model for CV parsing
+	GeminiModelJobAnalysis string // Advanced model for job analysis
+	GeminiModelCoverLetter string // Advanced model for cover letter generation
 }
 
 // NewSettings initializes and returns a Settings struct with default values
@@ -161,9 +146,12 @@ func NewSettings() Settings {
 
 		SecurityPageEnabled: getEnv("SECURITY_PAGE_ENABLED", "false") == "true",
 
-		AIProvider:   "gemini",
-		GeminiAPIKey: getEnv("GEMINI_API_KEY", ""),
-		GeminiModel:  "gemini-2.5-flash",
+		AIProvider:             "gemini",
+		GeminiAPIKey:           getEnv("GEMINI_API_KEY", ""),
+		GeminiModel:            getEnv("GEMINI_MODEL", "gemini-2.5-flash"), // Default/fallback model
+		GeminiModelCVParsing:   getEnv("GEMINI_MODEL_CV_PARSING", "gemini-1.5-flash"),
+		GeminiModelJobAnalysis: getEnv("GEMINI_MODEL_JOB_ANALYSIS", "gemini-2.5-flash"),
+		GeminiModelCoverLetter: getEnv("GEMINI_MODEL_COVER_LETTER", "gemini-2.5-flash"),
 	}
 }
 
