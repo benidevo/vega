@@ -471,25 +471,48 @@ function updateSkills() {
 </script>
 
 <!-- CV Upload Functionality -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script>
-  window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-</script>
-
 <script type="module">
 document.addEventListener('DOMContentLoaded', function() {
     const uploadButton = document.getElementById('cv-upload-button');
     const fileInput = document.getElementById('cv-file-input');
     const uploadStatus = document.getElementById('cv-upload-status');
     const manualFillButton = document.getElementById('manual-fill-button');
+    let pdfLibLoaded = false;
 
     if (uploadButton && fileInput) {
         uploadButton.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => {
+        fileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
-            if (file) handleCVUpload(file);
+            if (file) {
+                // Lazy load PDF.js only when needed
+                if (!pdfLibLoaded) {
+                    await loadPDFLib();
+                }
+                handleCVUpload(file);
+            }
         });
+    }
+
+    async function loadPDFLib() {
+        if (pdfLibLoaded) return;
+
+        try {
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+                'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+            pdfLibLoaded = true;
+        } catch (error) {
+            console.error('Failed to load PDF.js:', error);
+            throw new Error('Failed to initialize PDF processing. Please try again.');
+        }
     }
 
     if (manualFillButton) {
