@@ -569,14 +569,17 @@ func (h *JobHandler) GenerateCoverLetter(c *gin.Context) {
 	}
 	userID := userIDValue.(int)
 
-	coverLetter, err := h.service.GenerateCoverLetter(c.Request.Context(), userID, jobID)
+	result, err := h.service.GenerateCoverLetter(c.Request.Context(), userID, jobID)
 	if err != nil {
 		alerts.RenderError(c, http.StatusBadRequest, models.GetSentinelError(err).Error(), alerts.ContextGeneral)
 		return
 	}
 
 	html, err := h.renderTemplate("partials/cover_letter_generator.html", gin.H{
-		"CoverLetter": coverLetter,
+		"CoverLetter": result.CoverLetter,
+		"GeneratedCV": gin.H{
+			"PersonalInfo": result.PersonalInfo,
+		},
 	})
 	if err != nil {
 		alerts.RenderError(c, http.StatusInternalServerError, "Error rendering cover letter", alerts.ContextGeneral)

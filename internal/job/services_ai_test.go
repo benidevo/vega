@@ -290,7 +290,8 @@ func TestJobService_buildProfileSummary(t *testing.T) {
 
 	assert.Contains(t, summary, "Current Title: Senior Developer")
 	assert.Contains(t, summary, "Industry: Technology")
-	assert.Contains(t, summary, "Location: San Francisco")
+	assert.NotContains(t, summary, "Location: San Francisco")
+	assert.NotContains(t, summary, "Phone:")
 	assert.Contains(t, summary, "Career Summary:")
 	assert.Contains(t, summary, "Skills: Go, Python, JavaScript")
 	assert.Contains(t, summary, "Work Experience:")

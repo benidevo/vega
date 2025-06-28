@@ -288,6 +288,12 @@ type CoverLetter struct {
 	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
+// CoverLetterWithProfile holds a cover letter along with user profile information
+type CoverLetterWithProfile struct {
+	CoverLetter  *CoverLetter  `json:"coverLetter"`
+	PersonalInfo *PersonalInfo `json:"personalInfo"`
+}
+
 // JobMatchAnalysis represents a job match analysis result in the job domain.
 type JobMatchAnalysis struct {
 	ID         int       `json:"id"`

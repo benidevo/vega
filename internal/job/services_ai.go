@@ -152,8 +152,8 @@ func (s *JobService) AnalyzeJobMatch(ctx context.Context, userID, jobID int) (*m
 	return result, nil
 }
 
-// GenerateCoverLetter generates an AI-powered cover letter for a specific job application.
-func (s *JobService) GenerateCoverLetter(ctx context.Context, userID, jobID int) (*models.CoverLetter, error) {
+// GenerateCoverLetter generates a cover letter for a specific job application.
+func (s *JobService) GenerateCoverLetter(ctx context.Context, userID, jobID int) (*models.CoverLetterWithProfile, error) {
 	userRef := fmt.Sprintf("user_%d", userID)
 
 	s.log.Debug().
@@ -220,7 +220,20 @@ func (s *JobService) GenerateCoverLetter(ctx context.Context, userID, jobID int)
 		return nil, err
 	}
 
-	result := s.convertToCoverLetter(aiResult, userID, jobID)
+	coverLetter := s.convertToCoverLetter(aiResult, userID, jobID)
+
+	personalInfo := &models.PersonalInfo{
+		FirstName: profile.FirstName,
+		LastName:  profile.LastName,
+		Title:     profile.Title,
+		Phone:     profile.PhoneNumber,
+		Location:  profile.Location,
+	}
+
+	result := &models.CoverLetterWithProfile{
+		CoverLetter:  coverLetter,
+		PersonalInfo: personalInfo,
+	}
 
 	s.log.Info().
 		Str("user_ref", userRef).
@@ -270,20 +283,12 @@ func (s *JobService) buildProfileSummary(profile *settingsmodels.Profile) string
 		summary.WriteString(fmt.Sprintf("Name: %s %s\n", profile.FirstName, profile.LastName))
 	}
 
-	if profile.PhoneNumber != "" {
-		summary.WriteString(fmt.Sprintf("Phone: %s\n", profile.PhoneNumber))
-	}
-
 	if profile.Title != "" {
 		summary.WriteString(fmt.Sprintf("Current Title: %s\n", profile.Title))
 	}
 
 	if profile.Industry.String() != "" {
 		summary.WriteString(fmt.Sprintf("Industry: %s\n", profile.Industry.String()))
-	}
-
-	if profile.Location != "" {
-		summary.WriteString(fmt.Sprintf("Location: %s\n", profile.Location))
 	}
 
 	if profile.CareerSummary != "" {
@@ -533,7 +538,7 @@ func (s *JobService) GenerateCV(ctx context.Context, userID, jobID int) (*models
 		return nil, err
 	}
 
-	result := s.convertToGeneratedCV(aiResult, userID, jobID)
+	result := s.convertToGeneratedCV(aiResult, userID, jobID, profile)
 
 	s.log.Info().
 		Str("user_ref", userRef).
@@ -546,15 +551,25 @@ func (s *JobService) GenerateCV(ctx context.Context, userID, jobID int) (*models
 }
 
 // convertToGeneratedCV converts AI CV result to job domain model.
-func (s *JobService) convertToGeneratedCV(aiResult *aimodels.GeneratedCV, userID, jobID int) *models.GeneratedCV {
+func (s *JobService) convertToGeneratedCV(aiResult *aimodels.GeneratedCV, userID, jobID int, profile *settingsmodels.Profile) *models.GeneratedCV {
 	now := time.Now().UTC()
+
+	personalInfo := convertPersonalInfo(aiResult.PersonalInfo)
+
+	// Overwrite AI-generated phone and location with actual user data (privacy-safe: not shared with AI)
+	if profile.PhoneNumber != "" {
+		personalInfo.Phone = profile.PhoneNumber
+	}
+	if profile.Location != "" {
+		personalInfo.Location = profile.Location
+	}
 
 	return &models.GeneratedCV{
 		JobID:          jobID,
 		UserID:         userID,
 		IsValid:        aiResult.IsValid,
 		Reason:         aiResult.Reason,
-		PersonalInfo:   convertPersonalInfo(aiResult.PersonalInfo),
+		PersonalInfo:   personalInfo,
 		WorkExperience: convertWorkExperience(aiResult.WorkExperience),
 		Education:      convertEducation(aiResult.Education),
 		Skills:         aiResult.Skills,

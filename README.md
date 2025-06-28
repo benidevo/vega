@@ -53,7 +53,6 @@ ADMIN_PASSWORD=your-secure-password
 Navigate to your vega-ai folder and start Vega with persistent data storage:
 
 ```bash
-cd vega-ai
 docker run --pull always -d \
   --name vega-ai \
   -p 8765:8765 \
