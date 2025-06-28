@@ -248,11 +248,17 @@ func (s *JobService) buildAIRequest(job *models.Job, profile *settingsmodels.Pro
 		jobDescription += fmt.Sprintf("\n\nRequired Skills: %s", strings.Join(job.RequiredSkills, ", "))
 	}
 
+	totalYears := s.calculateTotalExperience(profile.WorkExperience)
+	experienceContext := profile.Context
+	if totalYears >= 2 {
+		experienceContext = fmt.Sprintf("EXPERIENCED CANDIDATE (%.0f+ years): De-emphasize educational background in evaluation. Focus primarily on practical work experience, skills, and demonstrated achievements. Education should be secondary consideration. %s", totalYears, profile.Context)
+	}
+
 	return aimodels.Request{
 		ApplicantName:    applicantName,
 		ApplicantProfile: profileSummary,
 		JobDescription:   jobDescription,
-		ExtraContext:     profile.Context,
+		ExtraContext:     experienceContext,
 	}
 }
 
@@ -364,6 +370,33 @@ func (s *JobService) buildProfileSummary(profile *settingsmodels.Profile) string
 	}
 
 	return summary.String()
+}
+
+// calculateTotalExperience calculates the total years of work experience from work history
+func (s *JobService) calculateTotalExperience(workExperience []settingsmodels.WorkExperience) float64 {
+	if len(workExperience) == 0 {
+		return 0
+	}
+
+	var totalDays float64
+	now := time.Now()
+
+	for _, exp := range workExperience {
+		startDate := exp.StartDate
+		endDate := now
+		if exp.EndDate != nil {
+			endDate = *exp.EndDate
+		}
+
+		// Calculate duration in days and add to total
+		if !startDate.IsZero() && endDate.After(startDate) {
+			duration := endDate.Sub(startDate)
+			totalDays += duration.Hours() / 24
+		}
+	}
+
+	totalYears := totalDays / 365.25
+	return totalYears
 }
 
 // convertToJobMatchAnalysis converts AI match result to job domain model.

@@ -411,6 +411,21 @@ document.addEventListener('htmx:afterRequest', function(evt) {
   }
 });
 
+// Check if we should scroll to AI actions section on page load
+document.addEventListener('DOMContentLoaded', function() {
+  if (sessionStorage.getItem('scrollToAIActions') === 'true') {
+    // Clear the flag
+    sessionStorage.removeItem('scrollToAIActions');
+    // Scroll to AI actions section
+    setTimeout(() => {
+      const aiActionsSection = document.getElementById('ai-actions-section');
+      if (aiActionsSection) {
+        aiActionsSection.scrollIntoView({behavior: 'smooth', block: 'start'});
+      }
+    }, 100);
+  }
+});
+
 // Event delegation for dynamically loaded content
 document.addEventListener('click', function(evt) {
   // Check if the clicked element or its parent has a data-action
