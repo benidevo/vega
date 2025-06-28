@@ -141,14 +141,20 @@
                 _="on htmx:afterRequest
                    if event.detail.successful
                      set skills to #skills-input.value
-                     set skillsArray to skills.split(',').map(s => s.trim()).filter(s => s)
-                     if skillsArray.length > 0
+                     set skillsArray to skills.split(',')
+                     set trimmedSkills to []
+                     for skill in skillsArray
+                       set trimmed to skill.trim()
+                       if trimmed.length > 0
+                         append trimmed to trimmedSkills
+                       end
+                     end
+                     if trimmedSkills.length > 0
                        put '' into #skills-display then
-                       for skill in skillsArray
-                         make a <span.px-3.py-1.5.bg-slate-700.rounded-md.text-sm.text-primary/>
+                       for skill in trimmedSkills
+                         make a <span.px-3.py-1.5.bg-slate-700.rounded-md.text-sm.text-primary.mr-2/>
                          put skill into the result
                          put the result at the end of #skills-display
-                         make a text ' ' then put it at the end of #skills-display
                        end
                      else
                        make a <span.text-gray-400/> called noSkills
@@ -241,17 +247,17 @@
                   hx-swap="innerHTML"
                   hx-indicator="#analyze-spinner">
             <span id="analyze-spinner" class="htmx-indicator">
-              <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg class="animate-spin h-5 w-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             </span>
             <span id="analyze-icon" class="htmx-indicator:not(.htmx-request) block">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </span>
-            <span>Analyze Job Match</span>
+            <span class="flex-shrink-0">Analyze Match</span>
           </button>
 
           <!-- Error display for analyze button -->
@@ -262,14 +268,14 @@
                   hx-target="#cover-letter-section"
                   hx-target-4xx="#cover-letter-error"
                   hx-swap="innerHTML">
-            <svg class="cover-letter-spinner htmx-indicator animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg class="cover-letter-spinner htmx-indicator animate-spin h-5 w-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <svg class="cover-letter-icon h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="cover-letter-icon h-5 w-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
-            <span>Generate Cover Letter</span>
+            <span class="flex-shrink-0">Cover Letter</span>
           </button>
 
           <!-- Error display for cover letter button -->
@@ -277,27 +283,27 @@
 
           <!-- Match History Button -->
           <a href="/jobs/{{.jobID}}/match-history" class="w-full mb-3 py-2.5 px-4 bg-slate-600 hover:bg-slate-500 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span>View Match History</span>
+            <span class="flex-shrink-0">Match History</span>
           </a>
 
           {{if .job.SourceURL}}
           <a href="{{.job.SourceURL}}" target="_blank" class="w-full mb-3 py-2.5 px-4 bg-slate-600 hover:bg-slate-500 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
-            View Original Posting
+            <span class="flex-shrink-0">Original Posting</span>
           </a>
           {{end}}
 
           {{if .job.ApplicationURL}}
           <a href="{{.job.ApplicationURL}}" target="_blank" class="w-full mb-3 py-2.5 px-4 bg-slate-600 hover:bg-slate-500 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
-            View Original Posting
+            <span class="flex-shrink-0">Original Posting</span>
           </a>
           {{end}}
 
@@ -308,10 +314,10 @@
                put {url: '/jobs/{{.jobID}}', method: 'DELETE', type: 'job'} into window.itemToDelete
                remove .hidden from #delete-modal-shared"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
-            Delete Job
+            <span class="flex-shrink-0">Delete Job</span>
           </button>
         </div>
       </div>

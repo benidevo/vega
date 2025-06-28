@@ -18,6 +18,7 @@ const (
 type AIService struct {
 	JobMatcher           *services.JobMatcherService
 	CoverLetterGenerator *services.CoverLetterGeneratorService
+	CVParser             *services.CVParserService
 }
 
 // Setup initializes the complete AI service with all dependencies.
@@ -38,6 +39,7 @@ func createProvider(cfg *config.Settings) (llm.Provider, error) {
 			return nil, models.WrapError(models.ErrMissingAPIKey, fmt.Errorf("GEMINI_API_KEY is required for Gemini provider"))
 		}
 		geminiCfg := gemini.NewConfig(cfg)
+
 		provider, err := gemini.New(context.Background(), geminiCfg)
 		if err != nil {
 			return nil, models.WrapError(models.ErrProviderInitFailed, err)
@@ -53,5 +55,6 @@ func NewAIService(provider llm.Provider) *AIService {
 	return &AIService{
 		JobMatcher:           services.NewJobMatcherService(provider),
 		CoverLetterGenerator: services.NewCoverLetterGeneratorService(provider),
+		CVParser:             services.NewCVParserService(provider),
 	}
 }

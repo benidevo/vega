@@ -392,3 +392,249 @@ func TestGemini_Generate_UnsupportedResponseType(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "unsupported response type")
 }
+
+func TestGemini_TaskSpecificModelIntegration(t *testing.T) {
+	tests := []struct {
+		name          string
+		config        *Config
+		responseType  llm.ResponseType
+		expectedModel string
+	}{
+		{
+			name: "CV parsing response type uses CV parsing model",
+			config: &Config{
+				Model:            "gemini-2.5-flash",
+				ModelCVParsing:   "gemini-1.5-flash",
+				ModelJobAnalysis: "gemini-2.5-flash",
+				ModelCoverLetter: "gemini-2.5-flash",
+			},
+			responseType:  llm.ResponseTypeCVParsing,
+			expectedModel: "gemini-1.5-flash",
+		},
+		{
+			name: "Match result response type uses job analysis model",
+			config: &Config{
+				Model:            "gemini-1.5-flash",
+				ModelCVParsing:   "gemini-1.5-flash",
+				ModelJobAnalysis: "gemini-2.5-flash",
+				ModelCoverLetter: "gemini-2.5-flash",
+			},
+			responseType:  llm.ResponseTypeMatchResult,
+			expectedModel: "gemini-2.5-flash",
+		},
+		{
+			name: "Cover letter response type uses cover letter model",
+			config: &Config{
+				Model:            "gemini-1.5-flash",
+				ModelCVParsing:   "gemini-1.5-flash",
+				ModelJobAnalysis: "gemini-2.5-flash",
+				ModelCoverLetter: "gemini-2.5-flash",
+			},
+			responseType:  llm.ResponseTypeCoverLetter,
+			expectedModel: "gemini-2.5-flash",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Verify the configuration correctly selects the expected model for the task
+			var taskType string
+			switch tt.responseType {
+			case llm.ResponseTypeCVParsing:
+				taskType = "cv_parsing"
+			case llm.ResponseTypeMatchResult:
+				taskType = "job_analysis"
+			case llm.ResponseTypeCoverLetter:
+				taskType = "cover_letter"
+			}
+
+			result := tt.config.GetModelForTask(taskType)
+			assert.Equal(t, tt.expectedModel, result)
+		})
+	}
+}
+
+func TestGemini_parseCVJSON(t *testing.T) {
+	g := &Gemini{}
+
+	tests := []struct {
+		name          string
+		input         string
+		expected      models.CVParsingResult
+		expectedError string
+	}{
+		{
+			name: "valid CV JSON with complete information",
+			input: `{
+				"isValid": true,
+				"personalInfo": {
+					"firstName": "John",
+					"lastName": "Doe",
+					"email": "john.doe@email.com",
+					"phone": "+1-555-123-4567",
+					"location": "San Francisco, CA",
+					"title": "Senior Software Engineer"
+				},
+				"workExperience": [
+					{
+						"company": "Tech Corp",
+						"title": "Senior Engineer",
+						"startDate": "2020-01",
+						"endDate": "Present",
+						"description": "Led development of microservices"
+					}
+				],
+				"education": [
+					{
+						"institution": "UC Berkeley",
+						"degree": "BS",
+						"fieldOfStudy": "Computer Science",
+						"startDate": "2014",
+						"endDate": "2018"
+					}
+				],
+				"skills": ["Go", "Python", "JavaScript"]
+			}`,
+			expected: models.CVParsingResult{
+				IsValid: true,
+				PersonalInfo: models.PersonalInfo{
+					FirstName: "John",
+					LastName:  "Doe",
+					Email:     "john.doe@email.com",
+					Phone:     "+1-555-123-4567",
+					Location:  "San Francisco, CA",
+					Title:     "Senior Software Engineer",
+				},
+				WorkExperience: []models.WorkExperience{
+					{
+						Company:     "Tech Corp",
+						Title:       "Senior Engineer",
+						StartDate:   "2020-01",
+						EndDate:     "Present",
+						Description: "Led development of microservices",
+					},
+				},
+				Education: []models.Education{
+					{
+						Institution:  "UC Berkeley",
+						Degree:       "BS",
+						FieldOfStudy: "Computer Science",
+						StartDate:    "2014",
+						EndDate:      "2018",
+					},
+				},
+				Skills: []string{"Go", "Python", "JavaScript"},
+			},
+			expectedError: "",
+		},
+		{
+			name: "invalid document gets rejected",
+			input: `{
+				"isValid": false,
+				"reason": "Document appears to be a police report, not a CV/Resume"
+			}`,
+			expected:      models.CVParsingResult{},
+			expectedError: "invalid document: Document appears to be a police report, not a CV/Resume",
+		},
+		{
+			name: "invalid document with missing reason",
+			input: `{
+				"isValid": false
+			}`,
+			expected:      models.CVParsingResult{},
+			expectedError: "invalid document: Document is not a valid CV/Resume",
+		},
+		{
+			name: "valid CV but missing name",
+			input: `{
+				"isValid": true,
+				"personalInfo": {
+					"firstName": "",
+					"lastName": "",
+					"email": "test@email.com"
+				},
+				"skills": ["Python"]
+			}`,
+			expected:      models.CVParsingResult{},
+			expectedError: "no name found in CV",
+		},
+		{
+			name: "valid CV ensures arrays are not nil",
+			input: `{
+				"isValid": true,
+				"personalInfo": {
+					"firstName": "Jane",
+					"lastName": "Smith"
+				}
+			}`,
+			expected: models.CVParsingResult{
+				IsValid: true,
+				PersonalInfo: models.PersonalInfo{
+					FirstName: "Jane",
+					LastName:  "Smith",
+				},
+				WorkExperience: []models.WorkExperience{},
+				Education:      []models.Education{},
+				Skills:         []string{},
+			},
+			expectedError: "",
+		},
+		{
+			name:          "malformed JSON",
+			input:         `{"isValid": true, "personalInfo": {`,
+			expected:      models.CVParsingResult{},
+			expectedError: "failed to parse Gemini response",
+		},
+		{
+			name: "CV with extra text around JSON",
+			input: `Here is the parsed CV data: {
+				"isValid": true,
+				"personalInfo": {
+					"firstName": "Bob",
+					"lastName": "Wilson"
+				},
+				"skills": ["Java", "SQL"]
+			} End of parsing`,
+			expected: models.CVParsingResult{
+				IsValid: true,
+				PersonalInfo: models.PersonalInfo{
+					FirstName: "Bob",
+					LastName:  "Wilson",
+				},
+				WorkExperience: []models.WorkExperience{},
+				Education:      []models.Education{},
+				Skills:         []string{"Java", "SQL"},
+			},
+			expectedError: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := g.parseCVJSON(tt.input)
+
+			if tt.expectedError != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected.IsValid, result.IsValid)
+				assert.Equal(t, tt.expected.PersonalInfo.FirstName, result.PersonalInfo.FirstName)
+				assert.Equal(t, tt.expected.PersonalInfo.LastName, result.PersonalInfo.LastName)
+				assert.Equal(t, tt.expected.PersonalInfo.Email, result.PersonalInfo.Email)
+				assert.Equal(t, tt.expected.PersonalInfo.Phone, result.PersonalInfo.Phone)
+				assert.Equal(t, tt.expected.PersonalInfo.Location, result.PersonalInfo.Location)
+				assert.Equal(t, tt.expected.PersonalInfo.Title, result.PersonalInfo.Title)
+
+				// Verify arrays are correctly handled
+				assert.NotNil(t, result.WorkExperience)
+				assert.NotNil(t, result.Education)
+				assert.NotNil(t, result.Skills)
+
+				assert.Equal(t, len(tt.expected.WorkExperience), len(result.WorkExperience))
+				assert.Equal(t, len(tt.expected.Education), len(result.Education))
+				assert.Equal(t, tt.expected.Skills, result.Skills)
+			}
+		})
+	}
+}

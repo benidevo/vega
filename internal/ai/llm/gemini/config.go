@@ -8,9 +8,13 @@ type Config struct {
 	APIKey string
 	// MaxTokens is the maximum number of tokens to generate in the response.
 	MaxTokens int
-	// Model is the model to use for generating responses. It should be a valid Gemini
+	// Model is the default model to use for generating responses. It should be a valid Gemini
 	// model identifier, such as "gemini-1.5-flash".
 	Model string
+	// Task-specific models for optimal performance and cost
+	ModelCVParsing   string // Fast model for CV parsing (e.g., gemini-1.5-flash)
+	ModelJobAnalysis string // Advanced model for job analysis (e.g., gemini-2.5-flash)
+	ModelCoverLetter string // Advanced model for cover letter generation (e.g., gemini-2.5-flash)
 	// Temperature controls the randomness of the output. Higher values (e.g., 0.8) make the output more random,
 	// while lower values (e.g., 0.2) make it more focused and deterministic.
 	Temperature *float32
@@ -48,10 +52,13 @@ func NewConfig(cfg *config.Settings) *Config {
 	defaultTemp := float32(0.4)
 
 	return &Config{
-		APIKey:      cfg.GeminiAPIKey,
-		MaxTokens:   8192,
-		Model:       cfg.GeminiModel,
-		Temperature: &defaultTemp,
+		APIKey:           cfg.GeminiAPIKey,
+		MaxTokens:        8192,
+		Model:            cfg.GeminiModel,
+		ModelCVParsing:   cfg.GeminiModelCVParsing,
+		ModelJobAnalysis: cfg.GeminiModelJobAnalysis,
+		ModelCoverLetter: cfg.GeminiModelCoverLetter,
+		Temperature:      &defaultTemp,
 
 		// Retry configuration
 		MaxRetries:     3,
@@ -80,6 +87,26 @@ func NewConfig(cfg *config.Settings) *Config {
 		TopK:              floatPtr(40),
 		SystemInstruction: "You are a professional career advisor and expert writer. Always provide helpful, accurate, and constructive feedback. When responding with JSON, output ONLY valid JSON without any preamble, explanation, or additional text. Do not include phrases like 'Here is the JSON' or any other text before or after the JSON object.",
 	}
+}
+
+// GetModelForTask returns the appropriate model for the given task type
+func (c *Config) GetModelForTask(taskType string) string {
+	switch taskType {
+	case "cv_parsing":
+		if c.ModelCVParsing != "" {
+			return c.ModelCVParsing
+		}
+	case "job_analysis", "match_result":
+		if c.ModelJobAnalysis != "" {
+			return c.ModelJobAnalysis
+		}
+	case "cover_letter":
+		if c.ModelCoverLetter != "" {
+			return c.ModelCoverLetter
+		}
+	}
+
+	return c.Model
 }
 
 // Helper function to create float32 pointers

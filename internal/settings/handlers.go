@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/benidevo/vega/internal/ai"
+	aimodels "github.com/benidevo/vega/internal/ai/models"
 	"github.com/benidevo/vega/internal/common/alerts"
 	"github.com/benidevo/vega/internal/settings/models"
 	"github.com/gin-gonic/gin"
@@ -14,13 +16,14 @@ import (
 // SettingsHandler manages settings-related HTTP requests
 type SettingsHandler struct {
 	service              *SettingsService
+	aiService            *ai.AIService
 	experienceHandler    *BaseSettingsHandler
 	educationHandler     *BaseSettingsHandler
 	certificationHandler *BaseSettingsHandler
 }
 
 // NewSettingsHandler creates a new SettingsHandler instance
-func NewSettingsHandler(service *SettingsService) *SettingsHandler {
+func NewSettingsHandler(service *SettingsService, aiService *ai.AIService) *SettingsHandler {
 	experienceMetadata := EntityMetadata{
 		Name:      "Experience",
 		URLPrefix: "experience",
@@ -47,6 +50,7 @@ func NewSettingsHandler(service *SettingsService) *SettingsHandler {
 
 	return &SettingsHandler{
 		service:              service,
+		aiService:            aiService,
 		experienceHandler:    NewBaseSettingsHandler(service, experienceMetadata),
 		educationHandler:     NewBaseSettingsHandler(service, educationMetadata),
 		certificationHandler: NewBaseSettingsHandler(service, certificationMetadata),
@@ -288,6 +292,200 @@ func (h *SettingsHandler) HandleUpdateContext(c *gin.Context) {
 		"context": "dashboard",
 		"message": "Personal context updated successfully",
 	})
+}
+
+// HandleCVUpload handles the HTTP request to parse and save CV data
+func (h *SettingsHandler) HandleCVUpload(c *gin.Context) {
+	userID := c.GetInt("userID")
+
+	var requestData struct {
+		CVText string `json:"cv_text"`
+	}
+
+	if err := c.ShouldBindJSON(&requestData); err != nil {
+		h.service.log.Error().Err(err).Msg("Failed to parse CV upload request")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Invalid request format",
+		})
+		return
+	}
+
+	if requestData.CVText == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "CV text is required",
+		})
+		return
+	}
+
+	if h.aiService == nil {
+		h.service.log.Error().Msg("AI service not available for CV parsing")
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"success": false,
+			"message": "CV parsing service is currently unavailable",
+		})
+		return
+	}
+
+	cvResult, err := h.aiService.CVParser.ParseCV(c.Request.Context(), requestData.CVText)
+	if err != nil {
+		h.service.log.Error().Err(err).Msg("Failed to parse CV with AI")
+
+		if strings.Contains(err.Error(), "invalid document:") {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "Failed to parse CV content",
+			})
+		}
+		return
+	}
+
+	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
+	if err != nil {
+		profile = &models.Profile{UserID: userID}
+	}
+
+	// Update profile fields with AI-parsed data
+	if cvResult.PersonalInfo.FirstName != "" {
+		profile.FirstName = cvResult.PersonalInfo.FirstName
+	}
+	if cvResult.PersonalInfo.LastName != "" {
+		profile.LastName = cvResult.PersonalInfo.LastName
+	}
+	if cvResult.PersonalInfo.Title != "" {
+		profile.Title = cvResult.PersonalInfo.Title
+	}
+	if cvResult.PersonalInfo.Phone != "" {
+		profile.PhoneNumber = cvResult.PersonalInfo.Phone
+	}
+	if cvResult.PersonalInfo.Location != "" {
+		profile.Location = cvResult.PersonalInfo.Location
+	}
+	if len(cvResult.Skills) > 0 {
+		profile.Skills = cvResult.Skills
+	}
+
+	// Save profile
+	if err := h.service.UpdateProfile(c.Request.Context(), profile); err != nil {
+		h.service.log.Error().Err(err).Msg("Failed to save parsed CV data")
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"message": "Failed to update profile",
+		})
+		return
+	}
+
+	// Process and save work experience from AI-parsed data
+	for i, aiExp := range cvResult.WorkExperience {
+		exp := h.convertAIWorkExperienceToModel(aiExp, profile.ID)
+		if err := h.service.CreateEntity(c, &exp); err != nil {
+			h.service.log.Error().Err(err).
+				Int("experience_index", i).
+				Str("company", exp.Company).
+				Str("title", exp.Title).
+				Msg("Failed to save work experience from AI-parsed CV")
+			// Continue processing other experiences even if one fails
+		} else {
+			h.service.log.Info().
+				Str("company", exp.Company).
+				Str("title", exp.Title).
+				Msg("Successfully saved work experience from AI-parsed CV")
+		}
+	}
+
+	// Process and save education from AI-parsed data
+	for i, aiEdu := range cvResult.Education {
+		edu := h.convertAIEducationToModel(aiEdu, profile.ID)
+		if err := h.service.CreateEntity(c, &edu); err != nil {
+			h.service.log.Error().Err(err).
+				Int("education_index", i).
+				Str("institution", edu.Institution).
+				Str("degree", edu.Degree).
+				Msg("Failed to save education from AI-parsed CV")
+			// Continue processing other education entries even if one fails
+		} else {
+			h.service.log.Info().
+				Str("institution", edu.Institution).
+				Str("degree", edu.Degree).
+				Msg("Successfully saved education from AI-parsed CV")
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "CV parsed and profile updated successfully",
+	})
+}
+
+// convertAIWorkExperienceToModel converts AI-parsed work experience to database model
+func (h *SettingsHandler) convertAIWorkExperienceToModel(aiExp aimodels.WorkExperience, profileID int) models.WorkExperience {
+	startDate := h.parseAIDate(aiExp.StartDate)
+	var endDate *time.Time
+	current := false
+
+	if aiExp.EndDate != "" && strings.ToLower(aiExp.EndDate) != "present" {
+		endDateTime := h.parseAIDate(aiExp.EndDate)
+		endDate = &endDateTime
+	} else if strings.ToLower(aiExp.EndDate) == "present" {
+		current = true
+	}
+
+	return models.WorkExperience{
+		ProfileID:   profileID,
+		Company:     aiExp.Company,
+		Title:       aiExp.Title,
+		Location:    aiExp.Location,
+		StartDate:   startDate,
+		EndDate:     endDate,
+		Description: aiExp.Description,
+		Current:     current,
+	}
+}
+
+// convertAIEducationToModel converts AI-parsed education to database model
+func (h *SettingsHandler) convertAIEducationToModel(aiEdu aimodels.Education, profileID int) models.Education {
+	startDate := h.parseAIDate(aiEdu.StartDate)
+	var endDate *time.Time
+
+	if aiEdu.EndDate != "" {
+		endDateTime := h.parseAIDate(aiEdu.EndDate)
+		endDate = &endDateTime
+	}
+
+	return models.Education{
+		ProfileID:    profileID,
+		Institution:  aiEdu.Institution,
+		Degree:       aiEdu.Degree,
+		FieldOfStudy: aiEdu.FieldOfStudy,
+		StartDate:    startDate,
+		EndDate:      endDate,
+	}
+}
+
+// parseAIDate parses AI-formatted dates (YYYY-MM or YYYY) to time.Time
+func (h *SettingsHandler) parseAIDate(dateStr string) time.Time {
+	if dateStr == "" {
+		return time.Now().AddDate(-4, 0, 0) // Default to 4 years ago
+	}
+
+	// Try YYYY-MM format first
+	if t, err := time.Parse("2006-01", dateStr); err == nil {
+		return t
+	}
+
+	// Try YYYY format
+	if t, err := time.Parse("2006", dateStr); err == nil {
+		return t
+	}
+
+	// Default fallback
+	return time.Now().AddDate(-4, 0, 0)
 }
 
 // GetSecuritySettings handles the request to display the security settings page

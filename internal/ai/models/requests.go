@@ -28,6 +28,7 @@ type PreviousMatch struct {
 type Prompt struct {
 	Instructions string
 	Request
+	CVText               string
 	UseEnhancedTemplates bool
 	Temperature          *float32
 	promptEnhancer       *prompts.PromptEnhancer
@@ -46,6 +47,15 @@ func NewPrompt(instructions string, request Request, useEnhanced bool) *Prompt {
 	}
 
 	return p
+}
+
+// NewCVParsingPrompt creates a new prompt specifically for CV parsing
+func NewCVParsingPrompt(cvText string) *Prompt {
+	return &Prompt{
+		Instructions:         "Parse CV and extract structured information",
+		CVText:               cvText,
+		UseEnhancedTemplates: false,
+	}
 }
 
 // SetTemperature sets a custom temperature for this prompt
@@ -161,7 +171,7 @@ CRITICAL SCORING GUIDELINES:
 
 Provide a comprehensive analysis focusing on:
 - Skills alignment with job requirements
-- Experience level and relevance  
+- Experience level and relevance
 - Industry knowledge fit
 - Cultural fit indicators
 - Growth potential
