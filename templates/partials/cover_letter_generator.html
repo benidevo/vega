@@ -1,5 +1,5 @@
 <!-- Cover Letter Generator -->
-<div class="bg-slate-800 rounded-xl shadow-lg overflow-hidden mb-6">
+<div class="bg-slate-800 rounded-none md:rounded-xl shadow-lg overflow-hidden mb-6">
   <div class="px-4 md:px-6 py-4 md:py-5 border-b border-slate-700">
     <h3 class="text-lg md:text-xl font-semibold text-white flex items-center">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -17,7 +17,7 @@
                   onclick="copyToClipboard('cover-letter-content')">
             Copy
           </button>
-          <button class="flex-1 md:flex-none px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-md transition-colors"
+          <button class="flex-1 md:flex-none px-3 py-2 bg-primary hover:bg-primary-dark text-white text-sm rounded-md transition-colors"
                   onclick="downloadCoverLetter()">
             Download PDF
           </button>
@@ -25,7 +25,7 @@
       </div>
 
       <!-- Mobile-optimized editable cover letter -->
-      <div id="cover-letter-content" class="bg-white text-gray-800 p-4 md:p-6 rounded-md text-sm md:text-base leading-relaxed min-h-[300px] md:min-h-[400px]">
+      <div id="cover-letter-content" class="bg-white text-gray-800 p-4 md:p-6 rounded-md text-sm md:text-base leading-relaxed min-h-[300px] md:min-h-[400px] overflow-x-auto break-words max-w-full">
         <!-- Personal Information Header -->
         <div class="mb-4 border-b pb-3">
           <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-1" contenteditable="true">{{.GeneratedCV.PersonalInfo.FirstName}} {{.GeneratedCV.PersonalInfo.LastName}}</h2>

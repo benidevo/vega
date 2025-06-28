@@ -8,14 +8,13 @@
   <div class="flex-1 overflow-auto bg-slate-900 min-h-0 scroll-smooth overscroll-contain">
     <!-- Header -->
     <header class="bg-slate-800 shadow-md">
-      <div class="px-4 py-6 sm:px-6 lg:px-8">
+      <div class="px-4 py-6 md:px-6 lg:px-8">
         <h1 class="text-xl md:text-2xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">{{.pageTitle}}</h1>
       </div>
     </header>
 
-
     <!-- Content -->
-    <main class="px-4 py-6 sm:px-6 lg:px-8">
+    <main class="px-0 py-6 md:px-6 lg:px-8">
       {{if eq .page "settings-profile"}}
         {{template "settings-profile-content" .}}
       {{else if eq .page "settings-security"}}

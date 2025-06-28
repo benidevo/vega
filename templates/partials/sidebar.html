@@ -155,21 +155,21 @@
 
 {{define "dashboard-layout"}}
 <!-- Mobile responsive dashboard with sidebar that converts to top navbar on small screens -->
-<div class="h-screen flex flex-col md:flex-row bg-slate-900">
+<div class="h-screen flex flex-col md:flex-row bg-slate-900 overflow-hidden">
   {{template "mobile-nav" .}}
   {{template "sidebar" .}}
 
   <!-- Main Content Area -->
-  <div class="flex-1 overflow-auto bg-slate-900 min-h-0">
+  <div class="flex-1 overflow-auto bg-slate-900 min-h-0 overscroll-contain">
     <!-- Header -->
     <header class="bg-slate-800 shadow-md">
-      <div class="px-4 py-6 sm:px-6 lg:px-8">
+      <div class="px-4 py-6 md:px-6 lg:px-8">
         <h1 class="text-xl md:text-2xl font-bold text-primary">{{.pageTitle}}</h1>
       </div>
     </header>
 
     <!-- Content -->
-    <main class="px-4 py-6 sm:px-6 lg:px-8">
+    <main class="px-0 py-6 md:px-6 lg:px-8">
       {{if eq .page "job-new"}}
         {{template "job-content" .}}
       {{else if eq .page "job-details"}}
