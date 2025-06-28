@@ -370,3 +370,29 @@ func TestJobService_convertToCoverLetter(t *testing.T) {
 	assert.NotZero(t, result.CreatedAt)
 	assert.NotZero(t, result.UpdatedAt)
 }
+
+func TestJobService_GenerateCV_NoAIService(t *testing.T) {
+	mockJobRepo := &MockJobRepository{}
+	cfg := &config.Settings{}
+
+	service := NewJobService(mockJobRepo, nil, nil, cfg)
+
+	result, err := service.GenerateCV(context.Background(), 1, 1)
+
+	assert.Error(t, err)
+	assert.Equal(t, models.ErrAIServiceUnavailable, err)
+	assert.Nil(t, result)
+}
+
+func TestJobService_GenerateCV_NoSettingsService(t *testing.T) {
+	mockJobRepo := &MockJobRepository{}
+	cfg := &config.Settings{}
+
+	service := NewJobService(mockJobRepo, &ai.AIService{}, nil, cfg)
+
+	result, err := service.GenerateCV(context.Background(), 1, 1)
+
+	assert.Error(t, err)
+	assert.Equal(t, models.ErrProfileServiceRequired, err)
+	assert.Nil(t, result)
+}

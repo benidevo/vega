@@ -80,6 +80,26 @@ func (m *MockProvider) SetupCoverLetterMock(result models.CoverLetter, err error
 	})).Return(response, err)
 }
 
+// SetupCVGenerationMock configures the mock for CV generation operations
+func (m *MockProvider) SetupCVGenerationMock(result models.CVParsingResult, err error) {
+	response := llm.GenerateResponse{
+		Data:     result,
+		Duration: 800 * time.Millisecond,
+		Tokens:   0,
+		Metadata: map[string]interface{}{
+			"temperature": float32(0.3),
+			"enhanced":    false,
+			"model":       "gemini-2.5-flash",
+			"task_type":   "cv_generation",
+			"method":      "gemini_cv_generation",
+		},
+	}
+
+	m.On("Generate", mock.Anything, mock.MatchedBy(func(req llm.GenerateRequest) bool {
+		return req.ResponseType == llm.ResponseTypeCV
+	})).Return(response, err)
+}
+
 // SetupGenericMock configures the mock to return any response for any request
 func (m *MockProvider) SetupGenericMock(response llm.GenerateResponse, err error) {
 	m.On("Generate", mock.Anything, mock.AnythingOfType("llm.GenerateRequest")).
@@ -374,6 +394,41 @@ func (td *TestData) MinimalRequest() models.Request {
 		ApplicantName:    "John Doe",
 		ApplicantProfile: "Software Engineer with 3 years experience.",
 		JobDescription:   "Software Engineer position at a tech company.",
+	}
+}
+
+// ValidGeneratedCV returns a sample generated CV for testing
+func (td *TestData) ValidGeneratedCV() models.CVParsingResult {
+	return models.CVParsingResult{
+		IsValid: true,
+		PersonalInfo: models.PersonalInfo{
+			FirstName: "Sarah",
+			LastName:  "Johnson",
+			Email:     "sarah.johnson@email.com",
+			Phone:     "+1 (555) 234-5678",
+			Location:  "Seattle, WA",
+			Title:     "Senior Frontend Developer",
+		},
+		WorkExperience: []models.WorkExperience{
+			{
+				Company:     "WebTech Solutions",
+				Title:       "Senior Frontend Developer",
+				Location:    "Seattle, WA",
+				StartDate:   "March 2021",
+				EndDate:     "Present",
+				Description: "• Lead frontend development for e-commerce platform serving 100K+ daily users\n• Implemented React components using TypeScript and modern hooks\n• Optimized application performance resulting in 30% faster load times\n• Mentored 3 junior developers and conducted code reviews",
+			},
+		},
+		Education: []models.Education{
+			{
+				Institution:  "University of Washington",
+				Degree:       "Bachelor of Science",
+				FieldOfStudy: "Computer Science",
+				StartDate:    "Sep 2013",
+				EndDate:      "Jun 2017",
+			},
+		},
+		Skills: []string{"React", "TypeScript", "JavaScript", "CSS3", "Next.js"},
 	}
 }
 

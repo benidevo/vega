@@ -104,6 +104,10 @@ func (c *Config) GetModelForTask(taskType string) string {
 		if c.ModelCoverLetter != "" {
 			return c.ModelCoverLetter
 		}
+	case "cv_generation":
+		if c.ModelCoverLetter != "" {
+			return c.ModelCoverLetter
+		}
 	}
 
 	return c.Model

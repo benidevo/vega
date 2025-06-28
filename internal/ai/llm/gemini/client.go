@@ -51,6 +51,8 @@ func (g *Gemini) Generate(ctx context.Context, request llm.GenerateRequest) (llm
 		return g.generateMatchResult(ctx, request.Prompt, start)
 	case llm.ResponseTypeCVParsing:
 		return g.parseCVContent(ctx, request.Prompt, start)
+	case llm.ResponseTypeCV:
+		return g.generateCV(ctx, request.Prompt, start)
 	default:
 		return llm.GenerateResponse{}, fmt.Errorf("unsupported response type: %s", request.ResponseType)
 	}
@@ -463,6 +465,52 @@ func (g *Gemini) buildCVParsingSystemInstruction() *genai.Content {
 	return nil
 }
 
+func (g *Gemini) buildCVGenerationSystemInstruction() *genai.Content {
+	instruction := `You are an expert professional CV/Resume writer. Your task is to generate a comprehensive, tailored CV from the provided user profile data and job description.
+
+CRITICAL RULES:
+1. You MUST use ONLY the information provided in the USER PROFILE section
+2. NEVER fabricate names, companies, job titles, education, or any other information
+3. If the user's name is provided, use it. If not, leave it blank
+4. Only include work experiences, education, and skills that are explicitly mentioned in the profile
+5. You are reformatting and optimizing existing information, NOT creating new information
+
+SKILLS FILTERING:
+- ONLY include skills that are DIRECTLY RELEVANT to the job posting
+- If the job is for Python development, DO NOT include Java, Spring Boot, or unrelated technologies
+- Order skills by relevance to the specific job requirements
+- Focus on skills that match the job description's technology stack
+
+WORK EXPERIENCE FORMATTING:
+- Include company location if provided in the profile data
+- Each job description MUST contain multiple bullet points
+- Current/Recent roles (last 2 years): 4-5 bullet points
+- Previous recent roles (2-5 years ago): 3-4 bullet points
+- Older roles: 2-3 bullet points
+- Start each bullet with "• " (bullet character + space)
+- Use action verbs and quantify achievements where possible
+- Separate each bullet point with a newline
+
+DATE FORMATTING:
+- Use "Month Year" format (e.g., "August 2023", "Jan 2021")
+- For current positions use "Present"
+- Always include both month and year for clarity
+
+Key guidelines:
+- Always set "isValid" to true when generating a CV
+- Use professional language and active voice
+- Tailor the presentation of existing experience to match job requirements
+- Highlight relevant achievements from the actual profile
+- If information is missing (e.g., email, phone), leave those fields empty rather than inventing data
+- Focus on presenting the user's actual experience in the best possible light`
+
+	contents := genai.Text(instruction)
+	if len(contents) > 0 {
+		return contents[0]
+	}
+	return nil
+}
+
 func (g *Gemini) getCVParsingSchema() *genai.Schema {
 	return &genai.Schema{
 		Type: genai.TypeObject,
@@ -529,6 +577,74 @@ func (g *Gemini) getCVParsingSchema() *genai.Schema {
 	}
 }
 
+func (g *Gemini) getCVGenerationSchema() *genai.Schema {
+	return &genai.Schema{
+		Type: genai.TypeObject,
+		Properties: map[string]*genai.Schema{
+			"isValid": {
+				Type:        genai.TypeBoolean,
+				Description: "Always true for generated CVs",
+			},
+			"reason": {
+				Type:        genai.TypeString,
+				Description: "Not used for generation, leave empty",
+			},
+			"personalInfo": {
+				Type: genai.TypeObject,
+				Properties: map[string]*genai.Schema{
+					"firstName": {Type: genai.TypeString, Description: "First name EXACTLY as provided in USER PROFILE - do not fabricate"},
+					"lastName":  {Type: genai.TypeString, Description: "Last name EXACTLY as provided in USER PROFILE - do not fabricate"},
+					"email":     {Type: genai.TypeString, Description: "Email EXACTLY as provided in USER PROFILE - leave empty if not provided"},
+					"phone":     {Type: genai.TypeString, Description: "Phone EXACTLY as provided in USER PROFILE - leave empty if not provided"},
+					"location":  {Type: genai.TypeString, Description: "Location EXACTLY as provided in USER PROFILE - leave empty if not provided"},
+					"title":     {Type: genai.TypeString, Description: "Professional title based on profile, can be tailored to match job"},
+				},
+				Required: []string{},
+			},
+			"workExperience": {
+				Type: genai.TypeArray,
+				Items: &genai.Schema{
+					Type: genai.TypeObject,
+					Properties: map[string]*genai.Schema{
+						"company":     {Type: genai.TypeString, Description: "Company name EXACTLY as in USER PROFILE - do not fabricate"},
+						"title":       {Type: genai.TypeString, Description: "Job title EXACTLY as in USER PROFILE - do not fabricate"},
+						"location":    {Type: genai.TypeString, Description: "Job location (city, country) from USER PROFILE - MUST include if available in profile"},
+						"startDate":   {Type: genai.TypeString, Description: "Start date from USER PROFILE (Month Year format, e.g., 'August 2023')"},
+						"endDate":     {Type: genai.TypeString, Description: "End date from USER PROFILE (Month Year format, e.g., 'June 2024' or 'Present')"},
+						"description": {Type: genai.TypeString, Description: "Multiple bullet points (4-5 for recent, 2-3 for older) starting with '• '. Each on new line. From USER PROFILE but tailored."},
+					},
+					Required: []string{"company", "title", "startDate", "description"},
+				},
+				Description: "ONLY work experiences from USER PROFILE - do not add fictional jobs",
+			},
+			"education": {
+				Type: genai.TypeArray,
+				Items: &genai.Schema{
+					Type: genai.TypeObject,
+					Properties: map[string]*genai.Schema{
+						"institution":  {Type: genai.TypeString, Description: "School/University EXACTLY as in USER PROFILE - do not fabricate"},
+						"degree":       {Type: genai.TypeString, Description: "Degree EXACTLY as in USER PROFILE - do not fabricate"},
+						"fieldOfStudy": {Type: genai.TypeString, Description: "Field of study from USER PROFILE"},
+						"startDate":    {Type: genai.TypeString, Description: "Start date from USER PROFILE (Month Year format, e.g., 'Sep 2014')"},
+						"endDate":      {Type: genai.TypeString, Description: "End date from USER PROFILE (Month Year format, e.g., 'Jun 2018')"},
+					},
+					Required: []string{"institution", "degree"},
+				},
+				Description: "ONLY education from USER PROFILE - do not add fictional schools",
+			},
+			"skills": {
+				Type: genai.TypeArray,
+				Items: &genai.Schema{
+					Type: genai.TypeString,
+				},
+				Description: "ONLY skills from USER PROFILE that are DIRECTLY RELEVANT to the job. Filter out unrelated technologies (e.g., no Java/Spring for Python jobs). Order by relevance.",
+			},
+		},
+		PropertyOrdering: []string{"isValid", "personalInfo", "workExperience", "education", "skills"},
+		Required:         []string{"isValid"},
+	}
+}
+
 func (g *Gemini) parseCVJSON(jsonResponse string) (models.CVParsingResult, error) {
 	cleanJSON := g.extractJSON(jsonResponse)
 
@@ -537,7 +653,6 @@ func (g *Gemini) parseCVJSON(jsonResponse string) (models.CVParsingResult, error
 		return models.CVParsingResult{}, WrapError(ErrResponseParseFailed, err)
 	}
 
-	// Check if document is valid first
 	if !result.IsValid {
 		reason := result.Reason
 		if reason == "" {
@@ -551,7 +666,6 @@ func (g *Gemini) parseCVJSON(jsonResponse string) (models.CVParsingResult, error
 		return models.CVParsingResult{}, fmt.Errorf("no name found in CV")
 	}
 
-	// Ensure arrays are never nil for valid CVs
 	if result.WorkExperience == nil {
 		result.WorkExperience = []models.WorkExperience{}
 	}
@@ -563,4 +677,96 @@ func (g *Gemini) parseCVJSON(jsonResponse string) (models.CVParsingResult, error
 	}
 
 	return result, nil
+}
+
+// parseGeneratedCVJSON parses JSON response from CV generation without strict validation
+func (g *Gemini) parseGeneratedCVJSON(jsonResponse string) (models.CVParsingResult, error) {
+	cleanJSON := g.extractJSON(jsonResponse)
+
+	var result models.CVParsingResult
+	if err := json.Unmarshal([]byte(cleanJSON), &result); err != nil {
+		return models.CVParsingResult{}, WrapError(ErrResponseParseFailed, err)
+	}
+
+	// For generated CVs, assume it's valid
+	result.IsValid = true
+
+	if result.WorkExperience == nil {
+		result.WorkExperience = []models.WorkExperience{}
+	}
+	if result.Education == nil {
+		result.Education = []models.Education{}
+	}
+	if result.Skills == nil {
+		result.Skills = []string{}
+	}
+
+	return result, nil
+}
+
+// generateCV generates a CV based on the provided prompt.
+func (g *Gemini) generateCV(ctx context.Context, prompt models.Prompt, start time.Time) (llm.GenerateResponse, error) {
+	cvPrompt := g.buildCVGenerationPrompt(prompt)
+
+	temperature := float32(0.3)
+
+	result, err := g.executeWithRetry(ctx, func() (string, error) {
+		model := g.cfg.GetModelForTask("cv_generation")
+		resp, err := g.client.Models.GenerateContent(ctx, model, genai.Text(cvPrompt), &genai.GenerateContentConfig{
+			Temperature:       &temperature,
+			ResponseMIMEType:  g.cfg.ResponseMIMEType,
+			ResponseSchema:    g.getCVGenerationSchema(),
+			MaxOutputTokens:   g.cfg.MaxOutputTokens,
+			TopP:              g.cfg.TopP,
+			TopK:              g.cfg.TopK,
+			SystemInstruction: g.buildCVGenerationSystemInstruction(),
+		})
+		if err != nil {
+			return "", fmt.Errorf("generate content error: %w", err)
+		}
+
+		if len(resp.Candidates) == 0 {
+			return "", fmt.Errorf("no candidates in response")
+		}
+
+		candidate := resp.Candidates[0]
+		if candidate.Content == nil || len(candidate.Content.Parts) == 0 {
+			return "", fmt.Errorf("no content in response candidate")
+		}
+
+		var responseText string
+		for _, part := range candidate.Content.Parts {
+			if part.Text != "" {
+				responseText += part.Text
+			}
+		}
+
+		return responseText, nil
+	})
+
+	if err != nil {
+		return llm.GenerateResponse{}, WrapError(ErrCoverLetterGenFailed, err)
+	}
+
+	cvResult, err := g.parseGeneratedCVJSON(result)
+	if err != nil {
+		return llm.GenerateResponse{}, err
+	}
+
+	return llm.GenerateResponse{
+		Data:     cvResult,
+		Duration: time.Since(start),
+		Tokens:   0,
+		Metadata: map[string]any{
+			"temperature": temperature,
+			"enhanced":    prompt.UseEnhancedTemplates,
+			"model":       g.cfg.GetModelForTask("cv_generation"),
+			"task_type":   "cv_generation",
+			"method":      "gemini_cv_generation",
+		},
+	}, nil
+}
+
+func (g *Gemini) buildCVGenerationPrompt(prompt models.Prompt) string {
+	return prompt.ToCVGenerationPrompt()
 }

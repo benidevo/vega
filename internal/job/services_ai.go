@@ -260,6 +260,14 @@ func (s *JobService) buildAIRequest(job *models.Job, profile *settingsmodels.Pro
 func (s *JobService) buildProfileSummary(profile *settingsmodels.Profile) string {
 	var summary strings.Builder
 
+	if profile.FirstName != "" || profile.LastName != "" {
+		summary.WriteString(fmt.Sprintf("Name: %s %s\n", profile.FirstName, profile.LastName))
+	}
+
+	if profile.PhoneNumber != "" {
+		summary.WriteString(fmt.Sprintf("Phone: %s\n", profile.PhoneNumber))
+	}
+
 	if profile.Title != "" {
 		summary.WriteString(fmt.Sprintf("Current Title: %s\n", profile.Title))
 	}
@@ -298,8 +306,12 @@ func (s *JobService) buildProfileSummary(profile *settingsmodels.Profile) string
 				endDate = exp.EndDate.Format("2006")
 			}
 
-			summary.WriteString(fmt.Sprintf("- %s at %s (%s - %s)\n",
-				exp.Title, exp.Company, exp.StartDate.Format("2006"), endDate))
+			location := ""
+			if exp.Location != "" {
+				location = fmt.Sprintf(", %s", exp.Location)
+			}
+			summary.WriteString(fmt.Sprintf("- %s at %s%s (%s - %s)\n",
+				exp.Title, exp.Company, location, exp.StartDate.Format("2006"), endDate))
 
 			if exp.Description != "" {
 				// Truncate long descriptions
@@ -409,10 +421,154 @@ func (s *JobService) ValidateProfileForAI(profile *settingsmodels.Profile) error
 				break
 			}
 		}
-		if !hasDetailedExperience && profile.CareerSummary == "" {
+		if !hasDetailedExperience && len(profile.Education) == 0 {
 			return models.ErrProfileSummaryRequired
 		}
 	}
 
 	return nil
+}
+
+// GenerateCV generates a CV for a specific job application.
+func (s *JobService) GenerateCV(ctx context.Context, userID, jobID int) (*models.GeneratedCV, error) {
+	userRef := fmt.Sprintf("user_%d", userID)
+
+	s.log.Debug().
+		Str("user_ref", userRef).
+		Int("job_id", jobID).
+		Str("operation", "cv_generation").
+		Msg("Starting CV generation")
+
+	if s.aiService == nil {
+		s.log.Error().
+			Str("user_ref", userRef).
+			Int("job_id", jobID).
+			Str("error_type", "ai_service_unavailable").
+			Msg("AI service not available")
+		return nil, models.ErrAIServiceUnavailable
+	}
+
+	if s.settingsService == nil {
+		s.log.Error().
+			Str("user_ref", userRef).
+			Int("job_id", jobID).
+			Str("error_type", "settings_service_unavailable").
+			Msg("Settings service not available")
+		return nil, models.ErrProfileServiceRequired
+	}
+
+	job, err := s.GetJob(ctx, jobID)
+	if err != nil {
+		s.log.Error().Err(err).
+			Str("user_ref", userRef).
+			Int("job_id", jobID).
+			Str("error_type", "job_not_found").
+			Msg("Job not found for CV generation")
+		return nil, err
+	}
+
+	profile, err := s.settingsService.GetProfileWithRelated(ctx, userID)
+	if err != nil {
+		s.log.Error().Err(err).
+			Str("user_ref", userRef).
+			Int("job_id", jobID).
+			Str("error_type", "profile_fetch_failed").
+			Msg("Failed to get user profile for CV generation")
+		return nil, err
+	}
+
+	if err := s.ValidateProfileForAI(profile); err != nil {
+		s.log.Warn().
+			Str("user_ref", userRef).
+			Int("job_id", jobID).
+			Str("error_type", "profile_incomplete").
+			Msg("Profile incomplete for AI CV generation")
+		return nil, err
+	}
+
+	aiRequest := s.buildAIRequest(job, profile)
+	// Set CVText to be the profile summary for CV generation
+	aiRequest.CVText = s.buildProfileSummary(profile)
+
+	aiResult, err := s.aiService.CVGenerator.GenerateCV(ctx, aiRequest, jobID, job.Title)
+	if err != nil {
+		s.log.Error().Err(err).
+			Str("user_ref", userRef).
+			Int("job_id", jobID).
+			Str("error_type", "ai_generation_failed").
+			Msg("CV generation failed")
+		return nil, err
+	}
+
+	result := s.convertToGeneratedCV(aiResult, userID, jobID)
+
+	s.log.Info().
+		Str("user_ref", userRef).
+		Int("job_id", jobID).
+		Str("operation", "cv_generation").
+		Bool("success", true).
+		Msg("CV generation completed")
+
+	return result, nil
+}
+
+// convertToGeneratedCV converts AI CV result to job domain model.
+func (s *JobService) convertToGeneratedCV(aiResult *aimodels.GeneratedCV, userID, jobID int) *models.GeneratedCV {
+	now := time.Now().UTC()
+
+	return &models.GeneratedCV{
+		JobID:          jobID,
+		UserID:         userID,
+		IsValid:        aiResult.IsValid,
+		Reason:         aiResult.Reason,
+		PersonalInfo:   convertPersonalInfo(aiResult.PersonalInfo),
+		WorkExperience: convertWorkExperience(aiResult.WorkExperience),
+		Education:      convertEducation(aiResult.Education),
+		Skills:         aiResult.Skills,
+		GeneratedAt:    time.Unix(aiResult.GeneratedAt, 0),
+		JobTitle:       aiResult.JobTitle,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}
+}
+
+func convertPersonalInfo(ai aimodels.PersonalInfo) models.PersonalInfo {
+	return models.PersonalInfo{
+		FirstName: ai.FirstName,
+		LastName:  ai.LastName,
+		Email:     ai.Email,
+		Phone:     ai.Phone,
+		Location:  ai.Location,
+		Title:     ai.Title,
+		Summary:   ai.Summary,
+	}
+}
+
+func convertWorkExperience(aiExps []aimodels.WorkExperience) []models.WorkExperience {
+	exps := make([]models.WorkExperience, len(aiExps))
+	for i, exp := range aiExps {
+		exps[i] = models.WorkExperience{
+			Company:     exp.Company,
+			Title:       exp.Title,
+			Location:    exp.Location,
+			StartDate:   exp.StartDate,
+			EndDate:     exp.EndDate,
+			Description: exp.Description,
+		}
+	}
+	return exps
+}
+
+func convertEducation(aiEdu []aimodels.Education) []models.Education {
+	edu := make([]models.Education, len(aiEdu))
+	for i, e := range aiEdu {
+		edu[i] = models.Education{
+			Institution:  e.Institution,
+			Degree:       e.Degree,
+			FieldOfStudy: e.FieldOfStudy,
+			StartDate:    e.StartDate,
+			EndDate:      e.EndDate,
+		}
+	}
+	return edu
 }

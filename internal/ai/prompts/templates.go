@@ -24,3 +24,8 @@ func (pe *PromptEnhancer) EnhanceCoverLetterPrompt(systemInstruction, applicantN
 func (pe *PromptEnhancer) EnhanceJobMatchPrompt(systemInstruction, applicantName, jobDescription, applicantProfile, extraContext string, minScore, maxScore int) string {
 	return EnhanceJobMatchPrompt(systemInstruction, applicantName, jobDescription, applicantProfile, extraContext, minScore, maxScore)
 }
+
+// EnhanceCVGenerationPrompt enhances a CV generation prompt
+func (pe *PromptEnhancer) EnhanceCVGenerationPrompt(systemInstruction, cvText, jobDescription, extraContext string) string {
+	return EnhanceCVGenerationPrompt(systemInstruction, cvText, jobDescription, extraContext)
+}

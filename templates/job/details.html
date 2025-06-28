@@ -281,6 +281,24 @@
           <!-- Error display for cover letter button -->
           <div id="cover-letter-error"></div>
 
+          <button id="cv-button" class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  hx-post="/jobs/{{.jobID}}/cv"
+                  hx-target="#cv-section"
+                  hx-target-4xx="#cv-error"
+                  hx-swap="innerHTML">
+            <svg class="cv-spinner htmx-indicator animate-spin h-5 w-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <svg class="cv-icon h-5 w-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span class="flex-shrink-0">Generate CV</span>
+          </button>
+
+          <!-- Error display for CV button -->
+          <div id="cv-error"></div>
+
           <!-- Match History Button -->
           <a href="/jobs/{{.jobID}}/match-history" class="w-full mb-3 py-2.5 px-4 bg-slate-600 hover:bg-slate-500 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -330,6 +348,9 @@
   <!-- Cover Letter section - will be populated by HTMX -->
   <div id="cover-letter-section"></div>
 
+  <!-- CV section - will be populated by HTMX -->
+  <div id="cv-section"></div>
+
 </div>
 
 <style>
@@ -343,7 +364,8 @@
 }
 
 .htmx-request .analyze-icon,
-.htmx-request .cover-letter-icon {
+.htmx-request .cover-letter-icon,
+.htmx-request .cv-icon {
   display: none;
 }
 </style>
@@ -352,23 +374,39 @@
 document.addEventListener('htmx:afterRequest', function(evt) {
 
   if (evt.detail.target.id === 'ai-analysis' && evt.detail.xhr.status === 200) {
-    // Clear any previous errors and hide cover letter section
+    // Clear any previous errors and hide other sections
     document.getElementById('analyze-error').innerHTML = '';
     document.getElementById('cover-letter-error').innerHTML = '';
+    document.getElementById('cv-error').innerHTML = '';
     document.getElementById('cover-letter-section').innerHTML = '';
+    document.getElementById('cv-section').innerHTML = '';
     // Scroll to analysis
     setTimeout(() => {
       document.getElementById('ai-analysis').scrollIntoView({behavior: 'smooth', block: 'start'});
     }, 100);
   }
   if (evt.detail.target.id === 'cover-letter-section' && evt.detail.xhr.status === 200) {
-    // Clear any previous errors and hide analysis section
+    // Clear any previous errors and hide other sections
     document.getElementById('analyze-error').innerHTML = '';
     document.getElementById('cover-letter-error').innerHTML = '';
+    document.getElementById('cv-error').innerHTML = '';
     document.getElementById('ai-analysis').innerHTML = '';
+    document.getElementById('cv-section').innerHTML = '';
     // Scroll to cover letter
     setTimeout(() => {
       document.getElementById('cover-letter-section').scrollIntoView({behavior: 'smooth', block: 'start'});
+    }, 100);
+  }
+  if (evt.detail.target.id === 'cv-section' && evt.detail.xhr.status === 200) {
+    // Clear any previous errors and hide other sections
+    document.getElementById('analyze-error').innerHTML = '';
+    document.getElementById('cover-letter-error').innerHTML = '';
+    document.getElementById('cv-error').innerHTML = '';
+    document.getElementById('ai-analysis').innerHTML = '';
+    document.getElementById('cover-letter-section').innerHTML = '';
+    // Scroll to CV
+    setTimeout(() => {
+      document.getElementById('cv-section').scrollIntoView({behavior: 'smooth', block: 'start'});
     }, 100);
   }
 });

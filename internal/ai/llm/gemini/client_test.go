@@ -638,3 +638,79 @@ func TestGemini_parseCVJSON(t *testing.T) {
 		})
 	}
 }
+
+func TestGemini_parseGeneratedCVJSON(t *testing.T) {
+	g := &Gemini{}
+
+	tests := []struct {
+		name     string
+		input    string
+		expected models.CVParsingResult
+	}{
+		{
+			name: "valid generated CV JSON",
+			input: `{
+				"isValid": true,
+				"personalInfo": {
+					"firstName": "John",
+					"lastName": "Doe",
+					"email": "john@example.com",
+					"title": "Software Engineer"
+				},
+				"workExperience": [{
+					"company": "Tech Corp",
+					"title": "Developer",
+					"location": "San Francisco, CA",
+					"startDate": "January 2020",
+					"endDate": "Present",
+					"description": "• Built web applications\n• Led team projects"
+				}],
+				"education": [{
+					"institution": "University",
+					"degree": "BS",
+					"fieldOfStudy": "Computer Science",
+					"endDate": "May 2019"
+				}],
+				"skills": ["Go", "Python", "React"]
+			}`,
+			expected: models.CVParsingResult{
+				IsValid: true,
+				PersonalInfo: models.PersonalInfo{
+					FirstName: "John",
+					LastName:  "Doe",
+					Email:     "john@example.com",
+					Title:     "Software Engineer",
+				},
+				WorkExperience: []models.WorkExperience{{
+					Company:     "Tech Corp",
+					Title:       "Developer",
+					Location:    "San Francisco, CA",
+					StartDate:   "January 2020",
+					EndDate:     "Present",
+					Description: "• Built web applications\n• Led team projects",
+				}},
+				Education: []models.Education{{
+					Institution:  "University",
+					Degree:       "BS",
+					FieldOfStudy: "Computer Science",
+					EndDate:      "May 2019",
+				}},
+				Skills: []string{"Go", "Python", "React"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := g.parseGeneratedCVJSON(tt.input)
+
+			assert.NoError(t, err)
+			assert.True(t, result.IsValid)
+			assert.Equal(t, tt.expected.PersonalInfo.FirstName, result.PersonalInfo.FirstName)
+			assert.Equal(t, tt.expected.PersonalInfo.LastName, result.PersonalInfo.LastName)
+			assert.Equal(t, len(tt.expected.WorkExperience), len(result.WorkExperience))
+			assert.Equal(t, len(tt.expected.Education), len(result.Education))
+			assert.Equal(t, tt.expected.Skills, result.Skills)
+		})
+	}
+}

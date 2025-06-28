@@ -44,6 +44,7 @@ type PersonalInfo struct {
 	Phone     string `json:"phone,omitempty"`
 	Location  string `json:"location,omitempty"`
 	Title     string `json:"title,omitempty"`
+	Summary   string `json:"summary,omitempty"`
 }
 
 // WorkExperience represents a work experience entry from a CV
@@ -63,4 +64,12 @@ type Education struct {
 	FieldOfStudy string `json:"fieldOfStudy,omitempty"`
 	StartDate    string `json:"startDate"`         // Format: "YYYY-MM" or "YYYY"
 	EndDate      string `json:"endDate,omitempty"` // Format: "YYYY-MM" or "YYYY"
+}
+
+// GeneratedCV represents a CV generated for a specific job application
+type GeneratedCV struct {
+	CVParsingResult
+	GeneratedAt int64  `json:"generatedAt"` // Unix timestamp
+	JobID       int    `json:"jobId"`
+	JobTitle    string `json:"jobTitle"`
 }

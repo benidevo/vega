@@ -585,6 +585,40 @@ func (h *JobHandler) GenerateCoverLetter(c *gin.Context) {
 	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
 }
 
+// GenerateCV handles the HTMX request to generate AI CV
+func (h *JobHandler) GenerateCV(c *gin.Context) {
+	jobIDValue, exists := c.Get("jobID")
+	if !exists {
+		alerts.RenderError(c, http.StatusBadRequest, "Invalid job ID format", alerts.ContextGeneral)
+		return
+	}
+	jobID := jobIDValue.(int)
+
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		alerts.RenderError(c, http.StatusUnauthorized, "Authentication required", alerts.ContextGeneral)
+		return
+	}
+	userID := userIDValue.(int)
+
+	generatedCV, err := h.service.GenerateCV(c.Request.Context(), userID, jobID)
+	if err != nil {
+		alerts.RenderError(c, http.StatusBadRequest, models.GetSentinelError(err).Error(), alerts.ContextGeneral)
+		return
+	}
+
+	html, err := h.renderTemplate("partials/cv_generator.html", gin.H{
+		"GeneratedCV": generatedCV,
+	})
+	if err != nil {
+
+		h.service.LogError(fmt.Errorf("error rendering CV template: %w", err))
+		alerts.RenderError(c, http.StatusInternalServerError, "Error rendering CV", alerts.ContextGeneral)
+		return
+	}
+	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
+}
+
 // buildMatchAnalysisData creates template data for match analysis
 func (h *JobHandler) buildMatchAnalysisData(analysis *models.JobMatchAnalysis) gin.H {
 	var matchCategory, matchColor string
