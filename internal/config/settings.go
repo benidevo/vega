@@ -114,7 +114,7 @@ func NewSettings() Settings {
 		DBDriver:           "sqlite",
 		LogLevel:           getEnv("LOG_LEVEL", getDefaultLogLevel(isDevelopment)),
 		IsDevelopment:      isDevelopment,
-		TokenSecret:        getEnv("TOKEN_SECRET", ""),
+		TokenSecret:        getEnv("TOKEN_SECRET", "default-secret-key"),
 		IsTest:             isTest,
 		MigrationsDir:      "migrations/sqlite",
 
