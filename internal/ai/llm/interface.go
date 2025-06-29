@@ -28,6 +28,7 @@ const (
 	ResponseTypeCoverLetter ResponseType = "cover_letter"
 	ResponseTypeMatchResult ResponseType = "match_result"
 	ResponseTypeCVParsing   ResponseType = "cv_parsing"
+	ResponseTypeCV          ResponseType = "cv_generation"
 )
 
 // GenerateResponse wraps the LLM response with metadata

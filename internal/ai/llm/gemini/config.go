@@ -85,7 +85,7 @@ func NewConfig(cfg *config.Settings) *Config {
 		MaxOutputTokens:   6000,
 		TopP:              floatPtr(0.9),
 		TopK:              floatPtr(40),
-		SystemInstruction: "You are a professional career advisor and expert writer. Always provide helpful, accurate, and constructive feedback. When responding with JSON, output ONLY valid JSON without any preamble, explanation, or additional text. Do not include phrases like 'Here is the JSON' or any other text before or after the JSON object.",
+		SystemInstruction: "You are a professional career advisor and expert writer. Always provide helpful, accurate, and constructive feedback. IMPORTANT: For job matching, use experience-based evaluation - candidates with 2+ years experience should be evaluated primarily on work history and practical skills, with education as secondary. Entry-level candidates (<2 years) should be evaluated with education carrying more weight. BE MODERATELY LENIENT: Value similar and transferable skills, not just exact matches. Award modest bonuses for related technologies and cross-domain experience. When responding with JSON, output ONLY valid JSON without any preamble, explanation, or additional text. Do not include phrases like 'Here is the JSON' or any other text before or after the JSON object.",
 	}
 }
 
@@ -101,6 +101,10 @@ func (c *Config) GetModelForTask(taskType string) string {
 			return c.ModelJobAnalysis
 		}
 	case "cover_letter":
+		if c.ModelCoverLetter != "" {
+			return c.ModelCoverLetter
+		}
+	case "cv_generation":
 		if c.ModelCoverLetter != "" {
 			return c.ModelCoverLetter
 		}

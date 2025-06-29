@@ -157,17 +157,18 @@
         </svg>
         <h3 class="text-lg font-medium text-white mb-2">No Match History</h3>
         <p class="text-gray-400 mb-4">This job hasn't been analyzed yet.</p>
-        <a href="/jobs/{{.jobID}}/details" class="inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-md transition-colors">
+        <button onclick="navigateToAnalyze({{.jobID}})" class="inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-md transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
           Analyze Job Match
-        </a>
+        </button>
       </div>
     {{end}}
   </div>
   
-  <!-- Back to Job Details Button at the End -->
+  <!-- Back to Job Details Button at the End (only show if there's match history) -->
+  {{if .matchHistory}}
   <div class="mt-8 text-center">
     <a href="/jobs/{{.jobID}}/details" class="inline-flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-md transition-colors">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -176,8 +177,18 @@
       Back to Job Details
     </a>
   </div>
+  {{end}}
 </div>
 
 <!-- Include delete modal -->
 {{template "delete-modal" .}}
+
+<script>
+function navigateToAnalyze(jobID) {
+  // Store the scroll target in sessionStorage
+  sessionStorage.setItem('scrollToAIActions', 'true');
+  // Navigate to job details page
+  window.location.href = '/jobs/' + jobID + '/details';
+}
+</script>
 {{ end }}

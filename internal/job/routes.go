@@ -18,5 +18,6 @@ func RegisterRoutes(router *gin.RouterGroup, handler *JobHandler) {
 		jobRoutes.DELETE("/:id", handler.DeleteJob)
 		jobRoutes.POST("/:id/analyze", handler.AnalyzeJobMatch)
 		jobRoutes.POST("/:id/cover-letter", handler.GenerateCoverLetter)
+		jobRoutes.POST("/:id/cv", handler.GenerateCV)
 	}
 }

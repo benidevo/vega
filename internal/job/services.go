@@ -202,30 +202,6 @@ func (s *JobService) GetJob(ctx context.Context, id int) (*models.Job, error) {
 	return job, nil
 }
 
-// GetJobStats retrieves job statistics from the repository.
-//
-// If an error occurs during retrieval, it logs the error and returns an empty JobStats struct.
-func (s *JobService) GetJobStats(ctx context.Context) *models.JobStats {
-	s.log.Debug().Msg("Getting job statistics")
-
-	stats, err := s.jobRepo.GetStats(ctx)
-	if err != nil {
-		s.log.Error().
-			Err(err).
-			Msg("Failed to get job statistics")
-
-		return &models.JobStats{}
-	}
-
-	s.log.Debug().
-		Int("total_jobs", stats.TotalJobs).
-		Int("applied_jobs", stats.TotalApplied).
-		Int("high_match", stats.HighMatch).
-		Msg("Job statistics retrieved successfully")
-
-	return stats
-}
-
 // GetJobsWithPagination retrieves jobs with pagination metadata
 func (s *JobService) GetJobsWithPagination(ctx context.Context, filter models.JobFilter) (*models.JobsWithPagination, error) {
 	if filter.Limit <= 0 {

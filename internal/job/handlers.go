@@ -266,8 +266,6 @@ func (h *JobHandler) ListJobsPage(c *gin.Context) {
 		return
 	}
 
-	stats := h.service.GetJobStats(c.Request.Context())
-
 	templateData := gin.H{
 		"title":               "Dashboard",
 		"page":                "dashboard",
@@ -278,9 +276,6 @@ func (h *JobHandler) ListJobsPage(c *gin.Context) {
 		"username":            username,
 		"jobs":                jobsWithPagination.Jobs,
 		"pagination":          jobsWithPagination.Pagination,
-		"totalJobs":           stats.TotalJobs,
-		"applied":             stats.TotalApplied,
-		"highMatch":           stats.HighMatch,
 		"statusFilter":        statusParam,
 	}
 
@@ -545,12 +540,13 @@ func (h *JobHandler) AnalyzeJobMatch(c *gin.Context) {
 		return
 	}
 
-	html, err := h.renderTemplate("partials/job_match_analysis.html", h.buildMatchAnalysisData(analysis))
+	analysisHTML, err := h.renderTemplate("partials/job_match_analysis.html", h.buildMatchAnalysisData(analysis))
 	if err != nil {
 		alerts.RenderError(c, http.StatusInternalServerError, "Error rendering analysis", alerts.ContextGeneral)
 		return
 	}
-	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
+
+	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(analysisHTML))
 }
 
 // GenerateCoverLetter handles the HTMX request to generate AI cover letter
@@ -569,17 +565,54 @@ func (h *JobHandler) GenerateCoverLetter(c *gin.Context) {
 	}
 	userID := userIDValue.(int)
 
-	coverLetter, err := h.service.GenerateCoverLetter(c.Request.Context(), userID, jobID)
+	result, err := h.service.GenerateCoverLetter(c.Request.Context(), userID, jobID)
 	if err != nil {
 		alerts.RenderError(c, http.StatusBadRequest, models.GetSentinelError(err).Error(), alerts.ContextGeneral)
 		return
 	}
 
 	html, err := h.renderTemplate("partials/cover_letter_generator.html", gin.H{
-		"CoverLetter": coverLetter,
+		"CoverLetter": result.CoverLetter,
+		"GeneratedCV": gin.H{
+			"PersonalInfo": result.PersonalInfo,
+		},
 	})
 	if err != nil {
 		alerts.RenderError(c, http.StatusInternalServerError, "Error rendering cover letter", alerts.ContextGeneral)
+		return
+	}
+	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
+}
+
+// GenerateCV handles the HTMX request to generate AI CV
+func (h *JobHandler) GenerateCV(c *gin.Context) {
+	jobIDValue, exists := c.Get("jobID")
+	if !exists {
+		alerts.RenderError(c, http.StatusBadRequest, "Invalid job ID format", alerts.ContextGeneral)
+		return
+	}
+	jobID := jobIDValue.(int)
+
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		alerts.RenderError(c, http.StatusUnauthorized, "Authentication required", alerts.ContextGeneral)
+		return
+	}
+	userID := userIDValue.(int)
+
+	generatedCV, err := h.service.GenerateCV(c.Request.Context(), userID, jobID)
+	if err != nil {
+		alerts.RenderError(c, http.StatusBadRequest, models.GetSentinelError(err).Error(), alerts.ContextGeneral)
+		return
+	}
+
+	html, err := h.renderTemplate("partials/cv_generator.html", gin.H{
+		"GeneratedCV": generatedCV,
+	})
+	if err != nil {
+
+		h.service.LogError(fmt.Errorf("error rendering CV template: %w", err))
+		alerts.RenderError(c, http.StatusInternalServerError, "Error rendering CV", alerts.ContextGeneral)
 		return
 	}
 	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))

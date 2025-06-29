@@ -239,16 +239,18 @@ func templateFuncMap() template.FuncMap {
 			}
 			s := *score
 			switch {
-			case s >= 75:
-				return "bg-primary bg-opacity-20 text-primary"
-			case s >= 60:
+			case s >= 85:
+				return "bg-green-600 bg-opacity-20 text-primary"
+			case s >= 70:
 				return "bg-green-500 bg-opacity-20 text-green-400"
-			case s >= 40:
+			case s >= 55:
 				return "bg-yellow-500 bg-opacity-20 text-yellow-400"
+			case s >= 40:
+				return "bg-orange-500 bg-opacity-20 text-orange-400"
 			case s >= 25:
-				return "bg-amber-500 bg-opacity-20 text-amber-400"
+				return "bg-red-500 bg-opacity-20 text-red-400"
 			default:
-				return "bg-gray-500 bg-opacity-20 text-gray-400"
+				return "bg-red-600 bg-opacity-20 text-red-400"
 			}
 		},
 	}

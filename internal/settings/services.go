@@ -35,7 +35,7 @@ func NewSettingsService(settingsRepo interfaces.SettingsRepository, cfg *config.
 
 // GetProfileSettings retrieves a user's profile settings
 func (s *SettingsService) GetProfileSettings(ctx context.Context, userID int) (*models.Profile, error) {
-	profile, err := s.settingsRepo.GetProfile(ctx, userID)
+	profile, err := s.settingsRepo.GetProfileWithRelated(ctx, userID)
 	if err != nil {
 		s.log.Error().Err(err).
 			Str("event", "profile_get_failed").

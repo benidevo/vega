@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/benidevo/vega/internal/ai/prompts"
+	"github.com/benidevo/vega/internal/ai/security"
 )
 
 // Request represents a generic request containing information needed for AI operations.
@@ -13,6 +14,7 @@ type Request struct {
 	JobDescription   string
 	ExtraContext     string
 	PreviousMatches  []PreviousMatch
+	CVText           string
 }
 
 // PreviousMatch represents a summary of a previous match result for context
@@ -32,6 +34,7 @@ type Prompt struct {
 	UseEnhancedTemplates bool
 	Temperature          *float32
 	promptEnhancer       *prompts.PromptEnhancer
+	sanitizer            *security.PromptSanitizer
 }
 
 // NewPrompt creates a new prompt with optional enhanced features
@@ -40,11 +43,15 @@ func NewPrompt(instructions string, request Request, useEnhanced bool) *Prompt {
 		Instructions:         instructions,
 		Request:              request,
 		UseEnhancedTemplates: useEnhanced,
+		CVText:               request.CVText, // Copy CVText from request to prompt
 	}
 
 	if useEnhanced {
 		p.promptEnhancer = prompts.NewPromptEnhancer()
 	}
+
+	// Always initialize sanitizer for security
+	p.sanitizer = security.NewPromptSanitizer()
 
 	return p
 }
@@ -122,6 +129,62 @@ Return a JSON object with ONLY this field:
 		p.ApplicantProfile,
 		p.ExtraContext,
 		defaultWordRange)
+}
+
+// ToCVGenerationPrompt builds a CV generation prompt with security sanitization.
+func (p Prompt) ToCVGenerationPrompt() string {
+	// Sanitize all user inputs to prevent prompt injection
+	sanitizedInstructions := p.Instructions
+	sanitizedCVText := p.CVText
+	sanitizedJobDescription := p.JobDescription
+	sanitizedExtraContext := p.ExtraContext
+
+	if p.sanitizer != nil {
+		sanitizedInstructions = p.sanitizer.SanitizeInstructions(p.Instructions)
+		sanitizedCVText = p.sanitizer.SanitizeCVText(p.CVText)
+		sanitizedJobDescription = p.sanitizer.SanitizeJobDescription(p.JobDescription)
+		sanitizedExtraContext = p.sanitizer.SanitizeExtraContext(p.ExtraContext)
+	}
+
+	if p.UseEnhancedTemplates && p.promptEnhancer != nil {
+		return p.promptEnhancer.EnhanceCVGenerationPrompt(
+			sanitizedInstructions,
+			sanitizedCVText,
+			sanitizedJobDescription,
+			sanitizedExtraContext,
+		)
+	}
+
+	return fmt.Sprintf(`%s
+
+Generate a tailored CV based on the user's profile and the job description.
+
+USER PROFILE:
+%s
+
+JOB DESCRIPTION:
+%s
+
+%s
+
+INSTRUCTIONS:
+1. Create a CV that highlights relevant experience and skills for this specific job
+2. Maintain honesty. Do not oversell or exaggerate qualifications
+3. Focus on achievements and impact in previous roles
+4. Tailor the professional summary to match the job requirements
+5. Order sections by relevance to the job (most relevant first)
+6. Use action verbs and quantify achievements where possible
+7. Keep descriptions concise and impactful
+8. Don't use AI-generated phrases or em dashes. Keep it professional and straightforward
+9. It MUST read like a human-written CV, not an AI-generated one
+10. CRITICAL: Use ONLY the information from the USER PROFILE above - do not make up names, companies, or experiences
+11. Format work experience descriptions as bullet points, each starting with "• " on a new line
+
+Generate a structured CV in JSON format following the exact schema requirements.`,
+		sanitizedInstructions,
+		sanitizedCVText,
+		sanitizedJobDescription,
+		sanitizedExtraContext)
 }
 
 // ToMatchAnalysisPrompt builds a job match analysis prompt from this Prompt

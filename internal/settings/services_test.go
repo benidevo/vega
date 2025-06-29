@@ -230,7 +230,7 @@ func TestGetProfileSettings(t *testing.T) {
 
 	t.Run("existing profile", func(t *testing.T) {
 		profile := createTestProfile(1)
-		mockProfileRepo.On("GetProfile", ctx, 1).Return(profile, nil).Once()
+		mockProfileRepo.On("GetProfileWithRelated", ctx, 1).Return(profile, nil).Once()
 
 		result, err := service.GetProfileSettings(ctx, 1)
 		require.NoError(t, err)
@@ -239,7 +239,7 @@ func TestGetProfileSettings(t *testing.T) {
 	})
 
 	t.Run("profile not found - creates new", func(t *testing.T) {
-		mockProfileRepo.On("GetProfile", ctx, 2).Return(nil, nil).Once()
+		mockProfileRepo.On("GetProfileWithRelated", ctx, 2).Return(nil, nil).Once()
 
 		result, err := service.GetProfileSettings(ctx, 2)
 		require.NoError(t, err)
@@ -251,7 +251,7 @@ func TestGetProfileSettings(t *testing.T) {
 
 	t.Run("database error", func(t *testing.T) {
 		dbErr := errors.New("database error")
-		mockProfileRepo.On("GetProfile", ctx, 3).Return(nil, dbErr).Once()
+		mockProfileRepo.On("GetProfileWithRelated", ctx, 3).Return(nil, dbErr).Once()
 
 		result, err := service.GetProfileSettings(ctx, 3)
 		assert.Error(t, err)

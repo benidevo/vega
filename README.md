@@ -32,12 +32,27 @@ ADMIN_USERNAME=admin
 ADMIN_PASSWORD=your-secure-password
 ```
 
+**Password Requirements:**
+
+- Must be at least 8 characters long
+- Maximum 64 characters
+- Use a strong, unique password for security
+
+**Username Requirements:**
+
+- Must be 3-50 characters long
+- Can contain letters, numbers, and common symbols
+
+**Optional Admin Settings:**
+
+- Add `RESET_ADMIN_PASSWORD=true` to reset admin password if user already exists
+- See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for advanced configuration options
+
 ### 2. Run with Docker
 
 Navigate to your vega-ai folder and start Vega with persistent data storage:
 
 ```bash
-cd vega-ai
 docker run --pull always -d \
   --name vega-ai \
   -p 8765:8765 \

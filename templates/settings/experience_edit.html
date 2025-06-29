@@ -6,8 +6,6 @@
 
 {{define "experience-edit-content"}}
 <div class="max-w-6xl mx-auto relative">
-  <!-- Glow effect -->
-  <div class="absolute -inset-1 rounded-xl bg-gradient-to-r from-primary via-secondary to-primary opacity-20 blur-xl"></div>
 
   <!-- Content container -->
   <div class="relative p-6 bg-slate-800 bg-opacity-70 backdrop-blur-xl rounded-xl shadow-2xl border border-white border-opacity-10">
@@ -83,14 +81,12 @@
         </div>
       </div>
 
-      <div class="flex items-center">
+      <label class="flex items-center cursor-pointer">
         <input type="checkbox" id="current" name="current" {{if .experience.Current}}checked{{end}}
-               class="h-4 w-4 text-primary focus:ring-primary border-gray-600 rounded bg-slate-700"
+               class="h-4 w-4 text-primary focus:ring-primary border-gray-600 rounded bg-slate-700 flex-shrink-0"
                _="on change set #end_date.disabled to my.checked">
-        <label for="current" class="ml-2 block text-sm text-gray-300">
-          I currently work here
-        </label>
-      </div>
+        <span class="ml-2 text-sm text-gray-300">I currently work here</span>
+      </label>
 
       <div>
         <label for="description" class="block text-sm font-medium text-gray-300 mb-2">Responsibilities & Achievements</label>

@@ -19,6 +19,7 @@ type AIService struct {
 	JobMatcher           *services.JobMatcherService
 	CoverLetterGenerator *services.CoverLetterGeneratorService
 	CVParser             *services.CVParserService
+	CVGenerator          *services.CVGeneratorService
 }
 
 // Setup initializes the complete AI service with all dependencies.
@@ -56,5 +57,6 @@ func NewAIService(provider llm.Provider) *AIService {
 		JobMatcher:           services.NewJobMatcherService(provider),
 		CoverLetterGenerator: services.NewCoverLetterGeneratorService(provider),
 		CVParser:             services.NewCVParserService(provider),
+		CVGenerator:          services.NewCVGeneratorService(provider),
 	}
 }

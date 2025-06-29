@@ -128,15 +128,57 @@ go test -cover ./...
 
 ### Environment Variables
 
+#### Core Application Settings
+
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `TOKEN_SECRET` | Yes | JWT secret for user sessions |
 | `GEMINI_API_KEY` | Yes | Google AI API key |
 | `GOOGLE_CLIENT_ID` | No | Google OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | No | Google OAuth client secret |
-| `CREATE_ADMIN_USER` | No | Create admin user on startup |
-| `ADMIN_USERNAME` | No | Admin username (if creating) |
-| `ADMIN_PASSWORD` | No | Admin password (if creating) |
+
+#### Admin User Management
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `CREATE_ADMIN_USER` | No | `false` | Create admin user automatically on startup |
+| `ADMIN_USERNAME` | No | - | Admin username (3-50 characters, enforced client-side) |
+| `ADMIN_PASSWORD` | No | - | Admin password (8-64 characters, enforced client-side) |
+| `RESET_ADMIN_PASSWORD` | No | `false` | Reset admin password on startup if user exists |
+
+**Admin User Setup Examples:**
+
+```bash
+# Create new admin user
+CREATE_ADMIN_USER=true
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=SecurePassword123
+
+# Reset existing admin password
+CREATE_ADMIN_USER=true
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=NewSecurePassword456
+RESET_ADMIN_PASSWORD=true
+```
+
+#### CORS Configuration
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `CORS_ALLOWED_ORIGINS` | No | `*` | Comma-separated list of allowed origins |
+| `CORS_ALLOW_CREDENTIALS` | No | `false` | Allow credentials in CORS requests |
+
+**CORS Setup Examples:**
+
+```bash
+# Development - allow all origins
+CORS_ALLOWED_ORIGINS=*
+CORS_ALLOW_CREDENTIALS=false
+
+# Production - specific origins only
+CORS_ALLOWED_ORIGINS=https://yourdomain.com,https://api.yourdomain.com
+CORS_ALLOW_CREDENTIALS=true
+```
 
 ### Database
 

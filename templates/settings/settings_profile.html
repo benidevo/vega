@@ -12,15 +12,13 @@
 {{else if .isEditingCertification}}
   {{template "certification-edit-content" .}}
 {{else}}
-<div class="max-w-6xl mx-auto relative">
-  <!-- Glow effect -->
-  <div class="absolute -inset-1 rounded-xl bg-gradient-to-r from-primary via-secondary to-primary opacity-20 blur-xl"></div>
+<div class="mx-0 md:max-w-6xl md:mx-auto relative">
 
   <!-- Alert container for form responses -->
-  <div id="form-alert-container" class="mb-4 md:mb-6" hx-swap-oob="true"></div>
+  <div id="form-alert-container" class="mb-4 md:mb-6 px-4 md:px-0" hx-swap-oob="true"></div>
 
   <!-- Content container -->
-  <div class="relative p-4 md:p-6 bg-slate-800 bg-opacity-70 backdrop-blur-xl rounded-xl shadow-2xl border border-white border-opacity-10">
+  <div class="relative p-4 md:p-6 bg-slate-800 bg-opacity-70 backdrop-blur-xl rounded-none md:rounded-xl shadow-2xl border-0 md:border border-white border-opacity-10">
 
     <!-- CV Upload Section (shown when profile is empty) -->
     {{if and (not .profile.FirstName) (not .profile.LastName) (not .profile.Title)}}

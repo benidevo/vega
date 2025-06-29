@@ -2,6 +2,7 @@ package job
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -259,7 +260,8 @@ func TestJobService_buildAIRequest(t *testing.T) {
 	assert.Contains(t, request.JobDescription, "Software Engineer")
 	assert.Contains(t, request.JobDescription, "Tech Corp")
 	assert.Contains(t, request.JobDescription, "Go, Python, Docker")
-	assert.Equal(t, "Additional context about my experience", request.ExtraContext)
+	assert.Contains(t, request.ExtraContext, "EXPERIENCED CANDIDATE")
+	assert.Contains(t, request.ExtraContext, "Additional context about my experience")
 }
 
 func TestJobService_buildAIRequest_EmptyName(t *testing.T) {
@@ -288,7 +290,8 @@ func TestJobService_buildProfileSummary(t *testing.T) {
 
 	assert.Contains(t, summary, "Current Title: Senior Developer")
 	assert.Contains(t, summary, "Industry: Technology")
-	assert.Contains(t, summary, "Location: San Francisco")
+	assert.NotContains(t, summary, "Location: San Francisco")
+	assert.NotContains(t, summary, "Phone:")
 	assert.Contains(t, summary, "Career Summary:")
 	assert.Contains(t, summary, "Skills: Go, Python, JavaScript")
 	assert.Contains(t, summary, "Work Experience:")
@@ -369,4 +372,233 @@ func TestJobService_convertToCoverLetter(t *testing.T) {
 	assert.NotZero(t, result.GeneratedAt)
 	assert.NotZero(t, result.CreatedAt)
 	assert.NotZero(t, result.UpdatedAt)
+}
+
+func TestJobService_GenerateCV_NoAIService(t *testing.T) {
+	mockJobRepo := &MockJobRepository{}
+	cfg := &config.Settings{}
+
+	service := NewJobService(mockJobRepo, nil, nil, cfg)
+
+	result, err := service.GenerateCV(context.Background(), 1, 1)
+
+	assert.Error(t, err)
+	assert.Equal(t, models.ErrAIServiceUnavailable, err)
+	assert.Nil(t, result)
+}
+
+func TestJobService_GenerateCV_NoSettingsService(t *testing.T) {
+	mockJobRepo := &MockJobRepository{}
+	cfg := &config.Settings{}
+
+	service := NewJobService(mockJobRepo, &ai.AIService{}, nil, cfg)
+
+	result, err := service.GenerateCV(context.Background(), 1, 1)
+
+	assert.Error(t, err)
+	assert.Equal(t, models.ErrProfileServiceRequired, err)
+	assert.Nil(t, result)
+}
+
+func TestJobService_calculateTotalExperience(t *testing.T) {
+	mockJobRepo := &MockJobRepository{}
+	cfg := &config.Settings{}
+	service := NewJobService(mockJobRepo, nil, nil, cfg)
+
+	tests := []struct {
+		name           string
+		workExperience []settingsmodels.WorkExperience
+		expectedYears  float64
+		description    string
+	}{
+		{
+			name:           "no work experience",
+			workExperience: []settingsmodels.WorkExperience{},
+			expectedYears:  0,
+			description:    "Empty work experience should return 0",
+		},
+		{
+			name: "current job for 3 years",
+			workExperience: []settingsmodels.WorkExperience{
+				{
+					Title:     "Software Engineer",
+					Company:   "Tech Corp",
+					StartDate: time.Now().AddDate(-3, 0, 0), // 3 years ago
+					EndDate:   nil,                          // current job
+				},
+			},
+			expectedYears: 3.0,
+			description:   "Current job should calculate time from start to now",
+		},
+		{
+			name: "multiple jobs totaling 5+ years",
+			workExperience: []settingsmodels.WorkExperience{
+				{
+					Title:     "Senior Engineer",
+					Company:   "Current Corp",
+					StartDate: time.Now().AddDate(-2, 0, 0), // 2 years ago
+					EndDate:   nil,                          // current
+				},
+				{
+					Title:     "Junior Engineer",
+					Company:   "Previous Corp",
+					StartDate: time.Now().AddDate(-5, 0, 0),                   // 5 years ago
+					EndDate:   &[]time.Time{time.Now().AddDate(-2, -1, 0)}[0], // ended 2y 1m ago
+				},
+			},
+			expectedYears: 5.0, // approximately 5 years total
+			description:   "Multiple jobs should sum their durations",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := service.calculateTotalExperience(tt.workExperience)
+
+			// Allow for some tolerance in floating point comparison
+			tolerance := 0.2 // about 2.5 months tolerance
+			assert.InDelta(t, tt.expectedYears, result, tolerance, tt.description)
+		})
+	}
+}
+
+func TestJobService_buildAIRequest_ExperienceContext(t *testing.T) {
+	mockJobRepo := &MockJobRepository{}
+	cfg := &config.Settings{}
+	service := NewJobService(mockJobRepo, nil, nil, cfg)
+
+	job := createTestJobForAI()
+
+	tests := []struct {
+		name              string
+		profile           *settingsmodels.Profile
+		expectedInContext string
+		description       string
+	}{
+		{
+			name: "experienced candidate (2+ years)",
+			profile: &settingsmodels.Profile{
+				FirstName: "John",
+				LastName:  "Doe",
+				Skills:    []string{"Go", "Python"},
+				WorkExperience: []settingsmodels.WorkExperience{
+					{
+						Title:     "Senior Engineer",
+						Company:   "Tech Corp",
+						StartDate: time.Now().AddDate(-3, 0, 0), // 3 years ago
+					},
+				},
+				Context: "Additional context",
+			},
+			expectedInContext: "EXPERIENCED CANDIDATE",
+			description:       "Should identify experienced candidate and add de-emphasis instruction",
+		},
+		{
+			name: "entry-level candidate (<2 years)",
+			profile: &settingsmodels.Profile{
+				FirstName: "Jane",
+				LastName:  "Smith",
+				Skills:    []string{"Python", "React"},
+				WorkExperience: []settingsmodels.WorkExperience{
+					{
+						Title:     "Junior Developer",
+						Company:   "Startup Inc",
+						StartDate: time.Now().AddDate(0, -6, 0), // 6 months ago
+					},
+				},
+				Context: "Fresh graduate",
+			},
+			expectedInContext: "Fresh graduate",
+			description:       "Should not add experience-based instruction for entry-level",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			request := service.buildAIRequest(job, tt.profile)
+
+			assert.Contains(t, request.ExtraContext, tt.expectedInContext, tt.description)
+		})
+	}
+}
+
+func TestJobService_buildAIRequest_SimilarSkillsHandling(t *testing.T) {
+	mockJobRepo := &MockJobRepository{}
+	cfg := &config.Settings{}
+	service := NewJobService(mockJobRepo, nil, nil, cfg)
+
+	// Create a job requiring specific skills
+	job := &models.Job{
+		ID:             1,
+		Title:          "Python Backend Developer",
+		Description:    "Looking for a backend developer with Django and PostgreSQL experience",
+		RequiredSkills: []string{"Python", "Django", "PostgreSQL", "AWS"},
+		Company: models.Company{
+			ID:   1,
+			Name: "Tech Startup",
+		},
+	}
+
+	tests := []struct {
+		name        string
+		profile     *settingsmodels.Profile
+		description string
+	}{
+		{
+			name: "similar backend skills (Node.js developer for Python role)",
+			profile: &settingsmodels.Profile{
+				FirstName: "Alex",
+				LastName:  "Smith",
+				Title:     "Backend Developer",
+				Skills:    []string{"Node.js", "Express", "MongoDB", "Azure"}, // Similar but different stack
+				WorkExperience: []settingsmodels.WorkExperience{
+					{
+						Title:       "Backend Developer",
+						Company:     "Previous Corp",
+						StartDate:   time.Now().AddDate(-3, 0, 0),
+						Description: "Built REST APIs and microservices",
+					},
+				},
+				Context: "Similar skills in different technology stack",
+			},
+			description: "Should handle similar backend skills positively",
+		},
+		{
+			name: "exact skill match",
+			profile: &settingsmodels.Profile{
+				FirstName: "Sarah",
+				LastName:  "Johnson",
+				Title:     "Python Developer",
+				Skills:    []string{"Python", "Django", "PostgreSQL", "AWS"}, // Exact match
+				WorkExperience: []settingsmodels.WorkExperience{
+					{
+						Title:       "Python Developer",
+						Company:     "Django Corp",
+						StartDate:   time.Now().AddDate(-2, 0, 0),
+						Description: "Django web applications with PostgreSQL",
+					},
+				},
+				Context: "Exact skill and experience match",
+			},
+			description: "Should handle exact matches well",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			request := service.buildAIRequest(job, tt.profile)
+
+			// Verify the request contains the job requirements
+			assert.Contains(t, request.JobDescription, "Python")
+			assert.Contains(t, request.JobDescription, "Django")
+			assert.Contains(t, request.JobDescription, "PostgreSQL")
+
+			// Verify profile skills are included
+			skillsInProfile := strings.Join(tt.profile.Skills, ", ")
+			assert.Contains(t, request.ApplicantProfile, skillsInProfile)
+
+			// Verify context is preserved
+			assert.Contains(t, request.ExtraContext, tt.profile.Context)
+		})
+	}
 }

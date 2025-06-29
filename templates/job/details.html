@@ -7,9 +7,9 @@
 {{end}}
 
 {{define "job-details"}}
-<div class="max-w-6xl mx-auto pb-20 md:pb-0">
+<div class="mx-0 md:max-w-6xl md:mx-auto">
   <!-- Job details container -->
-  <div class="bg-slate-800 rounded-xl shadow-lg overflow-hidden mb-6">
+  <div class="bg-slate-800 rounded-none md:rounded-xl shadow-lg overflow-hidden mb-6">
     <div class="px-4 md:px-6 py-4 md:py-5 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
         <div id="job-header-display">
@@ -75,7 +75,7 @@
           <div id="header-response"></div>
         </div>
       </div>
-      <div class="px-4 py-1.5 {{matchColors .job.MatchScore}} rounded-full text-sm font-medium">
+      <div id="match-score-badge" class="px-3 md:px-4 py-1.5 {{matchColors .job.MatchScore}} rounded-full text-xs md:text-sm font-medium whitespace-nowrap">
         {{.job.GetMatchScoreString}}
       </div>
     </div>
@@ -222,7 +222,7 @@
         </div>
 
         <!-- Status -->
-        <div id="ai-actions-section" class="bg-slate-700 bg-opacity-60 rounded-lg p-4 md:p-5">
+        <div id="ai-actions-section" class="bg-slate-700 bg-opacity-60 rounded-none md:rounded-lg p-4 md:p-5">
           <h3 class="text-lg font-medium text-white mb-3">Application Status</h3>
           <select
             class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors mb-4"
@@ -240,7 +240,7 @@
           </select>
           <div id="status-response"></div>
 
-          <button id="analyze-button" class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
+          <button id="analyze-button" class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
                   hx-post="/jobs/{{.jobID}}/analyze"
                   hx-target="#ai-analysis"
                   hx-target-error="#analyze-error"
@@ -257,7 +257,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </span>
-            <span class="flex-shrink-0">Analyze Match</span>
+            <span>Analyze Match</span>
           </button>
 
           <!-- Error display for analyze button -->
@@ -275,18 +275,36 @@
             <svg class="cover-letter-icon h-5 w-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
-            <span class="flex-shrink-0">Cover Letter</span>
+            <span>Cover Letter</span>
           </button>
 
           <!-- Error display for cover letter button -->
           <div id="cover-letter-error"></div>
+
+          <button id="cv-button" class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  hx-post="/jobs/{{.jobID}}/cv"
+                  hx-target="#cv-section"
+                  hx-target-4xx="#cv-error"
+                  hx-swap="innerHTML">
+            <svg class="cv-spinner htmx-indicator animate-spin h-5 w-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <svg class="cv-icon h-5 w-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>Resume</span>
+          </button>
+
+          <!-- Error display for CV button -->
+          <div id="cv-error"></div>
 
           <!-- Match History Button -->
           <a href="/jobs/{{.jobID}}/match-history" class="w-full mb-3 py-2.5 px-4 bg-slate-600 hover:bg-slate-500 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span class="flex-shrink-0">Match History</span>
+            <span>Match History</span>
           </a>
 
           {{if .job.SourceURL}}
@@ -294,7 +312,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
-            <span class="flex-shrink-0">Original Posting</span>
+            <span>Original Posting</span>
           </a>
           {{end}}
 
@@ -303,7 +321,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
-            <span class="flex-shrink-0">Original Posting</span>
+            <span>Original Posting</span>
           </a>
           {{end}}
 
@@ -317,7 +335,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
-            <span class="flex-shrink-0">Delete Job</span>
+            <span>Delete Job</span>
           </button>
         </div>
       </div>
@@ -329,6 +347,9 @@
 
   <!-- Cover Letter section - will be populated by HTMX -->
   <div id="cover-letter-section"></div>
+
+  <!-- CV section - will be populated by HTMX -->
+  <div id="cv-section"></div>
 
 </div>
 
@@ -343,32 +364,67 @@
 }
 
 .htmx-request .analyze-icon,
-.htmx-request .cover-letter-icon {
+.htmx-request .cover-letter-icon,
+.htmx-request .cv-icon {
   display: none;
 }
 </style>
+
+<!-- Include shared AI helpers for CV and Cover Letter generation -->
+<script src="/static/js/ai-helpers.js"></script>
 
 <script>
 document.addEventListener('htmx:afterRequest', function(evt) {
 
   if (evt.detail.target.id === 'ai-analysis' && evt.detail.xhr.status === 200) {
-    // Clear any previous errors and hide cover letter section
+    // Clear any previous errors and hide other sections
     document.getElementById('analyze-error').innerHTML = '';
     document.getElementById('cover-letter-error').innerHTML = '';
+    document.getElementById('cv-error').innerHTML = '';
     document.getElementById('cover-letter-section').innerHTML = '';
+    document.getElementById('cv-section').innerHTML = '';
     // Scroll to analysis
     setTimeout(() => {
       document.getElementById('ai-analysis').scrollIntoView({behavior: 'smooth', block: 'start'});
     }, 100);
   }
   if (evt.detail.target.id === 'cover-letter-section' && evt.detail.xhr.status === 200) {
-    // Clear any previous errors and hide analysis section
+    // Clear any previous errors and hide other sections
     document.getElementById('analyze-error').innerHTML = '';
     document.getElementById('cover-letter-error').innerHTML = '';
+    document.getElementById('cv-error').innerHTML = '';
     document.getElementById('ai-analysis').innerHTML = '';
+    document.getElementById('cv-section').innerHTML = '';
     // Scroll to cover letter
     setTimeout(() => {
       document.getElementById('cover-letter-section').scrollIntoView({behavior: 'smooth', block: 'start'});
+    }, 100);
+  }
+  if (evt.detail.target.id === 'cv-section' && evt.detail.xhr.status === 200) {
+    // Clear any previous errors and hide other sections
+    document.getElementById('analyze-error').innerHTML = '';
+    document.getElementById('cover-letter-error').innerHTML = '';
+    document.getElementById('cv-error').innerHTML = '';
+    document.getElementById('ai-analysis').innerHTML = '';
+    document.getElementById('cover-letter-section').innerHTML = '';
+    // Scroll to CV
+    setTimeout(() => {
+      document.getElementById('cv-section').scrollIntoView({behavior: 'smooth', block: 'start'});
+    }, 100);
+  }
+});
+
+// Check if we should scroll to AI actions section on page load
+document.addEventListener('DOMContentLoaded', function() {
+  if (sessionStorage.getItem('scrollToAIActions') === 'true') {
+    // Clear the flag
+    sessionStorage.removeItem('scrollToAIActions');
+    // Scroll to AI actions section
+    setTimeout(() => {
+      const aiActionsSection = document.getElementById('ai-actions-section');
+      if (aiActionsSection) {
+        aiActionsSection.scrollIntoView({behavior: 'smooth', block: 'start'});
+      }
     }, 100);
   }
 });
