@@ -148,8 +148,12 @@
 
       /* Ensure all containers respect viewport width */
       *, *::before, *::after {
-        max-width: 100vw;
         box-sizing: border-box;
+      }
+      
+      /* Only apply max-width to potentially overflowing elements */
+      img, video, iframe, object, embed, table, pre {
+        max-width: 100vw;
       }
 
       /* Force text wrapping on all text elements */
@@ -190,6 +194,7 @@
       .flex {
         flex-wrap: wrap;
       }
+
     }
 
   </style>
@@ -197,32 +202,36 @@
 <body class="bg-slate-900 text-gray-100 font-sans">
   <!-- Use template switching based on page variable -->
   {{if eq .page "dashboard"}}
-    <!-- Dashboard has a different layout -->
-    <div class="h-screen bg-slate-900 flex flex-col">
+    <!-- Dashboard layout -->
+    <div class="min-h-screen bg-slate-900 flex flex-col">
       <div class="flex-1">
         {{template "dashboard-content" .}}
       </div>
+      {{template "footer" .}}
     </div>
   {{else if eq .page "job-new"}}
-    <!-- Job form uses the job-specific template -->
-    <div class="h-screen bg-slate-900 flex flex-col">
+    <!-- Job form layout -->
+    <div class="min-h-screen bg-slate-900 flex flex-col">
       <div class="flex-1">
         {{template "job-new-content" .}}
       </div>
+      {{template "footer" .}}
     </div>
   {{else if eq .page "job-details"}}
     <!-- Job details page -->
-    <div class="h-screen bg-slate-900 flex flex-col">
+    <div class="min-h-screen bg-slate-900 flex flex-col">
       <div class="flex-1">
         {{template "job-details-content" .}}
       </div>
+      {{template "footer" .}}
     </div>
   {{else if eq .page "match-history"}}
     <!-- Match history page -->
-    <div class="h-screen bg-slate-900 flex flex-col">
+    <div class="min-h-screen bg-slate-900 flex flex-col">
       <div class="flex-1">
         {{template "match-history-content" .}}
       </div>
+      {{template "footer" .}}
     </div>
   {{else if eq .page "404"}}
     <!-- 404 Not Found page -->
@@ -232,31 +241,35 @@
     {{template "500-content" .}}
   {{else if eq .page "settings-home" }}
     <!-- Settings home page -->
-    <div class="h-screen bg-slate-900 flex flex-col">
+    <div class="min-h-screen bg-slate-900 flex flex-col">
       <div class="flex-1">
         {{template "settings-layout" .}}
       </div>
+      {{template "footer" .}}
     </div>
   {{else if eq .page "settings-profile" }}
     <!-- Settings profile page -->
-    <div class="h-screen bg-slate-900 flex flex-col">
+    <div class="min-h-screen bg-slate-900 flex flex-col">
       <div class="flex-1">
         {{template "settings-layout" .}}
       </div>
+      {{template "footer" .}}
     </div>
   {{else if eq .page "settings-security" }}
     <!-- Settings security page -->
-    <div class="h-screen bg-slate-900 flex flex-col">
+    <div class="min-h-screen bg-slate-900 flex flex-col">
       <div class="flex-1">
         {{template "settings-layout" .}}
       </div>
+      {{template "footer" .}}
     </div>
   {{else if eq .page "settings-notifications" }}
     <!-- Settings notifications page -->
-    <div class="h-screen bg-slate-900 flex flex-col">
+    <div class="min-h-screen bg-slate-900 flex flex-col">
       <div class="flex-1">
         {{template "settings-layout" .}}
       </div>
+      {{template "footer" .}}
     </div>
   {{else}}
     <!-- Modern layout with enhanced backgrounds for home and login pages -->

@@ -1,15 +1,17 @@
 {{define "settings-layout"}}
 <!-- Mobile responsive dashboard with sidebar that converts to top navbar on small screens -->
-<div class="h-screen flex flex-col md:flex-row bg-slate-900">
+<div class="min-h-screen bg-slate-900">
   {{template "mobile-nav" .}}
-  {{template "sidebar" .}}
+  
+  <div class="flex md:flex-row">
+    {{template "sidebar" .}}
 
-  <!-- Main Content Area -->
-  <div class="flex-1 overflow-auto bg-slate-900 min-h-0 scroll-smooth overscroll-contain">
-    <!-- Header -->
-    <header class="bg-slate-800 shadow-md">
+    <!-- Main Content Area -->
+    <div class="flex-1 overflow-auto bg-slate-900 min-h-0 scroll-smooth overscroll-contain pt-14 md:pt-0">
+    <!-- Header - Only show on desktop -->
+    <header class="hidden md:block bg-slate-800 shadow-md sticky top-0 z-10">
       <div class="px-4 py-6 md:px-6 lg:px-8">
-        <h1 class="text-xl md:text-2xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">{{.pageTitle}}</h1>
+        <h1 class="text-xl md:text-2xl font-bold text-primary">{{.pageTitle}}</h1>
       </div>
     </header>
 

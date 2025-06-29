@@ -266,8 +266,6 @@ func (h *JobHandler) ListJobsPage(c *gin.Context) {
 		return
 	}
 
-	stats := h.service.GetJobStats(c.Request.Context())
-
 	templateData := gin.H{
 		"title":               "Dashboard",
 		"page":                "dashboard",
@@ -278,9 +276,6 @@ func (h *JobHandler) ListJobsPage(c *gin.Context) {
 		"username":            username,
 		"jobs":                jobsWithPagination.Jobs,
 		"pagination":          jobsWithPagination.Pagination,
-		"totalJobs":           stats.TotalJobs,
-		"applied":             stats.TotalApplied,
-		"highMatch":           stats.HighMatch,
 		"statusFilter":        statusParam,
 	}
 
