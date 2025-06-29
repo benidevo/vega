@@ -90,7 +90,35 @@
 </div>
 
 <script>
-function copyToClipboard(elementId) {
+(function() {
+  // Forward declare functions to avoid ordering issues
+  var generateCoverLetterPDF, generateCoverLetterPDFFromContent;
+  
+
+  window.downloadCoverLetter = function() {
+  // Check if the content element exists
+  const contentElement = document.getElementById('cover-letter-content');
+  if (!contentElement) {
+    alert('Error: Cover letter content not found. Please refresh the page and try again.');
+    return;
+  }
+
+  if (typeof html2pdf === 'undefined') {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    script.onload = function() {
+      generateCoverLetterPDF();
+    };
+    script.onerror = function() {
+      alert('Failed to load PDF library. Please check your internet connection and try again.');
+    };
+    document.head.appendChild(script);
+  } else {
+    generateCoverLetterPDF();
+  }
+  }
+
+  window.copyToClipboard = function(elementId) {
   const element = document.getElementById(elementId);
   const text = element.innerText;
   navigator.clipboard.writeText(text).then(() => {
@@ -103,34 +131,146 @@ function copyToClipboard(elementId) {
       button.classList.remove('bg-green-600');
     }, 2000);
   });
-}
-
-function downloadCoverLetter() {
-  if (typeof html2pdf === 'undefined') {
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-    script.onload = function() {
-      generatePDF();
-    };
-    document.head.appendChild(script);
-  } else {
-    generatePDF();
   }
 
-  function generatePDF() {
+  generateCoverLetterPDF = window.generateCoverLetterPDF = function() {
     const element = document.getElementById('cover-letter-content');
-    const opt = {
-      margin: 0.75,
-      filename: 'cover-letter.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-    };
-    html2pdf().set(opt).from(element).save();
+    
+    // Extract the text content and rebuild with inline styles
+    const pdfContent = document.createElement('div');
+    pdfContent.id = 'formatted-cover-letter-content';
+    pdfContent.style.cssText = 'width: 100%; max-width: 8.5in; margin: 0 auto; padding: 0.75in; background-color: white; color: black; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.8; box-sizing: border-box;';
+    
+    // Extract personal information from header
+    const headerDiv = element.querySelector('.border-b');
+    if (headerDiv) {
+      const nameElement = headerDiv.querySelector('h2');
+      const titleElement = headerDiv.querySelector('p');
+      const contactInfo = headerDiv.querySelector('.text-xs');
+      
+      if (nameElement) {
+        const name = document.createElement('h1');
+        name.textContent = nameElement.textContent;
+        name.style.cssText = 'font-size: 24px; font-weight: bold; margin: 0 0 5px 0; color: #111827;';
+        pdfContent.appendChild(name);
+      }
+      
+      if (titleElement) {
+        const title = document.createElement('p');
+        title.textContent = titleElement.textContent;
+        title.style.cssText = 'font-size: 16px; margin: 0 0 5px 0; color: #374151;';
+        pdfContent.appendChild(title);
+      }
+      
+      if (contactInfo) {
+        const contact = document.createElement('p');
+        contact.textContent = contactInfo.textContent.replace(/\s+/g, ' ').trim();
+        contact.style.cssText = 'font-size: 12px; margin: 0 0 20px 0; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; color: #6b7280;';
+        pdfContent.appendChild(contact);
+      }
+    }
+    
+    // Extract cover letter body
+    const letterBody = element.querySelector('.whitespace-pre-wrap');
+    if (letterBody) {
+      const bodyText = document.createElement('div');
+      bodyText.textContent = letterBody.textContent;
+      bodyText.style.cssText = 'font-size: 14px; line-height: 1.8; color: #374151; white-space: pre-wrap; margin-top: 20px;';
+      pdfContent.appendChild(bodyText);
+    }
+    
+    // Create a temporary hidden container for PDF generation
+    const tempContainer = document.createElement('div');
+    tempContainer.style.cssText = 'position: absolute; left: -9999px; top: 0; width: 8.5in;';
+    tempContainer.appendChild(pdfContent);
+    document.body.appendChild(tempContainer);
+    
+    // Add a small delay to ensure rendering
+    setTimeout(() => {
+      generateCoverLetterPDFFromContent(pdfContent, tempContainer);
+    }, 100);
   }
-}
+  
+  generateCoverLetterPDFFromContent = window.generateCoverLetterPDFFromContent = function(content, container) {
+    
+    // Get the exact HTML from the preview
+    const htmlString = content.outerHTML;
+    
+    // Create a wrapper div with the content
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = htmlString;
+    const pdfElement = wrapper.firstChild;
+    
+    // Ensure it has the right styles
+    pdfElement.style.width = '8.5in';
+    pdfElement.style.margin = '0';
+    pdfElement.style.padding = '0.75in';
+    pdfElement.style.backgroundColor = 'white';
+    pdfElement.style.color = 'black';
+    pdfElement.style.fontFamily = 'Arial, sans-serif';
+    pdfElement.style.position = 'relative';
+    pdfElement.style.boxSizing = 'border-box'; // Critical: ensures padding is included within width
+    
+    // Create a temporary container with white background
+    const tempContainer = document.createElement('div');
+    tempContainer.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: white; z-index: 999999;';
+    tempContainer.appendChild(pdfElement);
+    document.body.appendChild(tempContainer);
+    
+    const opt = {
+      margin: 0,  // No margin since content already has padding
+      filename: 'cover-letter.pdf',
+      image: { 
+        type: 'jpeg', 
+        quality: 0.98 
+      },
+      html2canvas: { 
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        // Remove hardcoded dimensions to let html2pdf.js handle scaling automatically
+        scrollX: 0,
+        scrollY: 0
+      },
+      jsPDF: { 
+        unit: 'in', 
+        format: 'letter', 
+        orientation: 'portrait'
+      },
+      pagebreak: { mode: 'avoid-all' }
+    };
 
-function editCoverLetter() {
+    
+    // Small delay to ensure rendering
+    setTimeout(() => {
+      // Generate PDF from the element
+      html2pdf().set(opt).from(pdfElement).save().then(() => {
+        
+        // Clean up
+        setTimeout(() => {
+          document.body.removeChild(tempContainer);
+        }, 1000);
+        
+        // Clean up preview container if exists
+        if (container && container.parentNode) {
+          document.body.removeChild(container);
+        }
+      }).catch(error => {
+        alert('Failed to generate PDF. Please try again.');
+        
+        // Clean up
+        if (tempContainer.parentNode) {
+          document.body.removeChild(tempContainer);
+        }
+        if (container && container.parentNode) {
+          document.body.removeChild(container);
+        }
+      });
+    }, 200);
+  }
+
+  window.editCoverLetter = function() {
   const content = document.getElementById('cover-letter-content');
   const parent = content.parentElement;
 
@@ -155,10 +295,10 @@ function editCoverLetter() {
     };
     parent.appendChild(saveBtn);
   }
-}
+  }
 
-// Mobile-specific editing functions
-function enableMobileEdit() {
+  // Mobile-specific editing functions
+  window.enableMobileEdit = function() {
   const content = document.getElementById('cover-letter-content');
   const editButtons = document.getElementById('mobile-edit-buttons');
 
@@ -173,9 +313,9 @@ function enableMobileEdit() {
 
   // Hide edit button
   editButtons.previousElementSibling.style.display = 'none';
-}
+  }
 
-function saveMobileEdit() {
+  window.saveMobileEdit = function() {
   const content = document.getElementById('cover-letter-content');
   const editButtons = document.getElementById('mobile-edit-buttons');
 
@@ -189,9 +329,9 @@ function saveMobileEdit() {
 
   // Show edit button
   editButtons.previousElementSibling.style.display = 'block';
-}
+  }
 
-function cancelMobileEdit() {
+  window.cancelMobileEdit = function() {
   const content = document.getElementById('cover-letter-content');
   const editButtons = document.getElementById('mobile-edit-buttons');
 
@@ -208,15 +348,16 @@ function cancelMobileEdit() {
 
   // Show edit button
   editButtons.previousElementSibling.style.display = 'block';
-}
-
-function scrollToAIActions() {
-  const aiActionsSection = document.getElementById('ai-actions-section');
-  if (aiActionsSection) {
-    aiActionsSection.scrollIntoView({behavior: 'smooth', block: 'start'});
-  } else {
-    // Fallback to top if section not found
-    window.scrollTo({top: 0, behavior: 'smooth'});
   }
-}
+
+  window.scrollToAIActions = function() {
+    const aiActionsSection = document.getElementById('ai-actions-section');
+    if (aiActionsSection) {
+      aiActionsSection.scrollIntoView({behavior: 'smooth', block: 'start'});
+    } else {
+      // Fallback to top if section not found
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+  }
+})();
 </script>
