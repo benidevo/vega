@@ -86,7 +86,7 @@
               </div>
               <span class="text-xs text-gray-600 flex-shrink-0 ml-2" contenteditable="true">{{.StartDate}} - {{.EndDate}}</span>
             </div>
-            <p class="text-xs text-gray-700" contenteditable="true">{{.Company}}{{if .Location}} <span class="italic text-gray-600">– {{.Location}}</span>{{end}}</p>
+            <p class="text-xs text-gray-700" contenteditable="true">{{.Company}}{{if .Location}} – <span class="italic text-gray-600">{{.Location}}</span>{{end}}</p>
             <div class="text-xs text-gray-700 whitespace-pre-wrap mt-0.5 leading-relaxed" contenteditable="true">{{.Description}}</div>
           </div>
           {{end}}
@@ -231,37 +231,96 @@
 
 <script>
 (function() {
-  // Forward declare functions to avoid ordering issues
-  var generatePDF, generatePDFFromContent;
+  var generateTextPDF;
 
+  // Track if PDF is being generated to prevent double-clicks
+  let isGeneratingPDF = false;
 
-  // Define downloadResumePDF using shared utilities
   window.downloadResumePDF = function() {
-    const hiddenElements = AIHelpers.hideElementsForPDF([
-      'button[onclick="showAddSectionModal()"]'
-    ]);
-
-    if (!AIHelpers.validateContentElement('resume-content', 'Resume content')) {
-      AIHelpers.restoreElementsAfterPDF(hiddenElements);
+    // Prevent multiple simultaneous PDF generations
+    if (isGeneratingPDF) {
       return;
     }
 
-    AIHelpers.loadHtml2PdfLibrary(
-      function() { generatePDF(hiddenElements); },
-      function() {
-        alert('Failed to load PDF library. Please check your internet connection and try again.');
-        AIHelpers.restoreElementsAfterPDF(hiddenElements);
-      }
-    );
+    if (!AIHelpers.validateContentElement('resume-content', 'Resume content')) {
+      return;
+    }
+
+    // Set loading state
+    isGeneratingPDF = true;
+    const button = event.target;
+    const originalText = button.innerText;
+    button.innerText = 'Generating...';
+    button.disabled = true;
+
+    try {
+      generateTextPDF();
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      alert('Failed to generate PDF. Please try again.');
+    } finally {
+      // Reset button state
+      isGeneratingPDF = false;
+      button.innerText = originalText;
+      button.disabled = false;
+    }
   }
 
-  generatePDF = window.generatePDF = function(hiddenElements) {
-    const element = document.getElementById('resume-content');
+  generateTextPDF = window.generateTextPDF = function() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+      unit: 'pt',
+      format: 'letter',
+      orientation: 'portrait'
+    });
 
-    // Extract the text content and rebuild with inline styles
-    const pdfContent = document.createElement('div');
-    pdfContent.id = 'formatted-resume-content';
-    pdfContent.style.cssText = 'width: 100%; max-width: 8.5in; margin: 0 auto; padding: 0.5in; background-color: white; color: black; font-family: Arial, sans-serif; font-size: 12px; line-height: 1.6; box-sizing: border-box;';
+    // this will either load Inter or fall back to Helvetica
+    AIHelpers.loadCustomFonts(doc);
+
+    // Check if Inter fonts were loaded successfully
+    const usingInterFonts = window.loadInterFonts && typeof window.loadInterFonts === 'function';
+    const fontFamily = usingInterFonts ? 'Inter' : 'helvetica';
+
+    const element = document.getElementById('resume-content');
+    const margin = 40;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const contentWidth = pageWidth - (2 * margin);
+    let yPos = margin;
+    const lineHeight = 14;
+
+    // Set document properties for better rendering
+    doc.setProperties({
+      title: 'Resume',
+      subject: 'Professional Resume',
+      author: element.querySelector('h2')?.textContent?.trim() || 'Resume',
+      keywords: 'resume, cv, professional',
+      creator: 'Vega AI'
+    });
+
+    // Helper function to add text with wrapping
+    function addText(text, fontSize, options = {}) {
+      const { isBold = false, isItalic = false, color = [0, 0, 0], font = fontFamily } = options;
+      doc.setFontSize(fontSize);
+
+      // Set font style
+      let fontStyle = 'normal';
+      if (isBold && isItalic) fontStyle = 'bolditalic';
+      else if (isBold) fontStyle = 'bold';
+      else if (isItalic) fontStyle = 'italic';
+
+      doc.setFont(font, fontStyle);
+      doc.setTextColor(...color);
+
+      const lines = doc.splitTextToSize(text, contentWidth);
+      lines.forEach(line => {
+        if (yPos > doc.internal.pageSize.getHeight() - margin) {
+          doc.addPage();
+          yPos = margin;
+        }
+        doc.text(line, margin, yPos);
+        yPos += fontSize * 1.4;
+      });
+    }
 
     // Extract personal information
     const nameElement = element.querySelector('h2');
@@ -269,243 +328,266 @@
     const contactInfo = element.querySelector('.text-xs.text-gray-600');
 
     if (nameElement) {
-      const name = document.createElement('h1');
-      name.textContent = nameElement.textContent;
-      name.style.cssText = 'font-size: 24px; font-weight: bold; margin: 0 0 5px 0; color: #111827;';
-      pdfContent.appendChild(name);
+      // Name in larger bold font
+      addText(nameElement.textContent.trim(), 18, { isBold: true });
+      yPos += 1;
     }
 
     if (titleElement) {
-      const title = document.createElement('p');
-      title.textContent = titleElement.textContent;
-      title.style.cssText = 'font-size: 16px; margin: 0 0 5px 0; color: #374151;';
-      pdfContent.appendChild(title);
+      // Title in medium gray
+      addText(titleElement.textContent.trim(), 14, { color: [90, 90, 90] });
+      yPos += 2;
     }
 
     if (contactInfo) {
-      const contact = document.createElement('p');
-      contact.textContent = contactInfo.textContent.replace(/\s+/g, ' ').trim();
-      contact.style.cssText = 'font-size: 12px; margin: 0 0 20px 0; color: #6b7280;';
-      pdfContent.appendChild(contact);
+      // Contact info with location in italics
+      const contactText = contactInfo.textContent.replace(/\s+/g, ' ').trim();
+      const parts = contactText.split('|').map(p => p.trim());
+
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      let xPos = margin;
+
+      parts.forEach((part, index) => {
+        if (index > 0) {
+          // Add separator
+          doc.setFont(fontFamily, 'normal');
+          doc.text(' | ', xPos, yPos);
+          xPos += doc.getTextWidth(' | ');
+        }
+
+        // Check if this part looks like a location (contains comma or known location keywords)
+        const isLocation = part.includes(',') || part.match(/^\+\d+/) === null;
+
+        if (isLocation && !part.includes('@')) {
+          // Location in italics
+          doc.setFont(fontFamily, 'italic');
+        } else {
+          // Phone/email in normal
+          doc.setFont(fontFamily, 'normal');
+        }
+
+        doc.text(part, xPos, yPos);
+        xPos += doc.getTextWidth(part);
+      });
+
+      yPos += 14;
     }
 
-    // Extract sections
+    // Process sections
     const sections = element.querySelectorAll('.resume-section');
     sections.forEach(section => {
       const sectionTitle = section.querySelector('h3');
       if (sectionTitle) {
-        const heading = document.createElement('h2');
-        heading.textContent = sectionTitle.textContent;
-        heading.style.cssText = 'font-size: 14px; font-weight: bold; margin: 20px 0 10px 0; padding-bottom: 2px; border-bottom: 1px solid #d1d5db; color: #111827;';
-        pdfContent.appendChild(heading);
+        yPos += 10; // Spacing before section
+
+        // Section title in bold
+        const titleText = sectionTitle.textContent.trim();
+        doc.setFontSize(13);
+        doc.setFont(fontFamily, 'bold');
+        doc.setTextColor(0, 0, 0);
+        doc.text(titleText, margin, yPos);
+        yPos += 3;
+
+        // Add underline
+        doc.setDrawColor(220, 220, 220);
+        doc.setLineWidth(0.5);
+        doc.line(margin, yPos, pageWidth - margin, yPos);
+        yPos += 12; // Spacing after section title
       }
 
-      // Handle different section types
       const sectionType = section.getAttribute('data-section');
 
       if (sectionType === 'summary') {
         const summaryText = section.querySelector('p');
         if (summaryText) {
-          const summary = document.createElement('p');
-          summary.textContent = summaryText.textContent;
-          summary.style.cssText = 'font-size: 12px; margin: 0 0 10px 0; color: #374151;';
-          pdfContent.appendChild(summary);
+          addText(summaryText.textContent.trim(), 10, { color: [50, 50, 50] });
+          yPos += 10;
         }
       } else if (sectionType === 'skills') {
         const skillsContainer = section.querySelector('#skills-container');
         if (skillsContainer) {
-          const skills = document.createElement('p');
-          skills.textContent = skillsContainer.textContent;
-          skills.style.cssText = 'font-size: 12px; margin: 0 0 10px 0; color: #374151;';
-          pdfContent.appendChild(skills);
+          addText(skillsContainer.textContent.trim(), 10, { color: [50, 50, 50] });
+          yPos += 10;
         }
       } else if (sectionType === 'experience') {
         const experiences = section.querySelectorAll('.mb-1\\.5, .mb-2');
-        experiences.forEach(exp => {
+        experiences.forEach((exp, expIndex) => {
           const jobTitle = exp.querySelector('h4');
-          const company = exp.querySelector('p.text-xs');
+          const companyInfo = exp.querySelector('p.text-xs');
           const dates = exp.querySelector('.text-xs.text-gray-600');
           const description = exp.querySelector('.whitespace-pre-wrap');
 
           if (jobTitle) {
-            const job = document.createElement('div');
-            job.style.cssText = 'margin-bottom: 15px;';
+            // Job title (bold) and dates on same line
+            const titleText = jobTitle.textContent.trim();
+            const dateText = dates ? dates.textContent.trim() : '';
 
-            const titleLine = document.createElement('div');
-            titleLine.style.cssText = 'display: flex; justify-content: space-between; align-items: baseline;';
+            doc.setFontSize(11); // Increased from 10
+            doc.setFont(fontFamily, 'bold');
+            doc.setTextColor(0, 0, 0);
+            doc.text(titleText, margin, yPos);
 
-            const jobTitleElem = document.createElement('h3');
-            jobTitleElem.textContent = jobTitle.textContent;
-            jobTitleElem.style.cssText = 'font-size: 12px; font-weight: bold; margin: 0; color: #111827;';
-            titleLine.appendChild(jobTitleElem);
-
-            if (dates) {
-              const datesElem = document.createElement('span');
-              datesElem.textContent = dates.textContent;
-              datesElem.style.cssText = 'font-size: 12px; color: #6b7280;';
-              titleLine.appendChild(datesElem);
+            if (dateText) {
+              doc.setFont(fontFamily, 'normal');
+              doc.setTextColor(100, 100, 100);
+              doc.setFontSize(10);
+              const dateWidth = doc.getTextWidth(dateText);
+              doc.text(dateText, pageWidth - margin - dateWidth, yPos);
             }
+            yPos += lineHeight;
 
-            job.appendChild(titleLine);
+            if (companyInfo) {
+              // Parse company and location
+              const companyText = companyInfo.textContent.trim();
+              const locationMatch = companyText.match(/^(.+?)\s*–\s*(.+)$/);
 
-            if (company) {
-              const companyElem = document.createElement('p');
-              companyElem.textContent = company.textContent;
-              companyElem.style.cssText = 'font-size: 12px; margin: 2px 0; color: #374151;';
-              job.appendChild(companyElem);
+              if (locationMatch) {
+                // Company name
+                doc.setFontSize(10);
+                doc.setFont(fontFamily, 'normal');
+                doc.setTextColor(100, 100, 100);
+                doc.text(locationMatch[1], margin, yPos);
+
+                // Dash
+                const companyWidth = doc.getTextWidth(locationMatch[1]);
+                doc.text(' – ', margin + companyWidth, yPos);
+
+                // Location in italics
+                doc.setFont(fontFamily, 'italic');
+                doc.text(locationMatch[2], margin + companyWidth + doc.getTextWidth(' – '), yPos);
+              } else {
+                // Just company, no location
+                doc.setFontSize(10);
+                doc.setFont(fontFamily, 'normal');
+                doc.setTextColor(100, 100, 100);
+                doc.text(companyText, margin, yPos);
+              }
+              yPos += lineHeight;
             }
 
             if (description) {
-              const descElem = document.createElement('p');
-              descElem.textContent = description.textContent;
-              descElem.style.cssText = 'font-size: 12px; margin: 5px 0 0 0; color: #374151; white-space: pre-wrap;';
-              job.appendChild(descElem);
+              yPos += 2;
+              // Process bullet points
+              const descText = description.textContent.trim();
+              const lines = descText.split('\n').filter(line => line.trim());
+
+              doc.setFontSize(10);
+              doc.setFont(fontFamily, 'normal');
+              doc.setTextColor(50, 50, 50);
+
+              lines.forEach(line => {
+                const trimmedLine = line.trim();
+                if (trimmedLine.startsWith('•')) {
+                  // Bullet point
+                  const bulletText = trimmedLine.substring(1).trim();
+                  const wrappedLines = doc.splitTextToSize(bulletText, contentWidth - 15);
+
+                  // Draw bullet
+                  doc.text('•', margin, yPos);
+
+                  // Draw text with indent
+                  wrappedLines.forEach((wLine, idx) => {
+                    if (yPos > doc.internal.pageSize.getHeight() - margin) {
+                      doc.addPage();
+                      yPos = margin;
+                    }
+                    doc.text(wLine, margin + 10, yPos);
+                    yPos += 10 * 1.4;
+                  });
+                } else {
+                  // Regular text
+                  const wrappedLines = doc.splitTextToSize(trimmedLine, contentWidth);
+                  wrappedLines.forEach(wLine => {
+                    if (yPos > doc.internal.pageSize.getHeight() - margin) {
+                      doc.addPage();
+                      yPos = margin;
+                    }
+                    doc.text(wLine, margin, yPos);
+                    yPos += 10 * 1.4;
+                  });
+                }
+              });
             }
 
-            pdfContent.appendChild(job);
+            // Add spacing between experiences
+            if (expIndex < experiences.length - 1) {
+              yPos += 6;
+            }
           }
         });
       } else if (sectionType === 'education') {
         const educationItems = section.querySelectorAll('.mb-1');
-        educationItems.forEach(edu => {
+        educationItems.forEach((edu, eduIndex) => {
           const degree = edu.querySelector('h4');
           const institution = edu.querySelector('p.text-xs');
           const endDate = edu.querySelector('.text-xs.text-gray-600');
 
           if (degree) {
-            const eduDiv = document.createElement('div');
-            eduDiv.style.cssText = 'margin-bottom: 10px;';
+            // Degree (bold) and date on same line
+            const degreeText = degree.textContent.trim();
+            const dateText = endDate ? endDate.textContent.trim() : '';
 
-            const eduLine = document.createElement('div');
-            eduLine.style.cssText = 'display: flex; justify-content: space-between; align-items: baseline;';
+            doc.setFontSize(11); // Increased from 10
+            doc.setFont(fontFamily, 'bold');
+            doc.setTextColor(0, 0, 0);
+            doc.text(degreeText, margin, yPos);
 
-            const degreeElem = document.createElement('h3');
-            degreeElem.textContent = degree.textContent;
-            degreeElem.style.cssText = 'font-size: 12px; font-weight: bold; margin: 0; color: #111827;';
-            eduLine.appendChild(degreeElem);
-
-            if (endDate) {
-              const dateElem = document.createElement('span');
-              dateElem.textContent = endDate.textContent;
-              dateElem.style.cssText = 'font-size: 12px; color: #6b7280;';
-              eduLine.appendChild(dateElem);
+            if (dateText) {
+              doc.setFont(fontFamily, 'normal');
+              doc.setTextColor(100, 100, 100);
+              doc.setFontSize(10); // Increased from 9
+              const dateWidth = doc.getTextWidth(dateText);
+              doc.text(dateText, pageWidth - margin - dateWidth, yPos);
             }
-
-            eduDiv.appendChild(eduLine);
+            yPos += lineHeight;
 
             if (institution) {
-              const instElem = document.createElement('p');
-              instElem.textContent = institution.textContent;
-              instElem.style.cssText = 'font-size: 12px; margin: 2px 0 0 0; color: #374151;';
-              eduDiv.appendChild(instElem);
+              doc.setFontSize(10); // Increased from 9
+              doc.setFont(fontFamily, 'normal');
+              doc.setTextColor(100, 100, 100);
+              doc.text(institution.textContent.trim(), margin, yPos);
+              yPos += lineHeight;
             }
 
-            pdfContent.appendChild(eduDiv);
+            // Add spacing between education items
+            if (eduIndex < educationItems.length - 1) {
+              yPos += 4;
+            }
           }
         });
+      } else {
+        // Handle custom sections
+        const sectionClone = section.cloneNode(true);
+        const header = sectionClone.querySelector('.flex.justify-between');
+        if (header) header.remove();
+
+        const textContent = sectionClone.textContent.trim();
+        if (textContent && textContent !== 'Click here to add content...') {
+          const lines = textContent.split('\n').filter(line => line.trim());
+
+          doc.setFontSize(10);
+          doc.setFont(fontFamily, 'normal');
+          doc.setTextColor(50, 50, 50);
+
+          lines.forEach(line => {
+            const trimmedLine = line.trim();
+            if (trimmedLine.startsWith('•')) {
+              doc.text('•', margin, yPos);
+              doc.text(trimmedLine.substring(1).trim(), margin + 10, yPos);
+            } else if (trimmedLine) {
+              doc.text(trimmedLine, margin, yPos);
+            }
+            yPos += 14;
+          });
+        }
+        yPos += 10;
       }
     });
 
-    // Create a temporary hidden container for PDF generation
-    const tempContainer = document.createElement('div');
-    tempContainer.style.cssText = 'position: absolute; left: -9999px; top: 0; width: 8.5in;';
-    tempContainer.appendChild(pdfContent);
-    document.body.appendChild(tempContainer);
-
-    // Add a small delay to ensure rendering
-    setTimeout(() => {
-      generatePDFFromContent(pdfContent, tempContainer, hiddenElements);
-    }, 100);
+    doc.save('resume.pdf');
   }
 
-  generatePDFFromContent = window.generatePDFFromContent = function(content, container, hiddenElements) {
-
-    // Get the exact HTML from the preview
-    const htmlString = content.outerHTML;
-
-    // Create a wrapper div with the content
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = htmlString;
-    const pdfElement = wrapper.firstChild;
-
-    // Ensure it has the right styles
-    pdfElement.style.width = '8.5in';
-    pdfElement.style.margin = '0';
-    pdfElement.style.padding = '0.5in';
-    pdfElement.style.backgroundColor = 'white';
-    pdfElement.style.color = 'black';
-    pdfElement.style.fontFamily = 'Arial, sans-serif';
-    pdfElement.style.position = 'relative';
-    pdfElement.style.boxSizing = 'border-box'; // Critical: ensures padding is included within width
-
-    // Create a temporary container with white background
-    // This must be visible for html2pdf.js to capture the content properly
-    const tempContainer = document.createElement('div');
-    tempContainer.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: white; z-index: 999999;';
-    tempContainer.appendChild(pdfElement);
-    document.body.appendChild(tempContainer);
-
-    const opt = {
-      margin: 0,  // No margin since content already has padding
-      filename: 'resume.pdf',
-      image: {
-        type: 'jpeg',
-        quality: 0.98
-      },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        // Remove hardcoded dimensions to let html2pdf.js handle scaling automatically
-        scrollX: 0,
-        scrollY: 0
-      },
-      jsPDF: {
-        unit: 'in',
-        format: 'letter',
-        orientation: 'portrait'
-      },
-      pagebreak: { mode: 'avoid-all' }
-    };
-
-
-    // Small delay to ensure rendering
-    setTimeout(() => {
-      // Generate PDF from the element
-      html2pdf().set(opt).from(pdfElement).save().then(() => {
-
-        // Clean up
-        setTimeout(() => {
-          document.body.removeChild(tempContainer);
-        }, 1000);
-
-        // Clean up preview container if exists
-        if (container && container.parentNode) {
-          document.body.removeChild(container);
-        }
-
-        // Restore hidden elements after PDF is generated
-        if (hiddenElements) {
-          AIHelpers.restoreElementsAfterPDF(hiddenElements);
-        }
-      }).catch(error => {
-        alert('Failed to generate PDF. Please try again.');
-
-        // Clean up
-        if (tempContainer.parentNode) {
-          document.body.removeChild(tempContainer);
-        }
-        if (container && container.parentNode) {
-          document.body.removeChild(container);
-        }
-
-        if (hiddenElements) {
-          AIHelpers.restoreElementsAfterPDF(hiddenElements);
-        }
-      });
-    }, 200);
-  }
 
 window.editResume = function() {
   const content = document.getElementById('resume-content');

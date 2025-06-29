@@ -6,62 +6,6 @@
 window.AIHelpers = (function() {
     'use strict';
 
-    // Common PDF generation utilities
-    function loadHtml2PdfLibrary(callback, errorCallback) {
-        if (typeof html2pdf !== 'undefined') {
-            callback();
-            return;
-        }
-
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-        script.onload = callback;
-        script.onerror = errorCallback || function() {
-            alert('Failed to load PDF library. Please check your internet connection and try again.');
-        };
-        document.head.appendChild(script);
-    }
-
-    // Common PDF options
-    function getPDFOptions(filename, format = 'a4') {
-        return {
-            margin: [0.5, 0.5, 0.5, 0.5],
-            filename: filename,
-            image: { type: 'jpeg', quality: 0.95 },
-            html2canvas: {
-                scale: 2,
-                useCORS: true,
-                letterRendering: true,
-                allowTaint: false
-            },
-            jsPDF: {
-                unit: 'in',
-                format: format,
-                orientation: 'portrait',
-                compress: true
-            }
-        };
-    }
-
-    // Hide/show elements during PDF generation
-    function hideElementsForPDF(selectors) {
-        const elements = [];
-        selectors.forEach(selector => {
-            const element = document.querySelector(selector);
-            if (element) {
-                elements.push({ element, display: element.style.display });
-                element.style.display = 'none';
-            }
-        });
-        return elements;
-    }
-
-    function restoreElementsAfterPDF(hiddenElements) {
-        hiddenElements.forEach(({ element, display }) => {
-            element.style.display = display;
-        });
-    }
-
     // Common content validation
     function validateContentElement(elementId, contentType = 'content') {
         const element = document.getElementById(elementId);
@@ -72,22 +16,6 @@ window.AIHelpers = (function() {
         return element;
     }
 
-    // Generate PDF with error handling
-    function generatePDFFromElement(elementId, filename, options = {}) {
-        const element = validateContentElement(elementId);
-        if (!element) return;
-
-        const mergedOptions = { ...getPDFOptions(filename), ...options };
-
-        return html2pdf()
-            .set(mergedOptions)
-            .from(element)
-            .save()
-            .catch(error => {
-                console.error('PDF generation failed:', error);
-                alert('PDF generation failed. Please try again.');
-            });
-    }
 
     // Copy to clipboard utility
     function copyToClipboard(text) {
@@ -186,13 +114,39 @@ window.AIHelpers = (function() {
         return text.substring(0, maxLength) + '...';
     }
 
+    // Custom font loading for jsPDF
+    let fontsLoaded = false;
+
+    function loadCustomFonts(doc) {
+        if (fontsLoaded) return;
+
+        try {
+            // Check if Inter fonts have been loaded via inter-font-loader.js
+            if (window.loadInterFonts && typeof window.loadInterFonts === 'function') {
+                // Use the external font loader if available
+                const success = window.loadInterFonts(doc);
+                if (success) {
+                    fontsLoaded = true;
+                    console.log('Inter fonts loaded successfully from inter-font-loader.js');
+                    return;
+                }
+            }
+
+            // Set Helvetica as the default font (similar to Inter)
+            doc.setFont('helvetica', 'normal');
+            console.log('Using Helvetica as Inter substitute for PDF generation');
+
+            fontsLoaded = true;
+
+        } catch (e) {
+            console.error('Failed to load custom fonts, using defaults:', e);
+            doc.setFont('helvetica', 'normal');
+        }
+    }
+
     return {
         // PDF utilities
-        loadHtml2PdfLibrary,
-        generatePDFFromElement,
-        getPDFOptions,
-        hideElementsForPDF,
-        restoreElementsAfterPDF,
+        loadCustomFonts,
 
         // Content utilities
         validateContentElement,

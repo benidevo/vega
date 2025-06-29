@@ -373,6 +373,11 @@
 <!-- Include shared AI helpers for CV and Cover Letter generation -->
 <script src="/static/js/ai-helpers.js"></script>
 
+<!-- Preload jsPDF library for PDF generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- Load Inter font for jsPDF (if available) -->
+<script src="/static/fonts/inter-font-loader.js"></script>
+
 <script>
 document.addEventListener('htmx:afterRequest', function(evt) {
 
@@ -417,7 +422,6 @@ document.addEventListener('htmx:afterRequest', function(evt) {
 // Check if we should scroll to AI actions section on page load
 document.addEventListener('DOMContentLoaded', function() {
   if (sessionStorage.getItem('scrollToAIActions') === 'true') {
-    // Clear the flag
     sessionStorage.removeItem('scrollToAIActions');
     // Scroll to AI actions section
     setTimeout(() => {
