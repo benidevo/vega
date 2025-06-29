@@ -431,13 +431,13 @@ function extractResumeData() {
   const resumeData = {
     isValid: true,
     personalInfo: {
-      firstName: cvContent.querySelector('h2').innerText.split(' ')[0],
-      lastName: cvContent.querySelector('h2').innerText.split(' ').slice(1).join(' '),
-      title: cvContent.querySelector('p.text-sm').innerText,
-      email: cvContent.querySelector('.text-xs span:nth-child(1)')?.innerText || '',
-      phone: cvContent.querySelector('.text-xs span:nth-child(2)')?.innerText || '',
-      location: cvContent.querySelector('.text-xs span:nth-child(3)')?.innerText || '',
-      summary: cvContent.querySelector('[data-section="summary"] p')?.innerText || ''
+      firstName: resumeContent.querySelector('h2').innerText.split(' ')[0],
+      lastName: resumeContent.querySelector('h2').innerText.split(' ').slice(1).join(' '),
+      title: resumeContent.querySelector('p.text-sm').innerText,
+      email: resumeContent.querySelector('.text-xs span:nth-child(1)')?.innerText || '',
+      phone: resumeContent.querySelector('.text-xs span:nth-child(2)')?.innerText || '',
+      location: resumeContent.querySelector('.text-xs span:nth-child(3)')?.innerText || '',
+      summary: resumeContent.querySelector('[data-section="summary"] p')?.innerText || ''
     },
     workExperience: [],
     education: [],
