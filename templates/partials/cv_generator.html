@@ -233,84 +233,62 @@
 (function() {
   // Forward declare functions to avoid ordering issues
   var generatePDF, generatePDFFromContent;
-  
 
-  // Define downloadResumePDF
+
+  // Define downloadResumePDF using shared utilities
   window.downloadResumePDF = function() {
-    // Hide the Add Section button before generating PDF
-    const addSectionBtn = document.querySelector('button[onclick="showAddSectionModal()"]');
-    const addSectionContainer = addSectionBtn ? addSectionBtn.parentElement : null;
+    const hiddenElements = AIHelpers.hideElementsForPDF([
+      'button[onclick="showAddSectionModal()"]'
+    ]);
 
-  if (addSectionContainer) {
-    addSectionContainer.style.display = 'none';
-  }
-
-  // Check if the content element exists
-  const contentElement = document.getElementById('resume-content');
-  if (!contentElement) {
-    alert('Error: Resume content not found. Please refresh the page and try again.');
-    if (addSectionContainer) {
-      addSectionContainer.style.display = '';
+    if (!AIHelpers.validateContentElement('resume-content', 'Resume content')) {
+      AIHelpers.restoreElementsAfterPDF(hiddenElements);
+      return;
     }
-    return;
-  }
 
-  if (typeof html2pdf === 'undefined') {
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-    script.onload = function() {
-      generatePDF();
-    };
-    script.onerror = function() {
-      alert('Failed to load PDF library. Please check your internet connection and try again.');
-      if (addSectionContainer) {
-        addSectionContainer.style.display = '';
+    AIHelpers.loadHtml2PdfLibrary(
+      function() { generatePDF(hiddenElements); },
+      function() {
+        alert('Failed to load PDF library. Please check your internet connection and try again.');
+        AIHelpers.restoreElementsAfterPDF(hiddenElements);
       }
-    };
-    document.head.appendChild(script);
-  } else {
-    generatePDF();
-  }
+    );
   }
 
-  generatePDF = window.generatePDF = function() {
+  generatePDF = window.generatePDF = function(hiddenElements) {
     const element = document.getElementById('resume-content');
-    
-    // Get reference to add section button
-    const addSectionBtn = document.querySelector('button[onclick="showAddSectionModal()"]');
-    const addSectionContainer = addSectionBtn ? addSectionBtn.parentElement : null;
-    
+
     // Extract the text content and rebuild with inline styles
     const pdfContent = document.createElement('div');
     pdfContent.id = 'formatted-resume-content';
     pdfContent.style.cssText = 'width: 100%; max-width: 8.5in; margin: 0 auto; padding: 0.5in; background-color: white; color: black; font-family: Arial, sans-serif; font-size: 12px; line-height: 1.6; box-sizing: border-box;';
-    
+
     // Extract personal information
     const nameElement = element.querySelector('h2');
     const titleElement = element.querySelector('p.text-sm, p.text-base');
     const contactInfo = element.querySelector('.text-xs.text-gray-600');
-    
+
     if (nameElement) {
       const name = document.createElement('h1');
       name.textContent = nameElement.textContent;
       name.style.cssText = 'font-size: 24px; font-weight: bold; margin: 0 0 5px 0; color: #111827;';
       pdfContent.appendChild(name);
     }
-    
+
     if (titleElement) {
       const title = document.createElement('p');
       title.textContent = titleElement.textContent;
       title.style.cssText = 'font-size: 16px; margin: 0 0 5px 0; color: #374151;';
       pdfContent.appendChild(title);
     }
-    
+
     if (contactInfo) {
       const contact = document.createElement('p');
       contact.textContent = contactInfo.textContent.replace(/\s+/g, ' ').trim();
       contact.style.cssText = 'font-size: 12px; margin: 0 0 20px 0; color: #6b7280;';
       pdfContent.appendChild(contact);
     }
-    
+
     // Extract sections
     const sections = element.querySelectorAll('.resume-section');
     sections.forEach(section => {
@@ -321,10 +299,10 @@
         heading.style.cssText = 'font-size: 14px; font-weight: bold; margin: 20px 0 10px 0; padding-bottom: 2px; border-bottom: 1px solid #d1d5db; color: #111827;';
         pdfContent.appendChild(heading);
       }
-      
+
       // Handle different section types
       const sectionType = section.getAttribute('data-section');
-      
+
       if (sectionType === 'summary') {
         const summaryText = section.querySelector('p');
         if (summaryText) {
@@ -348,42 +326,42 @@
           const company = exp.querySelector('p.text-xs');
           const dates = exp.querySelector('.text-xs.text-gray-600');
           const description = exp.querySelector('.whitespace-pre-wrap');
-          
+
           if (jobTitle) {
             const job = document.createElement('div');
             job.style.cssText = 'margin-bottom: 15px;';
-            
+
             const titleLine = document.createElement('div');
             titleLine.style.cssText = 'display: flex; justify-content: space-between; align-items: baseline;';
-            
+
             const jobTitleElem = document.createElement('h3');
             jobTitleElem.textContent = jobTitle.textContent;
             jobTitleElem.style.cssText = 'font-size: 12px; font-weight: bold; margin: 0; color: #111827;';
             titleLine.appendChild(jobTitleElem);
-            
+
             if (dates) {
               const datesElem = document.createElement('span');
               datesElem.textContent = dates.textContent;
               datesElem.style.cssText = 'font-size: 12px; color: #6b7280;';
               titleLine.appendChild(datesElem);
             }
-            
+
             job.appendChild(titleLine);
-            
+
             if (company) {
               const companyElem = document.createElement('p');
               companyElem.textContent = company.textContent;
               companyElem.style.cssText = 'font-size: 12px; margin: 2px 0; color: #374151;';
               job.appendChild(companyElem);
             }
-            
+
             if (description) {
               const descElem = document.createElement('p');
               descElem.textContent = description.textContent;
               descElem.style.cssText = 'font-size: 12px; margin: 5px 0 0 0; color: #374151; white-space: pre-wrap;';
               job.appendChild(descElem);
             }
-            
+
             pdfContent.appendChild(job);
           }
         });
@@ -393,63 +371,63 @@
           const degree = edu.querySelector('h4');
           const institution = edu.querySelector('p.text-xs');
           const endDate = edu.querySelector('.text-xs.text-gray-600');
-          
+
           if (degree) {
             const eduDiv = document.createElement('div');
             eduDiv.style.cssText = 'margin-bottom: 10px;';
-            
+
             const eduLine = document.createElement('div');
             eduLine.style.cssText = 'display: flex; justify-content: space-between; align-items: baseline;';
-            
+
             const degreeElem = document.createElement('h3');
             degreeElem.textContent = degree.textContent;
             degreeElem.style.cssText = 'font-size: 12px; font-weight: bold; margin: 0; color: #111827;';
             eduLine.appendChild(degreeElem);
-            
+
             if (endDate) {
               const dateElem = document.createElement('span');
               dateElem.textContent = endDate.textContent;
               dateElem.style.cssText = 'font-size: 12px; color: #6b7280;';
               eduLine.appendChild(dateElem);
             }
-            
+
             eduDiv.appendChild(eduLine);
-            
+
             if (institution) {
               const instElem = document.createElement('p');
               instElem.textContent = institution.textContent;
               instElem.style.cssText = 'font-size: 12px; margin: 2px 0 0 0; color: #374151;';
               eduDiv.appendChild(instElem);
             }
-            
+
             pdfContent.appendChild(eduDiv);
           }
         });
       }
     });
-    
+
     // Create a temporary hidden container for PDF generation
     const tempContainer = document.createElement('div');
     tempContainer.style.cssText = 'position: absolute; left: -9999px; top: 0; width: 8.5in;';
     tempContainer.appendChild(pdfContent);
     document.body.appendChild(tempContainer);
-    
+
     // Add a small delay to ensure rendering
     setTimeout(() => {
-      generatePDFFromContent(pdfContent, tempContainer, addSectionContainer);
+      generatePDFFromContent(pdfContent, tempContainer, hiddenElements);
     }, 100);
   }
-  
-  generatePDFFromContent = window.generatePDFFromContent = function(content, container, addSectionContainer) {
-    
+
+  generatePDFFromContent = window.generatePDFFromContent = function(content, container, hiddenElements) {
+
     // Get the exact HTML from the preview
     const htmlString = content.outerHTML;
-    
+
     // Create a wrapper div with the content
     const wrapper = document.createElement('div');
     wrapper.innerHTML = htmlString;
     const pdfElement = wrapper.firstChild;
-    
+
     // Ensure it has the right styles
     pdfElement.style.width = '8.5in';
     pdfElement.style.margin = '0';
@@ -459,22 +437,22 @@
     pdfElement.style.fontFamily = 'Arial, sans-serif';
     pdfElement.style.position = 'relative';
     pdfElement.style.boxSizing = 'border-box'; // Critical: ensures padding is included within width
-    
+
     // Create a temporary container with white background
     // This must be visible for html2pdf.js to capture the content properly
     const tempContainer = document.createElement('div');
     tempContainer.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: white; z-index: 999999;';
     tempContainer.appendChild(pdfElement);
     document.body.appendChild(tempContainer);
-    
+
     const opt = {
       margin: 0,  // No margin since content already has padding
       filename: 'resume.pdf',
-      image: { 
-        type: 'jpeg', 
-        quality: 0.98 
+      image: {
+        type: 'jpeg',
+        quality: 0.98
       },
-      html2canvas: { 
+      html2canvas: {
         scale: 2,
         useCORS: true,
         logging: false,
@@ -483,37 +461,37 @@
         scrollX: 0,
         scrollY: 0
       },
-      jsPDF: { 
-        unit: 'in', 
-        format: 'letter', 
+      jsPDF: {
+        unit: 'in',
+        format: 'letter',
         orientation: 'portrait'
       },
       pagebreak: { mode: 'avoid-all' }
     };
 
-    
+
     // Small delay to ensure rendering
     setTimeout(() => {
       // Generate PDF from the element
       html2pdf().set(opt).from(pdfElement).save().then(() => {
-        
+
         // Clean up
         setTimeout(() => {
           document.body.removeChild(tempContainer);
         }, 1000);
-        
+
         // Clean up preview container if exists
         if (container && container.parentNode) {
           document.body.removeChild(container);
         }
-        
-        // Show the Add Section button again after PDF is generated
-        if (addSectionContainer) {
-          addSectionContainer.style.display = '';
+
+        // Restore hidden elements after PDF is generated
+        if (hiddenElements) {
+          AIHelpers.restoreElementsAfterPDF(hiddenElements);
         }
       }).catch(error => {
         alert('Failed to generate PDF. Please try again.');
-        
+
         // Clean up
         if (tempContainer.parentNode) {
           document.body.removeChild(tempContainer);
@@ -521,9 +499,9 @@
         if (container && container.parentNode) {
           document.body.removeChild(container);
         }
-        
-        if (addSectionContainer) {
-          addSectionContainer.style.display = '';
+
+        if (hiddenElements) {
+          AIHelpers.restoreElementsAfterPDF(hiddenElements);
         }
       });
     }, 200);
@@ -621,42 +599,14 @@ window.scrollToAIActions = function() {
 }
 
 // Section management functions
-window.deleteSection = function(button) {
-  const section = button.closest('.resume-section');
-  const sectionName = section.querySelector('h3').innerText;
-
-  // Use the shared delete modal
-  const message = document.getElementById('delete-message');
-  if (message) {
-    message.textContent = `Are you sure you want to delete the "${sectionName}" section?`;
-  }
-
-  // Store the section to delete in a way the shared modal can handle
-  window.itemToDelete = {
-    element: section,
-    type: 'resume-section'
-  };
-
-  // Show the shared delete modal
-  const modal = document.getElementById('delete-modal-shared');
-  if (modal) {
-    modal.classList.remove('hidden');
-  }
-}
-
-// Listen for client-side delete events from the shared modal
-document.addEventListener('client-delete', function(e) {
-  if (e.detail && e.detail.type === 'resume-section' && e.detail.element) {
-    e.detail.element.remove();
-  }
-});
+window.deleteSection = AIHelpers.deleteSection;
 
 window.showAddSectionModal = function() {
-  document.getElementById('add-section-modal').classList.remove('hidden');
+  AIHelpers.showModal('add-section-modal');
 }
 
 window.hideAddSectionModal = function() {
-  document.getElementById('add-section-modal').classList.add('hidden');
+  AIHelpers.hideModal('add-section-modal');
 }
 
 window.addCustomSection = function(sectionTitle) {

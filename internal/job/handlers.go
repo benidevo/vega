@@ -540,12 +540,13 @@ func (h *JobHandler) AnalyzeJobMatch(c *gin.Context) {
 		return
 	}
 
-	html, err := h.renderTemplate("partials/job_match_analysis.html", h.buildMatchAnalysisData(analysis))
+	analysisHTML, err := h.renderTemplate("partials/job_match_analysis.html", h.buildMatchAnalysisData(analysis))
 	if err != nil {
 		alerts.RenderError(c, http.StatusInternalServerError, "Error rendering analysis", alerts.ContextGeneral)
 		return
 	}
-	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
+
+	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(analysisHTML))
 }
 
 // GenerateCoverLetter handles the HTMX request to generate AI cover letter

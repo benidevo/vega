@@ -745,7 +745,7 @@ func (g *Gemini) generateCV(ctx context.Context, prompt models.Prompt, start tim
 	})
 
 	if err != nil {
-		return llm.GenerateResponse{}, WrapError(ErrCoverLetterGenFailed, err)
+		return llm.GenerateResponse{}, WrapError(ErrCVGenFailed, err)
 	}
 
 	cvResult, err := g.parseGeneratedCVJSON(result)

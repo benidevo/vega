@@ -16,6 +16,8 @@ pkg/
 *.out
 *.prof
 *.test
+coverage.filtered.out
+coverage.html
 
 # Local development files
 .env
@@ -37,6 +39,7 @@ pkg/
 /config/*.local.json
 /assets/writing_samples/personal/
 tmp/
+scripts/
 
 # Docker related
 Dockerfile

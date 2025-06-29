@@ -28,6 +28,7 @@ COPY --from=builder /build/vega .
 
 COPY --from=builder /build/templates ./templates
 COPY --from=builder /build/migrations ./migrations
+COPY --from=builder /build/static ./static
 
 RUN mkdir -p /app/data && \
     chown -R appuser:appgroup /app

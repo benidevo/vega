@@ -141,7 +141,7 @@
     }
 
     /* Prevent horizontal overflow on mobile */
-    @media (max-width: 768px) {
+    @media (max-width: 640px) {
       html, body {
         overflow-x: hidden;
         width: 100%;
@@ -152,24 +152,16 @@
       *, *::before, *::after {
         box-sizing: border-box;
       }
-      
+
       /* Only apply max-width to potentially overflowing elements */
       img, video, iframe, object, embed, table, pre {
         max-width: 100vw;
-      }
-
-      /* Force text wrapping on all text elements */
-      p, span, div, h1, h2, h3, h4, h5, h6, a, button, input, textarea, select {
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-        hyphens: auto;
       }
 
       /* Contenteditable specific rules */
       [contenteditable] {
         word-wrap: break-word;
         overflow-wrap: break-word;
-        hyphens: auto;
         max-width: 100%;
         white-space: pre-wrap;
       }
@@ -191,12 +183,6 @@
         max-width: 100%;
         height: auto;
       }
-
-      /* Force flex containers to wrap */
-      .flex {
-        flex-wrap: wrap;
-      }
-
     }
 
   </style>

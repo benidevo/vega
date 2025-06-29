@@ -24,6 +24,7 @@ var (
 
 	// Generation errors
 	ErrCoverLetterGenFailed = commonerrors.New("cover letter generation failed")
+	ErrCVGenFailed          = commonerrors.New("CV generation failed")
 	ErrMatchAnalysisFailed  = commonerrors.New("job match analysis failed")
 
 	// Technical/Infrastructure errors

@@ -75,7 +75,7 @@
           <div id="header-response"></div>
         </div>
       </div>
-      <div class="px-4 py-1.5 {{matchColors .job.MatchScore}} rounded-full text-sm font-medium">
+      <div id="match-score-badge" class="px-3 md:px-4 py-1.5 {{matchColors .job.MatchScore}} rounded-full text-xs md:text-sm font-medium whitespace-nowrap">
         {{.job.GetMatchScoreString}}
       </div>
     </div>
@@ -369,6 +369,9 @@
   display: none;
 }
 </style>
+
+<!-- Include shared AI helpers for CV and Cover Letter generation -->
+<script src="/static/js/ai-helpers.js"></script>
 
 <script>
 document.addEventListener('htmx:afterRequest', function(evt) {

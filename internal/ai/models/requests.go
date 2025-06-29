@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/benidevo/vega/internal/ai/prompts"
+	"github.com/benidevo/vega/internal/ai/security"
 )
 
 // Request represents a generic request containing information needed for AI operations.
@@ -33,6 +34,7 @@ type Prompt struct {
 	UseEnhancedTemplates bool
 	Temperature          *float32
 	promptEnhancer       *prompts.PromptEnhancer
+	sanitizer            *security.PromptSanitizer
 }
 
 // NewPrompt creates a new prompt with optional enhanced features
@@ -47,6 +49,9 @@ func NewPrompt(instructions string, request Request, useEnhanced bool) *Prompt {
 	if useEnhanced {
 		p.promptEnhancer = prompts.NewPromptEnhancer()
 	}
+
+	// Always initialize sanitizer for security
+	p.sanitizer = security.NewPromptSanitizer()
 
 	return p
 }
@@ -126,14 +131,27 @@ Return a JSON object with ONLY this field:
 		defaultWordRange)
 }
 
-// ToCVGenerationPrompt builds a CV generation prompt.
+// ToCVGenerationPrompt builds a CV generation prompt with security sanitization.
 func (p Prompt) ToCVGenerationPrompt() string {
+	// Sanitize all user inputs to prevent prompt injection
+	sanitizedInstructions := p.Instructions
+	sanitizedCVText := p.CVText
+	sanitizedJobDescription := p.JobDescription
+	sanitizedExtraContext := p.ExtraContext
+
+	if p.sanitizer != nil {
+		sanitizedInstructions = p.sanitizer.SanitizeInstructions(p.Instructions)
+		sanitizedCVText = p.sanitizer.SanitizeCVText(p.CVText)
+		sanitizedJobDescription = p.sanitizer.SanitizeJobDescription(p.JobDescription)
+		sanitizedExtraContext = p.sanitizer.SanitizeExtraContext(p.ExtraContext)
+	}
+
 	if p.UseEnhancedTemplates && p.promptEnhancer != nil {
 		return p.promptEnhancer.EnhanceCVGenerationPrompt(
-			p.Instructions,
-			p.CVText,
-			p.JobDescription,
-			p.ExtraContext,
+			sanitizedInstructions,
+			sanitizedCVText,
+			sanitizedJobDescription,
+			sanitizedExtraContext,
 		)
 	}
 
@@ -163,10 +181,10 @@ INSTRUCTIONS:
 11. Format work experience descriptions as bullet points, each starting with "• " on a new line
 
 Generate a structured CV in JSON format following the exact schema requirements.`,
-		p.Instructions,
-		p.CVText,
-		p.JobDescription,
-		p.ExtraContext)
+		sanitizedInstructions,
+		sanitizedCVText,
+		sanitizedJobDescription,
+		sanitizedExtraContext)
 }
 
 // ToMatchAnalysisPrompt builds a job match analysis prompt from this Prompt

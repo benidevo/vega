@@ -119,18 +119,10 @@
   }
 
   window.copyToClipboard = function(elementId) {
-  const element = document.getElementById(elementId);
-  const text = element.innerText;
-  navigator.clipboard.writeText(text).then(() => {
-    const button = event.target;
-    const originalText = button.innerText;
-    button.innerText = 'Copied!';
-    button.classList.add('bg-green-600');
-    setTimeout(() => {
-      button.innerText = originalText;
-      button.classList.remove('bg-green-600');
-    }, 2000);
-  });
+    const element = document.getElementById(elementId);
+    if (element) {
+      AIHelpers.copyToClipboard(element.innerText);
+    }
   }
 
   generateCoverLetterPDF = window.generateCoverLetterPDF = function() {
