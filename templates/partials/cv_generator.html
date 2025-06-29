@@ -19,6 +19,12 @@
           </button>
         </div>
       </div>
+      <p class="text-xs text-yellow-500 mb-2 text-right md:hidden">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        For best results, view on desktop
+      </p>
 
       <!-- Mobile-optimized editable Resume -->
       <div id="resume-content" class="bg-white text-gray-800 p-4 md:p-6 rounded-md text-xs leading-tight min-h-[300px] md:min-h-[400px] overflow-x-auto break-words max-w-full">
@@ -109,7 +115,7 @@
           {{end}}
         </div>
         {{end}}
-        
+
         <!-- Add Section Button -->
         <div class="mt-2 text-center print:hidden">
           <button onclick="showAddSectionModal()" class="px-3 py-1 bg-primary hover:bg-primary-dark text-white text-xs rounded-md transition-colors">
@@ -228,7 +234,7 @@ function downloadResumePDF() {
   // Hide the Add Section button before generating PDF
   const addSectionBtn = document.querySelector('button[onclick="showAddSectionModal()"]');
   const addSectionContainer = addSectionBtn ? addSectionBtn.parentElement : null;
-  
+
   if (addSectionContainer) {
     addSectionContainer.style.display = 'none';
   }
@@ -253,7 +259,7 @@ function downloadResumePDF() {
       html2canvas: { scale: 2 },
       jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
-    
+
     // Generate PDF and then restore the button
     html2pdf().set(opt).from(element).save().then(() => {
       // Show the Add Section button again after PDF is generated
@@ -266,13 +272,13 @@ function downloadResumePDF() {
 
 function editResume() {
   const content = document.getElementById('resume-content');
-  
+
   // Make all editable elements visually distinct
   content.querySelectorAll('[contenteditable="true"]').forEach(elem => {
     elem.style.border = '1px dashed #3b82f6';
     elem.style.padding = '2px';
   });
-  
+
   // Add save button
   const parent = content.parentElement;
   let saveBtn = parent.querySelector('.resume-save-btn');
@@ -359,19 +365,19 @@ function scrollToAIActions() {
 function deleteSection(button) {
   const section = button.closest('.resume-section');
   const sectionName = section.querySelector('h3').innerText;
-  
+
   // Use the shared delete modal
   const message = document.getElementById('delete-message');
   if (message) {
     message.textContent = `Are you sure you want to delete the "${sectionName}" section?`;
   }
-  
+
   // Store the section to delete in a way the shared modal can handle
   window.itemToDelete = {
     element: section,
     type: 'resume-section'
   };
-  
+
   // Show the shared delete modal
   const modal = document.getElementById('delete-modal-shared');
   if (modal) {
@@ -397,11 +403,11 @@ function hideAddSectionModal() {
 function addCustomSection(sectionTitle) {
   const resumeContent = document.getElementById('resume-content');
   const addButton = resumeContent.querySelector('button[onclick="showAddSectionModal()"]').parentElement;
-  
+
   const newSection = document.createElement('div');
   newSection.className = 'resume-section mb-3';
   newSection.setAttribute('data-section', sectionTitle.toLowerCase().replace(/\s+/g, '-'));
-  
+
   newSection.innerHTML = `
     <div class="flex justify-between items-center mb-2">
       <h3 class="text-sm md:text-base font-semibold text-gray-900 border-b border-gray-300 pb-0.5 flex-grow" contenteditable="true">${sectionTitle}</h3>
@@ -415,7 +421,7 @@ function addCustomSection(sectionTitle) {
       Click here to add content...
     </div>
   `;
-  
+
   resumeContent.insertBefore(newSection, addButton);
 }
 
@@ -486,7 +492,7 @@ function extractResumeData() {
     margin: 0;
     padding: 0;
   }
-  
+
   #resume-content {
     padding: 0.5in !important;
     margin: 0 !important;
@@ -494,60 +500,60 @@ function extractResumeData() {
     font-size: 11pt !important;
     line-height: 1.3 !important;
   }
-  
+
   .resume-section {
     margin-bottom: 0.5em !important;
   }
-  
+
   h2 {
     font-size: 18pt !important;
     margin-bottom: 2pt !important;
   }
-  
+
   h3 {
     font-size: 12pt !important;
     margin-bottom: 4pt !important;
   }
-  
+
   h4 {
     font-size: 11pt !important;
     margin-bottom: 2pt !important;
   }
-  
+
   p, div, span {
     font-size: 10pt !important;
   }
-  
+
   .text-xs {
     font-size: 10pt !important;
   }
-  
+
   .mb-2 {
     margin-bottom: 0.4em !important;
   }
-  
+
   .mb-1\.5 {
     margin-bottom: 0.3em !important;
   }
-  
+
   .mb-1 {
     margin-bottom: 0.2em !important;
   }
-  
+
   .print\\:hidden {
     display: none !important;
   }
-  
+
   /* Ensure content doesn't break across pages */
   .resume-section {
     page-break-inside: avoid;
   }
-  
+
   /* Tighter spacing for work experience */
   div[data-section="experience"] .mb-1\.5 {
     margin-bottom: 0.4em !important;
   }
-  
+
   /* Even tighter line height for descriptions */
   .whitespace-pre-wrap {
     line-height: 1.2 !important;
