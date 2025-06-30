@@ -27,12 +27,12 @@ func TestGetProfileWithRelated(t *testing.T) {
 		// Profile query
 		profileRows := sqlmock.NewRows([]string{
 			"id", "user_id", "first_name", "last_name", "title", "industry",
-			"career_summary", "skills", "phone_number", "location",
+			"career_summary", "skills", "phone_number", "email", "location",
 			"linkedin_profile", "github_profile", "website", "context",
 			"created_at", "updated_at",
 		}).AddRow(
 			profileID, userID, "John", "Doe", "Software Engineer", models.IndustryTechnology,
-			"Experienced developer", skillsJSON, "+1234567890", "New York",
+			"Experienced developer", skillsJSON, "+1234567890", "john@example.com", "New York",
 			"https://linkedin.com/in/johndoe", "https://github.com/johndoe", "https://johndoe.com",
 			"Context about John", now, now,
 		)
@@ -118,12 +118,12 @@ func TestGetProfileWithRelated(t *testing.T) {
 	t.Run("profile exists but related entities queries fail", func(t *testing.T) {
 		profileRows := sqlmock.NewRows([]string{
 			"id", "user_id", "first_name", "last_name", "title", "industry",
-			"career_summary", "skills", "phone_number", "location",
+			"career_summary", "skills", "phone_number", "email", "location",
 			"linkedin_profile", "github_profile", "website", "context",
 			"created_at", "updated_at",
 		}).AddRow(
 			profileID, userID, "John", "Doe", "Software Engineer", models.IndustryTechnology,
-			"Experienced developer", skillsJSON, "+1234567890", "New York",
+			"Experienced developer", skillsJSON, "+1234567890", "john@example.com", "New York",
 			"", "", "", "", now, now,
 		)
 
@@ -178,12 +178,12 @@ func TestCreateProfileIfNotExists(t *testing.T) {
 		skillsJSON, _ := json.Marshal([]string{"Go", "Python"})
 		existingRows := sqlmock.NewRows([]string{
 			"id", "user_id", "first_name", "last_name", "title", "industry",
-			"career_summary", "skills", "phone_number", "location",
+			"career_summary", "skills", "phone_number", "email", "location",
 			"linkedin_profile", "github_profile", "website", "context",
 			"created_at", "updated_at",
 		}).AddRow(
 			1, userID, "John", "Doe", "Software Engineer", models.IndustryTechnology,
-			"Experienced developer", skillsJSON, "+1234567890", "New York",
+			"Experienced developer", skillsJSON, "+1234567890", "john@example.com", "New York",
 			"", "", "", "", now, now,
 		)
 

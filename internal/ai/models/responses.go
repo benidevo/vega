@@ -43,6 +43,7 @@ type PersonalInfo struct {
 	Email     string `json:"email,omitempty"`
 	Phone     string `json:"phone,omitempty"`
 	Location  string `json:"location,omitempty"`
+	LinkedIn  string `json:"linkedin,omitempty"`
 	Title     string `json:"title,omitempty"`
 	Summary   string `json:"summary,omitempty"`
 }

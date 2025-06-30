@@ -85,6 +85,7 @@ type Profile struct {
 	CareerSummary   string    `json:"career_summary" db:"career_summary" sql:"type:text" validate:"max=2000"`
 	Skills          []string  `json:"skills" db:"skills" sql:"type:text" validate:"max=50,dive,required,min=1,max=100"`
 	PhoneNumber     string    `json:"phone_number" db:"phone_number" sql:"type:text" validate:"phone"`
+	Email           string    `json:"email" db:"email" sql:"type:text" validate:"omitempty,email,max=255"`
 	Location        string    `json:"location" db:"location" sql:"type:text" validate:"max=200"`
 	LinkedInProfile string    `json:"linkedin_profile" db:"linkedin_profile" sql:"type:text" validate:"omitempty,linkedin,max=500"`
 	GitHubProfile   string    `json:"github_profile" db:"github_profile" sql:"type:text" validate:"omitempty,github,max=500"`
@@ -106,6 +107,7 @@ func (p *Profile) Sanitize() {
 	p.Location = strings.TrimSpace(p.Location)
 	p.CareerSummary = strings.TrimSpace(p.CareerSummary)
 	p.PhoneNumber = strings.TrimSpace(p.PhoneNumber)
+	p.Email = strings.TrimSpace(p.Email)
 	p.LinkedInProfile = strings.TrimSpace(p.LinkedInProfile)
 	p.GitHubProfile = strings.TrimSpace(p.GitHubProfile)
 	p.Website = strings.TrimSpace(p.Website)

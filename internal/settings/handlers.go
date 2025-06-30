@@ -177,6 +177,7 @@ func (h *SettingsHandler) HandleCreateProfile(c *gin.Context) {
 	industryStr := strings.TrimSpace(c.PostForm("industry"))
 	location := strings.TrimSpace(c.PostForm("location"))
 	phoneNumber := strings.TrimSpace(c.PostForm("phone_number"))
+	email := strings.TrimSpace(c.PostForm("email"))
 	careerSummary := strings.TrimSpace(c.PostForm("career_summary"))
 	skillsStr := strings.TrimSpace(c.PostForm("skills"))
 
@@ -205,6 +206,7 @@ func (h *SettingsHandler) HandleCreateProfile(c *gin.Context) {
 	profile.Industry = industry
 	profile.Location = location
 	profile.PhoneNumber = phoneNumber
+	profile.Email = email
 	profile.CareerSummary = careerSummary
 	profile.Skills = skills
 

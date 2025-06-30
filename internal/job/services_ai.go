@@ -556,9 +556,15 @@ func (s *JobService) convertToGeneratedCV(aiResult *aimodels.GeneratedCV, userID
 
 	personalInfo := convertPersonalInfo(aiResult.PersonalInfo)
 
-	// Overwrite AI-generated phone and location with actual user data (privacy-safe: not shared with AI)
+	// Overwrite AI-generated contact info with actual user data (privacy-safe: not shared with AI)
 	if profile.PhoneNumber != "" {
 		personalInfo.Phone = profile.PhoneNumber
+	}
+	if profile.Email != "" {
+		personalInfo.Email = profile.Email
+	}
+	if profile.LinkedInProfile != "" {
+		personalInfo.LinkedIn = profile.LinkedInProfile
 	}
 	if profile.Location != "" {
 		personalInfo.Location = profile.Location
@@ -587,6 +593,7 @@ func convertPersonalInfo(ai aimodels.PersonalInfo) models.PersonalInfo {
 		Email:     ai.Email,
 		Phone:     ai.Phone,
 		Location:  ai.Location,
+		LinkedIn:  ai.LinkedIn,
 		Title:     ai.Title,
 		Summary:   ai.Summary,
 	}

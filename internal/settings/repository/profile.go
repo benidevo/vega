@@ -21,7 +21,7 @@ func NewProfileRepository(db *sql.DB) *ProfileRepository {
 func (r *ProfileRepository) GetProfile(ctx context.Context, userID int) (*models.Profile, error) {
 	query := `
 		SELECT id, user_id, first_name, last_name, title, industry,
-		       career_summary, skills, phone_number, location,
+		       career_summary, skills, phone_number, email, location,
 		       linkedin_profile, github_profile, website, context,
 		       created_at, updated_at
 		FROM profiles
@@ -33,7 +33,7 @@ func (r *ProfileRepository) GetProfile(ctx context.Context, userID int) (*models
 	err := r.db.QueryRowContext(ctx, query, userID).Scan(
 		&profile.ID, &profile.UserID, &profile.FirstName, &profile.LastName,
 		&profile.Title, &profile.Industry, &profile.CareerSummary, &skillsJSON,
-		&profile.PhoneNumber, &profile.Location, &profile.LinkedInProfile,
+		&profile.PhoneNumber, &profile.Email, &profile.Location, &profile.LinkedInProfile,
 		&profile.GitHubProfile, &profile.Website, &profile.Context,
 		&profile.CreatedAt, &profile.UpdatedAt,
 	)
@@ -147,8 +147,8 @@ func (r *ProfileRepository) UpdateProfile(ctx context.Context, profile *models.P
 	query := `
 		INSERT INTO profiles (
 			user_id, first_name, last_name, title, industry, career_summary, skills,
-			phone_number, location, linkedin_profile, github_profile, website, context, updated_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			phone_number, email, location, linkedin_profile, github_profile, website, context, updated_at
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(user_id) DO UPDATE SET
 			first_name = excluded.first_name,
 			last_name = excluded.last_name,
@@ -157,6 +157,7 @@ func (r *ProfileRepository) UpdateProfile(ctx context.Context, profile *models.P
 			career_summary = excluded.career_summary,
 			skills = excluded.skills,
 			phone_number = excluded.phone_number,
+			email = excluded.email,
 			location = excluded.location,
 			linkedin_profile = excluded.linkedin_profile,
 			github_profile = excluded.github_profile,
@@ -172,7 +173,7 @@ func (r *ProfileRepository) UpdateProfile(ctx context.Context, profile *models.P
 	err = r.db.QueryRowContext(ctx, query,
 		profile.UserID, profile.FirstName, profile.LastName, profile.Title,
 		profile.Industry, profile.CareerSummary, skillsJSON, profile.PhoneNumber,
-		profile.Location, profile.LinkedInProfile, profile.GitHubProfile,
+		profile.Email, profile.Location, profile.LinkedInProfile, profile.GitHubProfile,
 		profile.Website, profile.Context, now,
 	).Scan(&profileID, &updatedAt)
 

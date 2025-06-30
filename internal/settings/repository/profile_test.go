@@ -33,12 +33,12 @@ func TestGetProfile(t *testing.T) {
 	t.Run("profile with all related data", func(t *testing.T) {
 		rows := sqlmock.NewRows([]string{
 			"id", "user_id", "first_name", "last_name", "title", "industry",
-			"career_summary", "skills", "phone_number", "location",
+			"career_summary", "skills", "phone_number", "email", "location",
 			"linkedin_profile", "github_profile", "website", "context",
 			"created_at", "updated_at",
 		}).AddRow(
 			1, userID, "John", "Doe", "Software Engineer", models.IndustryTechnology,
-			"Experienced developer", skillsJSON, "+1234567890", "New York",
+			"Experienced developer", skillsJSON, "+1234567890", "john.doe@example.com", "New York",
 			"https://linkedin.com/in/johndoe", "https://github.com/johndoe", "https://johndoe.com",
 			"", now, now,
 		)
@@ -64,13 +64,13 @@ func TestGetProfile(t *testing.T) {
 	t.Run("profile without related data", func(t *testing.T) {
 		rows := sqlmock.NewRows([]string{
 			"id", "user_id", "first_name", "last_name", "title", "industry",
-			"career_summary", "skills", "phone_number", "location",
+			"career_summary", "skills", "phone_number", "email", "location",
 			"linkedin_profile", "github_profile", "website", "context",
 			"created_at", "updated_at",
 		}).AddRow(
 			2, userID, "Jane", "Smith", "", models.IndustryUnspecified,
 			"", []byte("[]"), "", "",
-			"", "", "", "", now, now,
+			"", "", "", "", "", now, now,
 		)
 
 		mock.ExpectQuery("SELECT(.+)FROM profiles(.+)WHERE user_id = \\?").
@@ -124,6 +124,7 @@ func TestUpdateProfile(t *testing.T) {
 		UserID:    1,
 		FirstName: "John",
 		LastName:  "Doe Updated",
+		Email:     "john.updated@example.com",
 		Skills:    []string{"Go", "Python", "Kubernetes"},
 	}
 
@@ -134,7 +135,7 @@ func TestUpdateProfile(t *testing.T) {
 			WithArgs(
 				profile.UserID, profile.FirstName, profile.LastName,
 				profile.Title, profile.Industry, profile.CareerSummary,
-				skillsJSON, profile.PhoneNumber, profile.Location,
+				skillsJSON, profile.PhoneNumber, profile.Email, profile.Location,
 				profile.LinkedInProfile, profile.GitHubProfile, profile.Website,
 				profile.Context, sqlmock.AnyArg(), // updated_at
 			).
@@ -338,13 +339,13 @@ func TestHandleNullValues(t *testing.T) {
 	t.Run("profile with null optional fields", func(t *testing.T) {
 		rows := sqlmock.NewRows([]string{
 			"id", "user_id", "first_name", "last_name", "title", "industry",
-			"career_summary", "skills", "phone_number", "location",
+			"career_summary", "skills", "phone_number", "email", "location",
 			"linkedin_profile", "github_profile", "website", "context",
 			"created_at", "updated_at",
 		}).AddRow(
 			1, 1, "John", "Doe", "", models.IndustryUnspecified,
 			"", []byte("null"), "", "",
-			"", "", "", "", now, now,
+			"", "", "", "", "", now, now,
 		)
 
 		mock.ExpectQuery("SELECT(.+)FROM profiles(.+)WHERE user_id = \\?").

@@ -83,13 +83,15 @@ func createTestJobForAI() *models.Job {
 
 func createTestProfile() *settingsmodels.Profile {
 	return &settingsmodels.Profile{
-		FirstName:     "John",
-		LastName:      "Doe",
-		Title:         "Senior Developer",
-		Industry:      settingsmodels.IndustryTechnology,
-		Location:      "San Francisco",
-		CareerSummary: "Experienced software engineer with 5+ years",
-		Skills:        []string{"Go", "Python", "JavaScript"},
+		FirstName:       "John",
+		LastName:        "Doe",
+		Email:           "john.doe@example.com",
+		Title:           "Senior Developer",
+		Industry:        settingsmodels.IndustryTechnology,
+		Location:        "San Francisco",
+		LinkedInProfile: "https://www.linkedin.com/in/johndoe",
+		CareerSummary:   "Experienced software engineer with 5+ years",
+		Skills:          []string{"Go", "Python", "JavaScript"},
 		WorkExperience: []settingsmodels.WorkExperience{
 			{
 				Title:       "Software Engineer",
@@ -292,6 +294,10 @@ func TestJobService_buildProfileSummary(t *testing.T) {
 	assert.Contains(t, summary, "Industry: Technology")
 	assert.NotContains(t, summary, "Location: San Francisco")
 	assert.NotContains(t, summary, "Phone:")
+	assert.NotContains(t, summary, "john.doe@example.com")
+	assert.NotContains(t, summary, "Email:")
+	assert.NotContains(t, summary, "linkedin.com/in/johndoe")
+	assert.NotContains(t, summary, "LinkedIn:")
 	assert.Contains(t, summary, "Career Summary:")
 	assert.Contains(t, summary, "Skills: Go, Python, JavaScript")
 	assert.Contains(t, summary, "Work Experience:")
