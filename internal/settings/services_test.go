@@ -216,6 +216,7 @@ func createTestProfile(userID int) *settingsModels.Profile {
 		UserID:    userID,
 		FirstName: "John",
 		LastName:  "Doe",
+		Email:     "john@example.com",
 		Title:     "Software Engineer",
 		Industry:  settingsModels.IndustryTechnology,
 		Skills:    []string{"Go", "Python", "JavaScript"},

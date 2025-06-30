@@ -79,6 +79,36 @@ func TestProfileValidation(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "invalid email format",
+			profile: Profile{
+				UserID:    1,
+				FirstName: "John",
+				LastName:  "Doe",
+				Email:     "invalid-email",
+			},
+			wantErr: true,
+		},
+		{
+			name: "valid email format",
+			profile: Profile{
+				UserID:    1,
+				FirstName: "John",
+				LastName:  "Doe",
+				Email:     "john.doe@example.com",
+			},
+			wantErr: false,
+		},
+		{
+			name: "empty email (should be valid)",
+			profile: Profile{
+				UserID:    1,
+				FirstName: "John",
+				LastName:  "Doe",
+				Email:     "",
+			},
+			wantErr: false,
+		},
+		{
 			name: "invalid LinkedIn URL",
 			profile: Profile{
 				UserID:          1,
@@ -170,6 +200,7 @@ func TestProfileSanitize(t *testing.T) {
 		Location:        "  New York  ",
 		CareerSummary:   "  Experienced developer  ",
 		PhoneNumber:     "  +1234567890  ",
+		Email:           "  john.doe@example.com  ",
 		LinkedInProfile: "  https://linkedin.com/in/johndoe  ",
 		GitHubProfile:   "  https://github.com/johndoe  ",
 		Website:         "  https://johndoe.com  ",
@@ -184,6 +215,7 @@ func TestProfileSanitize(t *testing.T) {
 	assert.Equal(t, "New York", profile.Location)
 	assert.Equal(t, "Experienced developer", profile.CareerSummary)
 	assert.Equal(t, "+1234567890", profile.PhoneNumber)
+	assert.Equal(t, "john.doe@example.com", profile.Email)
 	assert.Equal(t, "https://linkedin.com/in/johndoe", profile.LinkedInProfile)
 	assert.Equal(t, "https://github.com/johndoe", profile.GitHubProfile)
 	assert.Equal(t, "https://johndoe.com", profile.Website)

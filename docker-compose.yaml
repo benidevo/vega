@@ -11,7 +11,7 @@ services:
       - IS_DEVELOPMENT=true
     volumes:
       - .:/app
-      - vega-data:/app/data
+      - vega-dev-data:/app/data
     ports:
       - "8765:8765"
     healthcheck:
@@ -28,7 +28,7 @@ services:
     image: coleifer/sqlite-web:latest
     container_name: db-dashboard
     volumes:
-      - vega-data:/data
+      - vega-dev-data:/data
     command: sqlite_web -H 0.0.0.0 -p 8080 /data/vega.db
     depends_on:
       - app
@@ -43,4 +43,4 @@ networks:
 
 
 volumes:
-  vega-data:
+  vega-dev-data:
