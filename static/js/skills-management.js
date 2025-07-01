@@ -21,15 +21,22 @@ function createSkillTag(skill) {
     const container = document.getElementById('skills-tags');
     const tag = document.createElement('span');
     tag.className = 'skill-tag inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-primary bg-opacity-20 text-primary border border-primary border-opacity-30';
-    tag.innerHTML = `
-        ${skill}
-        <button type="button" class="ml-1 inline-flex items-center justify-center w-4 h-4 text-primary hover:text-red-400 focus:outline-none"
-                onclick="removeSkillTag(this)">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-        </button>
+
+    const skillText = document.createTextNode(skill);
+    tag.appendChild(skillText);
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'ml-1 inline-flex items-center justify-center w-4 h-4 text-primary hover:text-red-400 focus:outline-none';
+    button.onclick = function() { removeSkillTag(this); };
+
+    button.innerHTML = `
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
     `;
+
+    tag.appendChild(button);
     container.appendChild(tag);
 }
 

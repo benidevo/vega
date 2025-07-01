@@ -13,17 +13,17 @@
            onclick="if (!event.target.matches('select') && !event.target.closest('select')) { window.location.href = '/jobs/{{.ID}}/details'; }">
         <div class="px-4 md:px-6 py-4 md:py-5">
           <div class="flex justify-between items-start mb-2">
-            <h3 class="text-lg font-semibold text-white truncate group-hover:text-blue-300 transition-colors flex-1 min-w-0 pr-2">{{.Title}}</h3>
+            <h3 class="text-lg font-semibold text-white truncate group-hover:text-blue-300 transition-colors flex-1 min-w-0 pr-2">{{.Title | html}}</h3>
             <div class="flex-none px-2 py-1 {{matchColors .MatchScore}} rounded text-xs font-medium whitespace-nowrap">
               {{.GetMatchScoreString}}
             </div>
           </div>
-          <p class="text-gray-400 text-sm truncate mb-3">{{.Company.Name}}{{if .Location}} · {{.Location}}{{end}}</p>
+          <p class="text-gray-400 text-sm truncate mb-3">{{.Company.Name | html}}{{if .Location}} · {{.Location | html}}{{end}}</p>
           <p class="text-gray-300 text-sm mb-4 line-clamp-2 leading-relaxed">
             {{if gt (len .Description) 120}}
-              {{slice .Description 0 120}}...
+              {{slice .Description 0 120 | html}}...
             {{else}}
-              {{.Description}}
+              {{.Description | html}}
             {{end}}
           </p>
           <div class="flex justify-start">

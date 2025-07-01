@@ -34,16 +34,16 @@
       <div id="cover-letter-content" class="bg-white text-gray-800 p-4 md:p-6 rounded-md text-sm md:text-base leading-relaxed min-h-[300px] md:min-h-[400px] overflow-x-auto break-words max-w-full">
         <!-- Personal Information Header -->
         <div class="mb-4 border-b pb-3">
-          <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-1" contenteditable="true">{{.GeneratedCV.PersonalInfo.FirstName}} {{.GeneratedCV.PersonalInfo.LastName}}</h2>
-          <p class="text-sm md:text-base text-gray-700 mb-1" contenteditable="true">{{.GeneratedCV.PersonalInfo.Title}}</p>
+          <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-1" contenteditable="true">{{.GeneratedCV.PersonalInfo.FirstName | html}} {{.GeneratedCV.PersonalInfo.LastName | html}}</h2>
+          <p class="text-sm md:text-base text-gray-700 mb-1" contenteditable="true">{{.GeneratedCV.PersonalInfo.Title | html}}</p>
           <div class="text-xs text-gray-600">
-            {{if .GeneratedCV.PersonalInfo.Email}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Email}}</span> | {{end}}
-            {{if .GeneratedCV.PersonalInfo.Phone}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Phone}}</span> | {{end}}
-            {{if .GeneratedCV.PersonalInfo.Location}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Location}}</span>{{end}}
+            {{if .GeneratedCV.PersonalInfo.Email}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Email | html}}</span> | {{end}}
+            {{if .GeneratedCV.PersonalInfo.Phone}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Phone | html}}</span> | {{end}}
+            {{if .GeneratedCV.PersonalInfo.Location}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Location | html}}</span>{{end}}
           </div>
         </div>
         <!-- Cover Letter Body -->
-        <div class="whitespace-pre-wrap" contenteditable="true">{{.CoverLetter.Content}}</div>
+        <div class="whitespace-pre-wrap" contenteditable="true">{{.CoverLetter.Content | html}}</div>
       </div>
 
       <!-- Mobile editing controls -->

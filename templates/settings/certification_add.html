@@ -45,13 +45,13 @@
     <form action="/settings/profile/certification" method="post" class="space-y-6">
       <div>
         <label for="name" class="block text-sm font-medium text-gray-300 mb-2">Certification Name *</label>
-        <input type="text" id="name" name="name" required value="{{if .certification}}{{.certification.Name}}{{end}}"
+        <input type="text" id="name" name="name" required value="{{if .certification}}{{.certification.Name | html}}{{end}}"
                class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
       </div>
 
       <div>
         <label for="issuing_org" class="block text-sm font-medium text-gray-300 mb-2">Issuing Organization *</label>
-        <input type="text" id="issuing_org" name="issuing_org" required value="{{if .certification}}{{.certification.IssuingOrg}}{{end}}"
+        <input type="text" id="issuing_org" name="issuing_org" required value="{{if .certification}}{{.certification.IssuingOrg | html}}{{end}}"
                class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
       </div>
 
@@ -73,13 +73,13 @@
 
       <div>
         <label for="credential_id" class="block text-sm font-medium text-gray-300 mb-2">Credential ID</label>
-        <input type="text" id="credential_id" name="credential_id" value="{{if .certification}}{{.certification.CredentialID}}{{end}}"
+        <input type="text" id="credential_id" name="credential_id" value="{{if .certification}}{{.certification.CredentialID | html}}{{end}}"
                class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
       </div>
 
       <div>
         <label for="credential_url" class="block text-sm font-medium text-gray-300 mb-2">Credential URL</label>
-        <input type="url" id="credential_url" name="credential_url" value="{{if .certification}}{{.certification.CredentialURL}}{{end}}"
+        <input type="url" id="credential_url" name="credential_url" value="{{if .certification}}{{.certification.CredentialURL | html}}{{end}}"
                class="w-full px-4 py-2 rounded-lg bg-slate-700 bg-opacity-50 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                placeholder="https://example.com/credential">
       </div>
