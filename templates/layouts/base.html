@@ -280,6 +280,7 @@
 
   <!-- Notification Modal -->
   <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden"
+       role="alertdialog" aria-modal="true" aria-labelledby="notification-title" aria-describedby="notification-message"
        _="on keydown[key=='Escape'] from window add .hidden to me
           on click if event.target.id == 'notification-modal' add .hidden to me">
     <div class="bg-slate-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4 border border-slate-700">

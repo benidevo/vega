@@ -202,13 +202,16 @@ func (h *BaseSettingsHandler) HandleCreate(c *gin.Context) {
 
 	// Set a URL parameter to trigger scrolling after page load
 	var scrollSection string
-	switch models.EntityType(h.metadata.Name) {
+	normalizedName := strings.ToLower(h.metadata.Name)
+	switch models.EntityType(normalizedName) {
 	case models.EntityTypeExperience:
 		scrollSection = models.EntityTypeExperience.Lower()
 	case models.EntityTypeEducation:
 		scrollSection = models.EntityTypeEducation.Lower()
 	case models.EntityTypeCertification:
 		scrollSection = models.EntityTypeCertification.Lower()
+	default:
+		scrollSection = "profile" // Fallback to profile section for unmatched cases
 	}
 
 	c.Redirect(http.StatusSeeOther, "/settings/profile?scroll="+scrollSection)
