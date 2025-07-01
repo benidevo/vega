@@ -406,6 +406,16 @@
       }
     });
   </script>
+
+  <!-- Page-specific scripts -->
+  {{if eq .page "login"}}
+  <script src="/static/js/auth-validation.js"></script>
+  {{end}}
+  {{if eq .page "settings-profile"}}
+  <script src="/static/js/skills-management.js"></script>
+  <script src="/static/js/cv-upload.js"></script>
+  <script src="/static/js/profile-scroll.js"></script>
+  {{end}}
 </body>
 </html>
 {{end}}

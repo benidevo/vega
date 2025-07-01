@@ -256,10 +256,29 @@
     button.disabled = true;
 
     try {
+      // Check if jsPDF is available
+      if (typeof window.jspdf === 'undefined') {
+        throw new Error('jsPDF library not loaded. Please check your internet connection and try again.');
+      }
+
+      // Check if resume content exists
+      const resumeElement = document.getElementById('resume-content');
+      if (!resumeElement) {
+        throw new Error('Resume content not found. Please refresh the page and try again.');
+      }
+
       generateTextPDF();
     } catch (error) {
       console.error('PDF generation error:', error);
-      alert('Failed to generate PDF. Please try again.');
+
+      let errorMessage = 'Failed to generate PDF. Please try again.';
+      if (error.message.includes('jsPDF library')) {
+        errorMessage = 'PDF library failed to load. Please check your internet connection and refresh the page.';
+      } else if (error.message.includes('Resume content not found')) {
+        errorMessage = 'Resume content is missing. Please refresh the page and try again.';
+      }
+
+      alert(errorMessage);
     } finally {
       // Reset button state
       isGeneratingPDF = false;
@@ -268,7 +287,12 @@
     }
   }
 
-  generateTextPDF = window.generateTextPDF = function() {
+  generateTextPDF = window.generateTextPDF = function(skipCustomFonts = false) {
+    // Validate jsPDF is available
+    if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
+      throw new Error('jsPDF library not properly loaded');
+    }
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({
       unit: 'pt',
@@ -276,14 +300,24 @@
       orientation: 'portrait'
     });
 
-    // this will either load Inter or fall back to Helvetica
-    AIHelpers.loadCustomFonts(doc);
+    const fontFamily = 'helvetica';
 
-    // Check if Inter fonts were loaded successfully
-    const usingInterFonts = window.loadInterFonts && typeof window.loadInterFonts === 'function';
-    const fontFamily = usingInterFonts ? 'Inter' : 'helvetica';
+    // Pre-initialize font metrics with reliable standard fonts
+    try {
+      doc.setFont(fontFamily, 'normal');
+      doc.setFontSize(12);
+      // Force font metric calculation with a dummy text
+      doc.getTextWidth('Test');
+    } catch (metricError) {
+      console.error('Font initialization failed:', metricError);
+      throw new Error('PDF font system initialization failed');
+    }
 
     const element = document.getElementById('resume-content');
+    if (!element) {
+      throw new Error('Resume content element not found');
+    }
+
     const margin = 40;
     const pageWidth = doc.internal.pageSize.getWidth();
     const contentWidth = pageWidth - (2 * margin);
@@ -291,37 +325,67 @@
     const lineHeight = 14;
 
     // Set document properties for better rendering
-    doc.setProperties({
-      title: 'Resume',
-      subject: 'Professional Resume',
-      author: element.querySelector('h2')?.textContent?.trim() || 'Resume',
-      keywords: 'resume, cv, professional',
-      creator: 'Vega AI'
-    });
+    try {
+      doc.setProperties({
+        title: 'Resume',
+        subject: 'Professional Resume',
+        author: element.querySelector('h2')?.textContent?.trim() || 'Resume',
+        keywords: 'resume, cv, professional',
+        creator: 'Vega AI'
+      });
+    } catch (propError) {
+      console.warn('Failed to set document properties:', propError);
+    }
 
     // Helper function to add text with wrapping
     function addText(text, fontSize, options = {}) {
-      const { isBold = false, isItalic = false, color = [0, 0, 0], font = fontFamily } = options;
-      doc.setFontSize(fontSize);
+      try {
+        const { isBold = false, isItalic = false, color = [0, 0, 0], font = fontFamily } = options;
 
-      // Set font style
-      let fontStyle = 'normal';
-      if (isBold && isItalic) fontStyle = 'bolditalic';
-      else if (isBold) fontStyle = 'bold';
-      else if (isItalic) fontStyle = 'italic';
+        // Validate color array
+        const safeColor = Array.isArray(color) && color.length >= 3 ? color : [0, 0, 0];
 
-      doc.setFont(font, fontStyle);
-      doc.setTextColor(...color);
+        doc.setFontSize(fontSize);
 
-      const lines = doc.splitTextToSize(text, contentWidth);
-      lines.forEach(line => {
-        if (yPos > doc.internal.pageSize.getHeight() - margin) {
-          doc.addPage();
-          yPos = margin;
+        // Set font style with fallback
+        let fontStyle = 'normal';
+        if (isBold && isItalic) fontStyle = 'bolditalic';
+        else if (isBold) fontStyle = 'bold';
+        else if (isItalic) fontStyle = 'italic';
+
+        doc.setFont(font, fontStyle);
+
+        doc.setTextColor(safeColor[0], safeColor[1], safeColor[2]);
+
+        if (!text || typeof text !== 'string') {
+          return;
         }
-        doc.text(line, margin, yPos);
+
+        if (!contentWidth || contentWidth <= 0) {
+          return;
+        }
+
+        const lines = doc.splitTextToSize(text, contentWidth);
+
+        if (!Array.isArray(lines)) {
+          doc.text(text.substring(0, 100), margin, yPos);
+          yPos += fontSize * 1.4;
+          return;
+        }
+
+        lines.forEach(line => {
+          if (yPos > doc.internal.pageSize.getHeight() - margin) {
+            doc.addPage();
+            yPos = margin;
+          }
+          doc.text(line, margin, yPos);
+          yPos += fontSize * 1.4;
+        });
+      } catch (textError) {
+        // Fallback for any unexpected text processing errors
+        doc.text(text.substring(0, 50) + '...', margin, yPos);
         yPos += fontSize * 1.4;
-      });
+      }
     }
 
     // Extract personal information

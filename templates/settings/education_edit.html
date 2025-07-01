@@ -33,17 +33,16 @@
 
   <!-- Page Header -->
   <div class="mb-8">
-    <h2 class="text-2xl font-bold text-white mb-2">Edit Education</h2>
-    <p class="text-gray-400">Update your educational qualifications. This information will be visible to potential employers.</p>
+    <p class="text-gray-400">Update your education details. This information will be used to match you with opportunities.</p>
   </div>
 
   <!-- Education Form -->
   <div>
-    <form hx-post="/settings/profile/education/{{.education.ID}}" 
-          hx-target="#form-alert-container" 
+    <form hx-post="/settings/profile/education/{{.education.ID}}"
+          hx-target="#form-alert-container"
           hx-swap="innerHTML"
           class="space-y-6">
-      
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label for="institution" class="block text-sm font-medium text-gray-300 mb-2">School/Institution *</label>
@@ -92,11 +91,11 @@
 
       <!-- Form Actions -->
       <div class="flex justify-end space-x-4 pt-6 border-t border-slate-700">
-        <a href="/settings/profile?scroll=education" 
+        <a href="/settings/profile?scroll=education"
            class="px-6 py-2 border border-gray-500 rounded-lg shadow-sm text-sm font-medium text-gray-300 bg-transparent hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
-          Cancel
+          Back
         </a>
-        <button type="submit" 
+        <button type="submit"
                 class="px-6 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
           Update
         </button>

@@ -100,13 +100,6 @@
       return;
     }
 
-    // Check if the content element exists
-    const contentElement = document.getElementById('cover-letter-content');
-    if (!contentElement) {
-      alert('Error: Cover letter content not found. Please refresh the page and try again.');
-      return;
-    }
-
     // Set loading state
     isGeneratingPDF = true;
     const button = event.target;
@@ -115,10 +108,30 @@
     button.disabled = true;
 
     try {
+      // Check if jsPDF is available
+      if (typeof window.jspdf === 'undefined') {
+        throw new Error('jsPDF library not loaded. Please check your internet connection and try again.');
+      }
+
+      // Check if cover letter content exists
+      const contentElement = document.getElementById('cover-letter-content');
+      if (!contentElement) {
+        throw new Error('Cover letter content not found. Please refresh the page and try again.');
+      }
+
       generateTextCoverLetterPDF();
     } catch (error) {
       console.error('PDF generation error:', error);
-      alert('Failed to generate PDF. Please try again.');
+
+      // Simple error handling since we only use built-in fonts
+      let errorMessage = 'Failed to generate PDF. Please try again.';
+      if (error.message.includes('jsPDF library')) {
+        errorMessage = 'PDF library failed to load. Please check your internet connection and refresh the page.';
+      } else if (error.message.includes('Cover letter content not found')) {
+        errorMessage = 'Cover letter content is missing. Please refresh the page and try again.';
+      }
+
+      alert(errorMessage);
     } finally {
       // Reset button state
       isGeneratingPDF = false;
@@ -135,6 +148,11 @@
   }
 
   generateTextCoverLetterPDF = window.generateTextCoverLetterPDF = function() {
+    // Validate jsPDF is available
+    if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
+      throw new Error('jsPDF library not properly loaded');
+    }
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({
       unit: 'pt',
@@ -142,12 +160,19 @@
       orientation: 'portrait'
     });
 
-    // Load custom fonts - this will either load Inter or fall back to Helvetica
-    AIHelpers.loadCustomFonts(doc);
+    // Use modern, clean Helvetica for all text
+    const fontFamily = 'helvetica';
 
-    // Check if Inter fonts were loaded successfully
-    const usingInterFonts = window.loadInterFonts && typeof window.loadInterFonts === 'function';
-    const fontFamily = usingInterFonts ? 'Inter' : 'helvetica';
+    // Pre-initialize font metrics with reliable standard fonts
+    try {
+      doc.setFont(fontFamily, 'normal');
+      doc.setFontSize(12);
+      // Force font metric calculation with a dummy text
+      doc.getTextWidth('Test');
+    } catch (metricError) {
+      console.error('Font initialization failed:', metricError);
+      throw new Error('PDF font system initialization failed');
+    }
 
     const element = document.getElementById('cover-letter-content');
     const margin = 40; // Reduced from 50
@@ -157,30 +182,66 @@
     const lineHeight = 16; // Increased for better readability
 
     // Set document properties for better rendering
-    doc.setProperties({
-      title: 'Cover Letter',
-      subject: 'Professional Cover Letter',
-      author: element.querySelector('h2')?.textContent?.trim() || 'Cover Letter',
-      keywords: 'cover letter, job application',
-      creator: 'Vega AI'
-    });
+    try {
+      doc.setProperties({
+        title: 'Cover Letter',
+        subject: 'Professional Cover Letter',
+        author: element.querySelector('h2')?.textContent?.trim() || 'Cover Letter',
+        keywords: 'cover letter, job application',
+        creator: 'Vega AI'
+      });
+    } catch (propError) {
+      console.warn('Failed to set document properties:', propError);
+    }
 
     // Helper function to add text with wrapping
     function addText(text, fontSize, options = {}) {
-      const { isBold = false, color = [0, 0, 0], font = fontFamily } = options;
-      doc.setFontSize(fontSize);
-      doc.setFont(font, isBold ? 'bold' : 'normal');
-      doc.setTextColor(...color);
+      try {
+        const { isBold = false, isItalic = false, color = [0, 0, 0], font = fontFamily } = options;
 
-      const lines = doc.splitTextToSize(text, contentWidth);
-      lines.forEach(line => {
-        if (yPos > doc.internal.pageSize.getHeight() - margin) {
-          doc.addPage();
-          yPos = margin;
+        // Validate color array
+        const safeColor = Array.isArray(color) && color.length >= 3 ? color : [0, 0, 0];
+
+        doc.setFontSize(fontSize);
+
+        let fontStyle = 'normal';
+        if (isBold && isItalic) fontStyle = 'bolditalic';
+        else if (isBold) fontStyle = 'bold';
+        else if (isItalic) fontStyle = 'italic';
+
+        doc.setFont(font, fontStyle);
+        doc.setTextColor(safeColor[0], safeColor[1], safeColor[2]);
+
+        // Validate text and contentWidth
+        if (!text || typeof text !== 'string') {
+          return;
         }
-        doc.text(line, margin, yPos);
+
+        if (!contentWidth || contentWidth <= 0) {
+          return;
+        }
+
+        const lines = doc.splitTextToSize(text, contentWidth);
+
+        if (!Array.isArray(lines)) {
+          doc.text(text.substring(0, 100), margin, yPos);
+          yPos += fontSize * 1.5;
+          return;
+        }
+
+        lines.forEach(line => {
+          if (yPos > doc.internal.pageSize.getHeight() - margin) {
+            doc.addPage();
+            yPos = margin;
+          }
+          doc.text(line, margin, yPos);
+          yPos += fontSize * 1.5;
+        });
+      } catch (textError) {
+        // Fallback for any unexpected text processing errors
+        doc.text(text.substring(0, 50) + '...', margin, yPos);
         yPos += fontSize * 1.5;
-      });
+      }
     }
 
     // Extract header information
