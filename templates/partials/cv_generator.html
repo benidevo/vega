@@ -268,17 +268,26 @@
       }
 
       generateTextPDF();
+      
+      // Show success notification
+      if (typeof window.showNotification === 'function') {
+        window.showNotification('Your resume has been downloaded successfully!', 'success', 'Download Complete');
+      }
     } catch (error) {
       console.error('PDF generation error:', error);
 
-      let errorMessage = 'Failed to generate PDF. Please try again.';
+      let errorMessage = 'Unable to download your resume right now. Please try again in a moment.';
       if (error.message.includes('jsPDF library')) {
-        errorMessage = 'PDF library failed to load. Please check your internet connection and refresh the page.';
+        errorMessage = 'Download temporarily unavailable. Please refresh the page and try again.';
       } else if (error.message.includes('Resume content not found')) {
-        errorMessage = 'Resume content is missing. Please refresh the page and try again.';
+        errorMessage = 'Your resume content couldn\'t be found. Please refresh the page and try again.';
       }
 
-      alert(errorMessage);
+      if (typeof window.showNotification === 'function') {
+        window.showNotification(errorMessage, 'error', 'Download Failed');
+      } else {
+        alert(errorMessage);
+      }
     } finally {
       // Reset button state
       isGeneratingPDF = false;

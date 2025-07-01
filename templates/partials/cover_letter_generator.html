@@ -120,18 +120,25 @@
       }
 
       generateTextCoverLetterPDF();
+
+      if (typeof window.showNotification === 'function') {
+        window.showNotification('Your cover letter has been downloaded successfully!', 'success', 'Download Complete');
+      }
     } catch (error) {
       console.error('PDF generation error:', error);
 
-      // Simple error handling since we only use built-in fonts
-      let errorMessage = 'Failed to generate PDF. Please try again.';
+      let errorMessage = 'Unable to download your cover letter right now. Please try again in a moment.';
       if (error.message.includes('jsPDF library')) {
-        errorMessage = 'PDF library failed to load. Please check your internet connection and refresh the page.';
+        errorMessage = 'Download temporarily unavailable. Please refresh the page and try again.';
       } else if (error.message.includes('Cover letter content not found')) {
-        errorMessage = 'Cover letter content is missing. Please refresh the page and try again.';
+        errorMessage = 'Your cover letter content couldn\'t be found. Please refresh the page and try again.';
       }
 
-      alert(errorMessage);
+      if (typeof window.showNotification === 'function') {
+        window.showNotification(errorMessage, 'error', 'Download Failed');
+      } else {
+        alert(errorMessage);
+      }
     } finally {
       // Reset button state
       isGeneratingPDF = false;
