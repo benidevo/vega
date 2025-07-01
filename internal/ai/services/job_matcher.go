@@ -69,7 +69,7 @@ func (j *JobMatcherService) AnalyzeMatch(ctx context.Context, req models.Request
 
 	j.validateMatchResult(&result)
 
-	metadata := j.helper.CreateOperationMetadata(prompt.GetOptimalTemperature("job_match"), prompt.UseEnhancedTemplates, map[string]interface{}{
+	metadata := j.helper.CreateOperationMetadata(prompt.GetOptimalTemperature(models.TaskTypeJobAnalysis.String()), prompt.UseEnhancedTemplates, map[string]interface{}{
 		"match_score":      result.MatchScore,
 		"strengths_count":  len(result.Strengths),
 		"weaknesses_count": len(result.Weaknesses),

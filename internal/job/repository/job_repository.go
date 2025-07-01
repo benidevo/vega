@@ -13,6 +13,11 @@ import (
 	"github.com/benidevo/vega/internal/job/models"
 )
 
+// scanner interface abstracts the common Scan method from *sql.Row and *sql.Rows
+type scanner interface {
+	Scan(dest ...any) error
+}
+
 // SQLiteJobRepository is a SQLite implementation of JobRepository
 type SQLiteJobRepository struct {
 	db                *sql.DB
@@ -34,6 +39,54 @@ func validateJob(jobModel *models.Job) error {
 	}
 
 	return jobModel.Validate()
+}
+
+// scanJob scans a job from any scanner (row or rows) and converts it to a Job model
+func (r *SQLiteJobRepository) scanJob(s scanner) (*models.Job, error) {
+	var j models.Job
+	var company models.Company
+	var skillsJSON string
+	var jobType, status int
+	var matchScore sql.NullInt64
+	var notes, sourceURL, applicationURL, location sql.NullString
+
+	err := s.Scan(
+		&j.ID, &j.Title, &j.Description, &location, &jobType,
+		&sourceURL, &skillsJSON,
+		&applicationURL, &company.ID, &status, &matchScore,
+		&notes, &j.CreatedAt, &j.UpdatedAt,
+		&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	if location.Valid {
+		j.Location = location.String
+	}
+	if sourceURL.Valid {
+		j.SourceURL = sourceURL.String
+	}
+	if applicationURL.Valid {
+		j.ApplicationURL = applicationURL.String
+	}
+	if notes.Valid {
+		j.Notes = notes.String
+	}
+	if matchScore.Valid {
+		score := int(matchScore.Int64)
+		j.MatchScore = &score
+	}
+
+	if err := json.Unmarshal([]byte(skillsJSON), &j.RequiredSkills); err != nil {
+		j.RequiredSkills = []string{}
+	}
+
+	j.JobType = models.JobType(jobType)
+	j.Status = models.JobStatus(status)
+	j.Company = company
+
+	return &j, nil
 }
 
 // GetOrCreate retrieves a job by its SourceURL or creates it if it does not exist.
@@ -79,21 +132,7 @@ func (r *SQLiteJobRepository) GetBySourceURL(ctx context.Context, sourceURL stri
 
 	row := r.db.QueryRowContext(ctx, query, sourceURL)
 
-	var j models.Job
-	var company models.Company
-	var skillsJSON string
-	var jobType, status int
-	var matchScore sql.NullInt64
-	var notes, jobSourceURL, applicationURL, location sql.NullString
-
-	err := row.Scan(
-		&j.ID, &j.Title, &j.Description, &location, &jobType,
-		&jobSourceURL, &skillsJSON,
-		&applicationURL, &company.ID, &status, &matchScore,
-		&notes, &j.CreatedAt, &j.UpdatedAt,
-		&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt,
-	)
-
+	job, err := r.scanJob(row)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, models.ErrJobNotFound
@@ -101,32 +140,7 @@ func (r *SQLiteJobRepository) GetBySourceURL(ctx context.Context, sourceURL stri
 		return nil, models.WrapError(models.ErrFailedToGetJob, err)
 	}
 
-	if location.Valid {
-		j.Location = location.String
-	}
-	if jobSourceURL.Valid {
-		j.SourceURL = jobSourceURL.String
-	}
-	if applicationURL.Valid {
-		j.ApplicationURL = applicationURL.String
-	}
-	if notes.Valid {
-		j.Notes = notes.String
-	}
-	if matchScore.Valid {
-		score := int(matchScore.Int64)
-		j.MatchScore = &score
-	}
-
-	if err := json.Unmarshal([]byte(skillsJSON), &j.RequiredSkills); err != nil {
-		j.RequiredSkills = []string{}
-	}
-
-	j.JobType = models.JobType(jobType)
-	j.Status = models.JobStatus(status)
-	j.Company = company
-
-	return &j, nil
+	return job, nil
 }
 
 // Create inserts a new job into the database
@@ -230,21 +244,7 @@ func (r *SQLiteJobRepository) GetByID(ctx context.Context, id int) (*models.Job,
 
 	row := r.db.QueryRowContext(ctx, query, id)
 
-	var j models.Job
-	var company models.Company
-	var skillsJSON string
-	var jobType, status int
-	var matchScore sql.NullInt64
-	var notes, sourceURL, applicationURL, location sql.NullString
-
-	err := row.Scan(
-		&j.ID, &j.Title, &j.Description, &location, &jobType,
-		&sourceURL, &skillsJSON,
-		&applicationURL, &company.ID, &status, &matchScore,
-		&notes, &j.CreatedAt, &j.UpdatedAt,
-		&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt,
-	)
-
+	job, err := r.scanJob(row)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, models.ErrJobNotFound
@@ -255,33 +255,7 @@ func (r *SQLiteJobRepository) GetByID(ctx context.Context, id int) (*models.Job,
 		}
 	}
 
-	if location.Valid {
-		j.Location = location.String
-	}
-	if sourceURL.Valid {
-		j.SourceURL = sourceURL.String
-	}
-	if applicationURL.Valid {
-		j.ApplicationURL = applicationURL.String
-	}
-	if notes.Valid {
-		j.Notes = notes.String
-	}
-	if matchScore.Valid {
-		score := int(matchScore.Int64)
-		j.MatchScore = &score
-	}
-
-	if err := json.Unmarshal([]byte(skillsJSON), &j.RequiredSkills); err != nil {
-		j.RequiredSkills = []string{}
-	}
-
-	j.JobType = models.JobType(jobType)
-	j.Status = models.JobStatus(status)
-
-	j.Company = company
-
-	return &j, nil
+	return job, nil
 }
 
 // GetAll retrieves all jobs with optional filtering
@@ -354,52 +328,11 @@ func (r *SQLiteJobRepository) GetAll(ctx context.Context, filter models.JobFilte
 	var jobs []*models.Job
 
 	for rows.Next() {
-		var j models.Job
-		var company models.Company
-		var skillsJSON string
-		var jobType, status int
-		var matchScore sql.NullInt64
-		var notes, sourceURL, applicationURL, location sql.NullString
-
-		err := rows.Scan(
-			&j.ID, &j.Title, &j.Description, &location, &jobType,
-			&sourceURL, &skillsJSON,
-			&applicationURL, &company.ID, &status, &matchScore,
-			&notes, &j.CreatedAt, &j.UpdatedAt,
-			&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt,
-		)
-
+		job, err := r.scanJob(rows)
 		if err != nil {
 			return nil, err
 		}
-
-		if location.Valid {
-			j.Location = location.String
-		}
-		if sourceURL.Valid {
-			j.SourceURL = sourceURL.String
-		}
-		if applicationURL.Valid {
-			j.ApplicationURL = applicationURL.String
-		}
-		if notes.Valid {
-			j.Notes = notes.String
-		}
-		if matchScore.Valid {
-			score := int(matchScore.Int64)
-			j.MatchScore = &score
-		}
-
-		if err := json.Unmarshal([]byte(skillsJSON), &j.RequiredSkills); err != nil {
-			j.RequiredSkills = []string{}
-		}
-
-		j.JobType = models.JobType(jobType)
-		j.Status = models.JobStatus(status)
-
-		j.Company = company
-
-		jobs = append(jobs, &j)
+		jobs = append(jobs, job)
 	}
 
 	if err := rows.Err(); err != nil {

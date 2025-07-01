@@ -7,6 +7,22 @@ import (
 	"github.com/benidevo/vega/internal/ai/security"
 )
 
+// AITaskType represents the type of AI task being performed
+type AITaskType string
+
+const (
+	TaskTypeCVParsing    AITaskType = "cv_parsing"
+	TaskTypeJobAnalysis  AITaskType = "job_analysis"
+	TaskTypeMatchResult  AITaskType = "match_result"
+	TaskTypeCoverLetter  AITaskType = "cover_letter"
+	TaskTypeCVGeneration AITaskType = "cv_generation"
+)
+
+// String returns the string representation of the AITaskType
+func (t AITaskType) String() string {
+	return string(t)
+}
+
 // Request represents a generic request containing information needed for AI operations.
 type Request struct {
 	ApplicantName    string
@@ -62,6 +78,7 @@ func NewCVParsingPrompt(cvText string) *Prompt {
 		Instructions:         "Parse CV and extract structured information",
 		CVText:               cvText,
 		UseEnhancedTemplates: false,
+		sanitizer:            security.NewPromptSanitizer(), // Always initialize sanitizer for security
 	}
 }
 
@@ -77,10 +94,10 @@ func (p *Prompt) GetOptimalTemperature(promptType string) float32 {
 	}
 
 	// Dynamic temperature based on task type
-	switch promptType {
-	case "cover_letter":
+	switch AITaskType(promptType) {
+	case TaskTypeCoverLetter:
 		return 0.65 // Higher creativity for writing
-	case "job_match":
+	case TaskTypeJobAnalysis:
 		return 0.2 // Lower for analytical consistency
 	default:
 		return 0.4 // Default balanced temperature
@@ -89,13 +106,27 @@ func (p *Prompt) GetOptimalTemperature(promptType string) float32 {
 
 // ToCoverLetterPrompt builds a cover letter generation prompt.
 func (p Prompt) ToCoverLetterPrompt(defaultWordRange string) string {
+	sanitizedInstructions := p.Instructions
+	sanitizedApplicantName := p.ApplicantName
+	sanitizedJobDescription := p.JobDescription
+	sanitizedApplicantProfile := p.ApplicantProfile
+	sanitizedExtraContext := p.ExtraContext
+
+	if p.sanitizer != nil {
+		sanitizedInstructions = p.sanitizer.SanitizeInstructions(p.Instructions)
+		sanitizedApplicantName = p.sanitizer.SanitizeText(p.ApplicantName)
+		sanitizedJobDescription = p.sanitizer.SanitizeJobDescription(p.JobDescription)
+		sanitizedApplicantProfile = p.sanitizer.SanitizeText(p.ApplicantProfile)
+		sanitizedExtraContext = p.sanitizer.SanitizeExtraContext(p.ExtraContext)
+	}
+
 	if p.UseEnhancedTemplates && p.promptEnhancer != nil {
 		return p.promptEnhancer.EnhanceCoverLetterPrompt(
-			p.Instructions,
-			p.ApplicantName,
-			p.JobDescription,
-			p.ApplicantProfile,
-			p.ExtraContext,
+			sanitizedInstructions,
+			sanitizedApplicantName,
+			sanitizedJobDescription,
+			sanitizedApplicantProfile,
+			sanitizedExtraContext,
 			defaultWordRange,
 		)
 	}
@@ -123,11 +154,11 @@ Requirements:
 
 Return a JSON object with ONLY this field:
 - content: the complete cover letter text (properly formatted with \n for line breaks)`,
-		p.Instructions,
-		p.ApplicantName,
-		p.JobDescription,
-		p.ApplicantProfile,
-		p.ExtraContext,
+		sanitizedInstructions,
+		sanitizedApplicantName,
+		sanitizedJobDescription,
+		sanitizedApplicantProfile,
+		sanitizedExtraContext,
 		defaultWordRange)
 }
 
@@ -189,13 +220,27 @@ Generate a structured CV in JSON format following the exact schema requirements.
 
 // ToMatchAnalysisPrompt builds a job match analysis prompt from this Prompt
 func (p Prompt) ToMatchAnalysisPrompt(minMatchScore, maxMatchScore int) string {
+	sanitizedInstructions := p.Instructions
+	sanitizedApplicantName := p.ApplicantName
+	sanitizedJobDescription := p.JobDescription
+	sanitizedApplicantProfile := p.ApplicantProfile
+	sanitizedExtraContext := p.ExtraContext
+
+	if p.sanitizer != nil {
+		sanitizedInstructions = p.sanitizer.SanitizeInstructions(p.Instructions)
+		sanitizedApplicantName = p.sanitizer.SanitizeText(p.ApplicantName)
+		sanitizedJobDescription = p.sanitizer.SanitizeJobDescription(p.JobDescription)
+		sanitizedApplicantProfile = p.sanitizer.SanitizeText(p.ApplicantProfile)
+		sanitizedExtraContext = p.sanitizer.SanitizeExtraContext(p.ExtraContext)
+	}
+
 	if p.UseEnhancedTemplates && p.promptEnhancer != nil {
 		return p.promptEnhancer.EnhanceJobMatchPrompt(
-			p.Instructions,
-			p.ApplicantName,
-			p.JobDescription,
-			p.ApplicantProfile,
-			p.ExtraContext,
+			sanitizedInstructions,
+			sanitizedApplicantName,
+			sanitizedJobDescription,
+			sanitizedApplicantProfile,
+			sanitizedExtraContext,
 			minMatchScore,
 			maxMatchScore,
 		)
@@ -208,8 +253,16 @@ func (p Prompt) ToMatchAnalysisPrompt(minMatchScore, maxMatchScore int) string {
 			if i >= 3 { // Limit to 3 previous matches
 				break
 			}
+			jobTitle := match.JobTitle
+			company := match.Company
+			keyInsights := match.KeyInsights
+			if p.sanitizer != nil {
+				jobTitle = p.sanitizer.SanitizeText(match.JobTitle)
+				company = p.sanitizer.SanitizeText(match.Company)
+				keyInsights = p.sanitizer.SanitizeText(match.KeyInsights)
+			}
 			previousMatchContext += fmt.Sprintf("- %s at %s (%d days ago): Score %d/100. %s\n",
-				match.JobTitle, match.Company, match.DaysAgo, match.MatchScore, match.KeyInsights)
+				jobTitle, company, match.DaysAgo, match.MatchScore, keyInsights)
 		}
 		previousMatchContext += "\nNote: These are for minor context only - base your score on the CURRENT profile content, not historical scores.\n"
 	}
@@ -248,10 +301,10 @@ Return the analysis as a JSON object with EXACTLY this structure:
 - weaknesses: array of 2-4 areas for improvement or skill gaps
 - highlights: array of 3-5 standout qualifications that make this candidate attractive
 - feedback: overall assessment and recommendations in 2-3 sentences (do NOT include the applicant's name)`,
-		p.Instructions,
-		p.JobDescription,
-		p.ApplicantProfile,
-		p.ExtraContext,
+		sanitizedInstructions,
+		sanitizedJobDescription,
+		sanitizedApplicantProfile,
+		sanitizedExtraContext,
 		previousMatchContext,
 		minMatchScore,
 		maxMatchScore,
