@@ -27,46 +27,7 @@
             hx-indicator="#spinner"
             class="relative z-10"
             aria-label="Login form"
-            _="on submit
-                 set username to #username.value
-                 set password to #password.value
-                 
-                 if username is '' or username.length < 3 or username.length > 50
-                   if username is ''
-                     set message to 'Username is required'
-                   else if username.length < 3
-                     set message to 'Username must be at least 3 characters long'
-                   else
-                     set message to 'Username must be no more than 50 characters long'
-                   end
-                   
-                   put message into #client-error-message
-                   remove .hidden from #client-error
-                   add .hidden to #form-response
-                   call #username.focus()
-                   halt the event
-                 end
-                 
-                 if password is '' or password.length < 8 or password.length > 64
-                   if password is ''
-                     set message to 'Password is required'
-                   else if password.length < 8
-                     set message to 'Password must be at least 8 characters long'
-                   else
-                     set message to 'Password must be no more than 64 characters long'
-                   end
-                   
-                   put message into #client-error-message
-                   remove .hidden from #client-error
-                   add .hidden to #form-response
-                   call #password.focus()
-                   halt the event
-                 end
-                 
-                 add .hidden to #client-error
-               
-               on htmx:afterRequest
-                 add .hidden to #client-error">
+            onsubmit="return validateLoginForm(event)">
         <div class="space-y-4 sm:space-y-5 lg:space-y-6">
           <!-- Username field with premium styling -->
           <div class="group">
@@ -114,25 +75,12 @@
                      class="w-full pl-10 sm:pl-11 pr-4 py-3 sm:py-4 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-base min-h-[48px]"
                      placeholder="Enter your password"
                      autocomplete="current-password"
-                     _="on input
-                          set password to my.value
-                          if password is not '' and (password.length < 8 or password.length > 64)
-                            if password.length < 8
-                              set message to 'Password must be at least 8 characters long'
-                            else
-                              set message to 'Password must be no more than 64 characters long'
-                            end
-                            put message into #client-error-message
-                            remove .hidden from #client-error
-                            add .hidden to #form-response
-                          else
-                            add .hidden to #client-error
-                          end">
+>
             </div>
           </div>
 
           <!-- Client-side validation error -->
-          <div id="client-error" class="hidden text-center text-sm bg-red-900 bg-opacity-50 text-white rounded-lg border border-red-800 p-3">
+          <div id="client-error" class="hidden text-center text-sm bg-red-900 bg-opacity-50 text-white rounded-lg border border-red-800 p-3" aria-live="polite">
             <div class="flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

@@ -30,13 +30,13 @@
       <div id="resume-content" class="bg-white text-gray-800 p-4 md:p-6 rounded-md text-xs leading-tight min-h-[300px] md:min-h-[400px] overflow-x-auto break-words max-w-full">
         <!-- Personal Information -->
         <div class="mb-2">
-          <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-0" contenteditable="true">{{.GeneratedCV.PersonalInfo.FirstName}} {{.GeneratedCV.PersonalInfo.LastName}}</h2>
-          <p class="text-sm md:text-base text-gray-700 mb-0.5" contenteditable="true">{{.GeneratedCV.PersonalInfo.Title}}</p>
+          <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-0" contenteditable="true">{{.GeneratedCV.PersonalInfo.FirstName | html}} {{.GeneratedCV.PersonalInfo.LastName | html}}</h2>
+          <p class="text-sm md:text-base text-gray-700 mb-0.5" contenteditable="true">{{.GeneratedCV.PersonalInfo.Title | html}}</p>
           <div class="text-xs text-gray-600">
-            {{if .GeneratedCV.PersonalInfo.Email}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Email}}</span> | {{end}}
-            {{if .GeneratedCV.PersonalInfo.Phone}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Phone}}</span> | {{end}}
-            {{if .GeneratedCV.PersonalInfo.LinkedIn}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.LinkedIn}}</span> | {{end}}
-            {{if .GeneratedCV.PersonalInfo.Location}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Location}}</span>{{end}}
+            {{if .GeneratedCV.PersonalInfo.Email}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Email | html}}</span> | {{end}}
+            {{if .GeneratedCV.PersonalInfo.Phone}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Phone | html}}</span> | {{end}}
+            {{if .GeneratedCV.PersonalInfo.LinkedIn}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.LinkedIn | html}}</span> | {{end}}
+            {{if .GeneratedCV.PersonalInfo.Location}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Location | html}}</span>{{end}}
           </div>
         </div>
 
@@ -51,7 +51,7 @@
               </svg>
             </button>
           </div>
-          <p class="text-xs text-gray-700 leading-relaxed" contenteditable="true">{{.GeneratedCV.PersonalInfo.Summary}}</p>
+          <p class="text-xs text-gray-700 leading-relaxed" contenteditable="true">{{.GeneratedCV.PersonalInfo.Summary | html}}</p>
         </div>
         {{end}}
 
@@ -65,7 +65,7 @@
               </svg>
             </button>
           </div>
-          <div id="skills-container" class="text-xs text-gray-700 leading-relaxed" contenteditable="true">{{range $i, $skill := .GeneratedCV.Skills}}{{if $i}}, {{end}}{{$skill}}{{end}}</div>
+          <div id="skills-container" class="text-xs text-gray-700 leading-relaxed" contenteditable="true">{{range $i, $skill := .GeneratedCV.Skills}}{{if $i}}, {{end}}{{$skill | html}}{{end}}</div>
         </div>
 
         <!-- Work Experience -->
@@ -83,12 +83,12 @@
           <div class="mb-1.5">
             <div class="flex justify-between items-start">
               <div>
-                <h4 class="text-xs font-semibold text-gray-900 inline" contenteditable="true">{{.Title}}</h4>
+                <h4 class="text-xs font-semibold text-gray-900 inline" contenteditable="true">{{.Title | html}}</h4>
               </div>
               <span class="text-xs text-gray-600 flex-shrink-0 ml-2" contenteditable="true">{{.StartDate}} - {{.EndDate}}</span>
             </div>
-            <p class="text-xs text-gray-700" contenteditable="true">{{.Company}}{{if .Location}} – <span class="italic text-gray-600">{{.Location}}</span>{{end}}</p>
-            <div class="text-xs text-gray-700 whitespace-pre-wrap mt-0.5 leading-relaxed" contenteditable="true">{{.Description}}</div>
+            <p class="text-xs text-gray-700" contenteditable="true">{{.Company | html}}{{if .Location}} – <span class="italic text-gray-600">{{.Location | html}}</span>{{end}}</p>
+            <div class="text-xs text-gray-700 whitespace-pre-wrap mt-0.5 leading-relaxed" contenteditable="true">{{.Description | html}}</div>
           </div>
           {{end}}
         </div>
@@ -256,10 +256,38 @@
     button.disabled = true;
 
     try {
+      // Check if jsPDF is available
+      if (typeof window.jspdf === 'undefined') {
+        throw new Error('jsPDF library not loaded. Please check your internet connection and try again.');
+      }
+
+      // Check if resume content exists
+      const resumeElement = document.getElementById('resume-content');
+      if (!resumeElement) {
+        throw new Error('Resume content not found. Please refresh the page and try again.');
+      }
+
       generateTextPDF();
+      
+      // Show success notification
+      if (typeof window.showNotification === 'function') {
+        window.showNotification('Your resume has been downloaded successfully!', 'success', 'Download Complete');
+      }
     } catch (error) {
       console.error('PDF generation error:', error);
-      alert('Failed to generate PDF. Please try again.');
+
+      let errorMessage = 'Unable to download your resume right now. Please try again in a moment.';
+      if (error.message.includes('jsPDF library')) {
+        errorMessage = 'Download temporarily unavailable. Please refresh the page and try again.';
+      } else if (error.message.includes('Resume content not found')) {
+        errorMessage = 'Your resume content couldn\'t be found. Please refresh the page and try again.';
+      }
+
+      if (typeof window.showNotification === 'function') {
+        window.showNotification(errorMessage, 'error', 'Download Failed');
+      } else {
+        alert(errorMessage);
+      }
     } finally {
       // Reset button state
       isGeneratingPDF = false;
@@ -268,7 +296,12 @@
     }
   }
 
-  generateTextPDF = window.generateTextPDF = function() {
+  generateTextPDF = window.generateTextPDF = function(skipCustomFonts = false) {
+    // Validate jsPDF is available
+    if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
+      throw new Error('jsPDF library not properly loaded');
+    }
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({
       unit: 'pt',
@@ -276,14 +309,24 @@
       orientation: 'portrait'
     });
 
-    // this will either load Inter or fall back to Helvetica
-    AIHelpers.loadCustomFonts(doc);
+    const fontFamily = 'helvetica';
 
-    // Check if Inter fonts were loaded successfully
-    const usingInterFonts = window.loadInterFonts && typeof window.loadInterFonts === 'function';
-    const fontFamily = usingInterFonts ? 'Inter' : 'helvetica';
+    // Pre-initialize font metrics with reliable standard fonts
+    try {
+      doc.setFont(fontFamily, 'normal');
+      doc.setFontSize(12);
+      // Force font metric calculation with a dummy text
+      doc.getTextWidth('Test');
+    } catch (metricError) {
+      console.error('Font initialization failed:', metricError);
+      throw new Error('PDF font system initialization failed');
+    }
 
     const element = document.getElementById('resume-content');
+    if (!element) {
+      throw new Error('Resume content element not found');
+    }
+
     const margin = 40;
     const pageWidth = doc.internal.pageSize.getWidth();
     const contentWidth = pageWidth - (2 * margin);
@@ -291,37 +334,67 @@
     const lineHeight = 14;
 
     // Set document properties for better rendering
-    doc.setProperties({
-      title: 'Resume',
-      subject: 'Professional Resume',
-      author: element.querySelector('h2')?.textContent?.trim() || 'Resume',
-      keywords: 'resume, cv, professional',
-      creator: 'Vega AI'
-    });
+    try {
+      doc.setProperties({
+        title: 'Resume',
+        subject: 'Professional Resume',
+        author: element.querySelector('h2')?.textContent?.trim() || 'Resume',
+        keywords: 'resume, cv, professional',
+        creator: 'Vega AI'
+      });
+    } catch (propError) {
+      console.warn('Failed to set document properties:', propError);
+    }
 
     // Helper function to add text with wrapping
     function addText(text, fontSize, options = {}) {
-      const { isBold = false, isItalic = false, color = [0, 0, 0], font = fontFamily } = options;
-      doc.setFontSize(fontSize);
+      try {
+        const { isBold = false, isItalic = false, color = [0, 0, 0], font = fontFamily } = options;
 
-      // Set font style
-      let fontStyle = 'normal';
-      if (isBold && isItalic) fontStyle = 'bolditalic';
-      else if (isBold) fontStyle = 'bold';
-      else if (isItalic) fontStyle = 'italic';
+        // Validate color array
+        const safeColor = Array.isArray(color) && color.length >= 3 ? color : [0, 0, 0];
 
-      doc.setFont(font, fontStyle);
-      doc.setTextColor(...color);
+        doc.setFontSize(fontSize);
 
-      const lines = doc.splitTextToSize(text, contentWidth);
-      lines.forEach(line => {
-        if (yPos > doc.internal.pageSize.getHeight() - margin) {
-          doc.addPage();
-          yPos = margin;
+        // Set font style with fallback
+        let fontStyle = 'normal';
+        if (isBold && isItalic) fontStyle = 'bolditalic';
+        else if (isBold) fontStyle = 'bold';
+        else if (isItalic) fontStyle = 'italic';
+
+        doc.setFont(font, fontStyle);
+
+        doc.setTextColor(safeColor[0], safeColor[1], safeColor[2]);
+
+        if (!text || typeof text !== 'string') {
+          return;
         }
-        doc.text(line, margin, yPos);
+
+        if (!contentWidth || contentWidth <= 0) {
+          return;
+        }
+
+        const lines = doc.splitTextToSize(text, contentWidth);
+
+        if (!Array.isArray(lines)) {
+          doc.text(text.substring(0, 100), margin, yPos);
+          yPos += fontSize * 1.4;
+          return;
+        }
+
+        lines.forEach(line => {
+          if (yPos > doc.internal.pageSize.getHeight() - margin) {
+            doc.addPage();
+            yPos = margin;
+          }
+          doc.text(line, margin, yPos);
+          yPos += fontSize * 1.4;
+        });
+      } catch (textError) {
+        // Fallback for any unexpected text processing errors
+        doc.text(text.substring(0, 50) + '...', margin, yPos);
         yPos += fontSize * 1.4;
-      });
+      }
     }
 
     // Extract personal information

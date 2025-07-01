@@ -7,6 +7,25 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+// EntityType represents the type of profile entity
+type EntityType string
+
+const (
+	EntityTypeExperience    EntityType = "Experience"
+	EntityTypeEducation     EntityType = "Education"
+	EntityTypeCertification EntityType = "Certification"
+)
+
+// String returns the string representation of the EntityType
+func (et EntityType) String() string {
+	return string(et)
+}
+
+// Lower returns the lowercase representation of the EntityType
+func (et EntityType) Lower() string {
+	return strings.ToLower(string(et))
+}
+
 // Validator instance
 var validate *validator.Validate
 

@@ -1,6 +1,9 @@
 package gemini
 
-import "github.com/benidevo/vega/internal/config"
+import (
+	"github.com/benidevo/vega/internal/ai/models"
+	"github.com/benidevo/vega/internal/config"
+)
 
 // Config holds the configuration for the Gemini LLM client.
 type Config struct {
@@ -91,20 +94,20 @@ func NewConfig(cfg *config.Settings) *Config {
 
 // GetModelForTask returns the appropriate model for the given task type
 func (c *Config) GetModelForTask(taskType string) string {
-	switch taskType {
-	case "cv_parsing":
+	switch models.AITaskType(taskType) {
+	case models.TaskTypeCVParsing:
 		if c.ModelCVParsing != "" {
 			return c.ModelCVParsing
 		}
-	case "job_analysis", "match_result":
+	case models.TaskTypeJobAnalysis, models.TaskTypeMatchResult:
 		if c.ModelJobAnalysis != "" {
 			return c.ModelJobAnalysis
 		}
-	case "cover_letter":
+	case models.TaskTypeCoverLetter:
 		if c.ModelCoverLetter != "" {
 			return c.ModelCoverLetter
 		}
-	case "cv_generation":
+	case models.TaskTypeCVGeneration:
 		if c.ModelCoverLetter != "" {
 			return c.ModelCoverLetter
 		}

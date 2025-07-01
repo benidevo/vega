@@ -62,10 +62,10 @@ func (g *Gemini) Generate(ctx context.Context, request llm.GenerateRequest) (llm
 func (g *Gemini) generateCoverLetter(ctx context.Context, prompt models.Prompt, start time.Time) (llm.GenerateResponse, error) {
 	coverLetterPrompt := prompt.ToCoverLetterPrompt(g.cfg.DefaultWordRange)
 
-	temperature := prompt.GetOptimalTemperature("cover_letter")
+	temperature := prompt.GetOptimalTemperature(models.TaskTypeCoverLetter.String())
 
 	result, err := g.executeWithRetry(ctx, func() (string, error) {
-		model := g.cfg.GetModelForTask("cover_letter")
+		model := g.cfg.GetModelForTask(models.TaskTypeCoverLetter.String())
 		resp, err := g.client.Models.GenerateContent(ctx, model, genai.Text(coverLetterPrompt), &genai.GenerateContentConfig{
 			Temperature:       &temperature,
 			ResponseMIMEType:  g.cfg.ResponseMIMEType,
@@ -114,8 +114,8 @@ func (g *Gemini) generateCoverLetter(ctx context.Context, prompt models.Prompt, 
 		Metadata: map[string]interface{}{
 			"temperature": temperature,
 			"enhanced":    prompt.UseEnhancedTemplates,
-			"model":       g.cfg.GetModelForTask("cover_letter"),
-			"task_type":   "cover_letter",
+			"model":       g.cfg.GetModelForTask(models.TaskTypeCoverLetter.String()),
+			"task_type":   models.TaskTypeCoverLetter.String(),
 		},
 	}, nil
 }
@@ -124,10 +124,10 @@ func (g *Gemini) generateCoverLetter(ctx context.Context, prompt models.Prompt, 
 func (g *Gemini) generateMatchResult(ctx context.Context, prompt models.Prompt, start time.Time) (llm.GenerateResponse, error) {
 	matchPrompt := prompt.ToMatchAnalysisPrompt(g.cfg.MinMatchScore, g.cfg.MaxMatchScore)
 
-	temperature := prompt.GetOptimalTemperature("job_match")
+	temperature := prompt.GetOptimalTemperature(models.TaskTypeJobAnalysis.String())
 
 	result, err := g.executeWithRetry(ctx, func() (string, error) {
-		model := g.cfg.GetModelForTask("job_analysis")
+		model := g.cfg.GetModelForTask(models.TaskTypeJobAnalysis.String())
 		resp, err := g.client.Models.GenerateContent(ctx, model, genai.Text(matchPrompt), &genai.GenerateContentConfig{
 			Temperature:       &temperature,
 			ResponseMIMEType:  g.cfg.ResponseMIMEType,
@@ -176,8 +176,8 @@ func (g *Gemini) generateMatchResult(ctx context.Context, prompt models.Prompt, 
 		Metadata: map[string]interface{}{
 			"temperature": temperature,
 			"enhanced":    prompt.UseEnhancedTemplates,
-			"model":       g.cfg.GetModelForTask("job_analysis"),
-			"task_type":   "job_analysis",
+			"model":       g.cfg.GetModelForTask(models.TaskTypeJobAnalysis.String()),
+			"task_type":   models.TaskTypeJobAnalysis.String(),
 		},
 	}, nil
 }
@@ -189,7 +189,7 @@ func (g *Gemini) parseCVContent(ctx context.Context, prompt models.Prompt, start
 	temperature := float32(0.1) // low temperature for consistent parsing
 
 	result, err := g.executeWithRetry(ctx, func() (string, error) {
-		model := g.cfg.GetModelForTask("cv_parsing")
+		model := g.cfg.GetModelForTask(models.TaskTypeCVParsing.String())
 		resp, err := g.client.Models.GenerateContent(ctx, model, genai.Text(cvPrompt), &genai.GenerateContentConfig{
 			Temperature:       &temperature,
 			ResponseMIMEType:  g.cfg.ResponseMIMEType,
@@ -237,8 +237,8 @@ func (g *Gemini) parseCVContent(ctx context.Context, prompt models.Prompt, start
 		Tokens:   0,
 		Metadata: map[string]any{
 			"temperature": temperature,
-			"model":       g.cfg.GetModelForTask("cv_parsing"),
-			"task_type":   "cv_parsing",
+			"model":       g.cfg.GetModelForTask(models.TaskTypeCVParsing.String()),
+			"task_type":   models.TaskTypeCVParsing.String(),
 			"method":      "gemini_cv_parsing",
 		},
 	}, nil
@@ -711,7 +711,7 @@ func (g *Gemini) generateCV(ctx context.Context, prompt models.Prompt, start tim
 	temperature := float32(0.3)
 
 	result, err := g.executeWithRetry(ctx, func() (string, error) {
-		model := g.cfg.GetModelForTask("cv_generation")
+		model := g.cfg.GetModelForTask(models.TaskTypeCVGeneration.String())
 		resp, err := g.client.Models.GenerateContent(ctx, model, genai.Text(cvPrompt), &genai.GenerateContentConfig{
 			Temperature:       &temperature,
 			ResponseMIMEType:  g.cfg.ResponseMIMEType,
@@ -760,8 +760,8 @@ func (g *Gemini) generateCV(ctx context.Context, prompt models.Prompt, start tim
 		Metadata: map[string]any{
 			"temperature": temperature,
 			"enhanced":    prompt.UseEnhancedTemplates,
-			"model":       g.cfg.GetModelForTask("cv_generation"),
-			"task_type":   "cv_generation",
+			"model":       g.cfg.GetModelForTask(models.TaskTypeCVGeneration.String()),
+			"task_type":   models.TaskTypeCVGeneration.String(),
 			"method":      "gemini_cv_generation",
 		},
 	}, nil
