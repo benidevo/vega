@@ -677,3 +677,19 @@ func (r *ProfileRepository) DeleteCertification(ctx context.Context, id int) err
 
 	return nil
 }
+
+// DeleteAllWorkExperience deletes all work experience entries for a profile
+func (r *ProfileRepository) DeleteAllWorkExperience(ctx context.Context, profileID int) error {
+	query := "DELETE FROM work_experiences WHERE profile_id = ?"
+
+	_, err := r.db.ExecContext(ctx, query, profileID)
+	return err
+}
+
+// DeleteAllEducation deletes all education entries for a profile
+func (r *ProfileRepository) DeleteAllEducation(ctx context.Context, profileID int) error {
+	query := "DELETE FROM education WHERE profile_id = ?"
+
+	_, err := r.db.ExecContext(ctx, query, profileID)
+	return err
+}

@@ -364,3 +364,111 @@ func TestHandleNullValues(t *testing.T) {
 		require.NoError(t, mock.ExpectationsWereMet())
 	})
 }
+
+func TestDeleteAllWorkExperience(t *testing.T) {
+	ctx := context.Background()
+	db, mock := setupMockDB(t)
+	repo := NewProfileRepository(db)
+
+	t.Run("successful deletion", func(t *testing.T) {
+		profileID := 1
+		mock.ExpectExec("DELETE FROM work_experiences WHERE profile_id = \\?").
+			WithArgs(profileID).
+			WillReturnResult(sqlmock.NewResult(0, 3)) // 3 rows affected
+
+		err := repo.DeleteAllWorkExperience(ctx, profileID)
+		require.NoError(t, err)
+		require.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("no rows to delete", func(t *testing.T) {
+		profileID := 2
+		mock.ExpectExec("DELETE FROM work_experiences WHERE profile_id = \\?").
+			WithArgs(profileID).
+			WillReturnResult(sqlmock.NewResult(0, 0)) // 0 rows affected
+
+		err := repo.DeleteAllWorkExperience(ctx, profileID)
+		require.NoError(t, err) // Should not error even if no rows deleted
+		require.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("database error", func(t *testing.T) {
+		profileID := 3
+		mock.ExpectExec("DELETE FROM work_experiences WHERE profile_id = \\?").
+			WithArgs(profileID).
+			WillReturnError(errors.New("database error"))
+
+		err := repo.DeleteAllWorkExperience(ctx, profileID)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "database error")
+		require.NoError(t, mock.ExpectationsWereMet())
+	})
+}
+
+func TestDeleteAllEducation(t *testing.T) {
+	ctx := context.Background()
+	db, mock := setupMockDB(t)
+	repo := NewProfileRepository(db)
+
+	t.Run("successful deletion", func(t *testing.T) {
+		profileID := 1
+		mock.ExpectExec("DELETE FROM education WHERE profile_id = \\?").
+			WithArgs(profileID).
+			WillReturnResult(sqlmock.NewResult(0, 2)) // 2 rows affected
+
+		err := repo.DeleteAllEducation(ctx, profileID)
+		require.NoError(t, err)
+		require.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("no rows to delete", func(t *testing.T) {
+		profileID := 2
+		mock.ExpectExec("DELETE FROM education WHERE profile_id = \\?").
+			WithArgs(profileID).
+			WillReturnResult(sqlmock.NewResult(0, 0)) // 0 rows affected
+
+		err := repo.DeleteAllEducation(ctx, profileID)
+		require.NoError(t, err) // Should not error even if no rows deleted
+		require.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("database error", func(t *testing.T) {
+		profileID := 3
+		mock.ExpectExec("DELETE FROM education WHERE profile_id = \\?").
+			WithArgs(profileID).
+			WillReturnError(errors.New("database error"))
+
+		err := repo.DeleteAllEducation(ctx, profileID)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "database error")
+		require.NoError(t, mock.ExpectationsWereMet())
+	})
+}
+
+func TestUtilityFunctions(t *testing.T) {
+	t.Run("toNullTime with nil", func(t *testing.T) {
+		result := toNullTime(nil)
+		assert.False(t, result.Valid)
+	})
+
+	t.Run("toNullTime with time", func(t *testing.T) {
+		now := time.Now()
+		result := toNullTime(&now)
+		assert.True(t, result.Valid)
+		assert.Equal(t, now, result.Time)
+	})
+
+	t.Run("fromNullTime invalid", func(t *testing.T) {
+		nullTime := sql.NullTime{Valid: false}
+		result := fromNullTime(nullTime)
+		assert.Nil(t, result)
+	})
+
+	t.Run("fromNullTime valid", func(t *testing.T) {
+		now := time.Now()
+		nullTime := sql.NullTime{Time: now, Valid: true}
+		result := fromNullTime(nullTime)
+		assert.NotNil(t, result)
+		assert.Equal(t, now, *result)
+	})
+}

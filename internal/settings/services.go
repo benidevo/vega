@@ -255,6 +255,26 @@ func (s *SettingsService) GetConfig() *config.Settings {
 	return s.cfg
 }
 
+// DeleteAllWorkExperience deletes all work experience entries for a profile
+func (s *SettingsService) DeleteAllWorkExperience(ctx context.Context, profileID int) error {
+	if err := s.settingsRepo.DeleteAllWorkExperience(ctx, profileID); err != nil {
+		s.log.Error().Err(err).Int("profile_id", profileID).Msg("Failed to delete all work experience")
+		return err
+	}
+	s.log.Info().Int("profile_id", profileID).Msg("Successfully deleted all work experience")
+	return nil
+}
+
+// DeleteAllEducation deletes all education entries for a profile
+func (s *SettingsService) DeleteAllEducation(ctx context.Context, profileID int) error {
+	if err := s.settingsRepo.DeleteAllEducation(ctx, profileID); err != nil {
+		s.log.Error().Err(err).Int("profile_id", profileID).Msg("Failed to delete all education")
+		return err
+	}
+	s.log.Info().Int("profile_id", profileID).Msg("Successfully deleted all education")
+	return nil
+}
+
 // validateEntity validates an entity based on its type
 func (s *SettingsService) validateEntity(entity CRUDEntity) error {
 	switch e := entity.(type) {

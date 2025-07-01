@@ -141,6 +141,16 @@ func (m *MockProfileRepository) DeleteCertification(ctx context.Context, id int)
 	return args.Error(0)
 }
 
+func (m *MockProfileRepository) DeleteAllWorkExperience(ctx context.Context, profileID int) error {
+	args := m.Called(ctx, profileID)
+	return args.Error(0)
+}
+
+func (m *MockProfileRepository) DeleteAllEducation(ctx context.Context, profileID int) error {
+	args := m.Called(ctx, profileID)
+	return args.Error(0)
+}
+
 // MockUserRepository mocks the user repository
 type MockUserRepository struct {
 	mock.Mock
@@ -358,4 +368,54 @@ func TestSanitizationInService(t *testing.T) {
 		mockProfileRepo.AssertExpectations(t)
 	})
 
+}
+
+func TestDeleteAllWorkExperience(t *testing.T) {
+	ctx := context.Background()
+	service, mockProfileRepo, _ := setupTestService()
+
+	t.Run("successful deletion", func(t *testing.T) {
+		profileID := 1
+		mockProfileRepo.On("DeleteAllWorkExperience", ctx, profileID).Return(nil).Once()
+
+		err := service.DeleteAllWorkExperience(ctx, profileID)
+		require.NoError(t, err)
+		mockProfileRepo.AssertExpectations(t)
+	})
+
+	t.Run("repository error", func(t *testing.T) {
+		profileID := 1
+		repoErr := errors.New("database error")
+		mockProfileRepo.On("DeleteAllWorkExperience", ctx, profileID).Return(repoErr).Once()
+
+		err := service.DeleteAllWorkExperience(ctx, profileID)
+		assert.Error(t, err)
+		assert.Equal(t, repoErr, err)
+		mockProfileRepo.AssertExpectations(t)
+	})
+}
+
+func TestDeleteAllEducation(t *testing.T) {
+	ctx := context.Background()
+	service, mockProfileRepo, _ := setupTestService()
+
+	t.Run("successful deletion", func(t *testing.T) {
+		profileID := 1
+		mockProfileRepo.On("DeleteAllEducation", ctx, profileID).Return(nil).Once()
+
+		err := service.DeleteAllEducation(ctx, profileID)
+		require.NoError(t, err)
+		mockProfileRepo.AssertExpectations(t)
+	})
+
+	t.Run("repository error", func(t *testing.T) {
+		profileID := 1
+		repoErr := errors.New("database error")
+		mockProfileRepo.On("DeleteAllEducation", ctx, profileID).Return(repoErr).Once()
+
+		err := service.DeleteAllEducation(ctx, profileID)
+		assert.Error(t, err)
+		assert.Equal(t, repoErr, err)
+		mockProfileRepo.AssertExpectations(t)
+	})
 }

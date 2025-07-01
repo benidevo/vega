@@ -19,9 +19,6 @@ func RegisterRoutes(settingsGroup *gin.RouterGroup, handler *SettingsHandler) {
 	// Security settings
 	settingsGroup.GET("/security", handler.GetSecuritySettingsPage)
 
-	// Notification settings
-	settingsGroup.GET("/notifications", handler.GetNotificationSettingsPage)
-
 	// Experience routes
 	settingsGroup.GET("/profile/experience/new", handler.GetAddExperiencePage)
 	settingsGroup.GET("/profile/experience/:id/edit", handler.GetEditExperiencePage)

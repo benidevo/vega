@@ -353,7 +353,6 @@ func (h *SettingsHandler) HandleCVUpload(c *gin.Context) {
 		profile = &models.Profile{UserID: userID}
 	}
 
-	// Update profile fields with AI-parsed data
 	if cvResult.PersonalInfo.FirstName != "" {
 		profile.FirstName = cvResult.PersonalInfo.FirstName
 	}
@@ -383,39 +382,49 @@ func (h *SettingsHandler) HandleCVUpload(c *gin.Context) {
 		return
 	}
 
-	// Process and save work experience from AI-parsed data
-	for i, aiExp := range cvResult.WorkExperience {
-		exp := h.convertAIWorkExperienceToModel(aiExp, profile.ID)
-		if err := h.service.CreateEntity(c, &exp); err != nil {
-			h.service.log.Error().Err(err).
-				Int("experience_index", i).
-				Str("company", exp.Company).
-				Str("title", exp.Title).
-				Msg("Failed to save work experience from AI-parsed CV")
-			// Continue processing other experiences even if one fails
-		} else {
-			h.service.log.Info().
-				Str("company", exp.Company).
-				Str("title", exp.Title).
-				Msg("Successfully saved work experience from AI-parsed CV")
+	// Replace work experience only if CV contains experience data
+	if len(cvResult.WorkExperience) > 0 {
+		if err := h.service.DeleteAllWorkExperience(c.Request.Context(), profile.ID); err != nil {
+			h.service.log.Error().Err(err).Msg("Failed to clear existing work experience")
+		}
+
+		for i, aiExp := range cvResult.WorkExperience {
+			exp := h.convertAIWorkExperienceToModel(aiExp, profile.ID)
+			if err := h.service.CreateEntity(c, &exp); err != nil {
+				h.service.log.Error().Err(err).
+					Int("experience_index", i).
+					Str("company", exp.Company).
+					Str("title", exp.Title).
+					Msg("Failed to save work experience from AI-parsed CV")
+			} else {
+				h.service.log.Info().
+					Str("company", exp.Company).
+					Str("title", exp.Title).
+					Msg("Successfully saved work experience from AI-parsed CV")
+			}
 		}
 	}
 
-	// Process and save education from AI-parsed data
-	for i, aiEdu := range cvResult.Education {
-		edu := h.convertAIEducationToModel(aiEdu, profile.ID)
-		if err := h.service.CreateEntity(c, &edu); err != nil {
-			h.service.log.Error().Err(err).
-				Int("education_index", i).
-				Str("institution", edu.Institution).
-				Str("degree", edu.Degree).
-				Msg("Failed to save education from AI-parsed CV")
-			// Continue processing other education entries even if one fails
-		} else {
-			h.service.log.Info().
-				Str("institution", edu.Institution).
-				Str("degree", edu.Degree).
-				Msg("Successfully saved education from AI-parsed CV")
+	// Replace education only if CV contains education data
+	if len(cvResult.Education) > 0 {
+		if err := h.service.DeleteAllEducation(c.Request.Context(), profile.ID); err != nil {
+			h.service.log.Error().Err(err).Msg("Failed to clear existing education")
+		}
+
+		for i, aiEdu := range cvResult.Education {
+			edu := h.convertAIEducationToModel(aiEdu, profile.ID)
+			if err := h.service.CreateEntity(c, &edu); err != nil {
+				h.service.log.Error().Err(err).
+					Int("education_index", i).
+					Str("institution", edu.Institution).
+					Str("degree", edu.Degree).
+					Msg("Failed to save education from AI-parsed CV")
+			} else {
+				h.service.log.Info().
+					Str("institution", edu.Institution).
+					Str("degree", edu.Degree).
+					Msg("Successfully saved education from AI-parsed CV")
+			}
 		}
 	}
 
@@ -523,22 +532,6 @@ func (h *SettingsHandler) GetSecuritySettingsPage(c *gin.Context) {
 		"currentYear":    time.Now().Year(),
 		"username":       username,
 		"security":       security,
-	})
-}
-
-// GetNotificationSettings handles the request to display the notification settings page
-func (h *SettingsHandler) GetNotificationSettingsPage(c *gin.Context) {
-	username, _ := c.Get("username")
-
-	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-		"title":               "Notifications",
-		"page":                "settings-notifications",
-		"activeNav":           "notifications",
-		"activeSettings":      "notifications",
-		"pageTitle":           "Notifications",
-		"currentYear":         time.Now().Year(),
-		"securityPageEnabled": h.service.cfg.SecurityPageEnabled,
-		"username":            username,
 	})
 }
 
