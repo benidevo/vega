@@ -132,7 +132,7 @@
               {{end}}
             </div>
             <div class="flex gap-2">
-              <input type="text" id="skills-input" placeholder="Add a skill and press Enter"
+              <input type="text" id="skills-input" placeholder="Type to search skills or add custom..."
                      class="flex-1 px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-sm"
                      onkeydown="if(event.key==='Enter'){event.preventDefault();addSkill();}">
               <button type="button" class="px-3 py-2 bg-slate-600 hover:bg-slate-500 text-white text-sm rounded-md transition-colors"
@@ -140,6 +140,7 @@
                 Add
               </button>
             </div>
+            <p class="text-xs text-gray-400 mt-1">Start typing to see skill suggestions or add your own custom skills</p>
             <textarea id="skills" name="skills" class="hidden">{{range $index, $skill := .profile.Skills}}{{if $index}}, {{end}}{{$skill}}{{end}}</textarea>
           </div>
         </div>
