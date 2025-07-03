@@ -226,8 +226,10 @@ func (s *JobService) GenerateCoverLetter(ctx context.Context, userID, jobID int)
 		FirstName: profile.FirstName,
 		LastName:  profile.LastName,
 		Title:     profile.Title,
+		Email:     profile.Email,
 		Phone:     profile.PhoneNumber,
 		Location:  profile.Location,
+		LinkedIn:  profile.LinkedInProfile,
 	}
 
 	result := &models.CoverLetterWithProfile{
@@ -322,7 +324,7 @@ func (s *JobService) buildProfileSummary(profile *settingsmodels.Profile) string
 
 			endDate := "Present"
 			if exp.EndDate != nil {
-				endDate = exp.EndDate.Format("2006")
+				endDate = exp.EndDate.Format("January 2006")
 			}
 
 			location := ""
@@ -330,7 +332,7 @@ func (s *JobService) buildProfileSummary(profile *settingsmodels.Profile) string
 				location = fmt.Sprintf(", %s", exp.Location)
 			}
 			summary.WriteString(fmt.Sprintf("- %s at %s%s (%s - %s)\n",
-				exp.Title, exp.Company, location, exp.StartDate.Format("2006"), endDate))
+				exp.Title, exp.Company, location, exp.StartDate.Format("January 2006"), endDate))
 
 			if exp.Description != "" {
 				desc := exp.Description
@@ -355,7 +357,7 @@ func (s *JobService) buildProfileSummary(profile *settingsmodels.Profile) string
 			}
 
 			summary.WriteString(fmt.Sprintf("- %s%s from %s (%s)\n",
-				edu.Degree, fieldOfStudy, edu.Institution, edu.StartDate.Format("2006")))
+				edu.Degree, fieldOfStudy, edu.Institution, edu.StartDate.Format("January 2006")))
 		}
 	}
 
@@ -364,7 +366,7 @@ func (s *JobService) buildProfileSummary(profile *settingsmodels.Profile) string
 		for _, cert := range profile.Certifications {
 
 			summary.WriteString(fmt.Sprintf("- %s from %s (%s)\n",
-				cert.Name, cert.IssuingOrg, cert.IssueDate.Format("2006")))
+				cert.Name, cert.IssuingOrg, cert.IssueDate.Format("January 2006")))
 		}
 	}
 
