@@ -272,6 +272,12 @@ func (s *JobService) buildAIRequest(job *models.Job, profile *settingsmodels.Pro
 		ApplicantProfile: profileSummary,
 		JobDescription:   jobDescription,
 		ExtraContext:     experienceContext,
+
+		WorkExperience:  profile.WorkExperience,
+		Education:       profile.Education,
+		Certifications:  profile.Certifications,
+		Skills:          profile.Skills,
+		YearsExperience: int(totalYears),
 	}
 }
 
@@ -291,6 +297,11 @@ func (s *JobService) buildProfileSummary(profile *settingsmodels.Profile) string
 		summary.WriteString(fmt.Sprintf("Industry: %s\n", profile.Industry.String()))
 	}
 
+	totalYears := s.calculateTotalExperience(profile.WorkExperience)
+	if totalYears > 0 {
+		summary.WriteString(fmt.Sprintf("Total Years of Experience: %.1f years\n", totalYears))
+	}
+
 	if profile.CareerSummary != "" {
 		summary.WriteString(fmt.Sprintf("\nCareer Summary:\n%s\n", profile.CareerSummary))
 	}
@@ -307,10 +318,7 @@ func (s *JobService) buildProfileSummary(profile *settingsmodels.Profile) string
 
 	if len(profile.WorkExperience) > 0 {
 		summary.WriteString("\nWork Experience:\n")
-		for i, exp := range profile.WorkExperience {
-			if i >= 5 { // Limit to most recent 5 experiences
-				break
-			}
+		for _, exp := range profile.WorkExperience {
 
 			endDate := "Present"
 			if exp.EndDate != nil {
@@ -325,11 +333,7 @@ func (s *JobService) buildProfileSummary(profile *settingsmodels.Profile) string
 				exp.Title, exp.Company, location, exp.StartDate.Format("2006"), endDate))
 
 			if exp.Description != "" {
-				// Truncate long descriptions
 				desc := exp.Description
-				if len(desc) > 200 {
-					desc = desc[:200] + "..."
-				}
 				summary.WriteString(fmt.Sprintf("  %s\n", desc))
 			}
 		}
@@ -343,10 +347,7 @@ func (s *JobService) buildProfileSummary(profile *settingsmodels.Profile) string
 	}
 	if len(validEducation) > 0 {
 		summary.WriteString("\nEducation:\n")
-		for i, edu := range validEducation {
-			if i >= 3 { // Limit to most recent 3 education entries
-				break
-			}
+		for _, edu := range validEducation {
 
 			fieldOfStudy := ""
 			if strings.TrimSpace(edu.FieldOfStudy) != "" {
@@ -360,10 +361,7 @@ func (s *JobService) buildProfileSummary(profile *settingsmodels.Profile) string
 
 	if len(profile.Certifications) > 0 {
 		summary.WriteString("\nCertifications:\n")
-		for i, cert := range profile.Certifications {
-			if i >= 5 { // Limit to most recent 5 certifications
-				break
-			}
+		for _, cert := range profile.Certifications {
 
 			summary.WriteString(fmt.Sprintf("- %s from %s (%s)\n",
 				cert.Name, cert.IssuingOrg, cert.IssueDate.Format("2006")))
@@ -378,12 +376,19 @@ func (s *JobService) buildProfileSummary(profile *settingsmodels.Profile) string
 }
 
 // calculateTotalExperience calculates the total years of work experience from work history
+// This function properly handles overlapping employment periods
 func (s *JobService) calculateTotalExperience(workExperience []settingsmodels.WorkExperience) float64 {
 	if len(workExperience) == 0 {
 		return 0
 	}
 
-	var totalDays float64
+	// Create time periods for each job
+	type TimePeriod struct {
+		Start time.Time
+		End   time.Time
+	}
+
+	var periods []TimePeriod
 	now := time.Now()
 
 	for _, exp := range workExperience {
@@ -393,11 +398,51 @@ func (s *JobService) calculateTotalExperience(workExperience []settingsmodels.Wo
 			endDate = *exp.EndDate
 		}
 
-		// Calculate duration in days and add to total
 		if !startDate.IsZero() && endDate.After(startDate) {
-			duration := endDate.Sub(startDate)
-			totalDays += duration.Hours() / 24
+			periods = append(periods, TimePeriod{
+				Start: startDate,
+				End:   endDate,
+			})
 		}
+	}
+
+	if len(periods) == 0 {
+		return 0
+	}
+
+	// Sort periods by start date
+	for i := 0; i < len(periods); i++ {
+		for j := i + 1; j < len(periods); j++ {
+			if periods[i].Start.After(periods[j].Start) {
+				periods[i], periods[j] = periods[j], periods[i]
+			}
+		}
+	}
+
+	var merged []TimePeriod
+	current := periods[0]
+
+	for i := 1; i < len(periods); i++ {
+		period := periods[i]
+
+		if current.End.After(period.Start) || current.End.Equal(period.Start) {
+			// Extend current period to include the overlapping period
+			if period.End.After(current.End) {
+				current.End = period.End
+			}
+		} else {
+			// No overlap, add current period and start new one
+			merged = append(merged, current)
+			current = period
+		}
+	}
+
+	merged = append(merged, current)
+
+	var totalDays float64
+	for _, period := range merged {
+		duration := period.End.Sub(period.Start)
+		totalDays += duration.Hours() / 24
 	}
 
 	totalYears := totalDays / 365.25

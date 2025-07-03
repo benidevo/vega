@@ -5,6 +5,7 @@ import (
 
 	"github.com/benidevo/vega/internal/ai/prompts"
 	"github.com/benidevo/vega/internal/ai/security"
+	settingsmodels "github.com/benidevo/vega/internal/settings/models"
 )
 
 // AITaskType represents the type of AI task being performed
@@ -31,6 +32,12 @@ type Request struct {
 	ExtraContext     string
 	PreviousMatches  []PreviousMatch
 	CVText           string
+
+	WorkExperience  []settingsmodels.WorkExperience `json:"work_experience,omitempty"`
+	Education       []settingsmodels.Education      `json:"education,omitempty"`
+	Certifications  []settingsmodels.Certification  `json:"certifications,omitempty"`
+	Skills          []string                        `json:"skills,omitempty"`
+	YearsExperience int                             `json:"years_experience,omitempty"`
 }
 
 // PreviousMatch represents a summary of a previous match result for context
