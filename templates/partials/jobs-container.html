@@ -9,7 +9,7 @@
   {{if and .jobs (gt (len .jobs) 0)}}
   <div class="grid gap-3 md:gap-4 {{if lt (len .jobs) 3}}grid-cols-1 sm:grid-cols-2{{else}}grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4{{end}}">
       {{range .jobs}}
-      <div class="bg-slate-800 rounded-lg shadow-lg overflow-hidden hover:bg-slate-700 transition-colors cursor-pointer group" 
+      <div class="bg-slate-800 rounded-lg shadow-lg overflow-hidden hover:bg-slate-700 transition-colors cursor-pointer group"
            onclick="if (!event.target.matches('select') && !event.target.closest('select')) { window.location.href = '/jobs/{{.ID}}/details'; }">
         <div class="px-4 md:px-6 py-4 md:py-5">
           <div class="flex justify-between items-start mb-2">
@@ -37,7 +37,7 @@
   </div>
   {{else}}
       <div class="text-center py-8">
-        <p class="text-gray-400">No jobs found. <a href="/jobs/new" class="text-primary hover:text-teal-400">Add your first job</a>.</p>
+        <p class="text-gray-400">No jobs found.</p>
       </div>
   {{end}}
 </div>

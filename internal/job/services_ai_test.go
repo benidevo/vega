@@ -455,6 +455,31 @@ func TestJobService_calculateTotalExperience(t *testing.T) {
 			expectedYears: 5.0, // approximately 5 years total
 			description:   "Multiple jobs should sum their durations",
 		},
+		{
+			name: "overlapping work periods",
+			workExperience: []settingsmodels.WorkExperience{
+				{
+					Title:     "Senior Developer",
+					Company:   "Tech Company A",
+					StartDate: time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC),
+					EndDate:   &[]time.Time{time.Date(2025, 7, 1, 0, 0, 0, 0, time.UTC)}[0],
+				},
+				{
+					Title:     "Systems Engineer",
+					Company:   "Tech Company B",
+					StartDate: time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
+					EndDate:   &[]time.Time{time.Date(2023, 12, 31, 0, 0, 0, 0, time.UTC)}[0],
+				},
+				{
+					Title:     "Junior Developer",
+					Company:   "Tech Company C",
+					StartDate: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+					EndDate:   &[]time.Time{time.Date(2021, 12, 31, 0, 0, 0, 0, time.UTC)}[0],
+				},
+			},
+			expectedYears: 5.5, // From Jan 2020 to July 2025 = 5.5 years
+			description:   "Overlapping periods should not double-count time",
+		},
 	}
 
 	for _, tt := range tests {

@@ -109,6 +109,9 @@ func JobMatchTemplate() *PromptTemplate {
 // EnhanceJobMatchPrompt enhances a job matching prompt
 func EnhanceJobMatchPrompt(systemInstruction, applicantName, jobDescription, applicantProfile, extraContext string, minScore, maxScore int) string {
 	template := JobMatchTemplate()
+
+	template.Constraints = append(template.Constraints, JobMatchAntiAIConstraints()...)
+
 	params := map[string]any{
 		"useChainOfThought": true,
 		"minScore":          minScore,

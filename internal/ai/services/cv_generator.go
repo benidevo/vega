@@ -45,12 +45,15 @@ func (c *CVGeneratorService) GenerateCV(ctx context.Context, req models.Request,
 		return nil, c.helper.LogValidationError("cv_generation", req.ApplicantName, err)
 	}
 
-	// Use enhanced prompting by default with temperature 0.3 for balanced creativity/accuracy
+	// Use enhanced prompting by default with optimal temperature for CV generation
 	prompt := models.NewPrompt(
 		"You are a professional career advisor and expert CV writer.",
 		req,
 		true,
 	)
+
+	optimalTemp := prompt.GetOptimalTemperature(string(models.TaskTypeCVGeneration))
+	prompt.SetTemperature(optimalTemp)
 
 	response, err := c.model.Generate(ctx, llm.GenerateRequest{
 		Prompt:       *prompt,
@@ -90,7 +93,7 @@ func (c *CVGeneratorService) GenerateCV(ctx context.Context, req models.Request,
 		JobTitle:        jobTitle,
 	}
 
-	metadata := c.helper.CreateOperationMetadata(0.3, prompt.UseEnhancedTemplates, map[string]interface{}{
+	metadata := c.helper.CreateOperationMetadata(optimalTemp, prompt.UseEnhancedTemplates, map[string]interface{}{
 		"job_id":                jobID,
 		"job_title":             jobTitle,
 		"work_experience_count": len(result.WorkExperience),

@@ -5,6 +5,7 @@ import (
 
 	"github.com/benidevo/vega/internal/ai/prompts"
 	"github.com/benidevo/vega/internal/ai/security"
+	settingsmodels "github.com/benidevo/vega/internal/settings/models"
 )
 
 // AITaskType represents the type of AI task being performed
@@ -31,6 +32,12 @@ type Request struct {
 	ExtraContext     string
 	PreviousMatches  []PreviousMatch
 	CVText           string
+
+	WorkExperience  []settingsmodels.WorkExperience `json:"work_experience,omitempty"`
+	Education       []settingsmodels.Education      `json:"education,omitempty"`
+	Certifications  []settingsmodels.Certification  `json:"certifications,omitempty"`
+	Skills          []string                        `json:"skills,omitempty"`
+	YearsExperience int                             `json:"years_experience,omitempty"`
 }
 
 // PreviousMatch represents a summary of a previous match result for context
@@ -97,6 +104,8 @@ func (p *Prompt) GetOptimalTemperature(promptType string) float32 {
 	switch AITaskType(promptType) {
 	case TaskTypeCoverLetter:
 		return 0.65 // Higher creativity for writing
+	case TaskTypeCVGeneration:
+		return 0.55 // Higher creativity for CV content transformation
 	case TaskTypeJobAnalysis:
 		return 0.2 // Lower for analytical consistency
 	default:
@@ -152,6 +161,13 @@ Requirements:
 - Avoid generic phrases and clichés
 - Do not include placeholder text like [Company Name] or [Your Name]
 
+CRITICAL - WRITE LIKE A HUMAN, NOT AI:
+- BANNED PHRASES: Never use "leverage", "utilize", "spearheaded", "orchestrated", "synergies", "cutting-edge", "innovative solutions", "dynamic", "passionate", "results-driven", "detail-oriented", "team player", "go-getter", "game-changer", "disruptive", "seamless", "robust", "scalable", "streamlined", "optimized", "enhanced", "facilitated", "collaborated with stakeholders", "deep dive", "circle back", "deliverables"
+- Write conversationally like explaining to a colleague, not corporate presentation style
+- Use specific concrete details, not vague buzzwords
+- Test: If it sounds like a template or AI wrote it, rewrite it completely
+- Sound like a real person with genuine interest, not a marketing brochure
+
 Return a JSON object with ONLY this field:
 - content: the complete cover letter text (properly formatted with \n for line breaks)`,
 		sanitizedInstructions,
@@ -206,10 +222,15 @@ INSTRUCTIONS:
 5. Order sections by relevance to the job (most relevant first)
 6. Use action verbs and quantify achievements where possible
 7. Keep descriptions concise and impactful
-8. Don't use AI-generated phrases or em dashes. Keep it professional and straightforward
-9. It MUST read like a human-written CV, not an AI-generated one
-10. CRITICAL: Use ONLY the information from the USER PROFILE above - do not make up names, companies, or experiences
-11. Format work experience descriptions as bullet points, each starting with "• " on a new line
+8. CRITICAL: Use ONLY the information from the USER PROFILE above - do not make up names, companies, or experiences
+9. Format work experience descriptions as bullet points, each starting with "• " on a new line
+
+CRITICAL - ELIMINATE ALL AI LANGUAGE:
+10. BANNED WORDS/PHRASES: Never use "leverage", "utilize", "spearheaded", "orchestrated", "synergies", "cutting-edge", "innovative solutions", "dynamic", "passionate", "results-driven", "detail-oriented", "team player", "go-getter", "game-changer", "disruptive", "seamless", "robust", "scalable", "streamlined", "optimized", "enhanced", "facilitated", "collaborated with stakeholders", "deep dive", "circle back", "deliverables", "action items", "learnings", "best practices", "low-hanging fruit"
+11. NATURAL WRITING: Write like a real person explaining their work to a colleague
+12. HUMAN TEST: If any sentence sounds like AI/template language, rewrite it completely
+13. SPECIFIC > GENERIC: Use concrete details instead of buzzwords and corporate speak
+14. CONVERSATIONAL PROFESSIONAL: Sound competent but approachable, not like a press release
 
 Generate a structured CV in JSON format following the exact schema requirements.`,
 		sanitizedInstructions,
@@ -294,6 +315,14 @@ Provide a comprehensive analysis focusing on:
 - Any concerns or red flags
 
 IMPORTANT: In your feedback, do NOT mention the applicant's name. Use "you" and "your" directly. Be brutally honest and direct - no sugar-coating or patronizing language. State facts bluntly about what's missing or inadequate.
+
+CRITICAL - WRITE LIKE A HUMAN RECRUITER, NOT AI:
+- BANNED PHRASES: Never use "leverage", "utilize", "spearheaded", "orchestrated", "synergies", "cutting-edge", "innovative solutions", "dynamic", "passionate", "results-driven", "detail-oriented", "team player", "go-getter", "game-changer", "disruptive", "seamless", "robust", "scalable", "streamlined", "optimized", "enhanced", "facilitated", "collaborated with stakeholders", "deep dive", "circle back", "deliverables", "action items", "learnings", "best practices", "low-hanging fruit", "value-add"
+- NATURAL FEEDBACK: Write like an experienced recruiter giving honest, straightforward feedback
+- NO CORPORATE SPEAK: Use plain English, not HR buzzwords or template language
+- CONVERSATIONAL TONE: Sound like you're talking to the person directly, not writing a formal report
+- SPECIFIC EXAMPLES: Point to concrete gaps or strengths, not vague generalities
+- HUMAN TEST: If it sounds like AI analysis or a form letter, rewrite it completely
 
 Return the analysis as a JSON object with EXACTLY this structure:
 - matchScore: integer from %d-%d where %d is no match and %d is perfect match
