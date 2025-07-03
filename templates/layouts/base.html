@@ -106,24 +106,39 @@
       transition-duration: 300ms;
     }
 
-    /* Remove all focus states and highlights globally */
-    *:focus,
-    *:focus-visible,
-    button:focus,
-    button:focus-visible,
-    input:focus,
-    input:focus-visible,
-    textarea:focus,
-    textarea:focus-visible,
-    select:focus,
-    select:focus-visible,
-    a:focus,
-    a:focus-visible {
+    /* Remove default focus outlines but preserve accessibility with custom focus-visible */
+    *:focus {
       outline: none !important;
       box-shadow: none !important;
       ring: 0 !important;
       --tw-ring-shadow: none !important;
       --tw-ring-offset-shadow: none !important;
+    }
+
+    /* Accessible focus-visible styles for keyboard navigation */
+    *:focus-visible {
+      outline: 2px solid #64748b !important; /* slate-500 to match project theme */
+      outline-offset: 2px !important;
+      border-radius: 4px !important;
+    }
+
+    /* focus for interactive elements */
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible,
+    select:focus-visible,
+    a:focus-visible {
+      outline: 2px solid #64748b !important;
+      outline-offset: 2px !important;
+      box-shadow: 0 0 0 4px rgba(100, 116, 139, 0.1) !important; /* slate-500 with opacity */
+    }
+
+    /* Special focus styling for form elements */
+    input:focus-visible,
+    textarea:focus-visible,
+    select:focus-visible {
+      border-color: #64748b !important;
+      box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.1) !important; /* slate-500 with opacity */
     }
 
     /* Fix autofill styling to match dark theme */
@@ -423,12 +438,12 @@
           return '';
         }
       });
-      
+
       // Clear unsaved changes flag when forms are submitted
       document.addEventListener('submit', () => {
         hasUnsavedChanges = false;
       });
-      
+
       // Clear unsaved changes flag on successful HTMX requests
       document.body.addEventListener('htmx:afterRequest', (event) => {
         if (event.detail.xhr.status >= 200 && event.detail.xhr.status < 300) {

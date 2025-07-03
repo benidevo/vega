@@ -101,13 +101,6 @@ func JobMatchTemplate() *PromptTemplate {
 			"TRANSFERABLE SKILLS: Consider cross-domain skills valuable (e.g., project management across industries, problem-solving abilities)",
 			"Don't penalize heavily for missing exact skills if candidate shows strong foundation in similar technologies",
 			"Recognize industry-specific qualifications but don't inflate their importance",
-			"CRITICAL - WRITE LIKE A HUMAN RECRUITER, NOT AI:",
-			"BANNED PHRASES: Never use 'leverage', 'utilize', 'spearheaded', 'orchestrated', 'synergies', 'cutting-edge', 'innovative solutions', 'dynamic', 'passionate', 'results-driven', 'detail-oriented', 'team player', 'go-getter', 'game-changer', 'disruptive', 'seamless', 'robust', 'scalable', 'streamlined', 'optimized', 'enhanced', 'facilitated', 'collaborated with stakeholders', 'deep dive', 'circle back', 'deliverables', 'action items', 'learnings', 'best practices', 'low-hanging fruit', 'value-add'",
-			"NATURAL RECRUITER LANGUAGE: Write like an experienced hiring manager giving straight feedback",
-			"NO CORPORATE BUZZWORDS: Use plain English, not HR jargon or template language",
-			"CONVERSATIONAL BUT DIRECT: Sound like you're talking to someone face-to-face, not writing a formal assessment",
-			"SPECIFIC > GENERIC: Point to concrete examples and gaps, avoid vague statements",
-			"HUMAN TEST: If any sentence sounds like AI analysis or a form letter, rewrite it completely",
 		},
 		OutputSpec: "Return ONLY a valid JSON object with: matchScore (0-100), strengths (array), weaknesses (array), highlights (array), and feedback (string)",
 	}
@@ -116,6 +109,9 @@ func JobMatchTemplate() *PromptTemplate {
 // EnhanceJobMatchPrompt enhances a job matching prompt
 func EnhanceJobMatchPrompt(systemInstruction, applicantName, jobDescription, applicantProfile, extraContext string, minScore, maxScore int) string {
 	template := JobMatchTemplate()
+
+	template.Constraints = append(template.Constraints, JobMatchAntiAIConstraints()...)
+
 	params := map[string]any{
 		"useChainOfThought": true,
 		"minScore":          minScore,

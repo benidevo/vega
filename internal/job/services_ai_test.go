@@ -462,7 +462,7 @@ func TestJobService_calculateTotalExperience(t *testing.T) {
 					Title:     "Senior Developer",
 					Company:   "Tech Company A",
 					StartDate: time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC),
-					EndDate:   nil, // current job
+					EndDate:   &[]time.Time{time.Date(2025, 7, 1, 0, 0, 0, 0, time.UTC)}[0],
 				},
 				{
 					Title:     "Systems Engineer",
@@ -477,7 +477,7 @@ func TestJobService_calculateTotalExperience(t *testing.T) {
 					EndDate:   &[]time.Time{time.Date(2021, 12, 31, 0, 0, 0, 0, time.UTC)}[0],
 				},
 			},
-			expectedYears: 5.5, // From Jan 2020 to present (July 2025) = ~5.5 years
+			expectedYears: 5.5, // From Jan 2020 to July 2025 = 5.5 years
 			description:   "Overlapping periods should not double-count time",
 		},
 	}
