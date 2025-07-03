@@ -2,7 +2,7 @@
 <!-- Mobile responsive dashboard with sidebar that converts to top navbar on small screens -->
 <div class="min-h-screen bg-slate-900">
   {{template "mobile-nav" .}}
-  
+
   <div class="flex md:flex-row">
     {{template "sidebar" .}}
 
@@ -49,43 +49,43 @@ html {
     display: flex;
     align-items: center;
   }
-  
+
   /* Better checkbox and radio button touch targets */
   input[type="checkbox"], input[type="radio"] {
     min-width: 20px;
     min-height: 20px;
     margin: 4px;
   }
-  
+
   /* Improve form field focus for mobile */
   input:focus, textarea:focus, select:focus {
     transform: scale(1.02);
     transition: transform 0.2s ease;
   }
-  
+
   /* Better button press feedback */
   button:active, .touch-manipulation:active {
     transform: scale(0.98);
     transition: transform 0.1s ease;
   }
-  
+
   /* Prevent zoom on input focus for iOS */
-  input[type="text"], 
-  input[type="email"], 
-  input[type="tel"], 
-  input[type="url"], 
-  input[type="password"], 
-  textarea, 
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="password"],
+  textarea,
   select {
     font-size: 16px;
   }
-  
+
   /* Better scroll performance */
   .scroll-container {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
   }
-  
+
   /* Reduce motion for users who prefer it */
   @media (prefers-reduced-motion: reduce) {
     * {
@@ -96,16 +96,6 @@ html {
   }
 }
 
-/* Enhanced focus indicators for better accessibility */
-button:focus-visible, 
-input:focus-visible, 
-textarea:focus-visible, 
-select:focus-visible,
-a:focus-visible {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-  border-radius: 4px;
-}
 
 /* Smooth animations for form validation */
 .htmx-request {

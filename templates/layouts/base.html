@@ -106,14 +106,34 @@
       transition-duration: 300ms;
     }
 
-    /* Focus states */
-    :focus {
-      outline: none;
+    /* Remove all focus states and highlights globally */
+    *:focus,
+    *:focus-visible,
+    button:focus,
+    button:focus-visible,
+    input:focus,
+    input:focus-visible,
+    textarea:focus,
+    textarea:focus-visible,
+    select:focus,
+    select:focus-visible,
+    a:focus,
+    a:focus-visible {
+      outline: none !important;
+      box-shadow: none !important;
+      ring: 0 !important;
+      --tw-ring-shadow: none !important;
+      --tw-ring-offset-shadow: none !important;
     }
 
-    :focus-visible {
-      outline: 2px solid #0D9488;
-      outline-offset: 2px;
+    /* Fix autofill styling to match dark theme */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+      -webkit-box-shadow: 0 0 0 30px #334155 inset !important;
+      -webkit-text-fill-color: white !important;
+      border-color: #475569 !important;
     }
 
     /* Screen reader only text */
@@ -323,6 +343,100 @@
       });
     }
 
+    // Toast notification system
+    function showToast(message, type = 'success', duration = 3000) {
+      const toast = document.createElement('div');
+
+      // Style to match app's design system
+      const baseClasses = 'fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg animate-fade-in border flex items-center';
+      const typeClasses = {
+        success: 'bg-slate-800 border-primary text-white',
+        error: 'bg-slate-800 border-red-500 text-white',
+        warning: 'bg-slate-800 border-yellow-500 text-white',
+        info: 'bg-slate-800 border-blue-500 text-white'
+      };
+
+      toast.className = `${baseClasses} ${typeClasses[type] || typeClasses.info}`;
+
+      // Add icon based on type
+      const icons = {
+        success: '<svg class="h-5 w-5 mr-2 text-primary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>',
+        error: '<svg class="h-5 w-5 mr-2 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>',
+        warning: '<svg class="h-5 w-5 mr-2 text-yellow-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L12.732 4.5c-.77-.833-2.186-.833-2.56 0L2.732 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>',
+        info: '<svg class="h-5 w-5 mr-2 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>'
+      };
+
+      toast.innerHTML = `${icons[type] || icons.info}<span class="text-sm">${message}</span>`;
+
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add('animate-fade-out');
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+          }
+        }, 300);
+      }, duration);
+    }
+
+    // Unsaved changes detection
+    let hasUnsavedChanges = false;
+
+    function trackFormChanges() {
+      const forms = document.querySelectorAll('form');
+      forms.forEach(form => {
+        const formData = new FormData(form);
+        const originalData = new Map();
+
+        // Store original values
+        for (let [key, value] of formData.entries()) {
+          originalData.set(key, value);
+        }
+
+        // Track changes
+        const inputs = form.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+          input.addEventListener('input', () => {
+            const currentData = new FormData(form);
+            let changed = false;
+
+            for (let [key, value] of currentData.entries()) {
+              if (originalData.get(key) !== value) {
+                changed = true;
+                break;
+              }
+            }
+
+            hasUnsavedChanges = changed;
+          });
+        });
+      });
+    }
+
+    // Warn before leaving page with unsaved changes
+    function setupUnsavedChangesWarning() {
+      window.addEventListener('beforeunload', (e) => {
+        if (hasUnsavedChanges) {
+          e.preventDefault();
+          e.returnValue = '';
+          return '';
+        }
+      });
+      
+      // Clear unsaved changes flag when forms are submitted
+      document.addEventListener('submit', () => {
+        hasUnsavedChanges = false;
+      });
+      
+      // Clear unsaved changes flag on successful HTMX requests
+      document.body.addEventListener('htmx:afterRequest', (event) => {
+        if (event.detail.xhr.status >= 200 && event.detail.xhr.status < 300) {
+          hasUnsavedChanges = false;
+        }
+      });
+    }
+
     // Format UTC dates to local browser timezone
     function formatUTCDates() {
       const timeElements = document.querySelectorAll('.utc-time');
@@ -382,10 +496,13 @@
     document.addEventListener('DOMContentLoaded', function() {
       setupAutoDismissAlerts();
       formatUTCDates();
+      trackFormChanges();
+      setupUnsavedChangesWarning();
     });
     document.body.addEventListener('htmx:afterSwap', function() {
       setupAutoDismissAlerts();
       formatUTCDates();
+      trackFormChanges();
     });
 
     // Setup page functionality
@@ -426,7 +543,6 @@
         });
       }
     });
-  });
 
   // Notification modal system (global functions)
   window.showNotification = function(message, type = 'info', title = null) {
@@ -434,7 +550,7 @@
     const iconElement = document.getElementById('notification-icon');
     const titleElement = document.getElementById('notification-title');
     const messageElement = document.getElementById('notification-message');
-    
+
     if (!modal || !iconElement || !titleElement || !messageElement) return;
 
     // Set icon and title based on type
@@ -458,7 +574,7 @@
   function getNotificationIcon(type) {
     const baseClasses = 'h-6 w-6';
     switch(type) {
-      case 'error': 
+      case 'error':
         return '<svg class="' + baseClasses + ' text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">' +
                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />' +
                '</svg>';
