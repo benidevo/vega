@@ -4,19 +4,18 @@ import (
 	"maps"
 	"time"
 
-	"github.com/rs/zerolog"
-
 	"github.com/benidevo/vega/internal/ai/constants"
 	"github.com/benidevo/vega/internal/ai/models"
+	"github.com/benidevo/vega/internal/common/logger"
 )
 
 // ServiceHelper provides common logging and error handling utilities for AI services
 type ServiceHelper struct {
-	log zerolog.Logger
+	log *logger.PrivacyLogger
 }
 
 // NewServiceHelper creates a new service helper with the provided logger
-func NewServiceHelper(log zerolog.Logger) *ServiceHelper {
+func NewServiceHelper(log *logger.PrivacyLogger) *ServiceHelper {
 	return &ServiceHelper{
 		log: log,
 	}
@@ -24,16 +23,16 @@ func NewServiceHelper(log zerolog.Logger) *ServiceHelper {
 
 // LogOperationStart logs the start of an AI operation
 func (h *ServiceHelper) LogOperationStart(operation, applicantName string) {
-	h.log.Info().
-		Str("applicant", applicantName).
+	h.log.UserEvent("ai_operation_start").
+		Str("hashed_applicant", logger.HashIdentifier(applicantName)).
 		Str("operation", operation).
 		Msg("Starting AI operation")
 }
 
 // LogOperationSuccess logs successful completion of an AI operation
 func (h *ServiceHelper) LogOperationSuccess(operation, applicantName string, duration time.Duration, enhanced bool, metadata map[string]interface{}) {
-	event := h.log.Info().
-		Str("applicant", applicantName).
+	event := h.log.UserEvent("ai_operation_success").
+		Str("hashed_applicant", logger.HashIdentifier(applicantName)).
 		Str("operation", operation).
 		Dur("duration", duration).
 		Bool("enhanced", enhanced).
@@ -57,9 +56,8 @@ func (h *ServiceHelper) LogOperationSuccess(operation, applicantName string, dur
 
 // LogValidationError logs validation errors with context
 func (h *ServiceHelper) LogValidationError(operation, applicantName string, err error) error {
-	h.log.Error().
-		Err(err).
-		Str("applicant", applicantName).
+	h.log.UserError("ai_validation_failed", err).
+		Str("hashed_applicant", logger.HashIdentifier(applicantName)).
 		Str("operation", operation).
 		Str("error_type", constants.ErrorTypeValidationFailed).
 		Msg("Validation failed")
@@ -68,9 +66,8 @@ func (h *ServiceHelper) LogValidationError(operation, applicantName string, err 
 
 // LogOperationError logs operation failures with context
 func (h *ServiceHelper) LogOperationError(operation, applicantName, errorType string, duration time.Duration, err error) error {
-	h.log.Error().
-		Err(err).
-		Str("applicant", applicantName).
+	h.log.UserError("ai_operation_failed", err).
+		Str("hashed_applicant", logger.HashIdentifier(applicantName)).
 		Str("operation", operation).
 		Str("error_type", errorType).
 		Dur("duration", duration).

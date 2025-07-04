@@ -20,26 +20,26 @@ func CoverLetterTemplate() *PromptTemplate {
 			},
 		},
 		Task: "Create a compelling, conversational cover letter that showcases the candidate's unique value proposition and demonstrates genuine interest in the role. You MUST sign the letter with 'Best regards,' followed by the applicant's actual name that is provided in the 'Applicant Name' field above. If personal context or additional information is provided, weave it naturally into the letter to add personality and memorability.",
-		Constraints: []string{
-			"Write like you're having a professional conversation, not submitting a formal document",
-			"Use everyday language while still being professional - avoid corporate jargon",
-			"Include specific numbers and achievements but weave them naturally into the story",
-			"Reference the job description but don't just parrot back their exact words",
-			"Show you've done your homework about the company but keep it casual",
-			"Let your personality come through - this is a letter from a real person",
-			"If personal context is provided (hobbies, interests, life experiences), use it to create memorable connections",
-			"Skip tired openings like 'I am writing to apply for' - just start with something engaging",
-			"Keep paragraphs short and readable (3-4 sentences max)",
-			"End with a friendly but clear next step",
-			"Match the company's vibe - more relaxed for startups, bit more formal for traditional industries",
-			"STRICTLY AVOID AI/CORPORATE LANGUAGE: 'leverage', 'utilize', 'spearheaded', 'orchestrated', 'synergies', 'cutting-edge', 'innovative solutions', 'dynamic', 'passionate', 'results-driven', 'detail-oriented', 'team player', 'go-getter', 'game-changer', 'disruptive', 'seamless', 'robust', 'scalable', 'streamlined', 'optimized', 'enhanced', 'facilitated', 'collaborated with stakeholders', 'deep dive', 'circle back', 'touch base', 'best practices', 'low-hanging fruit', 'value-add', 'deliverables', 'action items', 'learnings'",
-			"ELIMINATE AI-SOUNDING PHRASES: Don't use template language or generic statements that could apply to anyone",
-			"Mix up your sentences - some short, some longer, like natural speech",
-			"Sound excited but real - like you're genuinely interested, not trying to impress",
-			"Always sign with the applicant's actual name that was provided, never a placeholder",
-			"Always end the letter with 'Best regards,' followed by the applicant's name",
-			"Do not use em dashes (—) in your writing, use commas or rewrite the sentence instead",
-		},
+		Constraints: func() []string {
+			constraints := CoverLetterAntiAIConstraints()
+			additionalConstraints := []string{
+				"Include specific numbers and achievements but weave them naturally into the story",
+				"Reference the job description but don't just parrot back their exact words",
+				"Show you've done your homework about the company but keep it casual",
+				"Let your personality come through - this is a letter from a real person",
+				"If personal context is provided (hobbies, interests, life experiences), use it to create memorable connections",
+				"Keep paragraphs short and readable (3-4 sentences max)",
+				"End with a friendly but clear next step",
+				"Match the company's vibe - more relaxed for startups, bit more formal for traditional industries",
+				"ELIMINATE AI-SOUNDING PHRASES: Don't use template language or generic statements that could apply to anyone",
+				"Mix up your sentences - some short, some longer, like natural speech",
+				"Sound excited but real - like you're genuinely interested, not trying to impress",
+				"Always sign with the applicant's actual name that was provided, never a placeholder",
+				"Always end the letter with 'Best regards,' followed by the applicant's name",
+				"Do not use em dashes (—) in your writing, use commas or rewrite the sentence instead",
+			}
+			return append(constraints, additionalConstraints...)
+		}(),
 		OutputSpec: "Return ONLY a valid JSON object with a 'content' field containing the cover letter text with proper formatting (\\n for line breaks)",
 	}
 }

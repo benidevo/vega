@@ -186,12 +186,7 @@ Research and incorporate company values and culture where relevant.
 - White space is OK - readability matters
 
 ### 8.5. **CRITICAL: Write Like a Human, Not AI**
-- **ELIMINATE AI LANGUAGE**: Never use buzzwords, corporate-speak, or template phrases
-- **BANNED WORDS/PHRASES**: "leverage", "utilize", "spearheaded", "orchestrated", "synergies", "cutting-edge", "innovative solutions", "dynamic", "passionate", "results-driven", "detail-oriented", "team player", "go-getter", "game-changer", "disruptive", "seamless", "robust", "scalable", "streamlined", "optimized", "enhanced", "facilitated", "collaborated with stakeholders", "deep dive", "circle back", "touch base", "best practices", "low-hanging fruit"
-- **NATURAL LANGUAGE ONLY**: Write as if explaining accomplishments to a friend or colleague
-- **SPECIFIC > GENERIC**: Use concrete details instead of vague superlatives
-- **HUMAN TEST**: If it sounds like AI or a corporate template wrote it, start over
-- **CONVERSATIONAL TONE**: Professional but approachable, like how people actually talk
+{{.CVConstraints}}
 
 ### 9. Authenticity Checks
 - **ELEVATE TRUTHFULLY**: Transform and enhance presentation while maintaining complete honesty
@@ -242,6 +237,14 @@ Generate only valid JSON without any preamble or explanation.`
 func EnhanceCVGenerationPrompt(systemInstruction, cvText, jobDescription, extraContext string) string {
 	template := CVGenerationEnhancedTemplate
 	enhancedPrompt := systemInstruction + "\n\n" + template
+
+	// Inject CV constraints
+	cvConstraints := CVAntiAIConstraints()
+	constraintsText := ""
+	for _, constraint := range cvConstraints {
+		constraintsText += "- " + constraint + "\n"
+	}
+	enhancedPrompt = strings.ReplaceAll(enhancedPrompt, "{{.CVConstraints}}", constraintsText)
 
 	enhancedPrompt = strings.ReplaceAll(enhancedPrompt, "{{.CVText}}", cvText)
 	enhancedPrompt = strings.ReplaceAll(enhancedPrompt, "{{.JobDescription}}", jobDescription)

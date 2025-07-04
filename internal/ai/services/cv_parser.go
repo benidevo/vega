@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog"
-
 	"github.com/benidevo/vega/internal/ai/constants"
 	"github.com/benidevo/vega/internal/ai/helpers"
 	"github.com/benidevo/vega/internal/ai/llm"
@@ -18,14 +16,14 @@ import (
 // CVParserService provides services for parsing CV/resume content using a language model provider.
 type CVParserService struct {
 	model  llm.Provider
-	log    zerolog.Logger
+	log    *logger.PrivacyLogger
 	helper *helpers.ServiceHelper
 }
 
 // NewCVParserService creates and returns a new instance of CVParserService
 // using the provided llm.Provider as the model.
 func NewCVParserService(model llm.Provider) *CVParserService {
-	log := logger.GetLogger("ai_cv_parser")
+	log := logger.GetPrivacyLogger("ai_cv_parser")
 	return &CVParserService{
 		model:  model,
 		log:    log,

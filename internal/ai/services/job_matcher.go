@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rs/zerolog"
-
 	"github.com/benidevo/vega/internal/ai/constants"
 	"github.com/benidevo/vega/internal/ai/helpers"
 	"github.com/benidevo/vega/internal/ai/llm"
@@ -19,7 +17,7 @@ import (
 // The 'model' field represents the LLM provider used for job matching operations.
 type JobMatcherService struct {
 	model     llm.Provider
-	log       zerolog.Logger
+	log       *logger.PrivacyLogger
 	validator *validation.AIRequestValidator
 	helper    *helpers.ServiceHelper
 }
@@ -28,7 +26,7 @@ type JobMatcherService struct {
 // using the provided llm.Provider as the model.
 // The returned JobMatcherService can be used to perform job matching operations.
 func NewJobMatcherService(model llm.Provider) *JobMatcherService {
-	log := logger.GetLogger("ai_job_matcher")
+	log := logger.GetPrivacyLogger("ai_job_matcher")
 	return &JobMatcherService{
 		model:     model,
 		log:       log,

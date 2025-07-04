@@ -98,20 +98,3 @@ func IsRetryableError(err error) bool {
 		sentinelErr == ErrRateLimitExceeded ||
 		sentinelErr == ErrRequestTimeout
 }
-
-// MapHTTPErrorToSentinel maps HTTP errors to appropriate sentinel errors
-func MapHTTPErrorToSentinel(httpCode int, message string) error {
-	switch httpCode {
-	case http.StatusUnauthorized, http.StatusForbidden:
-		return ErrAPIKeyInvalid
-	case http.StatusTooManyRequests:
-		return ErrRateLimitExceeded
-	case http.StatusInternalServerError,
-		http.StatusBadGateway,
-		http.StatusServiceUnavailable,
-		http.StatusGatewayTimeout:
-		return ErrServiceUnavailable
-	default:
-		return ErrInvalidResponse
-	}
-}

@@ -85,7 +85,7 @@ func CreateAdminUserIfRequired(db *sql.DB, cfg *config.Settings) error {
 
 	log.Info().
 		Str("hashed_id", logger.HashIdentifier(cfg.AdminUsername)).
-		Str("email", cfg.AdminEmail).
+		Str("hashed_email", logger.HashIdentifier(cfg.AdminEmail)).
 		Int("user_id", user.ID).
 		Msg("Admin user created successfully")
 

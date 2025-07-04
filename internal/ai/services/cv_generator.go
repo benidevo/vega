@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rs/zerolog"
-
 	"github.com/benidevo/vega/internal/ai/constants"
 	"github.com/benidevo/vega/internal/ai/helpers"
 	"github.com/benidevo/vega/internal/ai/llm"
@@ -18,7 +16,7 @@ import (
 // CVGeneratorService provides methods to generate CVs using a specified LLM provider.
 type CVGeneratorService struct {
 	model     llm.Provider
-	log       zerolog.Logger
+	log       *logger.PrivacyLogger
 	validator *validation.AIRequestValidator
 	helper    *helpers.ServiceHelper
 }
@@ -26,7 +24,7 @@ type CVGeneratorService struct {
 // NewCVGeneratorService creates and returns a new instance of CVGeneratorService
 // using the provided llm.Provider as the underlying model.
 func NewCVGeneratorService(model llm.Provider) *CVGeneratorService {
-	log := logger.GetLogger("ai_cv_generator")
+	log := logger.GetPrivacyLogger("ai_cv_generator")
 	return &CVGeneratorService{
 		model:     model,
 		log:       log,

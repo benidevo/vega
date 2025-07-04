@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rs/zerolog"
-
 	"github.com/benidevo/vega/internal/ai/constants"
 	"github.com/benidevo/vega/internal/ai/helpers"
 	"github.com/benidevo/vega/internal/ai/llm"
@@ -18,7 +16,7 @@ import (
 // CoverLetterService provides methods to generate cover letters using a specified LLM provider.
 type CoverLetterGeneratorService struct {
 	model     llm.Provider
-	log       zerolog.Logger
+	log       *logger.PrivacyLogger
 	validator *validation.AIRequestValidator
 	helper    *helpers.ServiceHelper
 }
@@ -26,7 +24,7 @@ type CoverLetterGeneratorService struct {
 // NewCoverLetterGeneratorService creates and returns a new instance of CoverLetterGeneratorService
 // using the provided llm.Provider as the underlying model.
 func NewCoverLetterGeneratorService(model llm.Provider) *CoverLetterGeneratorService {
-	log := logger.GetLogger("ai_cover_letter")
+	log := logger.GetPrivacyLogger("ai_cover_letter")
 	return &CoverLetterGeneratorService{
 		model:     model,
 		log:       log,

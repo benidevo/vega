@@ -84,21 +84,3 @@ func RenderSuccess(c *gin.Context, message string, context AlertContext, actions
 		"actions": actions,
 	})
 }
-
-// RenderWarning renders a warning alert with the appropriate context
-func RenderWarning(c *gin.Context, message string, context AlertContext) {
-	c.HTML(http.StatusOK, "partials/alert.html", gin.H{
-		"type":    string(TypeWarning),
-		"context": string(context),
-		"message": message,
-	})
-}
-
-// RenderInfo renders an info alert with the appropriate context
-func RenderInfo(c *gin.Context, message string, context AlertContext) {
-	c.HTML(http.StatusOK, "partials/alert.html", gin.H{
-		"type":    string(TypeInfo),
-		"context": string(context),
-		"message": message,
-	})
-}

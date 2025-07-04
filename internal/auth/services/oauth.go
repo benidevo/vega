@@ -16,7 +16,6 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
-	"google.golang.org/api/option"
 )
 
 // GoogleAuthUserInfo represents the user information returned by Google's authentication API.
@@ -223,20 +222,6 @@ func (s *GoogleAuthService) getOrCreateUser(ctx context.Context, userInfo *Googl
 	}
 
 	return user, nil
-}
-
-// CreateDriveService creates a new Google Drive service client using the provided OAuth2 token and context.
-func (s *GoogleAuthService) CreateDriveService(ctx context.Context, token *oauth2.Token) (*drive.Service, error) {
-	client := s.oauthCfg.Client(ctx, token)
-
-	driveService, err := drive.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		s.log.Error().Err(err).Msg("Failed to create Google Drive service")
-		return nil, fmt.Errorf("%w: %v", models.ErrGoogleDriveServiceFailed, err)
-	}
-
-	s.log.Debug().Msg("Google Drive service created successfully")
-	return driveService, nil
 }
 
 // getGoogleCredentials creates an oauth2.Config using environment variables
