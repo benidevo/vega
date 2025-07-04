@@ -14,12 +14,6 @@ services:
       - vega-dev-data:/app/data
     ports:
       - "8765:8765"
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8765/health"]
-      interval: 2m
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     networks:
       - vega
 

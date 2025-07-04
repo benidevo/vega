@@ -91,13 +91,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 // Logout logs out the current user by clearing the authentication cookie and redirecting to the home page.
 func (h *AuthHandler) Logout(c *gin.Context) {
-	// Clear both access and refresh token cookies
-	sameSite := parseSameSiteMode(h.cfg.CookieSameSite)
-
-	c.SetSameSite(sameSite)
-	c.SetCookie("token", "", -1, "/", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
-	c.SetCookie("refresh_token", "", -1, "/", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
-
+	h.clearAuthCookies(c)
 	c.Redirect(http.StatusFound, "/")
 }
 
@@ -105,12 +99,15 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil {
+		h.clearAuthCookies(c)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing refresh token"})
 		return
 	}
 
 	accessToken, err := h.service.RefreshAccessToken(c.Request.Context(), refreshToken)
 	if err != nil {
+		h.service.LogError(fmt.Errorf("refresh token validation failed: %w", err))
+		h.clearAuthCookies(c)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
 		return
 	}
@@ -132,12 +129,26 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": true})
 }
 
+// clearAccessTokenCookie clears only the access token cookie
+func (h *AuthHandler) clearAccessTokenCookie(c *gin.Context) {
+	sameSite := parseSameSiteMode(h.cfg.CookieSameSite)
+	c.SetSameSite(sameSite)
+	c.SetCookie("token", "", -1, "/", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
+}
+
+// clearAuthCookies clears both access and refresh token cookies
+func (h *AuthHandler) clearAuthCookies(c *gin.Context) {
+	sameSite := parseSameSiteMode(h.cfg.CookieSameSite)
+	c.SetSameSite(sameSite)
+	c.SetCookie("token", "", -1, "/", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
+	c.SetCookie("refresh_token", "", -1, "/", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
+}
+
 // authMiddleware is the core authentication logic shared by different middleware functions.
 // It attempts to get and verify a token, refresh if needed, and populate context.
 func (h *AuthHandler) authMiddleware(c *gin.Context) (*services.Claims, error) {
 	tokenString, err := c.Cookie("token")
 
-	// If access token is missing or invalid, try to refresh it
 	if err != nil || tokenString == "" {
 		refreshToken, refreshErr := c.Cookie("refresh_token")
 		if refreshErr == nil && refreshToken != "" {
@@ -155,6 +166,11 @@ func (h *AuthHandler) authMiddleware(c *gin.Context) (*services.Claims, error) {
 					true,
 				)
 				tokenString = newAccessToken
+			} else {
+				// Refresh token is invalid/expired, clear all cookies
+				h.service.LogError(fmt.Errorf("refresh token failed: %w", refreshErr))
+				h.clearAuthCookies(c)
+				return nil, fmt.Errorf("refresh token invalid")
 			}
 		}
 	}
@@ -165,6 +181,44 @@ func (h *AuthHandler) authMiddleware(c *gin.Context) (*services.Claims, error) {
 
 	claims, err := h.service.VerifyToken(tokenString)
 	if err != nil {
+		// Access token is invalid, but we might still have a valid refresh token
+		// Only clear the access token, not the refresh token
+		h.service.LogError(fmt.Errorf("access token verification failed: %w", err))
+		h.clearAccessTokenCookie(c)
+
+		// Try to refresh with the existing refresh token
+		refreshToken, refreshErr := c.Cookie("refresh_token")
+		if refreshErr == nil && refreshToken != "" {
+			newAccessToken, refreshErr := h.service.RefreshAccessToken(c.Request.Context(), refreshToken)
+			if refreshErr == nil {
+				sameSite := parseSameSiteMode(h.cfg.CookieSameSite)
+				c.SetSameSite(sameSite)
+				c.SetCookie(
+					"token",
+					newAccessToken,
+					int(h.cfg.AccessTokenExpiry.Seconds()),
+					"/",
+					h.cfg.CookieDomain,
+					h.cfg.CookieSecure,
+					true,
+				)
+
+				claims, err := h.service.VerifyToken(newAccessToken)
+				if err != nil {
+					h.service.LogError(fmt.Errorf("newly refreshed token verification failed: %w", err))
+					h.clearAuthCookies(c)
+					return nil, fmt.Errorf("token refresh failed")
+				}
+				c.Set("userID", claims.UserID)
+				c.Set("username", claims.Username)
+				c.Set("role", claims.Role)
+				return claims, nil
+			} else {
+				h.service.LogError(fmt.Errorf("refresh token failed after access token failure: %w", refreshErr))
+				h.clearAuthCookies(c)
+				return nil, fmt.Errorf("both tokens invalid")
+			}
+		}
 		return nil, fmt.Errorf("invalid token: %w", err)
 	}
 
@@ -266,7 +320,6 @@ func (h *GoogleAuthHandler) HandleCallback(c *gin.Context) {
 		true,
 	)
 
-	// Set refresh token cookie
 	c.SetCookie(
 		"refresh_token",
 		refreshToken,

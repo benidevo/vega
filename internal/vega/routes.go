@@ -8,7 +8,6 @@ import (
 	authapi "github.com/benidevo/vega/internal/api/auth"
 	jobapi "github.com/benidevo/vega/internal/api/job"
 	"github.com/benidevo/vega/internal/auth"
-	"github.com/benidevo/vega/internal/health"
 	"github.com/benidevo/vega/internal/home"
 	"github.com/benidevo/vega/internal/job"
 	"github.com/benidevo/vega/internal/settings"
@@ -21,7 +20,10 @@ func SetupRoutes(a *App) {
 	a.router.Use(globalErrorHandler)
 	a.router.Static("/static", "./static")
 
-	health.RegisterRoutes(a.router, a.db)
+	// health check
+	a.router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
 
 	aiService, err := ai.Setup(&a.config)
 	if err != nil {

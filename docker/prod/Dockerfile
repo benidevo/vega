@@ -37,7 +37,4 @@ USER appuser
 
 EXPOSE 8765
 
-HEALTHCHECK --interval=2m --timeout=15s --start-period=30s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8765/health || exit 1
-
 CMD ["./vega"]
