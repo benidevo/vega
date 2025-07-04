@@ -356,17 +356,26 @@ func (s *JobService) buildProfileSummary(profile *settingsmodels.Profile) string
 				fieldOfStudy = fmt.Sprintf(" in %s", edu.FieldOfStudy)
 			}
 
-			summary.WriteString(fmt.Sprintf("- %s%s from %s (%s)\n",
-				edu.Degree, fieldOfStudy, edu.Institution, edu.StartDate.Format("January 2006")))
+			endDate := "Present"
+			if edu.EndDate != nil {
+				endDate = edu.EndDate.Format("January 2006")
+			}
+
+			summary.WriteString(fmt.Sprintf("- %s%s from %s (%s - %s)\n",
+				edu.Degree, fieldOfStudy, edu.Institution, edu.StartDate.Format("January 2006"), endDate))
 		}
 	}
 
 	if len(profile.Certifications) > 0 {
 		summary.WriteString("\nCertifications:\n")
 		for _, cert := range profile.Certifications {
+			expiryInfo := ""
+			if cert.ExpiryDate != nil {
+				expiryInfo = fmt.Sprintf(" - %s", cert.ExpiryDate.Format("January 2006"))
+			}
 
-			summary.WriteString(fmt.Sprintf("- %s from %s (%s)\n",
-				cert.Name, cert.IssuingOrg, cert.IssueDate.Format("January 2006")))
+			summary.WriteString(fmt.Sprintf("- %s from %s (%s%s)\n",
+				cert.Name, cert.IssuingOrg, cert.IssueDate.Format("January 2006"), expiryInfo))
 		}
 	}
 
@@ -625,6 +634,7 @@ func (s *JobService) convertToGeneratedCV(aiResult *aimodels.GeneratedCV, userID
 		PersonalInfo:   personalInfo,
 		WorkExperience: convertWorkExperience(aiResult.WorkExperience),
 		Education:      convertEducation(aiResult.Education),
+		Certifications: convertCertifications(profile.Certifications),
 		Skills:         aiResult.Skills,
 		GeneratedAt:    time.Unix(aiResult.GeneratedAt, 0),
 		JobTitle:       aiResult.JobTitle,
@@ -673,4 +683,25 @@ func convertEducation(aiEdu []aimodels.Education) []models.Education {
 		}
 	}
 	return edu
+}
+
+func convertCertifications(profileCerts []settingsmodels.Certification) []models.Certification {
+	certs := make([]models.Certification, len(profileCerts))
+	for i, c := range profileCerts {
+		issueDate := c.IssueDate.Format("Jan 2006")
+		expiryDate := ""
+		if c.ExpiryDate != nil {
+			expiryDate = c.ExpiryDate.Format("Jan 2006")
+		}
+
+		certs[i] = models.Certification{
+			Name:          c.Name,
+			IssuingOrg:    c.IssuingOrg,
+			IssueDate:     issueDate,
+			ExpiryDate:    expiryDate,
+			CredentialID:  c.CredentialID,
+			CredentialURL: c.CredentialURL,
+		}
+	}
+	return certs
 }
