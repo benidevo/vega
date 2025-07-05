@@ -1,5 +1,7 @@
 package prompts
 
+import "time"
+
 // CoverLetterTemplate returns a template for cover letter generation
 func CoverLetterTemplate() *PromptTemplate {
 	return &PromptTemplate{
@@ -48,7 +50,8 @@ func CoverLetterTemplate() *PromptTemplate {
 func EnhanceCoverLetterPrompt(systemInstruction, applicantName, jobDescription, applicantProfile, extraContext, wordRange string) string {
 	template := CoverLetterTemplate()
 	params := map[string]any{
-		"wordRange": wordRange,
+		"wordRange":   wordRange,
+		"currentDate": time.Now().Format("January 2, 2006"),
 	}
 	return template.BuildPrompt(systemInstruction, applicantName, jobDescription, applicantProfile, extraContext, params)
 }

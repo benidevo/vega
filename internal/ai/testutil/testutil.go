@@ -87,7 +87,7 @@ func (m *MockProvider) SetupCVGenerationMock(result models.CVParsingResult, err 
 		Duration: 800 * time.Millisecond,
 		Tokens:   0,
 		Metadata: map[string]interface{}{
-			"temperature": float32(0.3),
+			"temperature": float32(0.55),
 			"enhanced":    false,
 			"model":       "gemini-2.5-flash",
 			"task_type":   "cv_generation",

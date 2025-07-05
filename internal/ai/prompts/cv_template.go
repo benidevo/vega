@@ -1,11 +1,17 @@
 package prompts
 
-import "strings"
+import (
+	"strings"
+	"time"
+)
 
 const CVGenerationTemplate = `You are an expert CV/Resume writer with extensive experience in creating tailored CVs that effectively highlight relevant qualifications while maintaining complete honesty and professionalism.
 
 ## Task
 Generate a structured CV based on the user's profile that is specifically tailored to the given job description.
+
+## Current Date Context
+{{.CurrentDate}}
 
 ## User Profile
 {{.CVText}}
@@ -29,6 +35,7 @@ Generate a structured CV based on the user's profile that is specifically tailor
    - TRANSFORM and ENHANCE existing descriptions to put the candidate's best foot forward
    - Include company location (city, country) if provided in the profile
    - Lead with achievements and quantifiable impact
+   - Use current date context to assess experience recency and prioritize more recent/relevant experience
    - Use strong action verbs (managed, developed, implemented, etc.)
    - Focus on results: "Increased X by Y%" or "Reduced Z by $N"
    - Reframe basic responsibilities as achievements where possible
@@ -115,6 +122,9 @@ const CVGenerationEnhancedTemplate = `You are a senior CV/Resume writer and care
 ## Task
 Create a highly tailored, strategic CV that positions the candidate as the ideal match for the specific role while maintaining absolute honesty and professionalism.
 
+## Current Date Context
+{{.CurrentDate}}
+
 ## User Profile
 {{.CVText}}
 
@@ -141,20 +151,20 @@ Research and incorporate company values and culture where relevant.
 
 ### 3. Experience Optimization
 - **TRANSFORM and ELEVATE**: Reframe basic responsibilities as achievements and impact
+- **DATE CONTEXT AWARENESS**: Use current date to assess experience recency, prioritize recent achievements
 - **Achievement-Driven Bullets**: Start each with impact/result, then explain how
   - ✓ "• Reduced deployment time by 75% by implementing CI/CD pipeline"
   - ✗ "• Responsible for implementing CI/CD pipeline"
 - **Best Foot Forward**: Use powerful action verbs and emphasize leadership qualities
-- **Number of Bullets**: 
-  - Current/Most Recent Role: 4-5 detailed bullet points showcasing key achievements
-  - Previous Recent Roles (within 3 years): 3-4 bullet points
-  - Older Roles: 2-3 bullet points focusing on most relevant achievements
+- **Contextual Bullet Creation**: Generate 3-5 relevant bullet points per role by intelligently synthesizing the original description
+- **Extract Multiple Achievements**: Break down single descriptions into multiple focused accomplishments
+- **Prioritize Impact**: Emphasize the most relevant achievements for the target role
 - **Relevance Ranking**: Order bullets by relevance to target job, not chronologically
 - **Keyword Integration**: Naturally incorporate keywords from job posting
 - **Scope and Scale**: Include team size, budget, user base where impressive
 - **Problem-Action-Result Format**: When possible, show business impact
 - **Bullet Point Format**: Each description must be formatted as bullet points with "• " prefix
-- **Use Actual Profile Data**: Extract work experience directly from the user profile provided
+- **Intelligent Synthesis**: Extract and expand work experience from the user profile, creating comprehensive achievements from basic descriptions
 
 ### 4. Skills Architecture
 - **Primary Skills**: ONLY include skills that are directly mentioned in or highly relevant to the job posting
@@ -248,6 +258,7 @@ func EnhanceCVGenerationPrompt(systemInstruction, cvText, jobDescription, extraC
 
 	enhancedPrompt = strings.ReplaceAll(enhancedPrompt, "{{.CVText}}", cvText)
 	enhancedPrompt = strings.ReplaceAll(enhancedPrompt, "{{.JobDescription}}", jobDescription)
+	enhancedPrompt = strings.ReplaceAll(enhancedPrompt, "{{.CurrentDate}}", time.Now().Format("January 2, 2006"))
 
 	if extraContext != "" {
 		enhancedPrompt = strings.ReplaceAll(enhancedPrompt, "{{if .CompanyName}}", "")

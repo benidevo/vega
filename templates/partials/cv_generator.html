@@ -746,7 +746,7 @@
               doc.text('•', margin, yPos);
               const bulletText = trimmedLine.substring(1).trim();
               const wrappedLines = doc.splitTextToSize(bulletText, contentWidth - 15);
-              
+
               wrappedLines.forEach((wLine, idx) => {
                 if (yPos > pageHeight - margin - 20) {
                   doc.addPage();
@@ -944,7 +944,14 @@ window.addBulletPointToField = function(buttonElement) {
     selection.removeAllRanges();
     selection.addRange(range);
 
-    insertText('\n• ');
+    const currentText = descriptionField.textContent || '';
+    const needsNewline = currentText.length > 0 && !currentText.endsWith('\n');
+
+    if (needsNewline) {
+      insertText('\n• ');
+    } else {
+      insertText('• ');
+    }
   } else {
     if (typeof window.showNotification === 'function') {
       window.showNotification('Could not find the description field. Please try again.', 'error', 'Field Error');

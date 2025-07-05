@@ -473,7 +473,7 @@ CRITICAL RULES:
 2. NEVER fabricate names, companies, job titles, education, or any other information
 3. If the user's name is provided, use it. If not, leave it blank
 4. Only include work experiences, education, and skills that are explicitly mentioned in the profile
-5. You are reformatting and optimizing existing information, NOT creating new information
+5. Transform and enhance the presentation of existing information while maintaining complete honesty
 
 SKILLS FILTERING:
 - ONLY include skills that are DIRECTLY RELEVANT to the job posting
@@ -483,12 +483,13 @@ SKILLS FILTERING:
 
 WORK EXPERIENCE FORMATTING:
 - Include company location if provided in the profile data
-- Each job description MUST contain multiple bullet points
-- Current/Recent roles (last 2 years): 4-5 bullet points
-- Previous recent roles (2-5 years ago): 3-4 bullet points
-- Older roles: 2-3 bullet points
+- CONTEXTUAL BULLET POINT CREATION: Generate 3-5 relevant bullet points per role based on the original description
+- Extract and synthesize multiple achievements from single experience descriptions where applicable
+- Create additional contextually relevant bullet points that align with the original role and job requirements
 - Start each bullet with "• " (bullet character + space)
-- Use action verbs and quantify achievements where possible
+- TRANSFORM and ENHANCE: Convert basic responsibilities into achievement-focused, impactful statements
+- Prioritize the most relevant achievements and responsibilities for the target job
+- Quantify impact and results where possible (e.g., "Increased X by Y%", "Managed team of Z")
 - Separate each bullet point with a newline
 
 DATE FORMATTING:
@@ -499,8 +500,9 @@ DATE FORMATTING:
 Key guidelines:
 - Always set "isValid" to true when generating a CV
 - Use professional language and active voice
-- Tailor the presentation of existing experience to match job requirements
-- Highlight relevant achievements from the actual profile
+- Intelligently synthesize and expand existing experience descriptions into multiple focused achievements
+- Extract implicit accomplishments and responsibilities from basic job descriptions
+- Highlight and amplify relevant achievements that align with job requirements
 - If information is missing (e.g., email, phone), leave those fields empty rather than inventing data
 - Focus on presenting the user's actual experience in the best possible light`
 
@@ -708,7 +710,7 @@ func (g *Gemini) parseGeneratedCVJSON(jsonResponse string) (models.CVParsingResu
 func (g *Gemini) generateCV(ctx context.Context, prompt models.Prompt, start time.Time) (llm.GenerateResponse, error) {
 	cvPrompt := g.buildCVGenerationPrompt(prompt)
 
-	temperature := float32(0.3)
+	temperature := prompt.GetOptimalTemperature(models.TaskTypeCVGeneration.String())
 
 	result, err := g.executeWithRetry(ctx, func() (string, error) {
 		model := g.cfg.GetModelForTask(models.TaskTypeCVGeneration.String())

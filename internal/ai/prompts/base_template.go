@@ -45,6 +45,12 @@ func (t *PromptTemplate) BuildPrompt(systemInstruction, applicantName, jobDescri
 
 	// Current task details
 	promptBuilder.WriteString("# Current Task\n\n")
+
+	// Add current date context if available
+	if currentDate, ok := params["currentDate"].(string); ok {
+		promptBuilder.WriteString(fmt.Sprintf("**Current Date:** %s\n\n", currentDate))
+	}
+
 	promptBuilder.WriteString(fmt.Sprintf("**Applicant Name:** %s\n\n", applicantName))
 	promptBuilder.WriteString(fmt.Sprintf("**Job Description:**\n%s\n\n", jobDescription))
 	promptBuilder.WriteString(fmt.Sprintf("**Applicant Profile:**\n%s\n\n", applicantProfile))

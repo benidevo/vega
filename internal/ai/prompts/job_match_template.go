@@ -1,6 +1,9 @@
 package prompts
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 // JobMatchTemplate returns a template for job matching analysis
 func JobMatchTemplate() *PromptTemplate {
@@ -101,6 +104,8 @@ func JobMatchTemplate() *PromptTemplate {
 			"TRANSFERABLE SKILLS: Consider cross-domain skills valuable (e.g., project management across industries, problem-solving abilities)",
 			"Don't penalize heavily for missing exact skills if candidate shows strong foundation in similar technologies",
 			"Recognize industry-specific qualifications but don't inflate their importance",
+			"DATE CONTEXT AWARENESS: Use the current date to assess experience recency and career progression timing",
+			"Evaluate career gaps in context of current date when assessing overall profile strength",
 		},
 		OutputSpec: "Return ONLY a valid JSON object with: matchScore (0-100), strengths (array), weaknesses (array), highlights (array), and feedback (string)",
 	}
@@ -116,6 +121,7 @@ func EnhanceJobMatchPrompt(systemInstruction, applicantName, jobDescription, app
 		"useChainOfThought": true,
 		"minScore":          minScore,
 		"maxScore":          maxScore,
+		"currentDate":       time.Now().Format("January 2, 2006"),
 	}
 
 	// Add score range to output spec
