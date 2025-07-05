@@ -52,10 +52,10 @@
           <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-0" contenteditable="true">{{.GeneratedCV.PersonalInfo.FirstName | html}} {{.GeneratedCV.PersonalInfo.LastName | html}}</h2>
           <p class="text-sm md:text-base text-gray-700 mb-0.5" contenteditable="true">{{.GeneratedCV.PersonalInfo.Title | html}}</p>
           <div class="text-xs text-gray-600">
+            {{if .GeneratedCV.PersonalInfo.Location}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Location | html}}</span> | {{end}}
             {{if .GeneratedCV.PersonalInfo.Email}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Email | html}}</span> | {{end}}
             {{if .GeneratedCV.PersonalInfo.Phone}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Phone | html}}</span> | {{end}}
-            {{if .GeneratedCV.PersonalInfo.LinkedIn}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.LinkedIn | html}}</span> | {{end}}
-            {{if .GeneratedCV.PersonalInfo.Location}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Location | html}}</span>{{end}}
+            {{if .GeneratedCV.PersonalInfo.LinkedIn}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.LinkedIn | html}}</span>{{end}}
           </div>
         </div>
 
@@ -75,7 +75,7 @@
         {{end}}
 
         <!-- Skills -->
-        <div class="resume-section mb-2" data-section="skills">
+        <div class="resume-section mb-1" data-section="skills">
           <div class="flex justify-between items-center mb-0.5">
             <h3 class="text-sm font-semibold text-gray-900 border-b border-gray-300 pb-0.5 flex-grow">Skills</h3>
             <button onclick="deleteSection(this)" class="ml-2 text-red-500 hover:text-red-700 text-xs print:hidden">
@@ -84,7 +84,7 @@
               </svg>
             </button>
           </div>
-          <div id="skills-container" class="text-xs text-gray-700 leading-relaxed" contenteditable="true">{{range $i, $skill := .GeneratedCV.Skills}}{{if $i}}, {{end}}{{$skill | html}}{{end}}</div>
+          <div id="skills-container" class="text-xs text-gray-700 leading-relaxed mb-1" contenteditable="true">{{range $i, $skill := .GeneratedCV.Skills}}{{if $i}}, {{end}}{{$skill | html}}{{end}}</div>
         </div>
 
         <!-- Work Experience -->
@@ -362,7 +362,7 @@
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({
       unit: 'pt',
-      format: 'letter',
+      format: 'a4',
       orientation: 'portrait'
     });
 
@@ -384,11 +384,12 @@
       throw new Error('Resume content element not found');
     }
 
-    const margin = 40;
+    const margin = 30;
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     const contentWidth = pageWidth - (2 * margin);
     let yPos = margin;
-    const lineHeight = 14;
+    const lineHeight = 12;
 
     // Set document properties for better rendering
     try {
@@ -439,12 +440,12 @@
         }
 
         lines.forEach(line => {
-          if (yPos > doc.internal.pageSize.getHeight() - margin) {
+          if (yPos > pageHeight - margin - 20) {
             doc.addPage();
             yPos = margin;
           }
           doc.text(line, margin, yPos);
-          yPos += fontSize * 1.4;
+          yPos += fontSize * 1.3;
         });
       } catch (textError) {
         // Fallback for any unexpected text processing errors
@@ -493,7 +494,7 @@
         xPos += doc.getTextWidth(part);
       });
 
-      yPos += 14;
+      yPos += 18;
     }
 
     // Process sections
@@ -501,7 +502,7 @@
     sections.forEach(section => {
       const sectionTitle = section.querySelector('h3');
       if (sectionTitle) {
-        yPos += 10; // Spacing before section
+        yPos += 4; // Spacing before section
 
         // Section title in bold
         const titleText = sectionTitle.textContent.trim();
@@ -515,7 +516,7 @@
         doc.setDrawColor(220, 220, 220);
         doc.setLineWidth(0.5);
         doc.line(margin, yPos, pageWidth - margin, yPos);
-        yPos += 12; // Spacing after section title
+        yPos += 10; // Spacing after section title
       }
 
       const sectionType = section.getAttribute('data-section');
@@ -530,7 +531,7 @@
         const skillsContainer = section.querySelector('#skills-container');
         if (skillsContainer) {
           addText(skillsContainer.textContent.trim(), 10, { color: [50, 50, 50] });
-          yPos += 10;
+          yPos += 4;
         }
       } else if (sectionType === 'experience') {
         const experiences = section.querySelectorAll('.mb-1\\.5, .mb-2');
@@ -557,7 +558,7 @@
               const dateWidth = doc.getTextWidth(dateText);
               doc.text(dateText, pageWidth - margin - dateWidth, yPos);
             }
-            yPos += lineHeight;
+            yPos += lineHeight * 0.9;
 
             if (companyInfo) {
               // Parse company and location
@@ -585,7 +586,7 @@
                 doc.setTextColor(100, 100, 100);
                 doc.text(companyText, margin, yPos);
               }
-              yPos += lineHeight;
+              yPos += lineHeight * 0.9;
             }
 
             if (description) {
@@ -610,34 +611,35 @@
 
                   // Draw text with indent
                   wrappedLines.forEach((wLine, idx) => {
-                    if (yPos > doc.internal.pageSize.getHeight() - margin) {
+                    if (yPos > pageHeight - margin - 20) {
                       doc.addPage();
                       yPos = margin;
                     }
                     doc.text(wLine, margin + 10, yPos);
-                    yPos += 10 * 1.4;
+                    yPos += 10 * 1.3;
                   });
                 } else {
                   // Regular text
                   const wrappedLines = doc.splitTextToSize(trimmedLine, contentWidth);
                   wrappedLines.forEach(wLine => {
-                    if (yPos > doc.internal.pageSize.getHeight() - margin) {
+                    if (yPos > pageHeight - margin - 20) {
                       doc.addPage();
                       yPos = margin;
                     }
                     doc.text(wLine, margin, yPos);
-                    yPos += 10 * 1.4;
+                    yPos += 10 * 1.3;
                   });
                 }
               });
             }
 
-            // Add spacing between experiences
+            // spacing between experiences
             if (expIndex < experiences.length - 1) {
-              yPos += 6;
+              yPos += 4;
             }
           }
         });
+        yPos += 4; // Spacing after Work Experience section
       } else if (sectionType === 'education') {
         const educationItems = section.querySelectorAll('.mb-1');
         educationItems.forEach((edu, eduIndex) => {
@@ -661,22 +663,23 @@
               const dateWidth = doc.getTextWidth(dateText);
               doc.text(dateText, pageWidth - margin - dateWidth, yPos);
             }
-            yPos += lineHeight;
+            yPos += lineHeight * 0.9;
 
             if (institution) {
               doc.setFontSize(10);
               doc.setFont(fontFamily, 'normal');
               doc.setTextColor(100, 100, 100);
               doc.text(institution.textContent.trim(), margin, yPos);
-              yPos += lineHeight;
+              yPos += lineHeight * 0.9;
             }
 
-            // Add spacing between education items
+            // spacing between education items
             if (eduIndex < educationItems.length - 1) {
-              yPos += 4;
+              yPos += 3;
             }
           }
         });
+        yPos += 4; // Spacing after Education section
       } else if (sectionType === 'certifications') {
         const certificationItems = section.querySelectorAll('.mb-1');
         certificationItems.forEach((cert, certIndex) => {
@@ -701,22 +704,23 @@
               const dateWidth = doc.getTextWidth(dateText);
               doc.text(dateText, pageWidth - margin - dateWidth, yPos);
             }
-            yPos += lineHeight;
+            yPos += lineHeight * 0.9;
 
             if (certOrg) {
               doc.setFontSize(10);
               doc.setFont(fontFamily, 'normal');
               doc.setTextColor(100, 100, 100);
               doc.text(certOrg.textContent.trim(), margin, yPos);
-              yPos += lineHeight;
+              yPos += lineHeight * 0.9;
             }
 
-            // Add spacing between certification items
+            // spacing between certification items
             if (certIndex < certificationItems.length - 1) {
-              yPos += 4;
+              yPos += 3;
             }
           }
         });
+        yPos += 4; // Spacing after Certifications section
       } else {
         // Handle custom sections
         const sectionClone = section.cloneNode(true);
@@ -734,15 +738,38 @@
           lines.forEach(line => {
             const trimmedLine = line.trim();
             if (trimmedLine.startsWith('•')) {
+              // Handle bullet points with proper page breaks and text wrapping
+              if (yPos > pageHeight - margin - 20) {
+                doc.addPage();
+                yPos = margin;
+              }
               doc.text('•', margin, yPos);
-              doc.text(trimmedLine.substring(1).trim(), margin + 10, yPos);
+              const bulletText = trimmedLine.substring(1).trim();
+              const wrappedLines = doc.splitTextToSize(bulletText, contentWidth - 15);
+              
+              wrappedLines.forEach((wLine, idx) => {
+                if (yPos > pageHeight - margin - 20) {
+                  doc.addPage();
+                  yPos = margin;
+                }
+                doc.text(wLine, margin + 10, yPos);
+                yPos += 10 * 1.3;
+              });
             } else if (trimmedLine) {
-              doc.text(trimmedLine, margin, yPos);
+              // Handle regular text with proper page breaks and text wrapping
+              const wrappedLines = doc.splitTextToSize(trimmedLine, contentWidth);
+              wrappedLines.forEach(wLine => {
+                if (yPos > pageHeight - margin - 20) {
+                  doc.addPage();
+                  yPos = margin;
+                }
+                doc.text(wLine, margin, yPos);
+                yPos += 10 * 1.3;
+              });
             }
-            yPos += 14;
           });
         }
-        yPos += 10;
+        yPos += 4;
       }
     });
 
