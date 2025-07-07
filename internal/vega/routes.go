@@ -39,7 +39,11 @@ func SetupRoutes(a *App) {
 	jobAPIHandler := jobapi.Setup(a.db, &a.config)
 
 	authGroup := a.router.Group("/auth")
-	auth.RegisterPublicRoutes(authGroup, authHandler)
+
+	// Register password-based auth routes only if not in OAuth-only mode
+	if !a.config.OAuthOnlyMode {
+		auth.RegisterPublicRoutes(authGroup, authHandler)
+	}
 
 	// Setup and register Google Auth routes only if enabled
 	if a.config.GoogleOAuthEnabled {

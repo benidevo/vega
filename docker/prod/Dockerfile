@@ -18,11 +18,15 @@ RUN CGO_ENABLED=1 GOOS=linux go build \
 
 FROM alpine:3.20
 
+ARG CLOUD_MODE=false
+
 RUN apk --no-cache add ca-certificates tzdata wget && \
     addgroup -g 1001 -S appgroup && \
     adduser -u 1001 -S appuser -G appgroup
 
 WORKDIR /app
+
+ENV CLOUD_MODE=${CLOUD_MODE}
 
 COPY --from=builder /build/vega .
 

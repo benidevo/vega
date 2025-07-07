@@ -51,10 +51,16 @@ type Settings struct {
 
 	AIProvider             string
 	GeminiAPIKey           string
-	GeminiModel            string // Default model (deprecated, use specific models)
+	GeminiModel            string
 	GeminiModelCVParsing   string // Fast model for CV parsing
 	GeminiModelJobAnalysis string // Advanced model for job analysis
 	GeminiModelCoverLetter string // Advanced model for cover letter generation
+
+	// Cloud mode features
+	IsCloudMode         bool
+	MultiTenancyEnabled bool
+	OAuthOnlyMode       bool
+	GoogleDriveStorage  bool
 }
 
 // NewSettings initializes and returns a Settings struct with default values
@@ -133,7 +139,7 @@ func NewSettings() Settings {
 		GoogleClientSecret:      getEnv("GOOGLE_CLIENT_SECRET", ""),
 		GoogleClientRedirectURL: getEnv("GOOGLE_CLIENT_REDIRECT_URL", "http://localhost:8765/auth/google/callback"),
 		GoogleAuthUserInfoURL:   "https://www.googleapis.com/oauth2/v3/userinfo",
-		GoogleAuthUserInfoScope: "https://www.googleapis.com/auth/userinfo.email",
+		GoogleAuthUserInfoScope: getEnv("GOOGLE_AUTH_USER_INFO_SCOPE", "https://www.googleapis.com/auth/userinfo.email"),
 
 		CORSAllowedOrigins:   corsOrigins,
 		CORSAllowCredentials: false,
@@ -152,6 +158,11 @@ func NewSettings() Settings {
 		GeminiModelCVParsing:   getEnv("GEMINI_MODEL_CV_PARSING", "gemini-1.5-flash"),
 		GeminiModelJobAnalysis: getEnv("GEMINI_MODEL_JOB_ANALYSIS", "gemini-2.5-flash"),
 		GeminiModelCoverLetter: getEnv("GEMINI_MODEL_COVER_LETTER", "gemini-2.5-flash"),
+
+		IsCloudMode:         getEnv("CLOUD_MODE", "false") == "true",
+		MultiTenancyEnabled: getEnv("CLOUD_MODE", "false") == "true" && getEnv("MULTI_TENANCY_ENABLED", "true") == "true",
+		OAuthOnlyMode:       getEnv("CLOUD_MODE", "false") == "true" && getEnv("OAUTH_ONLY_MODE", "true") == "true",
+		GoogleDriveStorage:  getEnv("CLOUD_MODE", "false") == "true" && getEnv("GOOGLE_DRIVE_STORAGE", "true") == "true",
 	}
 }
 
