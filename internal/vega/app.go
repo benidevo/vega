@@ -14,6 +14,7 @@ import (
 	"github.com/benidevo/vega/internal/common/logger"
 	"github.com/benidevo/vega/internal/config"
 	"github.com/benidevo/vega/internal/db"
+	"github.com/benidevo/vega/internal/storage"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -23,11 +24,12 @@ import (
 // App represents the core application structure, encapsulating configuration,
 // HTTP router, database connection, HTTP server, and a channel for handling OS signals.
 type App struct {
-	config config.Settings
-	router *gin.Engine
-	db     *sql.DB
-	server *http.Server
-	done   chan os.Signal
+	config         config.Settings
+	router         *gin.Engine
+	db             *sql.DB
+	storageFactory *storage.Factory
+	server         *http.Server
+	done           chan os.Signal
 }
 
 // New creates and returns a new instance of App with the provided configuration.
@@ -127,6 +129,13 @@ func (a *App) Shutdown(ctx context.Context) error {
 		err = a.server.Shutdown(ctx)
 	}
 
+	if a.storageFactory != nil {
+		storageErr := a.storageFactory.Close()
+		if err == nil {
+			err = storageErr
+		}
+	}
+
 	if a.db != nil {
 		dbErr := a.db.Close()
 		if err == nil {
@@ -164,6 +173,12 @@ func (a *App) setupDependencies() error {
 			return err
 		}
 	}
+
+	storageFactory, err := storage.NewFactory(&a.config, a.db)
+	if err != nil {
+		return err
+	}
+	a.storageFactory = storageFactory
 
 	return nil
 }
