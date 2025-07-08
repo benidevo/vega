@@ -13,9 +13,10 @@ import (
 
 // Factory creates storage instances based on configuration
 type Factory struct {
-	config   *config.Settings
-	db       *sql.DB
-	provider StorageProvider
+	config      *config.Settings
+	db          *sql.DB
+	provider    StorageProvider
+	driveConfig *DriveProviderConfig
 }
 
 // NewFactory creates a new storage factory
@@ -90,6 +91,35 @@ func (p *temporaryProvider) GetStorage(ctx context.Context, userID string) (User
 
 func (p *temporaryProvider) CloseAll() error {
 	return nil
+}
+
+// DriveProviderConfig contains configuration for Google Drive storage
+type DriveProviderConfig struct {
+	CacheProvider StorageProvider
+	OAuth2Config  interface{} // *oauth2.Config from golang.org/x/oauth2
+}
+
+// SetDriveProvider sets up Google Drive storage provider
+func (f *Factory) SetDriveProvider(cfg *DriveProviderConfig) {
+	// This will be properly initialized when the drive package is imported
+	// For now, we store the config for later use
+	f.driveConfig = cfg
+}
+
+// GetUserStorageWithToken returns storage for a user with OAuth token
+func (f *Factory) GetUserStorageWithToken(ctx context.Context, userID string, token interface{}) (UserStorage, error) {
+	if userID == "" {
+		return nil, fmt.Errorf("user ID cannot be empty")
+	}
+
+	// Check if Google Drive is configured
+	if f.driveConfig != nil && token != nil {
+		// This will be implemented when drive package is imported
+		// For now, fall back to regular provider
+		return f.provider.GetStorage(ctx, userID)
+	}
+
+	return f.provider.GetStorage(ctx, userID)
 }
 
 // temporaryStorage is a no-op implementation

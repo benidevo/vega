@@ -3,6 +3,7 @@ package vega
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"html/template"
 	"net/http"
 	"os"
@@ -15,7 +16,6 @@ import (
 	"github.com/benidevo/vega/internal/config"
 	"github.com/benidevo/vega/internal/db"
 	"github.com/benidevo/vega/internal/storage"
-	"github.com/benidevo/vega/internal/storage/badger"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -181,17 +181,9 @@ func (a *App) setupDependencies() error {
 	}
 	a.storageFactory = storageFactory
 
-	// Initialize Badger provider if multi-tenancy is enabled
-	if a.config.MultiTenancyEnabled {
-		cacheDir := "/app/data/cache"
-		if a.config.IsDevelopment {
-			cacheDir = "./data/cache"
-		}
-
-		provider := badger.NewProvider(cacheDir)
-		a.storageFactory.SetProvider(provider)
-
-		log.Info().Str("cache_dir", cacheDir).Msg("Initialized Badger storage provider")
+	// Initialize storage providers
+	if err := InitializeStorageProviders(a); err != nil {
+		return fmt.Errorf("failed to initialize storage providers: %w", err)
 	}
 
 	return nil
