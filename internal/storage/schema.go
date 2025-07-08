@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-
 // UserDocument represents the complete user data stored in JSON format
 type UserDocument struct {
 	UpdatedAt time.Time    `json:"updated_at"`

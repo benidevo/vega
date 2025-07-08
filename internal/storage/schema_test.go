@@ -37,8 +37,8 @@ func TestUserDocument_Validate(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "empty document",
-			doc: &UserDocument{},
+			name:    "empty document",
+			doc:     &UserDocument{},
 			wantErr: false, // No validation rules currently
 		},
 	}
