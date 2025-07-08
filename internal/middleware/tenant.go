@@ -37,7 +37,7 @@ func TenantIsolation(factory *storage.Factory, cfg *config.Settings) gin.Handler
 			return
 		}
 
-		userStorage, err := factory.GetUserStorage(userEmail)
+		userStorage, err := factory.GetUserStorage(c.Request.Context(), userEmail)
 		if err != nil {
 			c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
 				"title":       "Something Went Wrong",

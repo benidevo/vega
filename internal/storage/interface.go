@@ -37,7 +37,7 @@ type UserStorage interface {
 // StorageProvider creates storage instances for users
 type StorageProvider interface {
 	// GetStorage returns a storage instance for the given user
-	GetStorage(userID string) (UserStorage, error)
+	GetStorage(ctx context.Context, userID string) (UserStorage, error)
 
 	// CloseAll closes all storage instances
 	CloseAll() error

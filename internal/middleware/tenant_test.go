@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"html/template"
 	"net/http"
 	"net/http/httptest"
@@ -178,7 +179,7 @@ func TestGetUserStorage(t *testing.T) {
 			setupContext: func(c *gin.Context) {
 				cfg := &config.Settings{}
 				factory, _ := storage.NewFactory(cfg, nil)
-				userStorage, _ := factory.GetUserStorage("test@example.com")
+				userStorage, _ := factory.GetUserStorage(context.Background(), "test@example.com")
 				c.Set(UserStorageKey, userStorage)
 			},
 			expectStorage: true,
@@ -224,7 +225,7 @@ func TestRequireUserStorage(t *testing.T) {
 			setupContext: func(c *gin.Context) {
 				cfg := &config.Settings{}
 				factory, _ := storage.NewFactory(cfg, nil)
-				userStorage, _ := factory.GetUserStorage("test@example.com")
+				userStorage, _ := factory.GetUserStorage(context.Background(), "test@example.com")
 				c.Set(UserStorageKey, userStorage)
 			},
 			expectAbort:  false,

@@ -34,29 +34,38 @@ func NewFactory(cfg *config.Settings, db *sql.DB) (*Factory, error) {
 
 // initializeProvider sets up the storage provider based on configuration
 func (f *Factory) initializeProvider() error {
-	// For now, always use SQLite storage
-	// In future phases, this will check for GoogleDriveStorage flag
-	// and initialize appropriate provider
+	// Check if multi-tenancy is enabled
+	if f.config.MultiTenancyEnabled {
+		// Note: Badger provider is set externally via SetProvider() in app.go
+		// to avoid import cycles. Temporary provider is used as fallback only
+		f.provider = &temporaryProvider{db: f.db}
+		return nil
+	}
 
-	// For Phase 2, we'll use a temporary provider
-	// Phase 5 will implement the actual providers
+	// For now, use temporary provider for non-multi-tenancy mode
+	// This will be replaced with SQLite provider in future
 	f.provider = &temporaryProvider{db: f.db}
 
 	return nil
 }
 
 // GetUserStorage returns a storage instance for the given user
-func (f *Factory) GetUserStorage(userID string) (UserStorage, error) {
+func (f *Factory) GetUserStorage(ctx context.Context, userID string) (UserStorage, error) {
 	if userID == "" {
 		return nil, fmt.Errorf("user ID cannot be empty")
 	}
 
-	return f.provider.GetStorage(userID)
+	return f.provider.GetStorage(ctx, userID)
 }
 
 // GetProvider returns the underlying storage provider
 func (f *Factory) GetProvider() StorageProvider {
 	return f.provider
+}
+
+// SetProvider sets the storage provider (used to avoid import cycles)
+func (f *Factory) SetProvider(provider StorageProvider) {
+	f.provider = provider
 }
 
 // Close closes all storage instances
@@ -67,12 +76,14 @@ func (f *Factory) Close() error {
 	return nil
 }
 
-// temporaryProvider is a placeholder for Phase 2
+// temporaryProvider is a no-op provider used when multi-tenancy is disabled
+// In single-tenant mode, the app uses direct SQLite repositories instead of the storage abstraction
+// TODO: Future improvement - implement SQLiteProvider to unify storage access patterns
 type temporaryProvider struct {
 	db *sql.DB
 }
 
-func (p *temporaryProvider) GetStorage(userID string) (UserStorage, error) {
+func (p *temporaryProvider) GetStorage(ctx context.Context, userID string) (UserStorage, error) {
 	// Return a temporary no-op storage for now
 	return &temporaryStorage{userID: userID}, nil
 }
@@ -81,7 +92,8 @@ func (p *temporaryProvider) CloseAll() error {
 	return nil
 }
 
-// temporaryStorage is a no-op implementation for Phase 2
+// temporaryStorage is a no-op implementation
+// Used when multi-tenancy is disabled since the app uses direct SQLite repositories
 type temporaryStorage struct {
 	userID string
 }

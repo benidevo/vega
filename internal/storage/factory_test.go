@@ -84,7 +84,7 @@ func TestFactory_GetUserStorage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			storage, err := factory.GetUserStorage(tt.userID)
+			storage, err := factory.GetUserStorage(context.Background(), tt.userID)
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Nil(t, storage)
@@ -128,7 +128,7 @@ func TestTemporaryStorage_NotImplemented(t *testing.T) {
 	factory, err := NewFactory(cfg, db)
 	require.NoError(t, err)
 
-	storage, err := factory.GetUserStorage("test@example.com")
+	storage, err := factory.GetUserStorage(context.Background(), "test@example.com")
 	require.NoError(t, err)
 	require.NotNil(t, storage)
 
