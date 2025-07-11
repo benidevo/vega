@@ -11,9 +11,11 @@ import (
 
 // Provider manages SQLite storage instances for multiple users
 type Provider struct {
-	dataDir   string
-	instances map[string]*Storage
-	mu        sync.RWMutex
+	dataDir       string
+	instances     map[string]*Storage
+	mu            sync.RWMutex
+	driveProvider storage.DriveProvider
+	isCloudMode   bool
 }
 
 // NewProvider creates a new SQLite storage provider
@@ -21,6 +23,16 @@ func NewProvider(dataDir string) *Provider {
 	return &Provider{
 		dataDir:   dataDir,
 		instances: make(map[string]*Storage),
+	}
+}
+
+// NewProviderWithDrive creates a new SQLite storage provider with Google Drive support
+func NewProviderWithDrive(dataDir string, driveProvider storage.DriveProvider) *Provider {
+	return &Provider{
+		dataDir:       dataDir,
+		instances:     make(map[string]*Storage),
+		driveProvider: driveProvider,
+		isCloudMode:   true,
 	}
 }
 
@@ -45,10 +57,25 @@ func (p *Provider) GetStorage(ctx context.Context, userID string) (storage.UserS
 		return instance, nil
 	}
 
-	instance, err := NewStorage(userID, p.dataDir)
+	var newInstance *Storage
+	var err error
+
+	if p.isCloudMode && p.driveProvider != nil {
+		newInstance, err = NewStorageWithOptions(StorageOptions{
+			UserID:        userID,
+			DataDir:       p.dataDir,
+			DriveProvider: p.driveProvider,
+			IsCloudMode:   true,
+		})
+	} else {
+		newInstance, err = NewStorage(userID, p.dataDir)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to create storage for user %s: %w", userID, err)
 	}
+
+	instance = newInstance
 
 	p.instances[userID] = instance
 	return instance, nil

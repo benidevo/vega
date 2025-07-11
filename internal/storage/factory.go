@@ -11,11 +11,20 @@ import (
 	settingsmodels "github.com/benidevo/vega/internal/settings/models"
 )
 
+// DriveProvider interface for Google Drive operations
+type DriveProvider interface {
+	Download(ctx context.Context, userID string) (string, error)
+	Upload(ctx context.Context, userID string, tempFilePath string) error
+	Delete(ctx context.Context, userID string) error
+	GetLastModified(ctx context.Context, userID string) (time.Time, error)
+}
+
 // Factory creates storage instances based on configuration
 type Factory struct {
-	config   *config.Settings
-	db       *sql.DB
-	provider StorageProvider
+	config        *config.Settings
+	db            *sql.DB
+	provider      StorageProvider
+	driveProvider DriveProvider
 }
 
 // NewFactory creates a new storage factory
@@ -66,6 +75,11 @@ func (f *Factory) GetProvider() StorageProvider {
 // SetProvider sets the storage provider (used to avoid import cycles)
 func (f *Factory) SetProvider(provider StorageProvider) {
 	f.provider = provider
+}
+
+// SetDriveProvider sets the Google Drive provider for cloud mode
+func (f *Factory) SetDriveProvider(provider DriveProvider) {
+	f.driveProvider = provider
 }
 
 // Close closes all storage instances

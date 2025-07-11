@@ -57,10 +57,11 @@ type Settings struct {
 	GeminiModelCoverLetter string // Advanced model for cover letter generation
 
 	// Cloud mode features
-	IsCloudMode         bool
-	MultiTenancyEnabled bool
-	OAuthOnlyMode       bool
-	GoogleDriveStorage  bool
+	IsCloudMode               bool
+	MultiTenancyEnabled       bool
+	OAuthOnlyMode             bool
+	GoogleDriveStorageEnabled bool
+	GoogleDriveStorage        bool
 }
 
 // NewSettings initializes and returns a Settings struct with default values
@@ -159,10 +160,11 @@ func NewSettings() Settings {
 		GeminiModelJobAnalysis: getEnv("GEMINI_MODEL_JOB_ANALYSIS", "gemini-2.5-flash"),
 		GeminiModelCoverLetter: getEnv("GEMINI_MODEL_COVER_LETTER", "gemini-2.5-flash"),
 
-		IsCloudMode:         getEnv("CLOUD_MODE", "false") == "true",
-		MultiTenancyEnabled: getEnv("CLOUD_MODE", "false") == "true" && getEnv("MULTI_TENANCY_ENABLED", "true") == "true",
-		OAuthOnlyMode:       getEnv("CLOUD_MODE", "false") == "true" && getEnv("OAUTH_ONLY_MODE", "true") == "true",
-		GoogleDriveStorage:  getEnv("CLOUD_MODE", "false") == "true" && getEnv("GOOGLE_DRIVE_STORAGE", "true") == "true",
+		IsCloudMode:               getEnv("CLOUD_MODE", "false") == "true",
+		MultiTenancyEnabled:       getEnv("CLOUD_MODE", "false") == "true" && getEnv("MULTI_TENANCY_ENABLED", "true") == "true",
+		OAuthOnlyMode:             getEnv("CLOUD_MODE", "false") == "true" && getEnv("OAUTH_ONLY_MODE", "true") == "true",
+		GoogleDriveStorageEnabled: getEnv("CLOUD_MODE", "false") == "true" && getEnv("GOOGLE_DRIVE_STORAGE", "true") == "true",
+		GoogleDriveStorage:        getEnv("CLOUD_MODE", "false") == "true" && getEnv("GOOGLE_DRIVE_STORAGE", "true") == "true",
 	}
 }
 

@@ -12,6 +12,8 @@ import (
 const (
 	// UserStorageKey is the context key for user storage
 	UserStorageKey = "user_storage"
+	// OAuthTokenKey is the context key for OAuth token
+	OAuthTokenKey = "oauth_token"
 )
 
 // TenantIsolation middleware ensures each user has their own storage instance
