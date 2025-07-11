@@ -188,24 +188,11 @@ func (a *App) setupDependencies() error {
 			dataDir = "./data"
 		}
 
-		// Check if Google Drive storage is enabled
-		if a.config.GoogleDriveStorageEnabled && a.config.IsCloudMode {
-			// For now, use SQLite with local sync
-			// Google Drive provider will be initialized per-user with their OAuth token
-			provider := sqlite.NewProvider(dataDir)
-			a.storageFactory.SetProvider(provider)
+		// Use SQLite storage for multi-tenancy
+		provider := sqlite.NewProvider(dataDir)
+		a.storageFactory.SetProvider(provider)
 
-			log.Info().
-				Str("data_dir", dataDir).
-				Bool("google_drive_enabled", true).
-				Msg("Initialized SQLite storage provider with Google Drive sync capability")
-		} else {
-			// Use SQLite storage for multi-tenancy
-			provider := sqlite.NewProvider(dataDir)
-			a.storageFactory.SetProvider(provider)
-
-			log.Info().Str("data_dir", dataDir).Msg("Initialized SQLite storage provider for multi-tenancy")
-		}
+		log.Info().Str("data_dir", dataDir).Msg("Initialized SQLite storage provider for multi-tenancy")
 	}
 
 	return nil

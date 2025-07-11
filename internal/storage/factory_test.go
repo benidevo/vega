@@ -20,16 +20,14 @@ func TestNewFactory(t *testing.T) {
 		{
 			name: "successful creation with default config",
 			config: &config.Settings{
-				IsCloudMode:        false,
-				GoogleDriveStorage: false,
+				IsCloudMode: false,
 			},
 			wantErr: false,
 		},
 		{
 			name: "successful creation with cloud mode",
 			config: &config.Settings{
-				IsCloudMode:        true,
-				GoogleDriveStorage: true,
+				IsCloudMode: true,
 			},
 			wantErr: false,
 		},

@@ -19,14 +19,6 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-// DriveProvider interface for Google Drive operations
-type DriveProvider interface {
-	Download(ctx context.Context, userID string) (string, error)
-	Upload(ctx context.Context, userID string, tempFilePath string) error
-	Delete(ctx context.Context, userID string) error
-	GetLastModified(ctx context.Context, userID string) (time.Time, error)
-}
-
 type Storage struct {
 	userID string
 	mu     sync.RWMutex
@@ -48,31 +40,10 @@ type Storage struct {
 	lastSync   time.Time
 	syncTicker *time.Ticker
 	stopSync   chan struct{}
-
-	// Google Drive sync (optional)
-	driveProvider DriveProvider
-	isCloudMode   bool
-}
-
-// StorageOptions contains options for creating a new Storage instance
-type StorageOptions struct {
-	UserID        string
-	DataDir       string
-	DriveProvider DriveProvider
-	IsCloudMode   bool
 }
 
 func NewStorage(userID, dataDir string) (*Storage, error) {
-	return NewStorageWithOptions(StorageOptions{
-		UserID:      userID,
-		DataDir:     dataDir,
-		IsCloudMode: false,
-	})
-}
-
-// NewStorageWithOptions creates a new Storage instance with custom options
-func NewStorageWithOptions(opts StorageOptions) (*Storage, error) {
-	userDir := filepath.Join(opts.DataDir, opts.UserID)
+	userDir := filepath.Join(dataDir, userID)
 	dbPath := filepath.Join(userDir, "vega.db")
 	badgerPath := filepath.Join(userDir, "cache")
 
@@ -87,28 +58,7 @@ func NewStorageWithOptions(opts StorageOptions) (*Storage, error) {
 		return nil, fmt.Errorf("failed to open badger: %w", err)
 	}
 
-	// In cloud mode, try to download from Google Drive first
-	var sqliteDB *sql.DB
-	if opts.IsCloudMode && opts.DriveProvider != nil {
-		ctx := context.Background()
-		tempPath, err := opts.DriveProvider.Download(ctx, opts.UserID)
-		if err != nil {
-			badgerDB.Close()
-			return nil, fmt.Errorf("failed to download from Google Drive: %w", err)
-		}
-
-		if tempPath != "" {
-			// Copy temp file to local path for SQLite to use
-			if err := copyFile(tempPath, dbPath); err != nil {
-				badgerDB.Close()
-				os.Remove(tempPath)
-				return nil, fmt.Errorf("failed to copy temp file: %w", err)
-			}
-			os.Remove(tempPath)
-		}
-	}
-
-	sqliteDB, err = sql.Open("sqlite", dbPath+"?_journal_mode=WAL&_synchronous=NORMAL&_busy_timeout=5000")
+	sqliteDB, err := sql.Open("sqlite", dbPath+"?_journal_mode=WAL&_synchronous=NORMAL&_busy_timeout=5000")
 	if err != nil {
 		badgerDB.Close()
 		return nil, fmt.Errorf("failed to open database: %w", err)
@@ -124,14 +74,12 @@ func NewStorageWithOptions(opts StorageOptions) (*Storage, error) {
 	}
 
 	s := &Storage{
-		userID:        opts.UserID,
-		badgerDB:      badgerDB,
-		sqliteDB:      sqliteDB,
-		dbPath:        dbPath,
-		lastSync:      time.Now(),
-		stopSync:      make(chan struct{}),
-		driveProvider: opts.DriveProvider,
-		isCloudMode:   opts.IsCloudMode,
+		userID:   userID,
+		badgerDB: badgerDB,
+		sqliteDB: sqliteDB,
+		dbPath:   dbPath,
+		lastSync: time.Now(),
+		stopSync: make(chan struct{}),
 	}
 
 	if err := s.migrate(); err != nil {
@@ -144,8 +92,8 @@ func NewStorageWithOptions(opts StorageOptions) (*Storage, error) {
 	s.settingsRepo = settingsRepo.NewProfileRepository(sqliteDB)
 
 	// Create user and profile if they don't exist
-	userIDInt := hashEmail(opts.UserID)
-	if err := s.ensureUserExists(userIDInt, opts.UserID); err != nil {
+	userIDInt := hashEmail(userID)
+	if err := s.ensureUserExists(userIDInt, userID); err != nil {
 		s.Close()
 		return nil, fmt.Errorf("failed to ensure user exists: %w", err)
 	}
@@ -706,30 +654,6 @@ func (s *Storage) syncToSQLite(ctx context.Context) error {
 		return nil
 	})
 
-	// If cloud mode is enabled, sync to Google Drive
-	if s.isCloudMode && s.driveProvider != nil {
-		tempFile, err := os.CreateTemp("", fmt.Sprintf("vega-%s-*.db", s.userID))
-		if err != nil {
-			return fmt.Errorf("failed to create temp file: %w", err)
-		}
-		tempPath := tempFile.Name()
-		tempFile.Close()
-
-		// Copy SQLite file to temp location
-		if err := copyFile(s.dbPath, tempPath); err != nil {
-			os.Remove(tempPath)
-			return fmt.Errorf("failed to copy database to temp file: %w", err)
-		}
-
-		// Upload to Google Drive
-		if err := s.driveProvider.Upload(ctx, s.userID, tempPath); err != nil {
-			os.Remove(tempPath)
-			return fmt.Errorf("failed to upload to Google Drive: %w", err)
-		}
-
-		os.Remove(tempPath)
-	}
-
 	return nil
 }
 
@@ -850,34 +774,6 @@ func copyFile(src, dst string) error {
 
 	_, err = io.Copy(destination, source)
 	return err
-}
-
-// UserDBStatus tracks the status of a user's database
-type UserDBStatus struct {
-	UserID           string
-	HasRemoteDB      bool
-	LastSyncTime     time.Time
-	MigrationVersion int
-	IsNew            bool
-}
-
-// CheckUserDBStatus checks if user has existing DB in Google Drive
-func (s *Storage) CheckUserDBStatus(ctx context.Context) (*UserDBStatus, error) {
-	status := &UserDBStatus{
-		UserID: s.userID,
-		IsNew:  true,
-	}
-
-	if s.isCloudMode && s.driveProvider != nil {
-		lastMod, err := s.driveProvider.GetLastModified(ctx, s.userID)
-		if err == nil && !lastMod.IsZero() {
-			status.HasRemoteDB = true
-			status.LastSyncTime = lastMod
-			status.IsNew = false
-		}
-	}
-
-	return status, nil
 }
 
 // ApplyMigrationsIfNeeded checks and applies migrations for existing users
