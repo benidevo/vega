@@ -23,6 +23,15 @@ func NewJobAPIHandler(jobService *job.JobService) *JobAPIHandler {
 
 // CreateJob handles the creation of a new job from API request
 func (h *JobAPIHandler) CreateJob(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized",
+		})
+		return
+	}
+	userID := userIDValue.(int)
+
 	var req apimodels.CreateJobRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -46,6 +55,7 @@ func (h *JobAPIHandler) CreateJob(c *gin.Context) {
 
 	createdJob, err := h.jobService.CreateJob(
 		c.Request.Context(),
+		userID,
 		req.Title,
 		req.Description,
 		req.Company,

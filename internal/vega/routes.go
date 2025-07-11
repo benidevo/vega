@@ -10,7 +10,6 @@ import (
 	"github.com/benidevo/vega/internal/auth"
 	"github.com/benidevo/vega/internal/home"
 	"github.com/benidevo/vega/internal/job"
-	"github.com/benidevo/vega/internal/middleware"
 	"github.com/benidevo/vega/internal/settings"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -19,10 +18,6 @@ import (
 // SetupRoutes configures all application routes and middleware
 func SetupRoutes(a *App) {
 	a.router.Use(globalErrorHandler)
-
-	if a.config.IsCloudMode && a.config.MultiTenancyEnabled {
-		a.router.Use(middleware.TenantIsolation(a.storageFactory, &a.config))
-	}
 
 	a.router.Static("/static", "./static")
 

@@ -205,6 +205,13 @@ func (h *JobHandler) ValidateJobID() gin.HandlerFunc {
 // gathers job statistics, and renders the dashboard template with the results.
 func (h *JobHandler) ListJobsPage(c *gin.Context) {
 	username, _ := c.Get("username")
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		h.renderDashboardError(c, models.ErrUnauthorized)
+		return
+	}
+	userID := userIDValue.(int)
+
 	statusParam := c.Query("status")
 	pageParam := c.DefaultQuery("page", "1")
 	limitParam := c.DefaultQuery("limit", "12")
@@ -234,7 +241,7 @@ func (h *JobHandler) ListJobsPage(c *gin.Context) {
 		}
 	}
 
-	jobsWithPagination, err := h.service.GetJobsWithPagination(c.Request.Context(), filter)
+	jobsWithPagination, err := h.service.GetJobsWithPagination(c.Request.Context(), userID, filter)
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
 			"title":               "Dashboard",
@@ -307,6 +314,13 @@ func (h *JobHandler) GetNewJobForm(c *gin.Context) {
 
 // CreateJob handles form submission for creating a new job
 func (h *JobHandler) CreateJob(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		h.renderError(c, models.ErrUnauthorized)
+		return
+	}
+	userID := userIDValue.(int)
+
 	title := strings.TrimSpace(c.PostForm("title"))
 	description := strings.TrimSpace(c.PostForm("description"))
 	companyName := strings.TrimSpace(c.PostForm("company_name"))
@@ -357,7 +371,7 @@ func (h *JobHandler) CreateJob(c *gin.Context) {
 		options = append(options, models.WithNotes(notes))
 	}
 
-	_, err = h.service.CreateJob(c.Request.Context(), title, description, companyName, options...)
+	_, err = h.service.CreateJob(c.Request.Context(), userID, title, description, companyName, options...)
 	if err != nil {
 		h.renderError(c, err)
 		return
@@ -383,7 +397,14 @@ func (h *JobHandler) GetJobDetails(c *gin.Context) {
 	jobID := jobIDValue.(int)
 	jobIDStr := c.Param("id")
 
-	job, err := h.service.GetJob(c.Request.Context(), jobID)
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		h.renderError(c, models.ErrUnauthorized)
+		return
+	}
+	userID := userIDValue.(int)
+
+	job, err := h.service.GetJob(c.Request.Context(), userID, jobID)
 	if err != nil {
 		if errors.Is(err, models.ErrJobNotFound) {
 			c.HTML(http.StatusNotFound, "layouts/base.html", gin.H{
@@ -402,7 +423,7 @@ func (h *JobHandler) GetJobDetails(c *gin.Context) {
 
 	// Check profile validation for AI features
 	var profileValidationError error
-	userIDValue, exists := c.Get("userID")
+	userIDValue, exists = c.Get("userID")
 	if exists && h.service.settingsService != nil {
 		userID := userIDValue.(int)
 		profile, err := h.service.settingsService.GetProfileSettings(c.Request.Context(), userID)
@@ -442,6 +463,13 @@ func (h *JobHandler) UpdateJobField(c *gin.Context) {
 	}
 	jobID := jobIDValue.(int)
 
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		h.renderError(c, models.ErrUnauthorized)
+		return
+	}
+	userID := userIDValue.(int)
+
 	field := c.Param("field")
 	err := h.service.ValidateFieldName(field)
 	if err != nil {
@@ -449,7 +477,7 @@ func (h *JobHandler) UpdateJobField(c *gin.Context) {
 		return
 	}
 
-	job, err := h.service.GetJob(c.Request.Context(), jobID)
+	job, err := h.service.GetJob(c.Request.Context(), userID, jobID)
 	if err != nil {
 		h.renderError(c, err)
 		return
@@ -474,7 +502,7 @@ func (h *JobHandler) UpdateJobField(c *gin.Context) {
 		return
 	}
 
-	err = h.service.UpdateJob(c.Request.Context(), job)
+	err = h.service.UpdateJob(c.Request.Context(), userID, job)
 	if err != nil {
 		// Use dashboard-specific error format for status updates
 		if field == "status" {
@@ -503,7 +531,14 @@ func (h *JobHandler) DeleteJob(c *gin.Context) {
 	}
 	jobID := jobIDValue.(int)
 
-	err := h.service.DeleteJob(c.Request.Context(), jobID)
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		h.renderError(c, models.ErrUnauthorized)
+		return
+	}
+	userID := userIDValue.(int)
+
+	err := h.service.DeleteJob(c.Request.Context(), userID, jobID)
 	if err != nil {
 		h.renderError(c, err)
 		return
@@ -675,7 +710,14 @@ func (h *JobHandler) GetMatchHistory(c *gin.Context) {
 	jobID := jobIDValue.(int)
 	jobIDStr := c.Param("id")
 
-	job, err := h.service.GetJob(c.Request.Context(), jobID)
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		h.renderError(c, models.ErrUnauthorized)
+		return
+	}
+	userID := userIDValue.(int)
+
+	job, err := h.service.GetJob(c.Request.Context(), userID, jobID)
 	if err != nil {
 		if errors.Is(err, models.ErrJobNotFound) {
 			c.HTML(http.StatusNotFound, "layouts/base.html", gin.H{
@@ -690,7 +732,7 @@ func (h *JobHandler) GetMatchHistory(c *gin.Context) {
 		return
 	}
 
-	matchHistory, err := h.service.GetJobMatchHistory(c.Request.Context(), jobID)
+	matchHistory, err := h.service.GetJobMatchHistory(c.Request.Context(), userID, jobID)
 	if err != nil {
 		h.renderError(c, err)
 		return
@@ -721,6 +763,13 @@ func (h *JobHandler) DeleteMatchResult(c *gin.Context) {
 	}
 	jobID := jobIDValue.(int)
 
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		h.renderError(c, models.ErrUnauthorized)
+		return
+	}
+	userID := userIDValue.(int)
+
 	matchIDStr := c.Param("matchId")
 	matchID, err := strconv.Atoi(matchIDStr)
 	if err != nil {
@@ -728,7 +777,7 @@ func (h *JobHandler) DeleteMatchResult(c *gin.Context) {
 		return
 	}
 
-	err = h.service.DeleteMatchResult(c.Request.Context(), jobID, matchID)
+	err = h.service.DeleteMatchResult(c.Request.Context(), userID, jobID, matchID)
 	if err != nil {
 		h.renderError(c, err)
 		return

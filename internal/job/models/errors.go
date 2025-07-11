@@ -6,6 +6,7 @@ import (
 
 var (
 	// Model validation errors
+	ErrUnauthorized            = commonerrors.New("unauthorized")
 	ErrInvalidJobStatus        = commonerrors.New("invalid job status")
 	ErrInvalidStatusTransition = commonerrors.New("job status can only move forward")
 	ErrJobTitleRequired        = commonerrors.New("job title is required")
