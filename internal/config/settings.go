@@ -122,7 +122,7 @@ func NewSettings() Settings {
 		IsDevelopment:      isDevelopment,
 		TokenSecret:        getEnv("TOKEN_SECRET", "default-secret-key"),
 		IsTest:             isTest,
-		MigrationsDir:      "migrations/sqlite",
+		MigrationsDir:      "internal/storage/sqlite/migrations",
 
 		DBMaxOpenConns:    dbMaxOpenConns,
 		DBMaxIdleConns:    dbMaxIdleConns,

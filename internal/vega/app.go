@@ -3,7 +3,6 @@ package vega
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"html/template"
 	"net/http"
 	"os"
@@ -16,6 +15,7 @@ import (
 	"github.com/benidevo/vega/internal/config"
 	"github.com/benidevo/vega/internal/db"
 	"github.com/benidevo/vega/internal/storage"
+	"github.com/benidevo/vega/internal/storage/sqlite"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -181,9 +181,18 @@ func (a *App) setupDependencies() error {
 	}
 	a.storageFactory = storageFactory
 
-	// Initialize storage providers
-	if err := InitializeStorageProviders(a); err != nil {
-		return fmt.Errorf("failed to initialize storage providers: %w", err)
+	// Initialize storage provider if multi-tenancy is enabled
+	if a.config.MultiTenancyEnabled {
+		dataDir := "/app/data"
+		if a.config.IsDevelopment {
+			dataDir = "./data"
+		}
+
+		// Use SQLite storage for multi-tenancy
+		provider := sqlite.NewProvider(dataDir)
+		a.storageFactory.SetProvider(provider)
+
+		log.Info().Str("data_dir", dataDir).Msg("Initialized SQLite storage provider for multi-tenancy")
 	}
 
 	return nil
