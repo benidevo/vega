@@ -517,22 +517,24 @@ func (h *SettingsHandler) GetSecuritySettingsPage(c *gin.Context) {
 	security, err := h.service.GetSecuritySettings(c.Request.Context(), username.(string))
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
-			"title":       "Something Went Wrong",
-			"page":        "500",
-			"currentYear": time.Now().Year(),
+			"title":               "Something Went Wrong",
+			"page":                "500",
+			"currentYear":         time.Now().Year(),
+			"securityPageEnabled": h.service.cfg.SecurityPageEnabled,
 		})
 		return
 	}
 
 	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-		"title":          "Security",
-		"page":           "settings-security",
-		"activeNav":      "security",
-		"activeSettings": "security",
-		"pageTitle":      "Security",
-		"currentYear":    time.Now().Year(),
-		"username":       username,
-		"security":       security,
+		"title":               "Security",
+		"page":                "settings-security",
+		"activeNav":           "security",
+		"activeSettings":      "security",
+		"pageTitle":           "Security",
+		"currentYear":         time.Now().Year(),
+		"securityPageEnabled": h.service.cfg.SecurityPageEnabled,
+		"username":            username,
+		"security":            security,
 	})
 }
 

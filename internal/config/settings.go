@@ -71,6 +71,7 @@ type Settings struct {
 func NewSettings() Settings {
 	isDevelopment := getEnv("IS_DEVELOPMENT", "false") == "true"
 	isTest := getEnv("GO_ENV", "") == "test"
+	isCloudMode := getEnv("CLOUD_MODE", "false") == "true"
 
 	// Production-optimized defaults
 	accessTokenExpiry := 60 * time.Minute // 1 hour
@@ -136,7 +137,7 @@ func NewSettings() Settings {
 		CookieSecure:       cookieSecure,
 		CookieSameSite:     "lax",
 
-		GoogleOAuthEnabled:      getEnv("GOOGLE_OAUTH_ENABLED", "false") == "true",
+		GoogleOAuthEnabled:      isCloudMode, // Google OAuth is required in cloud mode
 		GoogleClientID:          getEnv("GOOGLE_CLIENT_ID", ""),
 		GoogleClientSecret:      getEnv("GOOGLE_CLIENT_SECRET", ""),
 		GoogleClientRedirectURL: getEnv("GOOGLE_CLIENT_REDIRECT_URL", "http://localhost:8765/auth/google/callback"),
@@ -152,7 +153,7 @@ func NewSettings() Settings {
 		ResetAdminPassword: getEnv("RESET_ADMIN_PASSWORD", "false") == "true",
 		AdminEmail:         getEnv("ADMIN_EMAIL", ""),
 
-		SecurityPageEnabled: getEnv("SECURITY_PAGE_ENABLED", "false") == "true",
+		SecurityPageEnabled: isCloudMode, // Security page is only available in cloud mode
 
 		AIProvider:             "gemini",
 		GeminiAPIKey:           getEnv("GEMINI_API_KEY", ""),
@@ -161,7 +162,7 @@ func NewSettings() Settings {
 		GeminiModelJobAnalysis: getEnv("GEMINI_MODEL_JOB_ANALYSIS", "gemini-2.5-flash"),
 		GeminiModelCoverLetter: getEnv("GEMINI_MODEL_COVER_LETTER", "gemini-2.5-flash"),
 
-		IsCloudMode: getEnv("CLOUD_MODE", "false") == "true",
+		IsCloudMode: isCloudMode,
 
 		CachePath:        getEnv("CACHE_PATH", "./data/cache"),
 		CacheMaxMemoryMB: getCacheMaxMemoryMB(),

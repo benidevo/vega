@@ -28,11 +28,6 @@ func NewAuthHandler(service *services.AuthService, cfg *config.Settings) *AuthHa
 
 // GetLoginPage renders the login page template.
 func (h *AuthHandler) GetLoginPage(c *gin.Context) {
-	// In cloud mode, redirect to Google login directly
-	if h.cfg.IsCloudMode && h.cfg.GoogleOAuthEnabled {
-		c.Redirect(http.StatusTemporaryRedirect, "/auth/google/login")
-		return
-	}
 
 	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
 		"title":               "Login",
