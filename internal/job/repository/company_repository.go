@@ -6,18 +6,20 @@ import (
 	"strings"
 	"time"
 
+	"github.com/benidevo/vega/internal/cache"
 	commonerrors "github.com/benidevo/vega/internal/common/errors"
 	"github.com/benidevo/vega/internal/job/models"
 )
 
 // SQLiteCompanyRepository is a SQLite implementation of CompanyRepository
 type SQLiteCompanyRepository struct {
-	db *sql.DB
+	db    *sql.DB
+	cache cache.Cache
 }
 
 // NewSQLiteCompanyRepository creates a new SQLiteCompanyRepository instance
-func NewSQLiteCompanyRepository(db *sql.DB) *SQLiteCompanyRepository {
-	return &SQLiteCompanyRepository{db: db}
+func NewSQLiteCompanyRepository(db *sql.DB, cache cache.Cache) *SQLiteCompanyRepository {
+	return &SQLiteCompanyRepository{db: db, cache: cache}
 }
 
 // GetOrCreate retrieves a company by name or creates it if it doesn't exist
@@ -27,22 +29,8 @@ func (r *SQLiteCompanyRepository) GetOrCreate(ctx context.Context, name string) 
 		return nil, err
 	}
 
-	tx, err := r.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, &commonerrors.RepositoryError{
-			SentinelError: models.ErrTransactionFailed,
-			InnerError:    err,
-		}
-	}
-
-	defer func() {
-		if tx != nil {
-			_ = tx.Rollback()
-		}
-	}()
-
 	var company models.Company
-	err = tx.QueryRowContext(
+	err = r.db.QueryRowContext(
 		ctx,
 		"SELECT id, name, created_at, updated_at FROM companies WHERE LOWER(name) = LOWER(?)",
 		normalizedName,
@@ -50,7 +38,7 @@ func (r *SQLiteCompanyRepository) GetOrCreate(ctx context.Context, name string) 
 
 	if err == sql.ErrNoRows {
 		now := time.Now().UTC()
-		result, err := tx.ExecContext(
+		result, err := r.db.ExecContext(
 			ctx,
 			"INSERT INTO companies (name, created_at, updated_at) VALUES (?, ?, ?)",
 			normalizedName, now, now,
@@ -70,16 +58,6 @@ func (r *SQLiteCompanyRepository) GetOrCreate(ctx context.Context, name string) 
 			}
 		}
 
-		err = tx.Commit()
-		if err != nil {
-			return nil, &commonerrors.RepositoryError{
-				SentinelError: models.ErrTransactionFailed,
-				InnerError:    err,
-			}
-		}
-
-		tx = nil
-
 		company = models.Company{
 			ID:        int(id),
 			Name:      normalizedName,
@@ -93,15 +71,6 @@ func (r *SQLiteCompanyRepository) GetOrCreate(ctx context.Context, name string) 
 			InnerError:    err,
 		}
 	}
-
-	err = tx.Commit()
-	if err != nil {
-		return nil, &commonerrors.RepositoryError{
-			SentinelError: models.ErrTransactionFailed,
-			InnerError:    err,
-		}
-	}
-	tx = nil
 
 	return &company, nil
 }

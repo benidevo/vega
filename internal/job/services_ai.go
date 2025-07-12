@@ -39,7 +39,7 @@ func (s *JobService) AnalyzeJobMatch(ctx context.Context, userID, jobID int) (*m
 		return nil, models.ErrProfileServiceRequired
 	}
 
-	job, err := s.GetJob(ctx, jobID)
+	job, err := s.GetJob(ctx, userID, jobID)
 	if err != nil {
 		s.log.Error().Err(err).
 			Str("user_ref", userRef).
@@ -68,7 +68,7 @@ func (s *JobService) AnalyzeJobMatch(ctx context.Context, userID, jobID int) (*m
 		return nil, err
 	}
 
-	previousMatches, err := s.jobRepo.GetRecentMatchResultsWithDetails(ctx, 3, jobID)
+	previousMatches, err := s.jobRepo.GetRecentMatchResultsWithDetails(ctx, userID, 3, jobID)
 	if err != nil {
 		s.log.Warn().Err(err).
 			Str("user_ref", userRef).
@@ -116,7 +116,7 @@ func (s *JobService) AnalyzeJobMatch(ctx context.Context, userID, jobID int) (*m
 		Feedback:   aiResult.Feedback,
 	}
 
-	if err := s.jobRepo.CreateMatchResult(ctx, matchResult); err != nil {
+	if err := s.jobRepo.CreateMatchResult(ctx, userID, matchResult); err != nil {
 		s.log.Warn().Err(err).
 			Str("user_ref", userRef).
 			Int("job_id", jobID).
@@ -124,7 +124,7 @@ func (s *JobService) AnalyzeJobMatch(ctx context.Context, userID, jobID int) (*m
 			Msg("Failed to store match result history, but continuing with analysis")
 	}
 
-	err = s.jobRepo.UpdateMatchScore(ctx, jobID, &result.MatchScore)
+	err = s.jobRepo.UpdateMatchScore(ctx, userID, jobID, &result.MatchScore)
 	if err != nil {
 		s.log.Warn().Err(err).
 			Str("user_ref", userRef).
@@ -180,7 +180,7 @@ func (s *JobService) GenerateCoverLetter(ctx context.Context, userID, jobID int)
 		return nil, models.ErrProfileServiceRequired
 	}
 
-	job, err := s.GetJob(ctx, jobID)
+	job, err := s.GetJob(ctx, userID, jobID)
 	if err != nil {
 		s.log.Error().Err(err).
 			Str("user_ref", userRef).
@@ -551,7 +551,7 @@ func (s *JobService) GenerateCV(ctx context.Context, userID, jobID int) (*models
 		return nil, models.ErrProfileServiceRequired
 	}
 
-	job, err := s.GetJob(ctx, jobID)
+	job, err := s.GetJob(ctx, userID, jobID)
 	if err != nil {
 		s.log.Error().Err(err).
 			Str("user_ref", userRef).

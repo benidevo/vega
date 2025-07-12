@@ -124,12 +124,15 @@ func TestGetAuthURL(t *testing.T) {
 			},
 		}
 
-		url := service.GetAuthURL()
+		url, state := service.GetAuthURL()
 
 		require.Contains(t, url, "https://accounts.google.com/o/oauth2/auth")
 		require.Contains(t, url, "client_id=test-client-id")
 		require.Contains(t, url, "redirect_uri=http%3A%2F%2Flocalhost%2Fauth%2Fgoogle%2Fcallback")
 		require.Contains(t, url, "access_type=offline")
+		require.Contains(t, url, "state="+state)
+		require.Len(t, state, 32)
+		require.NotEmpty(t, state)
 	})
 }
 

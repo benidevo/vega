@@ -17,10 +17,10 @@ func TestSQLiteJobRepository_MatchResultBelongsToJob(t *testing.T) {
 		matchID := 100
 
 		mock.ExpectQuery("SELECT EXISTS").
-			WithArgs(matchID, jobID).
+			WithArgs(matchID, jobID, testUserID).
 			WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
 
-		belongs, err := repo.MatchResultBelongsToJob(ctx, matchID, jobID)
+		belongs, err := repo.MatchResultBelongsToJob(ctx, testUserID, matchID, jobID)
 
 		assert.NoError(t, err)
 		assert.True(t, belongs)
@@ -34,10 +34,10 @@ func TestSQLiteJobRepository_MatchResultBelongsToJob(t *testing.T) {
 		matchID := 100
 
 		mock.ExpectQuery("SELECT EXISTS").
-			WithArgs(matchID, jobID).
+			WithArgs(matchID, jobID, testUserID).
 			WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(false))
 
-		belongs, err := repo.MatchResultBelongsToJob(ctx, matchID, jobID)
+		belongs, err := repo.MatchResultBelongsToJob(ctx, testUserID, matchID, jobID)
 
 		assert.NoError(t, err)
 		assert.False(t, belongs)
@@ -48,7 +48,7 @@ func TestSQLiteJobRepository_MatchResultBelongsToJob(t *testing.T) {
 		repo, _, _ := setupJobRepositoryTest(t)
 		ctx := context.Background()
 
-		belongs, err := repo.MatchResultBelongsToJob(ctx, 0, 1)
+		belongs, err := repo.MatchResultBelongsToJob(ctx, testUserID, 0, 1)
 
 		assert.Equal(t, models.ErrInvalidJobID, err)
 		assert.False(t, belongs)
@@ -58,7 +58,7 @@ func TestSQLiteJobRepository_MatchResultBelongsToJob(t *testing.T) {
 		repo, _, _ := setupJobRepositoryTest(t)
 		ctx := context.Background()
 
-		belongs, err := repo.MatchResultBelongsToJob(ctx, 1, 0)
+		belongs, err := repo.MatchResultBelongsToJob(ctx, testUserID, 1, 0)
 
 		assert.Equal(t, models.ErrInvalidJobID, err)
 		assert.False(t, belongs)
@@ -71,10 +71,10 @@ func TestSQLiteJobRepository_MatchResultBelongsToJob(t *testing.T) {
 		matchID := 999
 
 		mock.ExpectQuery("SELECT EXISTS").
-			WithArgs(matchID, jobID).
+			WithArgs(matchID, jobID, testUserID).
 			WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(false))
 
-		belongs, err := repo.MatchResultBelongsToJob(ctx, matchID, jobID)
+		belongs, err := repo.MatchResultBelongsToJob(ctx, testUserID, matchID, jobID)
 
 		assert.NoError(t, err)
 		assert.False(t, belongs)

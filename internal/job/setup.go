@@ -5,6 +5,7 @@ import (
 
 	"github.com/benidevo/vega/internal/ai"
 	authrepo "github.com/benidevo/vega/internal/auth/repository"
+	"github.com/benidevo/vega/internal/cache"
 	"github.com/benidevo/vega/internal/config"
 	"github.com/benidevo/vega/internal/job/interfaces"
 	"github.com/benidevo/vega/internal/job/repository"
@@ -13,14 +14,14 @@ import (
 )
 
 // Setup initializes the job package dependencies and returns a JobHandler.
-func Setup(db *sql.DB, cfg *config.Settings) *JobHandler {
-	service := SetupService(db, cfg)
+func Setup(db *sql.DB, cfg *config.Settings, cache cache.Cache) *JobHandler {
+	service := SetupService(db, cfg, cache)
 	return NewJobHandler(service, cfg)
 }
 
 // SetupService initializes just the job service without the handler.
-func SetupService(db *sql.DB, cfg *config.Settings) *JobService {
-	jobRepo := SetupJobRepository(db)
+func SetupService(db *sql.DB, cfg *config.Settings, cache cache.Cache) *JobService {
+	jobRepo := SetupJobRepository(db, cache)
 	aiService, err := SetupAIService(cfg)
 	if err != nil {
 		// AI service is optional.
@@ -34,9 +35,9 @@ func SetupService(db *sql.DB, cfg *config.Settings) *JobService {
 }
 
 // SetupJobRepository initializes and returns a job repository.
-func SetupJobRepository(db *sql.DB) interfaces.JobRepository {
-	companyRepo := repository.NewSQLiteCompanyRepository(db)
-	return repository.NewSQLiteJobRepository(db, companyRepo)
+func SetupJobRepository(db *sql.DB, cache cache.Cache) interfaces.JobRepository {
+	companyRepo := repository.NewSQLiteCompanyRepository(db, cache)
+	return repository.NewSQLiteJobRepository(db, companyRepo, cache)
 }
 
 // SetupAIService initializes and returns an AI service instance.

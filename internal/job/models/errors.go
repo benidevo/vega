@@ -6,6 +6,7 @@ import (
 
 var (
 	// Model validation errors
+	ErrUnauthorized            = commonerrors.New("unauthorized")
 	ErrInvalidJobStatus        = commonerrors.New("invalid job status")
 	ErrInvalidStatusTransition = commonerrors.New("job status can only move forward")
 	ErrJobTitleRequired        = commonerrors.New("job title is required")
@@ -23,10 +24,10 @@ var (
 	ErrCompanyNotFound       = commonerrors.New("company not found")
 	ErrCompanyNameRequired   = commonerrors.New("company name is required")
 	ErrDuplicateJob          = commonerrors.New("job with this URL already exists")
-	ErrTransactionFailed     = commonerrors.New("database transaction failed")
+	ErrTransactionFailed     = commonerrors.New("Failed to save changes. Please try again")
 	ErrInvalidJobID          = commonerrors.New("invalid job ID")
 	ErrInvalidCompanyID      = commonerrors.New("invalid company ID")
-	ErrFailedToCreateJob     = commonerrors.New("failed to create job")
+	ErrFailedToCreateJob     = commonerrors.New("Unable to save job. Please try again")
 	ErrFailedToUpdateJob     = commonerrors.New("failed to update job")
 	ErrFailedToDeleteJob     = commonerrors.New("failed to delete job")
 	ErrFailedToCreateCompany = commonerrors.New("failed to create company")

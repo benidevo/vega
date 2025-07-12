@@ -130,7 +130,7 @@ func (s *JobService) ValidateURL(urlStr string) error {
 
 // CreateJob creates a new job with the given title, description, and company name.
 // Additional job options can be provided.
-func (s *JobService) CreateJob(ctx context.Context, title, description, companyName string, options ...models.JobOption) (*models.Job, error) {
+func (s *JobService) CreateJob(ctx context.Context, userID int, title, description, companyName string, options ...models.JobOption) (*models.Job, error) {
 	s.log.Debug().
 		Str("title", title).
 		Str("company", companyName).
@@ -138,6 +138,7 @@ func (s *JobService) CreateJob(ctx context.Context, title, description, companyN
 
 	company := models.Company{Name: companyName}
 	job := models.NewJob(title, description, company, options...)
+	job.UserID = userID
 
 	if err := s.validator.Struct(job); err != nil {
 		s.log.Error().
@@ -157,7 +158,7 @@ func (s *JobService) CreateJob(ctx context.Context, title, description, companyN
 		return nil, err
 	}
 
-	createdJob, err := s.jobRepo.GetOrCreate(ctx, job)
+	createdJob, err := s.jobRepo.GetOrCreate(ctx, userID, job)
 	if err != nil {
 		s.log.Error().
 			Str("title", title).
@@ -177,7 +178,7 @@ func (s *JobService) CreateJob(ctx context.Context, title, description, companyN
 }
 
 // GetJob retrieves a job by its ID.
-func (s *JobService) GetJob(ctx context.Context, id int) (*models.Job, error) {
+func (s *JobService) GetJob(ctx context.Context, userID int, id int) (*models.Job, error) {
 	s.log.Debug().Int("job_id", id).Msg("Getting job by ID")
 
 	if id <= 0 {
@@ -185,7 +186,7 @@ func (s *JobService) GetJob(ctx context.Context, id int) (*models.Job, error) {
 		return nil, models.ErrInvalidJobID
 	}
 
-	job, err := s.jobRepo.GetByID(ctx, id)
+	job, err := s.jobRepo.GetByID(ctx, userID, id)
 	if err != nil {
 		s.log.Error().
 			Int("job_id", id).
@@ -203,7 +204,7 @@ func (s *JobService) GetJob(ctx context.Context, id int) (*models.Job, error) {
 }
 
 // GetJobsWithPagination retrieves jobs with pagination metadata
-func (s *JobService) GetJobsWithPagination(ctx context.Context, filter models.JobFilter) (*models.JobsWithPagination, error) {
+func (s *JobService) GetJobsWithPagination(ctx context.Context, userID int, filter models.JobFilter) (*models.JobsWithPagination, error) {
 	if filter.Limit <= 0 {
 		filter.Limit = 12 // Default page size
 	}
@@ -211,7 +212,7 @@ func (s *JobService) GetJobsWithPagination(ctx context.Context, filter models.Jo
 		filter.Offset = 0
 	}
 
-	jobs, err := s.jobRepo.GetAll(ctx, filter)
+	jobs, err := s.jobRepo.GetAll(ctx, userID, filter)
 	if err != nil {
 		s.log.Error().
 			Err(err).
@@ -219,7 +220,7 @@ func (s *JobService) GetJobsWithPagination(ctx context.Context, filter models.Jo
 		return nil, err
 	}
 
-	totalCount, err := s.jobRepo.GetCount(ctx, filter)
+	totalCount, err := s.jobRepo.GetCount(ctx, userID, filter)
 	if err != nil {
 		s.log.Error().
 			Err(err).
@@ -255,7 +256,7 @@ func (s *JobService) GetJobsWithPagination(ctx context.Context, filter models.Jo
 }
 
 // UpdateJob updates a job's details.
-func (s *JobService) UpdateJob(ctx context.Context, job *models.Job) error {
+func (s *JobService) UpdateJob(ctx context.Context, userID int, job *models.Job) error {
 	if job == nil {
 		s.log.Error().Msg("Attempted to update nil job")
 		return models.ErrInvalidJobID
@@ -289,7 +290,7 @@ func (s *JobService) UpdateJob(ctx context.Context, job *models.Job) error {
 
 	job.UpdatedAt = time.Now().UTC()
 
-	err := s.jobRepo.Update(ctx, job)
+	err := s.jobRepo.Update(ctx, userID, job)
 	if err != nil {
 		s.log.Error().
 			Int("job_id", job.ID).
@@ -307,7 +308,7 @@ func (s *JobService) UpdateJob(ctx context.Context, job *models.Job) error {
 }
 
 // DeleteJob removes a job by its ID.
-func (s *JobService) DeleteJob(ctx context.Context, id int) error {
+func (s *JobService) DeleteJob(ctx context.Context, userID int, id int) error {
 	s.log.Debug().Int("job_id", id).Msg("Deleting job")
 
 	if id <= 0 {
@@ -315,7 +316,7 @@ func (s *JobService) DeleteJob(ctx context.Context, id int) error {
 		return models.ErrInvalidJobID
 	}
 
-	job, err := s.jobRepo.GetByID(ctx, id)
+	job, err := s.jobRepo.GetByID(ctx, userID, id)
 	if err != nil {
 		s.log.Error().
 			Int("job_id", id).
@@ -324,7 +325,7 @@ func (s *JobService) DeleteJob(ctx context.Context, id int) error {
 		return err
 	}
 
-	err = s.jobRepo.Delete(ctx, id)
+	err = s.jobRepo.Delete(ctx, userID, id)
 	if err != nil {
 		s.log.Error().
 			Int("job_id", id).
@@ -342,7 +343,7 @@ func (s *JobService) DeleteJob(ctx context.Context, id int) error {
 }
 
 // GetJobMatchHistory retrieves the match analysis history for a specific job
-func (s *JobService) GetJobMatchHistory(ctx context.Context, jobID int) ([]*models.MatchResult, error) {
+func (s *JobService) GetJobMatchHistory(ctx context.Context, userID int, jobID int) ([]*models.MatchResult, error) {
 	s.log.Debug().Int("job_id", jobID).Msg("Getting job match history")
 
 	if jobID <= 0 {
@@ -350,7 +351,7 @@ func (s *JobService) GetJobMatchHistory(ctx context.Context, jobID int) ([]*mode
 		return nil, models.ErrInvalidJobID
 	}
 
-	_, err := s.jobRepo.GetByID(ctx, jobID)
+	_, err := s.jobRepo.GetByID(ctx, userID, jobID)
 	if err != nil {
 		s.log.Error().
 			Int("job_id", jobID).
@@ -359,7 +360,7 @@ func (s *JobService) GetJobMatchHistory(ctx context.Context, jobID int) ([]*mode
 		return nil, err
 	}
 
-	history, err := s.jobRepo.GetJobMatchHistory(ctx, jobID)
+	history, err := s.jobRepo.GetJobMatchHistory(ctx, userID, jobID)
 	if err != nil {
 		s.log.Error().
 			Int("job_id", jobID).
@@ -377,7 +378,7 @@ func (s *JobService) GetJobMatchHistory(ctx context.Context, jobID int) ([]*mode
 }
 
 // DeleteMatchResult deletes a specific match result
-func (s *JobService) DeleteMatchResult(ctx context.Context, jobID, matchID int) error {
+func (s *JobService) DeleteMatchResult(ctx context.Context, userID int, jobID, matchID int) error {
 	s.log.Debug().
 		Int("job_id", jobID).
 		Int("match_id", matchID).
@@ -392,7 +393,7 @@ func (s *JobService) DeleteMatchResult(ctx context.Context, jobID, matchID int) 
 	}
 
 	// Verify the match result belongs to the specified job
-	belongsToJob, err := s.jobRepo.MatchResultBelongsToJob(ctx, matchID, jobID)
+	belongsToJob, err := s.jobRepo.MatchResultBelongsToJob(ctx, userID, matchID, jobID)
 	if err != nil {
 		s.log.Error().
 			Int("job_id", jobID).
@@ -410,7 +411,7 @@ func (s *JobService) DeleteMatchResult(ctx context.Context, jobID, matchID int) 
 		return models.ErrJobNotFound
 	}
 
-	err = s.jobRepo.DeleteMatchResult(ctx, matchID)
+	err = s.jobRepo.DeleteMatchResult(ctx, userID, matchID)
 	if err != nil {
 		s.log.Error().
 			Int("match_id", matchID).

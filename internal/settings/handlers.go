@@ -8,6 +8,7 @@ import (
 	"github.com/benidevo/vega/internal/ai"
 	aimodels "github.com/benidevo/vega/internal/ai/models"
 	"github.com/benidevo/vega/internal/common/alerts"
+	"github.com/benidevo/vega/internal/common/render"
 	"github.com/benidevo/vega/internal/settings/models"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -20,6 +21,7 @@ type SettingsHandler struct {
 	experienceHandler    *BaseSettingsHandler
 	educationHandler     *BaseSettingsHandler
 	certificationHandler *BaseSettingsHandler
+	renderer             *render.HTMLRenderer
 }
 
 // NewSettingsHandler creates a new SettingsHandler instance
@@ -54,6 +56,7 @@ func NewSettingsHandler(service *SettingsService, aiService *ai.AIService) *Sett
 		experienceHandler:    NewBaseSettingsHandler(service, experienceMetadata),
 		educationHandler:     NewBaseSettingsHandler(service, educationMetadata),
 		certificationHandler: NewBaseSettingsHandler(service, certificationMetadata),
+		renderer:             render.NewHTMLRenderer(service.cfg),
 	}
 }
 
@@ -129,41 +132,34 @@ func (h *SettingsHandler) formatValidationError(err error) string {
 
 // GetProfileSettingsPage handles the request to display the profile settings page
 func (h *SettingsHandler) GetProfileSettingsPage(c *gin.Context) {
-	username, _ := c.Get("username")
 	userID, _ := c.Get("userID")
 
 	profile, err := h.service.GetProfileWithRelated(c.Request.Context(), userID.(int))
+
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
-			"title":               "Something Went Wrong",
-			"page":                "500",
-			"currentYear":         time.Now().Year(),
-			"securityPageEnabled": h.service.cfg.SecurityPageEnabled,
+		h.renderer.HTML(c, http.StatusInternalServerError, "layouts/base.html", gin.H{
+			"title": "Something Went Wrong",
+			"page":  "500",
 		})
 		return
 	}
 
 	if profile == nil {
-		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
-			"title":               "Something Went Wrong",
-			"page":                "500",
-			"currentYear":         time.Now().Year(),
-			"securityPageEnabled": h.service.cfg.SecurityPageEnabled,
+		h.renderer.HTML(c, http.StatusInternalServerError, "layouts/base.html", gin.H{
+			"title": "Something Went Wrong",
+			"page":  "500",
 		})
 		return
 	}
 
-	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-		"title":               "Profile",
-		"page":                "settings-profile",
-		"activeNav":           "profile",
-		"activeSettings":      "profile",
-		"pageTitle":           "Profile",
-		"currentYear":         time.Now().Year(),
-		"securityPageEnabled": h.service.cfg.SecurityPageEnabled,
-		"username":            username,
-		"profile":             profile,
-		"industries":          models.GetAllIndustries(),
+	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", gin.H{
+		"title":          "Profile",
+		"page":           "settings-profile",
+		"activeNav":      "profile",
+		"activeSettings": "profile",
+		"pageTitle":      "Profile",
+		"profile":        profile,
+		"industries":     models.GetAllIndustries(),
 	})
 }
 
@@ -503,10 +499,9 @@ func (h *SettingsHandler) parseAIDate(dateStr string) time.Time {
 func (h *SettingsHandler) GetSecuritySettingsPage(c *gin.Context) {
 	// Return 404 if security page is disabled
 	if !h.service.cfg.SecurityPageEnabled {
-		c.HTML(http.StatusNotFound, "layouts/base.html", gin.H{
-			"title":       "Page Not Found",
-			"page":        "404",
-			"currentYear": time.Now().Year(),
+		h.renderer.HTML(c, http.StatusNotFound, "layouts/base.html", gin.H{
+			"title": "Page Not Found",
+			"page":  "404",
 		})
 		return
 	}
@@ -515,22 +510,19 @@ func (h *SettingsHandler) GetSecuritySettingsPage(c *gin.Context) {
 
 	security, err := h.service.GetSecuritySettings(c.Request.Context(), username.(string))
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
-			"title":       "Something Went Wrong",
-			"page":        "500",
-			"currentYear": time.Now().Year(),
+		h.renderer.HTML(c, http.StatusInternalServerError, "layouts/base.html", gin.H{
+			"title": "Something Went Wrong",
+			"page":  "500",
 		})
 		return
 	}
 
-	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
+	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", gin.H{
 		"title":          "Security",
 		"page":           "settings-security",
 		"activeNav":      "security",
 		"activeSettings": "security",
 		"pageTitle":      "Security",
-		"currentYear":    time.Now().Year(),
-		"username":       username,
 		"security":       security,
 	})
 }

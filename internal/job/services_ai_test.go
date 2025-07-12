@@ -68,6 +68,7 @@ func (m *MockSettingsService) GetProfileSettings(ctx context.Context, userID int
 func createTestJobForAI() *models.Job {
 	return &models.Job{
 		ID:             1,
+		UserID:         testUserID,
 		Title:          "Software Engineer",
 		Description:    "Build amazing software",
 		RequiredSkills: []string{"Go", "Python", "Docker"},

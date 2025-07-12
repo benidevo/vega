@@ -51,10 +51,18 @@ type Settings struct {
 
 	AIProvider             string
 	GeminiAPIKey           string
-	GeminiModel            string // Default model (deprecated, use specific models)
+	GeminiModel            string
 	GeminiModelCVParsing   string // Fast model for CV parsing
 	GeminiModelJobAnalysis string // Advanced model for job analysis
 	GeminiModelCoverLetter string // Advanced model for cover letter generation
+
+	// Cloud mode - enables multi-tenant deployment with OAuth-only authentication
+	IsCloudMode bool
+
+	// Cache settings
+	CachePath        string
+	CacheMaxMemoryMB int
+	CacheDefaultTTL  time.Duration
 }
 
 // NewSettings initializes and returns a Settings struct with default values
@@ -63,6 +71,7 @@ type Settings struct {
 func NewSettings() Settings {
 	isDevelopment := getEnv("IS_DEVELOPMENT", "false") == "true"
 	isTest := getEnv("GO_ENV", "") == "test"
+	isCloudMode := getEnv("CLOUD_MODE", "false") == "true"
 
 	// Production-optimized defaults
 	accessTokenExpiry := 60 * time.Minute // 1 hour
@@ -128,12 +137,12 @@ func NewSettings() Settings {
 		CookieSecure:       cookieSecure,
 		CookieSameSite:     "lax",
 
-		GoogleOAuthEnabled:      getEnv("GOOGLE_OAUTH_ENABLED", "false") == "true",
+		GoogleOAuthEnabled:      isCloudMode, // Google OAuth is required in cloud mode
 		GoogleClientID:          getEnv("GOOGLE_CLIENT_ID", ""),
 		GoogleClientSecret:      getEnv("GOOGLE_CLIENT_SECRET", ""),
 		GoogleClientRedirectURL: getEnv("GOOGLE_CLIENT_REDIRECT_URL", "http://localhost:8765/auth/google/callback"),
 		GoogleAuthUserInfoURL:   "https://www.googleapis.com/oauth2/v3/userinfo",
-		GoogleAuthUserInfoScope: "https://www.googleapis.com/auth/userinfo.email",
+		GoogleAuthUserInfoScope: getEnv("GOOGLE_AUTH_USER_INFO_SCOPE", "https://www.googleapis.com/auth/userinfo.email"),
 
 		CORSAllowedOrigins:   corsOrigins,
 		CORSAllowCredentials: false,
@@ -144,7 +153,7 @@ func NewSettings() Settings {
 		ResetAdminPassword: getEnv("RESET_ADMIN_PASSWORD", "false") == "true",
 		AdminEmail:         getEnv("ADMIN_EMAIL", ""),
 
-		SecurityPageEnabled: getEnv("SECURITY_PAGE_ENABLED", "false") == "true",
+		SecurityPageEnabled: isCloudMode, // Security page is only available in cloud mode
 
 		AIProvider:             "gemini",
 		GeminiAPIKey:           getEnv("GEMINI_API_KEY", ""),
@@ -152,6 +161,12 @@ func NewSettings() Settings {
 		GeminiModelCVParsing:   getEnv("GEMINI_MODEL_CV_PARSING", "gemini-1.5-flash"),
 		GeminiModelJobAnalysis: getEnv("GEMINI_MODEL_JOB_ANALYSIS", "gemini-2.5-flash"),
 		GeminiModelCoverLetter: getEnv("GEMINI_MODEL_COVER_LETTER", "gemini-2.5-flash"),
+
+		IsCloudMode: isCloudMode,
+
+		CachePath:        getEnv("CACHE_PATH", "./data/cache"),
+		CacheMaxMemoryMB: getCacheMaxMemoryMB(),
+		CacheDefaultTTL:  getCacheDefaultTTL(),
 	}
 }
 
@@ -193,4 +208,24 @@ func getDefaultLogLevel(isDevelopment bool) string {
 		return "debug"
 	}
 	return "info"
+}
+
+// getCacheMaxMemoryMB returns the max memory for cache in MB
+func getCacheMaxMemoryMB() int {
+	if envVal := getEnv("CACHE_MAX_MEMORY_MB", ""); envVal != "" {
+		if mb, err := strconv.Atoi(envVal); err == nil {
+			return mb
+		}
+	}
+	return 256 // Default 256MB
+}
+
+// getCacheDefaultTTL returns the default TTL for cache entries
+func getCacheDefaultTTL() time.Duration {
+	if envVal := getEnv("CACHE_DEFAULT_TTL", ""); envVal != "" {
+		if duration, err := time.ParseDuration(envVal); err == nil {
+			return duration
+		}
+	}
+	return time.Hour // Default 1 hour
 }

@@ -6,6 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const testUserID = 1
+
 func TestJobStatus_FromString(t *testing.T) {
 	tests := []struct {
 		name    string

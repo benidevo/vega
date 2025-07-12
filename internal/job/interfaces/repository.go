@@ -18,22 +18,27 @@ type CompanyRepository interface {
 
 // JobRepository defines methods for interacting with job data
 type JobRepository interface {
-	Create(ctx context.Context, job *models.Job) (*models.Job, error)
-	GetByID(ctx context.Context, id int) (*models.Job, error)
-	GetAll(ctx context.Context, filter models.JobFilter) ([]*models.Job, error)
-	GetCount(ctx context.Context, filter models.JobFilter) (int, error)
-	Update(ctx context.Context, job *models.Job) error
-	Delete(ctx context.Context, id int) error
-	UpdateStatus(ctx context.Context, id int, status models.JobStatus) error
-	UpdateMatchScore(ctx context.Context, jobID int, matchScore *int) error
-	GetStats(ctx context.Context) (*models.JobStats, error)
-	GetBySourceURL(ctx context.Context, sourceURL string) (*models.Job, error)
-	GetOrCreate(ctx context.Context, job *models.Job) (*models.Job, error)
+	Create(ctx context.Context, userID int, job *models.Job) (*models.Job, error)
+	GetByID(ctx context.Context, userID int, id int) (*models.Job, error)
+	GetAll(ctx context.Context, userID int, filter models.JobFilter) ([]*models.Job, error)
+	GetCount(ctx context.Context, userID int, filter models.JobFilter) (int, error)
+	Update(ctx context.Context, userID int, job *models.Job) error
+	Delete(ctx context.Context, userID int, id int) error
+	UpdateStatus(ctx context.Context, userID int, id int, status models.JobStatus) error
+	UpdateMatchScore(ctx context.Context, userID int, jobID int, matchScore *int) error
+	GetStats(ctx context.Context, userID int) (*models.JobStats, error)
+	GetBySourceURL(ctx context.Context, userID int, sourceURL string) (*models.Job, error)
+	GetOrCreate(ctx context.Context, userID int, job *models.Job) (*models.Job, error)
 
-	CreateMatchResult(ctx context.Context, matchResult *models.MatchResult) error
-	GetJobMatchHistory(ctx context.Context, jobID int) ([]*models.MatchResult, error)
-	GetRecentMatchResults(ctx context.Context, limit int) ([]*models.MatchResult, error)
-	GetRecentMatchResultsWithDetails(ctx context.Context, limit int, currentJobID int) ([]*models.MatchSummary, error)
-	DeleteMatchResult(ctx context.Context, matchID int) error
-	MatchResultBelongsToJob(ctx context.Context, matchID, jobID int) (bool, error)
+	CreateMatchResult(ctx context.Context, userID int, matchResult *models.MatchResult) error
+	GetJobMatchHistory(ctx context.Context, userID int, jobID int) ([]*models.MatchResult, error)
+	GetRecentMatchResults(ctx context.Context, userID int, limit int) ([]*models.MatchResult, error)
+	GetRecentMatchResultsWithDetails(ctx context.Context, userID int, limit int, currentJobID int) ([]*models.MatchSummary, error)
+	DeleteMatchResult(ctx context.Context, userID int, matchID int) error
+	MatchResultBelongsToJob(ctx context.Context, userID int, matchID, jobID int) (bool, error)
+
+	// User-specific methods
+	GetStatsByUserID(ctx context.Context, userID int) (*models.JobStats, error)
+	GetRecentJobsByUserID(ctx context.Context, userID int, limit int) ([]*models.Job, error)
+	GetJobStatsByStatus(ctx context.Context, userID int) (map[models.JobStatus]int, error)
 }

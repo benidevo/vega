@@ -1,6 +1,8 @@
-# Vega AI UI Design System
+# UI Component Reference
 
-Quick reference for consistent UI across the application.
+> **Note:** This is a quick reference for developers. For architecture details, see ARCHITECTURE.md.
+
+Quick reference for consistent UI implementation using our component library.
 
 ## Design Foundations
 

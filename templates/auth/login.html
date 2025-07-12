@@ -7,10 +7,12 @@
 
   <!-- Clean login container -->
   <div class="relative p-4 sm:p-6 lg:p-8 bg-slate-800 rounded-2xl shadow-xl border border-slate-700">
-    <!-- Logo -->
+    <!-- Logo with animation -->
     <div class="flex justify-center mb-6 lg:mb-8">
-      <div class="p-4 bg-slate-700 rounded-xl">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+      <div class="p-4 bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl shadow-lg relative group">
+        <!-- Glow effect -->
+        <div class="absolute inset-0 bg-primary/20 rounded-xl blur-xl group-hover:bg-primary/30 transition-all duration-300"></div>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14 text-primary relative z-10 transform group-hover:scale-110 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2 2v10a2 2 0 002 2z" />
         </svg>
       </div>
@@ -18,8 +20,39 @@
 
     <!-- Title -->
     <div class="relative z-10">
-      <h2 class="text-xl sm:text-2xl lg:text-3xl font-bold text-center mb-4 sm:mb-6 text-white font-heading">Welcome Back</h2>
+      {{if .isCloudMode}}
+      <!-- Cloud Mode Login UI -->
+      <div class="text-center">
+        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 text-white font-heading">Welcome to Vega AI</h2>
+        <p class="text-gray-400 text-sm sm:text-base lg:text-lg mb-8">Your intelligent job search companion</p>
 
+        <!-- Feature highlights -->
+        <div class="space-y-3 mb-8 text-left max-w-sm mx-auto">
+          <div class="flex items-start gap-3">
+            <svg class="h-5 w-5 text-primary mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <p class="text-gray-300 text-sm">Track job applications effortlessly</p>
+          </div>
+          <div class="flex items-start gap-3">
+            <svg class="h-5 w-5 text-primary mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <p class="text-gray-300 text-sm">AI-powered job matching & insights</p>
+          </div>
+          <div class="flex items-start gap-3">
+            <svg class="h-5 w-5 text-primary mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <p class="text-gray-300 text-sm">Generate tailored resumes & cover letters</p>
+          </div>
+        </div>
+      </div>
+      {{else}}
+      <h2 class="text-xl sm:text-2xl lg:text-3xl font-bold text-center mb-4 sm:mb-6 text-white font-heading">Welcome Back</h2>
+      {{end}}
+
+      {{if not .isCloudMode}}
       <!-- Login Form with HTMX -->
       <form hx-post="/auth/login"
             hx-target="#form-response"
@@ -110,18 +143,24 @@
           </button>
         </div>
 
-        {{if .googleOAuthEnabled}}
-        <!-- OR divider -->
-        <div class="flex items-center my-4 sm:my-6" role="separator" aria-label="Or continue with">
-          <div class="flex-grow h-px bg-gray-700"></div>
-          <div class="px-3 sm:px-4 text-sm text-gray-400">OR</div>
-          <div class="flex-grow h-px bg-gray-700"></div>
-        </div>
+      </form>
+      {{end}}
 
-        <!-- Google Sign-in button -->
-        <div class="relative">
-          <a href="/auth/google/login"
-             class="w-full flex items-center justify-center px-4 py-3 sm:py-4 bg-white hover:bg-gray-100 text-gray-800 font-medium rounded-lg border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 focus:ring-offset-slate-800 min-h-[48px] text-base"
+      {{if .isCloudMode}}
+      <!-- Divider -->
+      <div class="relative my-8">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-slate-700"></div>
+        </div>
+        <div class="relative flex justify-center text-sm">
+          <span class="px-4 bg-slate-800 text-gray-400">Continue with</span>
+        </div>
+      </div>
+
+      <!-- Google Sign-in button for cloud mode only -->
+      <div class="relative">
+        <a href="/auth/google/login"
+             class="w-full flex items-center justify-center px-6 py-4 bg-white hover:bg-gray-50 text-gray-800 font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-slate-800 min-h-[56px] text-base"
              aria-label="Sign in with Google">
             <svg class="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -132,10 +171,10 @@
             <span>Sign in with Google</span>
           </a>
         </div>
-        {{end}}
+      {{end}}
 
-        <!-- Return to home link -->
-        <div class="text-center mt-4 sm:mt-6">
+      <!-- Return to home link -->
+      <div class="text-center mt-4 sm:mt-6">
           <a href="/"
              class="text-gray-400 hover:text-primary text-sm flex items-center justify-center gap-1 sm:gap-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-slate-800 rounded min-h-[40px]"
              aria-label="Return to homepage">
@@ -145,8 +184,8 @@
             <span>Return to home</span>
           </a>
         </div>
-      </div>
-    </form>
+
+    </div>
   </div>
 </main>
 {{end}}

@@ -5,9 +5,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
+	"github.com/benidevo/vega/internal/cache"
 	commonerrors "github.com/benidevo/vega/internal/common/errors"
 	"github.com/benidevo/vega/internal/job/interfaces"
 	"github.com/benidevo/vega/internal/job/models"
@@ -22,13 +24,28 @@ type scanner interface {
 type SQLiteJobRepository struct {
 	db                *sql.DB
 	companyRepository interfaces.CompanyRepository
+	cache             cache.Cache
 }
 
 // NewSQLiteJobRepository creates a new SQLiteJobRepository instance
-func NewSQLiteJobRepository(db *sql.DB, companyRepository interfaces.CompanyRepository) *SQLiteJobRepository {
+func NewSQLiteJobRepository(db *sql.DB, companyRepository interfaces.CompanyRepository, cache cache.Cache) *SQLiteJobRepository {
 	return &SQLiteJobRepository{
 		db:                db,
 		companyRepository: companyRepository,
+		cache:             cache,
+	}
+}
+
+// invalidateUserCaches invalidates all caches related to a user
+func (r *SQLiteJobRepository) invalidateUserCaches(ctx context.Context, userID int) {
+	patterns := []string{
+		fmt.Sprintf("job:u%d:*", userID),
+		fmt.Sprintf("stats:u%d:*", userID),
+		fmt.Sprintf("match:u%d:*", userID),
+	}
+
+	for _, pattern := range patterns {
+		_ = r.cache.DeletePattern(ctx, pattern)
 	}
 }
 
@@ -91,7 +108,7 @@ func (r *SQLiteJobRepository) scanJob(s scanner) (*models.Job, error) {
 
 // GetOrCreate retrieves a job by its SourceURL or creates it if it does not exist.
 // Returns the existing or newly created job, or an error if the operation fails.
-func (r *SQLiteJobRepository) GetOrCreate(ctx context.Context, jobModel *models.Job) (*models.Job, error) {
+func (r *SQLiteJobRepository) GetOrCreate(ctx context.Context, userID int, jobModel *models.Job) (*models.Job, error) {
 	if err := validateJob(jobModel); err != nil {
 		return nil, err
 	}
@@ -100,7 +117,7 @@ func (r *SQLiteJobRepository) GetOrCreate(ctx context.Context, jobModel *models.
 		return nil, models.ErrInvalidJobID
 	}
 
-	existingJob, err := r.GetBySourceURL(ctx, jobModel.SourceURL)
+	existingJob, err := r.GetBySourceURL(ctx, userID, jobModel.SourceURL)
 	if err == nil {
 		return existingJob, nil
 	}
@@ -109,11 +126,11 @@ func (r *SQLiteJobRepository) GetOrCreate(ctx context.Context, jobModel *models.
 		return nil, err
 	}
 
-	return r.Create(ctx, jobModel)
+	return r.Create(ctx, userID, jobModel)
 }
 
 // GetBySourceURL retrieves a job by its source URL
-func (r *SQLiteJobRepository) GetBySourceURL(ctx context.Context, sourceURL string) (*models.Job, error) {
+func (r *SQLiteJobRepository) GetBySourceURL(ctx context.Context, userID int, sourceURL string) (*models.Job, error) {
 	if sourceURL == "" {
 		return nil, models.ErrInvalidJobID
 	}
@@ -127,10 +144,10 @@ func (r *SQLiteJobRepository) GetBySourceURL(ctx context.Context, sourceURL stri
 			c.id, c.name, c.created_at, c.updated_at
 		FROM jobs j
 		JOIN companies c ON j.company_id = c.id
-		WHERE j.source_url = ?
+		WHERE j.source_url = ? AND j.user_id = ?
 	`
 
-	row := r.db.QueryRowContext(ctx, query, sourceURL)
+	row := r.db.QueryRowContext(ctx, query, sourceURL, userID)
 
 	job, err := r.scanJob(row)
 	if err != nil {
@@ -144,7 +161,7 @@ func (r *SQLiteJobRepository) GetBySourceURL(ctx context.Context, sourceURL stri
 }
 
 // Create inserts a new job into the database
-func (r *SQLiteJobRepository) Create(ctx context.Context, jobModel *models.Job) (*models.Job, error) {
+func (r *SQLiteJobRepository) Create(ctx context.Context, userID int, jobModel *models.Job) (*models.Job, error) {
 	if err := validateJob(jobModel); err != nil {
 		return nil, err
 	}
@@ -152,17 +169,6 @@ func (r *SQLiteJobRepository) Create(ctx context.Context, jobModel *models.Job) 
 	if err != nil {
 		return nil, err
 	}
-
-	tx, err := r.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, models.WrapError(models.ErrTransactionFailed, err)
-	}
-
-	defer func() {
-		if tx != nil {
-			_ = tx.Rollback()
-		}
-	}()
 
 	now := time.Now().UTC()
 	if jobModel.CreatedAt.IsZero() {
@@ -183,11 +189,11 @@ func (r *SQLiteJobRepository) Create(ctx context.Context, jobModel *models.Job) 
 			title, description, location, job_type, source_url,
 			required_skills, application_url,
 			company_id, status, notes,
-			created_at, updated_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			created_at, updated_at, user_id
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	result, err := tx.ExecContext(
+	result, err := r.db.ExecContext(
 		ctx,
 		query,
 		jobModel.Title,
@@ -202,6 +208,7 @@ func (r *SQLiteJobRepository) Create(ctx context.Context, jobModel *models.Job) 
 		jobModel.Notes,
 		jobModel.CreatedAt,
 		jobModel.UpdatedAt,
+		userID,
 	)
 	if err != nil {
 		return nil, models.WrapError(models.ErrFailedToCreateJob, err)
@@ -212,22 +219,29 @@ func (r *SQLiteJobRepository) Create(ctx context.Context, jobModel *models.Job) 
 		return nil, models.WrapError(models.ErrFailedToCreateJob, err)
 	}
 
-	if err = tx.Commit(); err != nil {
-		return nil, models.WrapError(models.ErrTransactionFailed, err)
-	}
-
-	tx = nil
-
 	jobModel.ID = int(id)
 	jobModel.Company = *company
+
+	// Invalidate stats caches after creating a job
+	_ = r.cache.Delete(ctx,
+		fmt.Sprintf("stats:u%d:summary", userID),
+		fmt.Sprintf("stats:u%d:by-status", userID),
+	)
 
 	return jobModel, nil
 }
 
 // GetByID retrieves a job by its ID
-func (r *SQLiteJobRepository) GetByID(ctx context.Context, id int) (*models.Job, error) {
+func (r *SQLiteJobRepository) GetByID(ctx context.Context, userID int, id int) (*models.Job, error) {
 	if id <= 0 {
 		return nil, models.ErrInvalidJobID
+	}
+
+	// Check cache first
+	cacheKey := fmt.Sprintf("job:u%d:id%d", userID, id)
+	var job models.Job
+	if err := r.cache.Get(ctx, cacheKey, &job); err == nil {
+		return &job, nil
 	}
 
 	query := `
@@ -239,12 +253,12 @@ func (r *SQLiteJobRepository) GetByID(ctx context.Context, id int) (*models.Job,
 			c.id, c.name, c.created_at, c.updated_at
 		FROM jobs j
 		JOIN companies c ON j.company_id = c.id
-		WHERE j.id = ?
+		WHERE j.id = ? AND j.user_id = ?
 	`
 
-	row := r.db.QueryRowContext(ctx, query, id)
+	row := r.db.QueryRowContext(ctx, query, id, userID)
 
-	job, err := r.scanJob(row)
+	jobResult, err := r.scanJob(row)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, models.ErrJobNotFound
@@ -255,11 +269,14 @@ func (r *SQLiteJobRepository) GetByID(ctx context.Context, id int) (*models.Job,
 		}
 	}
 
-	return job, nil
+	// Cache the result for 1 hour
+	_ = r.cache.Set(ctx, cacheKey, jobResult, time.Hour)
+
+	return jobResult, nil
 }
 
 // GetAll retrieves all jobs with optional filtering
-func (r *SQLiteJobRepository) GetAll(ctx context.Context, filter models.JobFilter) ([]*models.Job, error) {
+func (r *SQLiteJobRepository) GetAll(ctx context.Context, userID int, filter models.JobFilter) ([]*models.Job, error) {
 	query := `
 		SELECT
 			j.id, j.title, j.description, j.location, j.job_type,
@@ -273,6 +290,10 @@ func (r *SQLiteJobRepository) GetAll(ctx context.Context, filter models.JobFilte
 
 	var conditions []string
 	var args []interface{}
+
+	// Always filter by user_id
+	conditions = append(conditions, "j.user_id = ?")
+	args = append(args, userID)
 
 	if filter.CompanyID != nil {
 		conditions = append(conditions, "j.company_id = ?")
@@ -343,7 +364,7 @@ func (r *SQLiteJobRepository) GetAll(ctx context.Context, filter models.JobFilte
 }
 
 // Update updates an existing job in the database
-func (r *SQLiteJobRepository) Update(ctx context.Context, job *models.Job) error {
+func (r *SQLiteJobRepository) Update(ctx context.Context, userID int, job *models.Job) error {
 	if job == nil {
 		return models.ErrInvalidJobID
 	}
@@ -361,17 +382,6 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, job *models.Job) error
 		return err
 	}
 
-	tx, err := r.db.BeginTx(ctx, nil)
-	if err != nil {
-		return models.ErrTransactionFailed
-	}
-
-	defer func() {
-		if tx != nil {
-			_ = tx.Rollback()
-		}
-	}()
-
 	job.UpdatedAt = time.Now().UTC()
 
 	skillsJSON, err := json.Marshal(job.RequiredSkills)
@@ -385,10 +395,10 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, job *models.Job) error
 			source_url = ?, required_skills = ?,
 			application_url = ?, company_id = ?,
 			status = ?, match_score = ?, notes = ?, updated_at = ?
-		WHERE id = ?
+		WHERE id = ? AND user_id = ?
 	`
 
-	result, err := tx.ExecContext(
+	result, err := r.db.ExecContext(
 		ctx,
 		query,
 		job.Title,
@@ -404,6 +414,7 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, job *models.Job) error
 		job.Notes,
 		job.UpdatedAt,
 		job.ID,
+		userID,
 	)
 	if err != nil {
 		return models.WrapError(models.ErrFailedToUpdateJob, err)
@@ -418,26 +429,23 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, job *models.Job) error
 		return models.ErrJobNotFound
 	}
 
-	if err = tx.Commit(); err != nil {
-		return models.ErrTransactionFailed
-	}
-
-	tx = nil
-
 	job.Company = *company
+
+	// Invalidate job cache after update
+	_ = r.cache.Delete(ctx, fmt.Sprintf("job:u%d:id%d", userID, job.ID))
 
 	return nil
 }
 
 // UpdateMatchScore updates only the match score for a job
-func (r *SQLiteJobRepository) UpdateMatchScore(ctx context.Context, jobID int, matchScore *int) error {
+func (r *SQLiteJobRepository) UpdateMatchScore(ctx context.Context, userID int, jobID int, matchScore *int) error {
 	if jobID <= 0 {
 		return models.ErrInvalidJobID
 	}
 
-	query := `UPDATE jobs SET match_score = ?, updated_at = ? WHERE id = ?`
+	query := `UPDATE jobs SET match_score = ?, updated_at = ? WHERE id = ? AND user_id = ?`
 
-	result, err := r.db.ExecContext(ctx, query, matchScore, time.Now().UTC(), jobID)
+	result, err := r.db.ExecContext(ctx, query, matchScore, time.Now().UTC(), jobID, userID)
 	if err != nil {
 		return models.WrapError(models.ErrFailedToUpdateJob, err)
 	}
@@ -451,18 +459,24 @@ func (r *SQLiteJobRepository) UpdateMatchScore(ctx context.Context, jobID int, m
 		return models.ErrJobNotFound
 	}
 
+	// Invalidate caches after updating match score
+	_ = r.cache.Delete(ctx,
+		fmt.Sprintf("job:u%d:id%d", userID, jobID),
+		fmt.Sprintf("stats:u%d:summary", userID),
+	)
+
 	return nil
 }
 
 // Delete removes a job from the database
-func (r *SQLiteJobRepository) Delete(ctx context.Context, id int) error {
+func (r *SQLiteJobRepository) Delete(ctx context.Context, userID int, id int) error {
 	if id <= 0 {
 		return models.ErrInvalidJobID
 	}
 
-	query := "DELETE FROM jobs WHERE id = ?"
+	query := "DELETE FROM jobs WHERE id = ? AND user_id = ?"
 
-	result, err := r.db.ExecContext(ctx, query, id)
+	result, err := r.db.ExecContext(ctx, query, id, userID)
 	if err != nil {
 		return models.WrapError(models.ErrFailedToDeleteJob, err)
 	}
@@ -476,11 +490,18 @@ func (r *SQLiteJobRepository) Delete(ctx context.Context, id int) error {
 		return models.ErrJobNotFound
 	}
 
+	// Invalidate caches after deleting a job
+	_ = r.cache.Delete(ctx,
+		fmt.Sprintf("job:u%d:id%d", userID, id),
+		fmt.Sprintf("stats:u%d:summary", userID),
+		fmt.Sprintf("stats:u%d:by-status", userID),
+	)
+
 	return nil
 }
 
 // UpdateStatus updates the status of a job
-func (r *SQLiteJobRepository) UpdateStatus(ctx context.Context, id int, status models.JobStatus) error {
+func (r *SQLiteJobRepository) UpdateStatus(ctx context.Context, userID int, id int, status models.JobStatus) error {
 	if id <= 0 {
 		return models.ErrInvalidJobID
 	}
@@ -489,10 +510,10 @@ func (r *SQLiteJobRepository) UpdateStatus(ctx context.Context, id int, status m
 		return models.ErrInvalidJobStatus
 	}
 
-	query := "UPDATE jobs SET status = ?, updated_at = ? WHERE id = ?"
+	query := "UPDATE jobs SET status = ?, updated_at = ? WHERE id = ? AND user_id = ?"
 
 	now := time.Now().UTC()
-	result, err := r.db.ExecContext(ctx, query, int(status), now, id)
+	result, err := r.db.ExecContext(ctx, query, int(status), now, id, userID)
 	if err != nil {
 		return models.WrapError(models.ErrFailedToUpdateJob, err)
 	}
@@ -506,11 +527,18 @@ func (r *SQLiteJobRepository) UpdateStatus(ctx context.Context, id int, status m
 		return models.ErrJobNotFound
 	}
 
+	// Invalidate stats caches after updating job status
+	_ = r.cache.Delete(ctx,
+		fmt.Sprintf("stats:u%d:summary", userID),
+		fmt.Sprintf("stats:u%d:by-status", userID),
+		fmt.Sprintf("job:u%d:id%d", userID, id),
+	)
+
 	return nil
 }
 
 // GetCount returns the total count of jobs matching the given filter
-func (r *SQLiteJobRepository) GetCount(ctx context.Context, filter models.JobFilter) (int, error) {
+func (r *SQLiteJobRepository) GetCount(ctx context.Context, userID int, filter models.JobFilter) (int, error) {
 	query := `
 		SELECT COUNT(*)
 		FROM jobs j
@@ -519,6 +547,10 @@ func (r *SQLiteJobRepository) GetCount(ctx context.Context, filter models.JobFil
 
 	var conditions []string
 	var args []interface{}
+
+	// Always filter by user_id
+	conditions = append(conditions, "j.user_id = ?")
+	args = append(args, userID)
 
 	if filter.CompanyID != nil {
 		conditions = append(conditions, "j.company_id = ?")
@@ -556,15 +588,16 @@ func (r *SQLiteJobRepository) GetCount(ctx context.Context, filter models.JobFil
 
 // GetStats returns aggregate statistics about jobs in the database.
 // It returns the total number of jobs, jobs with status APPLIED, and jobs with high match scores (>=70).
-func (r *SQLiteJobRepository) GetStats(ctx context.Context) (*models.JobStats, error) {
+func (r *SQLiteJobRepository) GetStats(ctx context.Context, userID int) (*models.JobStats, error) {
 	query := `
         SELECT
             COUNT(*) AS total_jobs,
             COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS applied,
             COALESCE(SUM(CASE WHEN match_score >= 70 THEN 1 ELSE 0 END), 0) AS high_match
         FROM jobs
+        WHERE user_id = ?
     `
-	rows, err := r.db.QueryContext(ctx, query, int(models.APPLIED))
+	rows, err := r.db.QueryContext(ctx, query, int(models.APPLIED), userID)
 	if err != nil {
 		return nil, models.WrapError(models.ErrFailedToGetJobStats, err)
 	}
@@ -585,22 +618,28 @@ func (r *SQLiteJobRepository) GetStats(ctx context.Context) (*models.JobStats, e
 
 // GetStatsByUserID returns aggregate statistics about jobs for a specific user.
 func (r *SQLiteJobRepository) GetStatsByUserID(ctx context.Context, userID int) (*models.JobStats, error) {
+	// Check cache first
+	cacheKey := fmt.Sprintf("stats:u%d:summary", userID)
+	var stats models.JobStats
+	if err := r.cache.Get(ctx, cacheKey, &stats); err == nil {
+		return &stats, nil
+	}
+
 	query := `
         SELECT
             COUNT(*) AS total_jobs,
             COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS applied,
             COALESCE(SUM(CASE WHEN match_score >= 70 THEN 1 ELSE 0 END), 0) AS high_match
         FROM jobs
+        WHERE user_id = ?
     `
-	// TODO: Add WHERE user_id = ? when user association is implemented
 
-	rows, err := r.db.QueryContext(ctx, query, int(models.APPLIED))
+	rows, err := r.db.QueryContext(ctx, query, int(models.APPLIED), userID)
 	if err != nil {
 		return nil, models.WrapError(models.ErrFailedToGetJobStats, err)
 	}
 	defer rows.Close()
 
-	var stats models.JobStats
 	if rows.Next() {
 		if err := rows.Scan(&stats.TotalJobs, &stats.TotalApplied, &stats.HighMatch); err != nil {
 			return nil, models.WrapError(models.ErrFailedToGetJobStats, err)
@@ -610,6 +649,10 @@ func (r *SQLiteJobRepository) GetStatsByUserID(ctx context.Context, userID int) 
 	if err := rows.Err(); err != nil {
 		return nil, models.WrapError(models.ErrFailedToGetJobStats, err)
 	}
+
+	// Cache the results for 10 minutes
+	_ = r.cache.Set(ctx, cacheKey, &stats, 10*time.Minute)
+
 	return &stats, nil
 }
 
@@ -625,7 +668,7 @@ func (r *SQLiteJobRepository) GetRecentJobsByUserID(ctx context.Context, userID 
 		// TODO: Add UserID field to JobFilter when user association is implemented
 	}
 
-	jobs, err := r.GetAll(ctx, filter)
+	jobs, err := r.GetAll(ctx, userID, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -636,23 +679,30 @@ func (r *SQLiteJobRepository) GetRecentJobsByUserID(ctx context.Context, userID 
 // GetJobStatsByStatus returns job counts grouped by status for a specific user.
 // This is useful for homepage pipeline visualization.
 func (r *SQLiteJobRepository) GetJobStatsByStatus(ctx context.Context, userID int) (map[models.JobStatus]int, error) {
+	// Check cache first
+	cacheKey := fmt.Sprintf("stats:u%d:by-status", userID)
+	var statusCounts map[models.JobStatus]int
+	if err := r.cache.Get(ctx, cacheKey, &statusCounts); err == nil {
+		return statusCounts, nil
+	}
+
 	query := `
         SELECT
             status,
             COUNT(*) as count
         FROM jobs
+        WHERE user_id = ?
         GROUP BY status
         ORDER BY status
     `
-	// TODO: Add WHERE user_id = ? when user association is implemented
 
-	rows, err := r.db.QueryContext(ctx, query)
+	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, models.WrapError(models.ErrFailedToGetJobStats, err)
 	}
 	defer rows.Close()
 
-	statusCounts := make(map[models.JobStatus]int)
+	statusCounts = make(map[models.JobStatus]int)
 
 	// Initialize all statuses to 0
 	for status := models.INTERESTED; status <= models.NOT_INTERESTED; status++ {
@@ -676,11 +726,14 @@ func (r *SQLiteJobRepository) GetJobStatsByStatus(ctx context.Context, userID in
 		return nil, models.WrapError(models.ErrFailedToGetJobStats, err)
 	}
 
+	// Cache the results for 10 minutes
+	_ = r.cache.Set(ctx, cacheKey, statusCounts, 10*time.Minute)
+
 	return statusCounts, nil
 }
 
 // CreateMatchResult stores a new match analysis result for a job
-func (r *SQLiteJobRepository) CreateMatchResult(ctx context.Context, matchResult *models.MatchResult) error {
+func (r *SQLiteJobRepository) CreateMatchResult(ctx context.Context, userID int, matchResult *models.MatchResult) error {
 	if matchResult == nil {
 		return models.ErrInvalidJobID
 	}
@@ -701,8 +754,8 @@ func (r *SQLiteJobRepository) CreateMatchResult(ctx context.Context, matchResult
 	}
 
 	query := `
-		INSERT INTO match_results (job_id, match_score, strengths, weaknesses, highlights, feedback)
-		VALUES (?, ?, ?, ?, ?, ?)
+		INSERT INTO match_results (job_id, match_score, strengths, weaknesses, highlights, feedback, user_id)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
 	`
 
 	result, err := r.db.ExecContext(
@@ -714,6 +767,7 @@ func (r *SQLiteJobRepository) CreateMatchResult(ctx context.Context, matchResult
 		string(weaknessesJSON),
 		string(highlightsJSON),
 		matchResult.Feedback,
+		userID,
 	)
 	if err != nil {
 		return models.WrapError(models.ErrFailedToCreateJob, err)
@@ -725,25 +779,41 @@ func (r *SQLiteJobRepository) CreateMatchResult(ctx context.Context, matchResult
 	}
 
 	matchResult.ID = int(id)
+
+	// Invalidate related caches
+	if err == nil {
+		_ = r.cache.Delete(ctx,
+			fmt.Sprintf("match:u%d:job%d:history", userID, matchResult.JobID),
+		)
+		_ = r.cache.DeletePattern(ctx, fmt.Sprintf("match:u%d:recent:*", userID))
+	}
+
 	return nil
 }
 
 // GetJobMatchHistory retrieves all match results for a specific job
-func (r *SQLiteJobRepository) GetJobMatchHistory(ctx context.Context, jobID int) ([]*models.MatchResult, error) {
+func (r *SQLiteJobRepository) GetJobMatchHistory(ctx context.Context, userID int, jobID int) ([]*models.MatchResult, error) {
+	// Check cache first
+	cacheKey := fmt.Sprintf("match:u%d:job%d:history", userID, jobID)
+	var results []*models.MatchResult
+	if err := r.cache.Get(ctx, cacheKey, &results); err == nil {
+		return results, nil
+	}
+
 	query := `
 		SELECT id, job_id, match_score, strengths, weaknesses, highlights, feedback, created_at
 		FROM match_results
-		WHERE job_id = ?
+		WHERE job_id = ? AND user_id = ?
 		ORDER BY created_at DESC
 	`
 
-	rows, err := r.db.QueryContext(ctx, query, jobID)
+	rows, err := r.db.QueryContext(ctx, query, jobID, userID)
 	if err != nil {
 		return nil, models.WrapError(models.ErrFailedToGetJob, err)
 	}
 	defer rows.Close()
 
-	var results []*models.MatchResult
+	results = []*models.MatchResult{}
 	for rows.Next() {
 		var mr models.MatchResult
 		var strengthsJSON, weaknessesJSON, highlightsJSON string
@@ -779,11 +849,16 @@ func (r *SQLiteJobRepository) GetJobMatchHistory(ctx context.Context, jobID int)
 		return nil, models.WrapError(models.ErrFailedToGetJob, err)
 	}
 
+	// Cache the results (no TTL for match history)
+	if err == nil {
+		_ = r.cache.Set(ctx, cacheKey, results, 0)
+	}
+
 	return results, nil
 }
 
 // GetRecentMatchResultsWithDetails retrieves recent match results with job details for context
-func (r *SQLiteJobRepository) GetRecentMatchResultsWithDetails(ctx context.Context, limit int, currentJobID int) ([]*models.MatchSummary, error) {
+func (r *SQLiteJobRepository) GetRecentMatchResultsWithDetails(ctx context.Context, userID int, limit int, currentJobID int) ([]*models.MatchSummary, error) {
 	if limit <= 0 {
 		limit = 5
 	}
@@ -794,14 +869,14 @@ func (r *SQLiteJobRepository) GetRecentMatchResultsWithDetails(ctx context.Conte
 		FROM match_results mr
 		JOIN jobs j ON mr.job_id = j.id
 		JOIN companies c ON j.company_id = c.id
-		WHERE mr.job_id != ?
+		WHERE mr.job_id != ? AND mr.user_id = ?
 		ORDER BY
 			CASE WHEN c.name = (SELECT c2.name FROM jobs j2 JOIN companies c2 ON j2.company_id = c2.id WHERE j2.id = ?) THEN 0 ELSE 1 END,
 			mr.created_at DESC
 		LIMIT ?
 	`
 
-	rows, err := r.db.QueryContext(ctx, query, currentJobID, currentJobID, limit)
+	rows, err := r.db.QueryContext(ctx, query, currentJobID, userID, currentJobID, limit)
 	if err != nil {
 		return nil, models.WrapError(models.ErrFailedToGetJob, err)
 	}
@@ -869,26 +944,34 @@ func (r *SQLiteJobRepository) GetRecentMatchResultsWithDetails(ctx context.Conte
 }
 
 // GetRecentMatchResults retrieves the most recent match results across all jobs
-func (r *SQLiteJobRepository) GetRecentMatchResults(ctx context.Context, limit int) ([]*models.MatchResult, error) {
+func (r *SQLiteJobRepository) GetRecentMatchResults(ctx context.Context, userID int, limit int) ([]*models.MatchResult, error) {
 	if limit <= 0 {
 		limit = 10
+	}
+
+	// Check cache first
+	cacheKey := fmt.Sprintf("match:u%d:recent:%d", userID, limit)
+	var results []*models.MatchResult
+	if err := r.cache.Get(ctx, cacheKey, &results); err == nil {
+		return results, nil
 	}
 
 	query := `
 		SELECT mr.id, mr.job_id, mr.match_score, mr.strengths, mr.weaknesses,
 		       mr.highlights, mr.feedback, mr.created_at
 		FROM match_results mr
+		WHERE mr.user_id = ?
 		ORDER BY mr.created_at DESC
 		LIMIT ?
 	`
 
-	rows, err := r.db.QueryContext(ctx, query, limit)
+	rows, err := r.db.QueryContext(ctx, query, userID, limit)
 	if err != nil {
 		return nil, models.WrapError(models.ErrFailedToGetJob, err)
 	}
 	defer rows.Close()
 
-	var results []*models.MatchResult
+	results = []*models.MatchResult{}
 	for rows.Next() {
 		var mr models.MatchResult
 		var strengthsJSON, weaknessesJSON, highlightsJSON string
@@ -924,18 +1007,36 @@ func (r *SQLiteJobRepository) GetRecentMatchResults(ctx context.Context, limit i
 		return nil, models.WrapError(models.ErrFailedToGetJob, err)
 	}
 
+	// Cache the results for 10 minutes
+	if err == nil {
+		_ = r.cache.Set(ctx, cacheKey, results, 10*time.Minute)
+	}
+
 	return results, nil
 }
 
 // DeleteMatchResult deletes a specific match result by ID
-func (r *SQLiteJobRepository) DeleteMatchResult(ctx context.Context, matchID int) error {
+func (r *SQLiteJobRepository) DeleteMatchResult(ctx context.Context, userID int, matchID int) error {
 	if matchID <= 0 {
 		return models.ErrInvalidJobID
 	}
 
-	query := `DELETE FROM match_results WHERE id = ?`
+	// Get the jobID before deletion for cache invalidation
+	var jobID int
+	err := r.db.QueryRowContext(ctx,
+		`SELECT job_id FROM match_results WHERE id = ? AND user_id = ?`,
+		matchID, userID,
+	).Scan(&jobID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return models.ErrJobNotFound
+		}
+		return models.WrapError(models.ErrFailedToDeleteJob, err)
+	}
 
-	result, err := r.db.ExecContext(ctx, query, matchID)
+	query := `DELETE FROM match_results WHERE id = ? AND user_id = ?`
+
+	result, err := r.db.ExecContext(ctx, query, matchID, userID)
 	if err != nil {
 		return models.WrapError(models.ErrFailedToDeleteJob, err)
 	}
@@ -949,19 +1050,25 @@ func (r *SQLiteJobRepository) DeleteMatchResult(ctx context.Context, matchID int
 		return models.ErrJobNotFound
 	}
 
+	// Invalidate related caches
+	_ = r.cache.Delete(ctx,
+		fmt.Sprintf("match:u%d:job%d:history", userID, jobID),
+	)
+	_ = r.cache.DeletePattern(ctx, fmt.Sprintf("match:u%d:recent:*", userID))
+
 	return nil
 }
 
 // MatchResultBelongsToJob checks if a match result belongs to a specific job
-func (r *SQLiteJobRepository) MatchResultBelongsToJob(ctx context.Context, matchID, jobID int) (bool, error) {
+func (r *SQLiteJobRepository) MatchResultBelongsToJob(ctx context.Context, userID int, matchID, jobID int) (bool, error) {
 	if matchID <= 0 || jobID <= 0 {
 		return false, models.ErrInvalidJobID
 	}
 
-	query := `SELECT EXISTS(SELECT 1 FROM match_results WHERE id = ? AND job_id = ?)`
+	query := `SELECT EXISTS(SELECT 1 FROM match_results WHERE id = ? AND job_id = ? AND user_id = ?)`
 
 	var exists bool
-	err := r.db.QueryRowContext(ctx, query, matchID, jobID).Scan(&exists)
+	err := r.db.QueryRowContext(ctx, query, matchID, jobID, userID).Scan(&exists)
 	if err != nil {
 		return false, models.WrapError(models.ErrFailedToGetJob, err)
 	}

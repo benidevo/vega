@@ -96,12 +96,13 @@ func (r *ProfileRepository) GetProfileWithRelated(ctx context.Context, userID in
 func (r *ProfileRepository) CreateProfileIfNotExists(ctx context.Context, userID int) (*models.Profile, error) {
 	// Check if profile exists
 	profile, err := r.GetProfile(ctx, userID)
-	if err != nil {
-		return nil, err
+	if err == nil && profile != nil {
+		// Profile already exists
+		return profile, nil
 	}
 
-	if profile != nil {
-		return profile, nil
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
 	}
 
 	// Create minimal profile
