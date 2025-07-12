@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/benidevo/vega/internal/auth/models"
 	"github.com/benidevo/vega/internal/auth/services"
@@ -255,21 +254,37 @@ func (h *AuthHandler) OptionalAuthMiddleware() gin.HandlerFunc {
 
 // GoogleAuthHandler handles authentication requests using Google OAuth.
 type GoogleAuthHandler struct {
-	service *services.GoogleAuthService
-	cfg     *config.Settings
+	service  *services.GoogleAuthService
+	cfg      *config.Settings
+	renderer *render.HTMLRenderer
 }
 
 // NewGoogleAuthHandler creates and returns a new GoogleAuthHandler with the provided service
 func NewGoogleAuthHandler(service *services.GoogleAuthService, cfg *config.Settings) *GoogleAuthHandler {
 	return &GoogleAuthHandler{
-		service: service,
-		cfg:     cfg,
+		service:  service,
+		cfg:      cfg,
+		renderer: render.NewHTMLRenderer(cfg),
 	}
 }
 
 // HandleLogin initiates the Google OAuth login flow by redirecting the user to the authentication URL.
 func (h *GoogleAuthHandler) HandleLogin(c *gin.Context) {
-	authURL := h.service.GetAuthURL()
+	authURL, state := h.service.GetAuthURL()
+
+	// Store state in secure, httpOnly cookie for CSRF protection
+	sameSite := parseSameSiteMode(h.cfg.CookieSameSite)
+	c.SetSameSite(sameSite)
+	c.SetCookie(
+		"oauth_state",
+		state,
+		300, // 5 minutes expiry
+		"/",
+		h.cfg.CookieDomain,
+		h.cfg.CookieSecure,
+		true, // httpOnly
+	)
+
 	c.Redirect(http.StatusFound, authURL)
 }
 
@@ -278,16 +293,34 @@ func (h *GoogleAuthHandler) HandleLogin(c *gin.Context) {
 // For errors, redirects to login page with appropriate error messages.
 func (h *GoogleAuthHandler) HandleCallback(c *gin.Context) {
 	code := c.Query("code")
+	state := c.Query("state")
+
+	// Validate state parameter for CSRF protection
+	storedState, err := c.Cookie("oauth_state")
+	if err != nil || storedState == "" || storedState != state {
+		h.service.LogError(fmt.Errorf("invalid oauth state: stored=%s, received=%s, error=%v", storedState, state, err))
+		h.renderer.HTML(c, http.StatusBadRequest, "layouts/base.html", gin.H{
+			"title":              "Login",
+			"page":               "login",
+			"googleOAuthEnabled": h.cfg.GoogleOAuthEnabled,
+			"isCloudMode":        h.cfg.IsCloudMode,
+			"error":              "Invalid authentication request. Please try again.",
+		})
+		return
+	}
+
+	// Clear state cookie after validation
+	c.SetCookie("oauth_state", "", -1, "/", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
+
 	if code == "" {
 		h.service.LogError(fmt.Errorf("missing code in callback"))
 		// Redirect to login page with error message
-		c.HTML(http.StatusBadRequest, "layouts/base.html", gin.H{
-			"title":               "Login",
-			"page":                "login",
-			"currentYear":         time.Now().Year(),
-			"securityPageEnabled": h.cfg.SecurityPageEnabled,
-			"googleOAuthEnabled":  h.cfg.GoogleOAuthEnabled,
-			"error":               "Invalid authentication request. Please try again.",
+		h.renderer.HTML(c, http.StatusBadRequest, "layouts/base.html", gin.H{
+			"title":              "Login",
+			"page":               "login",
+			"googleOAuthEnabled": h.cfg.GoogleOAuthEnabled,
+			"isCloudMode":        h.cfg.IsCloudMode,
+			"error":              "Invalid authentication request. Please try again.",
 		})
 		return
 	}
@@ -298,13 +331,12 @@ func (h *GoogleAuthHandler) HandleCallback(c *gin.Context) {
 
 		errorMessage := "Authentication failed. Please try again later."
 
-		c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-			"title":               "Login",
-			"page":                "login",
-			"currentYear":         time.Now().Year(),
-			"securityPageEnabled": h.cfg.SecurityPageEnabled,
-			"googleOAuthEnabled":  h.cfg.GoogleOAuthEnabled,
-			"error":               errorMessage,
+		h.renderer.HTML(c, http.StatusOK, "layouts/base.html", gin.H{
+			"title":              "Login",
+			"page":               "login",
+			"googleOAuthEnabled": h.cfg.GoogleOAuthEnabled,
+			"isCloudMode":        h.cfg.IsCloudMode,
+			"error":              errorMessage,
 		})
 		return
 	}

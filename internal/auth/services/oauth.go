@@ -56,12 +56,14 @@ func NewGoogleAuthService(cfg *config.Settings, repo repository.UserRepository) 
 
 // GetAuthURL generates a Google OAuth2 authentication URL with a random state parameter.
 // It requests offline access and forces the approval prompt.
-func (s *GoogleAuthService) GetAuthURL() string {
+// Returns both the auth URL and the state parameter for CSRF protection.
+func (s *GoogleAuthService) GetAuthURL() (string, string) {
 	state := generateRandomState(32)
-	return s.oauthCfg.AuthCodeURL(
+	url := s.oauthCfg.AuthCodeURL(
 		state,
 		oauth2.AccessTypeOffline,
 	)
+	return url, state
 }
 
 // exchangeCode exchanges an authorization code for an OAuth2 token using the configured OAuth2 client.
