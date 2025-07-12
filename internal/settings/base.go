@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/benidevo/vega/internal/common/alerts"
+	"github.com/benidevo/vega/internal/common/render"
 	"github.com/benidevo/vega/internal/config"
 	"github.com/benidevo/vega/internal/settings/models"
 	"github.com/gin-gonic/gin"
@@ -39,6 +40,7 @@ type EntityMetadata struct {
 type BaseSettingsHandler struct {
 	service  CRUDService
 	metadata EntityMetadata
+	renderer *render.HTMLRenderer
 }
 
 // CRUDService defines the interface for CRUD operations
@@ -56,12 +58,12 @@ func NewBaseSettingsHandler(service CRUDService, metadata EntityMetadata) *BaseS
 	return &BaseSettingsHandler{
 		service:  service,
 		metadata: metadata,
+		renderer: render.NewHTMLRenderer(service.GetConfig()),
 	}
 }
 
 // GetAddPage handles the request to display the add entity page
 func (h *BaseSettingsHandler) GetAddPage(c *gin.Context) {
-	username, _ := c.Get("username")
 	userID, _ := c.Get("userID")
 
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID.(int))
@@ -69,76 +71,50 @@ func (h *BaseSettingsHandler) GetAddPage(c *gin.Context) {
 		profile = &models.Profile{}
 	}
 
-	templateData := gin.H{
-		"title":               fmt.Sprintf("Add %s", h.metadata.Name),
-		"page":                "settings-profile",
-		"activeNav":           "settings",
-		"activeSettings":      "profile",
-		"pageTitle":           "Profile Settings",
-		"currentYear":         time.Now().Year(),
-		"securityPageEnabled": h.service.GetConfig().SecurityPageEnabled,
-		"username":            username,
-		"profile":             profile,
+	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", gin.H{
+		"title":          fmt.Sprintf("Add %s", h.metadata.Name),
+		"page":           "settings-profile",
+		"activeNav":      "settings",
+		"activeSettings": "profile",
+		"pageTitle":      "Profile Settings",
+		"profile":        profile,
 		fmt.Sprintf("isAdding%s", h.metadata.Name): true,
-	}
-
-	c.HTML(http.StatusOK, "layouts/base.html", templateData)
+	})
 }
 
 // GetEditPage handles the request to display the edit entity page
 func (h *BaseSettingsHandler) GetEditPage(c *gin.Context) {
-	username, _ := c.Get("username")
 	userID := c.GetInt("userID")
 	entityIDStr := c.Param("id")
 
 	entityID, err := strconv.Atoi(entityIDStr)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "layouts/base.html", gin.H{
-			"title":               "Bad Request",
-			"page":                "404",
-			"currentYear":         time.Now().Year(),
-			"securityPageEnabled": h.service.GetConfig().SecurityPageEnabled,
-		})
+		h.renderer.Error(c, http.StatusBadRequest, "Bad Request")
 		return
 	}
 
 	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
-			"title":               "Something Went Wrong",
-			"page":                "500",
-			"currentYear":         time.Now().Year(),
-			"securityPageEnabled": h.service.GetConfig().SecurityPageEnabled,
-		})
+		h.renderer.Error(c, http.StatusInternalServerError, "Something Went Wrong")
 		return
 	}
 
 	entity, err := h.service.GetEntityByID(c, entityID, profile.ID, h.metadata.Name)
 	if err != nil {
-		c.HTML(http.StatusNotFound, "layouts/base.html", gin.H{
-			"title":               "Not Found",
-			"page":                "404",
-			"currentYear":         time.Now().Year(),
-			"securityPageEnabled": h.service.GetConfig().SecurityPageEnabled,
-		})
+		h.renderer.Error(c, http.StatusNotFound, "Not Found")
 		return
 	}
 
-	templateData := gin.H{
-		"title":               fmt.Sprintf("Edit %s", h.metadata.Name),
-		"page":                "settings-profile",
-		"activeNav":           "settings",
-		"activeSettings":      "profile",
-		"pageTitle":           "Profile Settings",
-		"currentYear":         time.Now().Year(),
-		"securityPageEnabled": h.service.GetConfig().SecurityPageEnabled,
-		"username":            username,
-		"profile":             profile,
+	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", gin.H{
+		"title":          fmt.Sprintf("Edit %s", h.metadata.Name),
+		"page":           "settings-profile",
+		"activeNav":      "settings",
+		"activeSettings": "profile",
+		"pageTitle":      "Profile Settings",
+		"profile":        profile,
 		fmt.Sprintf("isEditing%s", h.metadata.Name): true,
 		strings.ToLower(h.metadata.Name):            entity,
-	}
-
-	c.HTML(http.StatusOK, "layouts/base.html", templateData)
+	})
 }
 
 // HandleCreate processes the creation of a new entity

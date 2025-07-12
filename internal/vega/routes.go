@@ -2,12 +2,12 @@ package vega
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/benidevo/vega/internal/ai"
 	authapi "github.com/benidevo/vega/internal/api/auth"
 	jobapi "github.com/benidevo/vega/internal/api/job"
 	"github.com/benidevo/vega/internal/auth"
+	"github.com/benidevo/vega/internal/common/render"
 	"github.com/benidevo/vega/internal/home"
 	"github.com/benidevo/vega/internal/job"
 	"github.com/benidevo/vega/internal/settings"
@@ -17,7 +17,7 @@ import (
 
 // SetupRoutes configures all application routes and middleware
 func SetupRoutes(a *App) {
-	a.router.Use(globalErrorHandler)
+	a.router.Use(globalErrorHandler(a.renderer))
 
 	a.router.Static("/static", "./static")
 
@@ -82,11 +82,7 @@ func SetupRoutes(a *App) {
 	jobapi.RegisterRoutes(jobAPIGroup, jobAPIHandler)
 
 	a.router.NoRoute(func(c *gin.Context) {
-		c.HTML(http.StatusNotFound, "layouts/base.html", gin.H{
-			"title":       "Page Not Found",
-			"page":        "404",
-			"currentYear": time.Now().Year(),
-		})
+		a.renderer.Error(c, http.StatusNotFound, "Page Not Found")
 	})
 }
 
@@ -95,29 +91,23 @@ func SetupRoutes(a *App) {
 //
 // It ensures that any unhandled errors or panics result in a
 // consistent error response to the client.
-func globalErrorHandler(c *gin.Context) {
-	defer func() {
-		if err := recover(); err != nil {
-			log.Error().Err(err.(error)).Msg("Recovered from panic")
+func globalErrorHandler(renderer *render.HTMLRenderer) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer func() {
+			if err := recover(); err != nil {
+				log.Error().Err(err.(error)).Msg("Recovered from panic")
 
-			c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
-				"title":       "Something Went Wrong",
-				"page":        "500",
-				"currentYear": time.Now().Year(),
-			})
+				renderer.Error(c, http.StatusInternalServerError, "Something Went Wrong")
+				c.Abort()
+			}
+		}()
+
+		c.Next()
+
+		// Only handle errors if no response has been written yet
+		if !c.Writer.Written() && (len(c.Errors) > 0 || c.Writer.Status() == http.StatusInternalServerError) {
+			renderer.Error(c, http.StatusInternalServerError, "Something Went Wrong")
 			c.Abort()
 		}
-	}()
-
-	c.Next()
-
-	// Only handle errors if no response has been written yet
-	if !c.Writer.Written() && (len(c.Errors) > 0 || c.Writer.Status() == http.StatusInternalServerError) {
-		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
-			"title":       "Something Went Wrong",
-			"page":        "500",
-			"currentYear": time.Now().Year(),
-		})
-		c.Abort()
 	}
 }

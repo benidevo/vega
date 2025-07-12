@@ -13,6 +13,7 @@ import (
 	"github.com/benidevo/vega/internal/auth"
 	"github.com/benidevo/vega/internal/cache"
 	"github.com/benidevo/vega/internal/common/logger"
+	"github.com/benidevo/vega/internal/common/render"
 	"github.com/benidevo/vega/internal/config"
 	"github.com/benidevo/vega/internal/db"
 	"github.com/gin-contrib/cors"
@@ -24,12 +25,13 @@ import (
 // App represents the core application structure, encapsulating configuration,
 // HTTP router, database connection, cache, HTTP server, and a channel for handling OS signals.
 type App struct {
-	config config.Settings
-	router *gin.Engine
-	db     *sql.DB
-	cache  cache.Cache
-	server *http.Server
-	done   chan os.Signal
+	config   config.Settings
+	router   *gin.Engine
+	db       *sql.DB
+	cache    cache.Cache
+	server   *http.Server
+	done     chan os.Signal
+	renderer *render.HTMLRenderer
 }
 
 // New creates and returns a new instance of App with the provided configuration.
@@ -54,9 +56,10 @@ func New(cfg config.Settings) *App {
 	}
 
 	return &App{
-		config: cfg,
-		router: router,
-		done:   make(chan os.Signal, 1),
+		config:   cfg,
+		router:   router,
+		done:     make(chan os.Signal, 1),
+		renderer: render.NewHTMLRenderer(&cfg),
 	}
 }
 

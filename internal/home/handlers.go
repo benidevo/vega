@@ -2,24 +2,26 @@ package home
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/benidevo/vega/internal/common/alerts"
+	"github.com/benidevo/vega/internal/common/render"
 	"github.com/benidevo/vega/internal/config"
 	"github.com/gin-gonic/gin"
 )
 
 // Handler manages home page related HTTP requests.
 type Handler struct {
-	cfg     *config.Settings
-	service *Service
+	cfg      *config.Settings
+	service  *Service
+	renderer *render.HTMLRenderer
 }
 
 // NewHandler creates and returns a new Handler.
 func NewHandler(cfg *config.Settings, service *Service) *Handler {
 	return &Handler{
-		cfg:     cfg,
-		service: service,
+		cfg:      cfg,
+		service:  service,
+		renderer: render.NewHTMLRenderer(cfg),
 	}
 }
 
@@ -30,17 +32,15 @@ func (h *Handler) GetHomePage(c *gin.Context) {
 		// Fallback to static template if no authentication
 		emptyHomeData := NewHomePageData(0, "")
 
-		c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-			"title":               emptyHomeData.Title,
-			"page":                emptyHomeData.Page,
-			"currentYear":         time.Now().Year(),
-			"securityPageEnabled": h.cfg.SecurityPageEnabled,
-			"googleOAuthEnabled":  h.cfg.GoogleOAuthEnabled,
-			"isCloudMode":         h.cfg.IsCloudMode,
-			"showOnboarding":      emptyHomeData.ShowOnboarding,
-			"stats":               emptyHomeData.Stats,
-			"recentJobs":          emptyHomeData.RecentJobs,
-			"hasJobs":             emptyHomeData.HasJobs,
+		h.renderer.HTML(c, http.StatusOK, "layouts/base.html", gin.H{
+			"title":              emptyHomeData.Title,
+			"page":               emptyHomeData.Page,
+			"googleOAuthEnabled": h.cfg.GoogleOAuthEnabled,
+			"isCloudMode":        h.cfg.IsCloudMode,
+			"showOnboarding":     emptyHomeData.ShowOnboarding,
+			"stats":              emptyHomeData.Stats,
+			"recentJobs":         emptyHomeData.RecentJobs,
+			"hasJobs":            emptyHomeData.HasJobs,
 		})
 		return
 	}
@@ -60,15 +60,11 @@ func (h *Handler) GetHomePage(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-		"title":               homeData.Title,
-		"page":                homeData.Page,
-		"username":            homeData.Username,
-		"activeNav":           "home",
-		"pageTitle":           "Dashboard",
-		"currentYear":         time.Now().Year(),
-		"securityPageEnabled": h.cfg.SecurityPageEnabled,
-
+	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", gin.H{
+		"title":          homeData.Title,
+		"page":           homeData.Page,
+		"activeNav":      "home",
+		"pageTitle":      "Dashboard",
 		"stats":          homeData.Stats,
 		"recentJobs":     homeData.RecentJobs,
 		"hasJobs":        homeData.HasJobs,

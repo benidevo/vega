@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/benidevo/vega/internal/common/alerts"
+	"github.com/benidevo/vega/internal/common/render"
 	"github.com/benidevo/vega/internal/config"
 	"github.com/benidevo/vega/internal/job/models"
 	"github.com/gin-gonic/gin"
@@ -22,6 +22,7 @@ type JobHandler struct {
 	service        *JobService
 	cfg            *config.Settings
 	commandFactory *CommandFactory
+	renderer       *render.HTMLRenderer
 }
 
 // formatValidationError converts validator errors to user-friendly messages
@@ -175,6 +176,7 @@ func NewJobHandler(service *JobService, cfg *config.Settings) *JobHandler {
 		service:        service,
 		cfg:            cfg,
 		commandFactory: NewCommandFactory(),
+		renderer:       render.NewHTMLRenderer(cfg),
 	}
 }
 
@@ -204,7 +206,6 @@ func (h *JobHandler) ValidateJobID() gin.HandlerFunc {
 // It retrieves the current user's jobs, applies optional status filtering,
 // gathers job statistics, and renders the dashboard template with the results.
 func (h *JobHandler) ListJobsPage(c *gin.Context) {
-	username, _ := c.Get("username")
 	userIDValue, exists := c.Get("userID")
 	if !exists {
 		h.renderDashboardError(c, models.ErrUnauthorized)
@@ -243,16 +244,13 @@ func (h *JobHandler) ListJobsPage(c *gin.Context) {
 
 	jobsWithPagination, err := h.service.GetJobsWithPagination(c.Request.Context(), userID, filter)
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
-			"title":               "Dashboard",
-			"page":                "dashboard",
-			"activeNav":           "jobs",
-			"pageTitle":           "Jobs",
-			"currentYear":         time.Now().Year(),
-			"securityPageEnabled": h.cfg.SecurityPageEnabled,
-			"username":            username,
-			"jobs":                []*models.Job{},
-			"statusFilter":        statusParam,
+		h.renderer.HTML(c, http.StatusInternalServerError, "layouts/base.html", gin.H{
+			"title":        "Dashboard",
+			"page":         "dashboard",
+			"activeNav":    "jobs",
+			"pageTitle":    "Jobs",
+			"jobs":         []*models.Job{},
+			"statusFilter": statusParam,
 		})
 		return
 	}
@@ -274,16 +272,13 @@ func (h *JobHandler) ListJobsPage(c *gin.Context) {
 	}
 
 	templateData := gin.H{
-		"title":               "Dashboard",
-		"page":                "dashboard",
-		"activeNav":           "jobs",
-		"pageTitle":           "Jobs",
-		"currentYear":         time.Now().Year(),
-		"securityPageEnabled": h.cfg.SecurityPageEnabled,
-		"username":            username,
-		"jobs":                jobsWithPagination.Jobs,
-		"pagination":          jobsWithPagination.Pagination,
-		"statusFilter":        statusParam,
+		"title":        "Dashboard",
+		"page":         "dashboard",
+		"activeNav":    "jobs",
+		"pageTitle":    "Jobs",
+		"jobs":         jobsWithPagination.Jobs,
+		"pagination":   jobsWithPagination.Pagination,
+		"statusFilter": statusParam,
 	}
 
 	// Check if this is an HTMX request
@@ -294,21 +289,17 @@ func (h *JobHandler) ListJobsPage(c *gin.Context) {
 	}
 
 	// Return full page for regular requests
-	c.HTML(http.StatusOK, "layouts/base.html", templateData)
+	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", templateData)
 }
 
 // GetNewJobForm renders the form for adding a new job.
 // It populates the template with user and page information.
 func (h *JobHandler) GetNewJobForm(c *gin.Context) {
-	username, _ := c.Get("username")
-	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-		"title":               "New Job",
-		"page":                "job-new",
-		"activeNav":           "newjob",
-		"pageTitle":           "New Job",
-		"currentYear":         time.Now().Year(),
-		"securityPageEnabled": h.cfg.SecurityPageEnabled,
-		"username":            username,
+	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", gin.H{
+		"title":     "New Job",
+		"page":      "job-new",
+		"activeNav": "newjob",
+		"pageTitle": "New Job",
 	})
 }
 
@@ -407,19 +398,12 @@ func (h *JobHandler) GetJobDetails(c *gin.Context) {
 	job, err := h.service.GetJob(c.Request.Context(), userID, jobID)
 	if err != nil {
 		if errors.Is(err, models.ErrJobNotFound) {
-			c.HTML(http.StatusNotFound, "layouts/base.html", gin.H{
-				"title":               "Page Not Found",
-				"page":                "404",
-				"currentYear":         time.Now().Year(),
-				"securityPageEnabled": h.cfg.SecurityPageEnabled,
-			})
+			h.renderer.Error(c, http.StatusNotFound, "Page Not Found")
 			return
 		}
 		h.renderError(c, err)
 		return
 	}
-
-	username, _ := c.Get("username")
 
 	// Check profile validation for AI features
 	var profileValidationError error
@@ -434,14 +418,11 @@ func (h *JobHandler) GetJobDetails(c *gin.Context) {
 		}
 	}
 
-	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
+	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", gin.H{
 		"title":                  "Job Details",
 		"page":                   "job-details",
 		"activeNav":              "jobs",
 		"pageTitle":              "Job Details",
-		"currentYear":            time.Now().Year(),
-		"securityPageEnabled":    h.cfg.SecurityPageEnabled,
-		"username":               username,
 		"job":                    job,
 		"jobID":                  jobIDStr,
 		"profileValidationError": profileValidationError,
@@ -720,12 +701,7 @@ func (h *JobHandler) GetMatchHistory(c *gin.Context) {
 	job, err := h.service.GetJob(c.Request.Context(), userID, jobID)
 	if err != nil {
 		if errors.Is(err, models.ErrJobNotFound) {
-			c.HTML(http.StatusNotFound, "layouts/base.html", gin.H{
-				"title":               "Page Not Found",
-				"page":                "404",
-				"currentYear":         time.Now().Year(),
-				"securityPageEnabled": h.cfg.SecurityPageEnabled,
-			})
+			h.renderer.Error(c, http.StatusNotFound, "Page Not Found")
 			return
 		}
 		h.renderError(c, err)
@@ -738,19 +714,14 @@ func (h *JobHandler) GetMatchHistory(c *gin.Context) {
 		return
 	}
 
-	username, _ := c.Get("username")
-
-	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-		"title":               "Match History",
-		"page":                "match-history",
-		"activeNav":           "jobs",
-		"pageTitle":           "Match History",
-		"currentYear":         time.Now().Year(),
-		"securityPageEnabled": h.cfg.SecurityPageEnabled,
-		"username":            username,
-		"job":                 job,
-		"jobID":               jobIDStr,
-		"matchHistory":        matchHistory,
+	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", gin.H{
+		"title":        "Match History",
+		"page":         "match-history",
+		"activeNav":    "jobs",
+		"pageTitle":    "Match History",
+		"job":          job,
+		"jobID":        jobIDStr,
+		"matchHistory": matchHistory,
 	})
 }
 

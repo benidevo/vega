@@ -8,34 +8,34 @@ import (
 
 	"github.com/benidevo/vega/internal/auth/models"
 	"github.com/benidevo/vega/internal/auth/services"
+	"github.com/benidevo/vega/internal/common/render"
 	"github.com/benidevo/vega/internal/config"
 	"github.com/gin-gonic/gin"
 )
 
 // AuthHandler handles authentication-related HTTP requests.
 type AuthHandler struct {
-	service *services.AuthService
-	cfg     *config.Settings
+	service  *services.AuthService
+	cfg      *config.Settings
+	renderer *render.HTMLRenderer
 }
 
 // NewAuthHandler creates and returns a new AuthHandler with the provided AuthService.
 func NewAuthHandler(service *services.AuthService, cfg *config.Settings) *AuthHandler {
 	return &AuthHandler{
-		service: service,
-		cfg:     cfg,
+		service:  service,
+		cfg:      cfg,
+		renderer: render.NewHTMLRenderer(cfg),
 	}
 }
 
 // GetLoginPage renders the login page template.
 func (h *AuthHandler) GetLoginPage(c *gin.Context) {
-
-	c.HTML(http.StatusOK, "layouts/base.html", gin.H{
-		"title":               "Login",
-		"page":                "login",
-		"currentYear":         time.Now().Year(),
-		"securityPageEnabled": h.cfg.SecurityPageEnabled,
-		"googleOAuthEnabled":  h.cfg.GoogleOAuthEnabled,
-		"isCloudMode":         h.cfg.IsCloudMode,
+	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", gin.H{
+		"title":              "Login",
+		"page":               "login",
+		"googleOAuthEnabled": h.cfg.GoogleOAuthEnabled,
+		"isCloudMode":        h.cfg.IsCloudMode,
 	})
 }
 
