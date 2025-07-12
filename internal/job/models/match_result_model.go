@@ -9,6 +9,7 @@ import (
 // It stores the result of the analysis performed on a job-user profile combination.
 type MatchResult struct {
 	ID         int       `json:"id" db:"id" sql:"primary_key;auto_increment"`
+	UserID     int       `json:"user_id" db:"user_id" sql:"not null;index" validate:"required"`
 	JobID      int       `json:"job_id" db:"job_id" sql:"type:integer;not null;index;references:jobs(id);on_delete:cascade"`
 	MatchScore int       `json:"match_score" db:"match_score" sql:"type:integer;not null;check:match_score >= 0 AND match_score <= 100" validate:"required,min=0,max=100"`
 	Strengths  []string  `json:"strengths" db:"strengths" sql:"type:text"`   // Stored as JSON

@@ -12,8 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const testUserID = 1
-
 // setupMockDB creates a new mock database for testing
 func setupMockDB(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
 	db, mock, err := sqlmock.New()
@@ -81,19 +79,19 @@ func TestSQLiteCompanyRepository_GetOrCreate(t *testing.T) {
 				rows.AddRow(r.id, r.name, r.createdAt, r.updatedAt)
 			}
 
-			mock.ExpectQuery("SELECT id, name, created_at, updated_at FROM companies WHERE LOWER\\(name\\) = LOWER\\(\\?\\) AND user_id = \\?").
-				WithArgs(tt.companyName, testUserID).
+			mock.ExpectQuery("SELECT id, name, created_at, updated_at FROM companies WHERE LOWER\\(name\\) = LOWER\\(\\?\\)").
+				WithArgs(tt.companyName).
 				WillReturnRows(rows)
 
 			if tt.expectInsert {
-				mock.ExpectExec("INSERT INTO companies \\(name, user_id, created_at, updated_at\\) VALUES \\(\\?, \\?, \\?, \\?\\)").
-					WithArgs(tt.companyName, testUserID, sqlmock.AnyArg(), sqlmock.AnyArg()).
+				mock.ExpectExec("INSERT INTO companies \\(name, created_at, updated_at\\) VALUES \\(\\?, \\?, \\?\\)").
+					WithArgs(tt.companyName, sqlmock.AnyArg(), sqlmock.AnyArg()).
 					WillReturnResult(sqlmock.NewResult(1, 1))
 			}
 
 			mock.ExpectCommit()
 
-			company, err := repo.GetOrCreate(context.Background(), testUserID, tt.companyName)
+			company, err := repo.GetOrCreate(context.Background(), tt.companyName)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -122,11 +120,11 @@ func TestSQLiteCompanyRepository_GetByID(t *testing.T) {
 		rows := sqlmock.NewRows([]string{"id", "name", "created_at", "updated_at"}).
 			AddRow(companyID, "Test Company", time.Now(), time.Now())
 
-		mock.ExpectQuery("SELECT id, name, created_at, updated_at FROM companies WHERE id = \\? AND user_id = \\?").
-			WithArgs(companyID, testUserID).
+		mock.ExpectQuery("SELECT id, name, created_at, updated_at FROM companies WHERE id = \\?").
+			WithArgs(companyID).
 			WillReturnRows(rows)
 
-		company, err := repo.GetByID(ctx, testUserID, companyID)
+		company, err := repo.GetByID(ctx, companyID)
 
 		require.NoError(t, err)
 		require.NotNil(t, company)
@@ -135,11 +133,11 @@ func TestSQLiteCompanyRepository_GetByID(t *testing.T) {
 	})
 
 	t.Run("non-existent company", func(t *testing.T) {
-		mock.ExpectQuery("SELECT id, name, created_at, updated_at FROM companies WHERE id = \\? AND user_id = \\?").
-			WithArgs(999, testUserID).
+		mock.ExpectQuery("SELECT id, name, created_at, updated_at FROM companies WHERE id = \\?").
+			WithArgs(999).
 			WillReturnError(sql.ErrNoRows)
 
-		company, err := repo.GetByID(ctx, testUserID, 999)
+		company, err := repo.GetByID(ctx, 999)
 
 		assert.Error(t, err)
 		assert.Equal(t, models.ErrCompanyNotFound, err)
@@ -155,7 +153,7 @@ func TestSQLiteCompanyRepository_GetByName(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("empty name returns error", func(t *testing.T) {
-		company, err := repo.GetByName(ctx, testUserID, "")
+		company, err := repo.GetByName(ctx, "")
 
 		assert.Error(t, err)
 		assert.Equal(t, models.ErrCompanyNameRequired, err)
@@ -166,11 +164,11 @@ func TestSQLiteCompanyRepository_GetByName(t *testing.T) {
 		rows := sqlmock.NewRows([]string{"id", "name", "created_at", "updated_at"}).
 			AddRow(1, "Test Company", time.Now(), time.Now())
 
-		mock.ExpectQuery("SELECT id, name, created_at, updated_at FROM companies WHERE LOWER\\(name\\) = LOWER\\(\\?\\) AND user_id = \\?").
-			WithArgs("Test Company", testUserID).
+		mock.ExpectQuery("SELECT id, name, created_at, updated_at FROM companies WHERE LOWER\\(name\\) = LOWER\\(\\?\\)").
+			WithArgs("Test Company").
 			WillReturnRows(rows)
 
-		company, err := repo.GetByName(ctx, testUserID, "Test Company")
+		company, err := repo.GetByName(ctx, "Test Company")
 
 		require.NoError(t, err)
 		require.NotNil(t, company)
@@ -190,11 +188,10 @@ func TestSQLiteCompanyRepository_GetAll(t *testing.T) {
 		AddRow(2, "Company B", testTime, testTime).
 		AddRow(3, "Company C", testTime, testTime)
 
-	mock.ExpectQuery("SELECT id, name, created_at, updated_at FROM companies WHERE user_id = \\? ORDER BY name").
-		WithArgs(testUserID).
+	mock.ExpectQuery("SELECT id, name, created_at, updated_at FROM companies ORDER BY name").
 		WillReturnRows(rows)
 
-	companies, err := repo.GetAll(context.Background(), testUserID)
+	companies, err := repo.GetAll(context.Background())
 
 	require.NoError(t, err)
 	require.Len(t, companies, 3)
@@ -209,11 +206,11 @@ func TestSQLiteCompanyRepository_Delete(t *testing.T) {
 
 	repo := NewSQLiteCompanyRepository(db)
 
-	mock.ExpectExec("DELETE FROM companies WHERE id = \\? AND user_id = \\?").
-		WithArgs(1, testUserID).
+	mock.ExpectExec("DELETE FROM companies WHERE id = \\?").
+		WithArgs(1).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
-	err := repo.Delete(context.Background(), testUserID, 1)
+	err := repo.Delete(context.Background(), 1)
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -228,11 +225,11 @@ func TestSQLiteCompanyRepository_Update(t *testing.T) {
 		Name: "Updated Company",
 	}
 
-	mock.ExpectExec("UPDATE companies SET name = \\?, updated_at = \\? WHERE id = \\? AND user_id = \\?").
-		WithArgs(company.Name, sqlmock.AnyArg(), company.ID, testUserID).
+	mock.ExpectExec("UPDATE companies SET name = \\?, updated_at = \\? WHERE id = \\?").
+		WithArgs(company.Name, sqlmock.AnyArg(), company.ID).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
-	err := repo.Update(context.Background(), testUserID, company)
+	err := repo.Update(context.Background(), company)
 
 	assert.NoError(t, err)
 	assert.NotZero(t, company.UpdatedAt)

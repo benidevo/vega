@@ -116,11 +116,12 @@ func (j JobType) String() string {
 // It includes metadata for database mapping and JSON serialization.
 type Job struct {
 	ID             int       `json:"id" db:"id" sql:"primary_key;auto_increment"`
+	UserID         int       `json:"user_id" db:"user_id" sql:"not null;index" validate:"required"`
 	Title          string    `json:"title" db:"title" sql:"type:text;not null;index" validate:"required,min=1,max=255"`
 	Description    string    `json:"description" db:"description" sql:"type:text;not null" validate:"required,min=1"`
 	Location       string    `json:"location" db:"location" sql:"type:text" validate:"max=255"`
 	JobType        JobType   `json:"job_type" db:"job_type" sql:"type:integer;not null;default:0" validate:"min=0,max=6"`
-	SourceURL      string    `json:"source_url" db:"source_url" sql:"type:text;unique;index" validate:"omitempty,url"`
+	SourceURL      string    `json:"source_url" db:"source_url" sql:"type:text;index" validate:"omitempty,url"`
 	RequiredSkills []string  `json:"required_skills" db:"required_skills" sql:"type:text" validate:"max=50,dive,max=100"` // Stored as JSON
 	ApplicationURL string    `json:"application_url" db:"application_url" sql:"type:text" validate:"omitempty,url"`
 	Company        Company   `json:"company" sql:"-" validate:"required"` // Not stored directly, company_id is used instead

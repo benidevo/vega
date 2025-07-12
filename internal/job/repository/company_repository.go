@@ -21,7 +21,7 @@ func NewSQLiteCompanyRepository(db *sql.DB) *SQLiteCompanyRepository {
 }
 
 // GetOrCreate retrieves a company by name or creates it if it doesn't exist
-func (r *SQLiteCompanyRepository) GetOrCreate(ctx context.Context, userID int, name string) (*models.Company, error) {
+func (r *SQLiteCompanyRepository) GetOrCreate(ctx context.Context, name string) (*models.Company, error) {
 	normalizedName, err := validateCompanyName(name)
 	if err != nil {
 		return nil, err
@@ -44,16 +44,16 @@ func (r *SQLiteCompanyRepository) GetOrCreate(ctx context.Context, userID int, n
 	var company models.Company
 	err = tx.QueryRowContext(
 		ctx,
-		"SELECT id, name, created_at, updated_at FROM companies WHERE LOWER(name) = LOWER(?) AND user_id = ?",
-		normalizedName, userID,
+		"SELECT id, name, created_at, updated_at FROM companies WHERE LOWER(name) = LOWER(?)",
+		normalizedName,
 	).Scan(&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt)
 
 	if err == sql.ErrNoRows {
 		now := time.Now().UTC()
 		result, err := tx.ExecContext(
 			ctx,
-			"INSERT INTO companies (name, user_id, created_at, updated_at) VALUES (?, ?, ?, ?)",
-			normalizedName, userID, now, now,
+			"INSERT INTO companies (name, created_at, updated_at) VALUES (?, ?, ?)",
+			normalizedName, now, now,
 		)
 		if err != nil {
 			return nil, &commonerrors.RepositoryError{
@@ -115,14 +115,14 @@ func wrapError(sentinel, inner error) error {
 }
 
 // GetByID retrieves a company by its ID
-func (r *SQLiteCompanyRepository) GetByID(ctx context.Context, userID int, id int) (*models.Company, error) {
+func (r *SQLiteCompanyRepository) GetByID(ctx context.Context, id int) (*models.Company, error) {
 	if id <= 0 {
 		return nil, models.ErrInvalidCompanyID
 	}
 
-	query := "SELECT id, name, created_at, updated_at FROM companies WHERE id = ? AND user_id = ?"
+	query := "SELECT id, name, created_at, updated_at FROM companies WHERE id = ?"
 	var company models.Company
-	err := r.db.QueryRowContext(ctx, query, id, userID).Scan(&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt)
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, models.ErrCompanyNotFound
@@ -133,15 +133,15 @@ func (r *SQLiteCompanyRepository) GetByID(ctx context.Context, userID int, id in
 }
 
 // GetByName retrieves a company by its name
-func (r *SQLiteCompanyRepository) GetByName(ctx context.Context, userID int, name string) (*models.Company, error) {
+func (r *SQLiteCompanyRepository) GetByName(ctx context.Context, name string) (*models.Company, error) {
 	normalizedName, err := validateCompanyName(name)
 	if err != nil {
 		return nil, err
 	}
 
-	query := "SELECT id, name, created_at, updated_at FROM companies WHERE LOWER(name) = LOWER(?) AND user_id = ?"
+	query := "SELECT id, name, created_at, updated_at FROM companies WHERE LOWER(name) = LOWER(?)"
 	var company models.Company
-	err = r.db.QueryRowContext(ctx, query, normalizedName, userID).Scan(&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt)
+	err = r.db.QueryRowContext(ctx, query, normalizedName).Scan(&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, models.ErrCompanyNotFound
@@ -167,10 +167,10 @@ func validateCompanyName(name string) (string, error) {
 }
 
 // GetAll retrieves all companies from the database
-func (r *SQLiteCompanyRepository) GetAll(ctx context.Context, userID int) ([]*models.Company, error) {
-	query := "SELECT id, name, created_at, updated_at FROM companies WHERE user_id = ? ORDER BY name"
+func (r *SQLiteCompanyRepository) GetAll(ctx context.Context) ([]*models.Company, error) {
+	query := "SELECT id, name, created_at, updated_at FROM companies ORDER BY name"
 
-	rows, err := r.db.QueryContext(ctx, query, userID)
+	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, wrapError(models.ErrFailedToCreateCompany, err)
 	}
@@ -194,14 +194,14 @@ func (r *SQLiteCompanyRepository) GetAll(ctx context.Context, userID int) ([]*mo
 }
 
 // Delete removes a company from the database by ID
-func (r *SQLiteCompanyRepository) Delete(ctx context.Context, userID int, id int) error {
+func (r *SQLiteCompanyRepository) Delete(ctx context.Context, id int) error {
 	if id <= 0 {
 		return models.ErrInvalidCompanyID
 	}
 
-	query := "DELETE FROM companies WHERE id = ? AND user_id = ?"
+	query := "DELETE FROM companies WHERE id = ?"
 
-	result, err := r.db.ExecContext(ctx, query, id, userID)
+	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return wrapError(models.ErrFailedToDeleteCompany, err)
 	}
@@ -219,7 +219,7 @@ func (r *SQLiteCompanyRepository) Delete(ctx context.Context, userID int, id int
 }
 
 // Update updates a company in the database
-func (r *SQLiteCompanyRepository) Update(ctx context.Context, userID int, company *models.Company) error {
+func (r *SQLiteCompanyRepository) Update(ctx context.Context, company *models.Company) error {
 	if company == nil {
 		return models.ErrInvalidCompanyID
 	}
@@ -234,9 +234,9 @@ func (r *SQLiteCompanyRepository) Update(ctx context.Context, userID int, compan
 	}
 
 	now := time.Now().UTC()
-	query := "UPDATE companies SET name = ?, updated_at = ? WHERE id = ? AND user_id = ?"
+	query := "UPDATE companies SET name = ?, updated_at = ? WHERE id = ?"
 
-	result, err := r.db.ExecContext(ctx, query, normalizedName, now, company.ID, userID)
+	result, err := r.db.ExecContext(ctx, query, normalizedName, now, company.ID)
 	if err != nil {
 		return wrapError(models.ErrFailedToUpdateCompany, err)
 	}

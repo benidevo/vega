@@ -148,7 +148,7 @@ func (r *SQLiteJobRepository) Create(ctx context.Context, userID int, jobModel *
 	if err := validateJob(jobModel); err != nil {
 		return nil, err
 	}
-	company, err := r.companyRepository.GetOrCreate(ctx, userID, jobModel.Company.Name)
+	company, err := r.companyRepository.GetOrCreate(ctx, jobModel.Company.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -361,7 +361,7 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, userID int, job *model
 		return err
 	}
 
-	company, err := r.companyRepository.GetOrCreate(ctx, userID, job.Company.Name)
+	company, err := r.companyRepository.GetOrCreate(ctx, job.Company.Name)
 	if err != nil {
 		return err
 	}

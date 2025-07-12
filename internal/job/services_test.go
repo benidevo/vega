@@ -180,6 +180,7 @@ func createTestCompany() models.Company {
 func createTestJob(id int, title string, company models.Company) *models.Job {
 	return &models.Job{
 		ID:          id,
+		UserID:      testUserID,
 		Title:       title,
 		Description: "Test description",
 		Company:     company,

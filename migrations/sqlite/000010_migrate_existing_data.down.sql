@@ -1,3 +1,0 @@
--- This migration is not reversible as it modifies data relationships
--- The down migration is a no-op to prevent accidental data corruption
--- If you need to revert, use the individual table down migrations instead

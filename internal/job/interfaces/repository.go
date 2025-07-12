@@ -8,12 +8,12 @@ import (
 
 // CompanyRepository defines methods for interacting with company data
 type CompanyRepository interface {
-	GetOrCreate(ctx context.Context, userID int, name string) (*models.Company, error)
-	GetByID(ctx context.Context, userID int, id int) (*models.Company, error)
-	GetByName(ctx context.Context, userID int, name string) (*models.Company, error)
-	GetAll(ctx context.Context, userID int) ([]*models.Company, error)
-	Delete(ctx context.Context, userID int, id int) error
-	Update(ctx context.Context, userID int, company *models.Company) error
+	GetOrCreate(ctx context.Context, name string) (*models.Company, error)
+	GetByID(ctx context.Context, id int) (*models.Company, error)
+	GetByName(ctx context.Context, name string) (*models.Company, error)
+	GetAll(ctx context.Context) ([]*models.Company, error)
+	Delete(ctx context.Context, id int) error
+	Update(ctx context.Context, company *models.Company) error
 }
 
 // JobRepository defines methods for interacting with job data

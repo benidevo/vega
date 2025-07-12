@@ -138,6 +138,7 @@ func (s *JobService) CreateJob(ctx context.Context, userID int, title, descripti
 
 	company := models.Company{Name: companyName}
 	job := models.NewJob(title, description, company, options...)
+	job.UserID = userID
 
 	if err := s.validator.Struct(job); err != nil {
 		s.log.Error().

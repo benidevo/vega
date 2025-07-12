@@ -14,6 +14,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const testUserID = 1
+
 func setupJobRepositoryTest(t *testing.T) (*SQLiteJobRepository, sqlmock.Sqlmock, *MinimalMockCompanyRepository) {
 	db, mock := setupMockDB(t)
 	mockCompanyRepo := NewMinimalMockCompanyRepository()
@@ -34,7 +36,7 @@ func NewMinimalMockCompanyRepository() *MinimalMockCompanyRepository {
 	}
 }
 
-func (r *MinimalMockCompanyRepository) GetOrCreate(ctx context.Context, userID int, name string) (*models.Company, error) {
+func (r *MinimalMockCompanyRepository) GetOrCreate(ctx context.Context, name string) (*models.Company, error) {
 	if name == "" {
 		return nil, models.ErrCompanyNameRequired
 	}
@@ -55,7 +57,7 @@ func (r *MinimalMockCompanyRepository) GetOrCreate(ctx context.Context, userID i
 	return company, nil
 }
 
-func (r *MinimalMockCompanyRepository) GetByID(ctx context.Context, userID int, id int) (*models.Company, error) {
+func (r *MinimalMockCompanyRepository) GetByID(ctx context.Context, id int) (*models.Company, error) {
 	for _, company := range r.companies {
 		if company.ID == id {
 			return company, nil
@@ -64,14 +66,14 @@ func (r *MinimalMockCompanyRepository) GetByID(ctx context.Context, userID int, 
 	return nil, models.ErrCompanyNotFound
 }
 
-func (r *MinimalMockCompanyRepository) GetByName(ctx context.Context, userID int, name string) (*models.Company, error) {
+func (r *MinimalMockCompanyRepository) GetByName(ctx context.Context, name string) (*models.Company, error) {
 	if company, ok := r.companies[name]; ok {
 		return company, nil
 	}
 	return nil, models.ErrCompanyNotFound
 }
 
-func (r *MinimalMockCompanyRepository) GetAll(ctx context.Context, userID int) ([]*models.Company, error) {
+func (r *MinimalMockCompanyRepository) GetAll(ctx context.Context) ([]*models.Company, error) {
 	companies := make([]*models.Company, 0, len(r.companies))
 	for _, company := range r.companies {
 		companies = append(companies, company)
@@ -79,7 +81,7 @@ func (r *MinimalMockCompanyRepository) GetAll(ctx context.Context, userID int) (
 	return companies, nil
 }
 
-func (r *MinimalMockCompanyRepository) Delete(ctx context.Context, userID int, id int) error {
+func (r *MinimalMockCompanyRepository) Delete(ctx context.Context, id int) error {
 	for name, company := range r.companies {
 		if company.ID == id {
 			delete(r.companies, name)
@@ -89,7 +91,7 @@ func (r *MinimalMockCompanyRepository) Delete(ctx context.Context, userID int, i
 	return models.ErrCompanyNotFound
 }
 
-func (r *MinimalMockCompanyRepository) Update(ctx context.Context, userID int, company *models.Company) error {
+func (r *MinimalMockCompanyRepository) Update(ctx context.Context, company *models.Company) error {
 	if company == nil || company.ID == 0 {
 		return errors.New("invalid company")
 	}
@@ -535,6 +537,7 @@ func TestGetRecentJobsByUserID(t *testing.T) {
 			want: []*models.Job{
 				{
 					ID:          1,
+					UserID:      testUserID,
 					Title:       "Engineer",
 					Description: "Great job",
 					Location:    "Remote",
@@ -547,6 +550,7 @@ func TestGetRecentJobsByUserID(t *testing.T) {
 				},
 				{
 					ID:          2,
+					UserID:      testUserID,
 					Title:       "Developer",
 					Description: "Another job",
 					Location:    "NYC",
