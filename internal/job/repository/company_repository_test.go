@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/benidevo/vega/internal/cache"
 	"github.com/benidevo/vega/internal/job/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -69,7 +70,7 @@ func TestSQLiteCompanyRepository_GetOrCreate(t *testing.T) {
 			db, mock := setupMockDB(t)
 			defer db.Close()
 
-			repo := NewSQLiteCompanyRepository(db)
+			repo := NewSQLiteCompanyRepository(db, cache.NewNoOpCache())
 
 			mock.ExpectBegin()
 
@@ -112,7 +113,7 @@ func TestSQLiteCompanyRepository_GetByID(t *testing.T) {
 	db, mock := setupMockDB(t)
 	defer db.Close()
 
-	repo := NewSQLiteCompanyRepository(db)
+	repo := NewSQLiteCompanyRepository(db, cache.NewNoOpCache())
 	ctx := context.Background()
 
 	t.Run("existing company", func(t *testing.T) {
@@ -149,7 +150,7 @@ func TestSQLiteCompanyRepository_GetByName(t *testing.T) {
 	db, mock := setupMockDB(t)
 	defer db.Close()
 
-	repo := NewSQLiteCompanyRepository(db)
+	repo := NewSQLiteCompanyRepository(db, cache.NewNoOpCache())
 	ctx := context.Background()
 
 	t.Run("empty name returns error", func(t *testing.T) {
@@ -180,7 +181,7 @@ func TestSQLiteCompanyRepository_GetAll(t *testing.T) {
 	db, mock := setupMockDB(t)
 	defer db.Close()
 
-	repo := NewSQLiteCompanyRepository(db)
+	repo := NewSQLiteCompanyRepository(db, cache.NewNoOpCache())
 	testTime := time.Now()
 
 	rows := sqlmock.NewRows([]string{"id", "name", "created_at", "updated_at"}).
@@ -204,7 +205,7 @@ func TestSQLiteCompanyRepository_Delete(t *testing.T) {
 	db, mock := setupMockDB(t)
 	defer db.Close()
 
-	repo := NewSQLiteCompanyRepository(db)
+	repo := NewSQLiteCompanyRepository(db, cache.NewNoOpCache())
 
 	mock.ExpectExec("DELETE FROM companies WHERE id = \\?").
 		WithArgs(1).
@@ -219,7 +220,7 @@ func TestSQLiteCompanyRepository_Update(t *testing.T) {
 	db, mock := setupMockDB(t)
 	defer db.Close()
 
-	repo := NewSQLiteCompanyRepository(db)
+	repo := NewSQLiteCompanyRepository(db, cache.NewNoOpCache())
 	company := &models.Company{
 		ID:   1,
 		Name: "Updated Company",

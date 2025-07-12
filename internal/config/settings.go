@@ -56,9 +56,13 @@ type Settings struct {
 	GeminiModelJobAnalysis string // Advanced model for job analysis
 	GeminiModelCoverLetter string // Advanced model for cover letter generation
 
-	// Cloud mode features
-	IsCloudMode   bool
-	OAuthOnlyMode bool
+	// Cloud mode - enables multi-tenant deployment with OAuth-only authentication
+	IsCloudMode bool
+
+	// Cache settings
+	CachePath        string
+	CacheMaxMemoryMB int
+	CacheDefaultTTL  time.Duration
 }
 
 // NewSettings initializes and returns a Settings struct with default values
@@ -157,8 +161,11 @@ func NewSettings() Settings {
 		GeminiModelJobAnalysis: getEnv("GEMINI_MODEL_JOB_ANALYSIS", "gemini-2.5-flash"),
 		GeminiModelCoverLetter: getEnv("GEMINI_MODEL_COVER_LETTER", "gemini-2.5-flash"),
 
-		IsCloudMode:   getEnv("CLOUD_MODE", "false") == "true",
-		OAuthOnlyMode: getEnv("CLOUD_MODE", "false") == "true" && getEnv("OAUTH_ONLY_MODE", "true") == "true",
+		IsCloudMode: getEnv("CLOUD_MODE", "false") == "true",
+
+		CachePath:        getEnv("CACHE_PATH", "./data/cache"),
+		CacheMaxMemoryMB: getCacheMaxMemoryMB(),
+		CacheDefaultTTL:  getCacheDefaultTTL(),
 	}
 }
 
@@ -200,4 +207,24 @@ func getDefaultLogLevel(isDevelopment bool) string {
 		return "debug"
 	}
 	return "info"
+}
+
+// getCacheMaxMemoryMB returns the max memory for cache in MB
+func getCacheMaxMemoryMB() int {
+	if envVal := getEnv("CACHE_MAX_MEMORY_MB", ""); envVal != "" {
+		if mb, err := strconv.Atoi(envVal); err == nil {
+			return mb
+		}
+	}
+	return 256 // Default 256MB
+}
+
+// getCacheDefaultTTL returns the default TTL for cache entries
+func getCacheDefaultTTL() time.Duration {
+	if envVal := getEnv("CACHE_DEFAULT_TTL", ""); envVal != "" {
+		if duration, err := time.ParseDuration(envVal); err == nil {
+			return duration
+		}
+	}
+	return time.Hour // Default 1 hour
 }

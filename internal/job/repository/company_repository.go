@@ -6,18 +6,20 @@ import (
 	"strings"
 	"time"
 
+	"github.com/benidevo/vega/internal/cache"
 	commonerrors "github.com/benidevo/vega/internal/common/errors"
 	"github.com/benidevo/vega/internal/job/models"
 )
 
 // SQLiteCompanyRepository is a SQLite implementation of CompanyRepository
 type SQLiteCompanyRepository struct {
-	db *sql.DB
+	db    *sql.DB
+	cache cache.Cache
 }
 
 // NewSQLiteCompanyRepository creates a new SQLiteCompanyRepository instance
-func NewSQLiteCompanyRepository(db *sql.DB) *SQLiteCompanyRepository {
-	return &SQLiteCompanyRepository{db: db}
+func NewSQLiteCompanyRepository(db *sql.DB, cache cache.Cache) *SQLiteCompanyRepository {
+	return &SQLiteCompanyRepository{db: db, cache: cache}
 }
 
 // GetOrCreate retrieves a company by name or creates it if it doesn't exist

@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS jobs (
     notes TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (company_id) REFERENCES companies(id),
     CHECK (match_score IS NULL OR (match_score >= 0 AND match_score <= 100))
 );
@@ -43,6 +43,8 @@ CREATE INDEX idx_jobs_status ON jobs(status);
 CREATE INDEX idx_jobs_match_score ON jobs(match_score);
 CREATE INDEX idx_jobs_company_id ON jobs(company_id);
 CREATE UNIQUE INDEX idx_jobs_user_id_source_url ON jobs(user_id, source_url);
+CREATE INDEX idx_jobs_user_id_status ON jobs(user_id, status);
+CREATE INDEX idx_jobs_user_id_created_at ON jobs(user_id, created_at DESC);
 
 -- Create profiles table
 CREATE TABLE IF NOT EXISTS profiles (
@@ -116,7 +118,7 @@ CREATE TABLE IF NOT EXISTS match_results (
     highlights TEXT, -- JSON array
     feedback TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
     CHECK (match_score >= 0 AND match_score <= 100)
 );

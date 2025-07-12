@@ -36,7 +36,7 @@ func (h *Handler) GetHomePage(c *gin.Context) {
 			"currentYear":         time.Now().Year(),
 			"securityPageEnabled": h.cfg.SecurityPageEnabled,
 			"googleOAuthEnabled":  h.cfg.GoogleOAuthEnabled,
-			"oAuthOnlyMode":       h.cfg.OAuthOnlyMode,
+			"isCloudMode":         h.cfg.IsCloudMode,
 			"showOnboarding":      emptyHomeData.ShowOnboarding,
 			"stats":               emptyHomeData.Stats,
 			"recentJobs":          emptyHomeData.RecentJobs,

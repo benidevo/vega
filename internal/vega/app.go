@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/benidevo/vega/internal/auth"
+	"github.com/benidevo/vega/internal/cache"
 	"github.com/benidevo/vega/internal/common/logger"
 	"github.com/benidevo/vega/internal/config"
 	"github.com/benidevo/vega/internal/db"
@@ -21,11 +22,12 @@ import (
 )
 
 // App represents the core application structure, encapsulating configuration,
-// HTTP router, database connection, HTTP server, and a channel for handling OS signals.
+// HTTP router, database connection, cache, HTTP server, and a channel for handling OS signals.
 type App struct {
 	config config.Settings
 	router *gin.Engine
 	db     *sql.DB
+	cache  cache.Cache
 	server *http.Server
 	done   chan os.Signal
 }
@@ -119,7 +121,7 @@ func (a *App) WaitForShutdown() {
 }
 
 // Shutdown gracefully shuts down the application by stopping the server
-// and closing the database connection.
+// and closing the database connection and cache.
 func (a *App) Shutdown(ctx context.Context) error {
 	var err error
 
@@ -134,8 +136,16 @@ func (a *App) Shutdown(ctx context.Context) error {
 		}
 	}
 
+	if a.cache != nil {
+		cacheErr := a.cache.Close()
+		if err == nil {
+			err = cacheErr
+		}
+	}
+
 	a.server = nil
 	a.db = nil
+	a.cache = nil
 
 	return err
 }
@@ -154,6 +164,21 @@ func (a *App) setupDependencies() error {
 		return err
 	}
 	a.db = database
+
+	// Initialize cache
+	if a.config.IsTest {
+		// Use NoOpCache for tests to avoid file system operations
+		a.cache = cache.NewNoOpCache()
+	} else {
+		cacheInstance, err := cache.NewBadgerCache(a.config.CachePath, a.config.CacheMaxMemoryMB)
+		if err != nil {
+			log.Warn().Err(err).Msg("Failed to initialize cache, using no-op cache")
+			a.cache = cache.NewNoOpCache()
+		} else {
+			a.cache = cacheInstance
+			log.Info().Str("path", a.config.CachePath).Int("maxMemoryMB", a.config.CacheMaxMemoryMB).Msg("Cache initialized successfully")
+		}
+	}
 
 	if !a.config.IsTest {
 		if err := a.runMigrations(); err != nil {

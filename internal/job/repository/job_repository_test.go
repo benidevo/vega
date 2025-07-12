@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/benidevo/vega/internal/cache"
 	"github.com/benidevo/vega/internal/job/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,7 +20,7 @@ const testUserID = 1
 func setupJobRepositoryTest(t *testing.T) (*SQLiteJobRepository, sqlmock.Sqlmock, *MinimalMockCompanyRepository) {
 	db, mock := setupMockDB(t)
 	mockCompanyRepo := NewMinimalMockCompanyRepository()
-	repo := NewSQLiteJobRepository(db, mockCompanyRepo)
+	repo := NewSQLiteJobRepository(db, mockCompanyRepo, cache.NewNoOpCache())
 	return repo, mock, mockCompanyRepo
 }
 

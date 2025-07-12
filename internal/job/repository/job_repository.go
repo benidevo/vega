@@ -5,9 +5,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
+	"github.com/benidevo/vega/internal/cache"
 	commonerrors "github.com/benidevo/vega/internal/common/errors"
 	"github.com/benidevo/vega/internal/job/interfaces"
 	"github.com/benidevo/vega/internal/job/models"
@@ -22,13 +24,28 @@ type scanner interface {
 type SQLiteJobRepository struct {
 	db                *sql.DB
 	companyRepository interfaces.CompanyRepository
+	cache             cache.Cache
 }
 
 // NewSQLiteJobRepository creates a new SQLiteJobRepository instance
-func NewSQLiteJobRepository(db *sql.DB, companyRepository interfaces.CompanyRepository) *SQLiteJobRepository {
+func NewSQLiteJobRepository(db *sql.DB, companyRepository interfaces.CompanyRepository, cache cache.Cache) *SQLiteJobRepository {
 	return &SQLiteJobRepository{
 		db:                db,
 		companyRepository: companyRepository,
+		cache:             cache,
+	}
+}
+
+// invalidateUserCaches invalidates all caches related to a user
+func (r *SQLiteJobRepository) invalidateUserCaches(ctx context.Context, userID int) {
+	patterns := []string{
+		fmt.Sprintf("job:u%d:*", userID),
+		fmt.Sprintf("stats:u%d:*", userID),
+		fmt.Sprintf("match:u%d:*", userID),
+	}
+
+	for _, pattern := range patterns {
+		_ = r.cache.DeletePattern(ctx, pattern)
 	}
 }
 
@@ -222,6 +239,12 @@ func (r *SQLiteJobRepository) Create(ctx context.Context, userID int, jobModel *
 	jobModel.ID = int(id)
 	jobModel.Company = *company
 
+	// Invalidate stats caches after creating a job
+	_ = r.cache.Delete(ctx,
+		fmt.Sprintf("stats:u%d:summary", userID),
+		fmt.Sprintf("stats:u%d:by-status", userID),
+	)
+
 	return jobModel, nil
 }
 
@@ -229,6 +252,13 @@ func (r *SQLiteJobRepository) Create(ctx context.Context, userID int, jobModel *
 func (r *SQLiteJobRepository) GetByID(ctx context.Context, userID int, id int) (*models.Job, error) {
 	if id <= 0 {
 		return nil, models.ErrInvalidJobID
+	}
+
+	// Check cache first
+	cacheKey := fmt.Sprintf("job:u%d:id%d", userID, id)
+	var job models.Job
+	if err := r.cache.Get(ctx, cacheKey, &job); err == nil {
+		return &job, nil
 	}
 
 	query := `
@@ -245,7 +275,7 @@ func (r *SQLiteJobRepository) GetByID(ctx context.Context, userID int, id int) (
 
 	row := r.db.QueryRowContext(ctx, query, id, userID)
 
-	job, err := r.scanJob(row)
+	jobResult, err := r.scanJob(row)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, models.ErrJobNotFound
@@ -256,7 +286,10 @@ func (r *SQLiteJobRepository) GetByID(ctx context.Context, userID int, id int) (
 		}
 	}
 
-	return job, nil
+	// Cache the result for 1 hour
+	_ = r.cache.Set(ctx, cacheKey, jobResult, time.Hour)
+
+	return jobResult, nil
 }
 
 // GetAll retrieves all jobs with optional filtering
@@ -432,6 +465,9 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, userID int, job *model
 
 	job.Company = *company
 
+	// Invalidate job cache after update
+	_ = r.cache.Delete(ctx, fmt.Sprintf("job:u%d:id%d", userID, job.ID))
+
 	return nil
 }
 
@@ -457,6 +493,12 @@ func (r *SQLiteJobRepository) UpdateMatchScore(ctx context.Context, userID int, 
 		return models.ErrJobNotFound
 	}
 
+	// Invalidate caches after updating match score
+	_ = r.cache.Delete(ctx,
+		fmt.Sprintf("job:u%d:id%d", userID, jobID),
+		fmt.Sprintf("stats:u%d:summary", userID),
+	)
+
 	return nil
 }
 
@@ -481,6 +523,13 @@ func (r *SQLiteJobRepository) Delete(ctx context.Context, userID int, id int) er
 	if rowsAffected == 0 {
 		return models.ErrJobNotFound
 	}
+
+	// Invalidate caches after deleting a job
+	_ = r.cache.Delete(ctx,
+		fmt.Sprintf("job:u%d:id%d", userID, id),
+		fmt.Sprintf("stats:u%d:summary", userID),
+		fmt.Sprintf("stats:u%d:by-status", userID),
+	)
 
 	return nil
 }
@@ -511,6 +560,13 @@ func (r *SQLiteJobRepository) UpdateStatus(ctx context.Context, userID int, id i
 	if rowsAffected == 0 {
 		return models.ErrJobNotFound
 	}
+
+	// Invalidate stats caches after updating job status
+	_ = r.cache.Delete(ctx,
+		fmt.Sprintf("stats:u%d:summary", userID),
+		fmt.Sprintf("stats:u%d:by-status", userID),
+		fmt.Sprintf("job:u%d:id%d", userID, id),
+	)
 
 	return nil
 }
@@ -596,6 +652,13 @@ func (r *SQLiteJobRepository) GetStats(ctx context.Context, userID int) (*models
 
 // GetStatsByUserID returns aggregate statistics about jobs for a specific user.
 func (r *SQLiteJobRepository) GetStatsByUserID(ctx context.Context, userID int) (*models.JobStats, error) {
+	// Check cache first
+	cacheKey := fmt.Sprintf("stats:u%d:summary", userID)
+	var stats models.JobStats
+	if err := r.cache.Get(ctx, cacheKey, &stats); err == nil {
+		return &stats, nil
+	}
+
 	query := `
         SELECT
             COUNT(*) AS total_jobs,
@@ -611,7 +674,6 @@ func (r *SQLiteJobRepository) GetStatsByUserID(ctx context.Context, userID int) 
 	}
 	defer rows.Close()
 
-	var stats models.JobStats
 	if rows.Next() {
 		if err := rows.Scan(&stats.TotalJobs, &stats.TotalApplied, &stats.HighMatch); err != nil {
 			return nil, models.WrapError(models.ErrFailedToGetJobStats, err)
@@ -621,6 +683,10 @@ func (r *SQLiteJobRepository) GetStatsByUserID(ctx context.Context, userID int) 
 	if err := rows.Err(); err != nil {
 		return nil, models.WrapError(models.ErrFailedToGetJobStats, err)
 	}
+
+	// Cache the results for 10 minutes
+	_ = r.cache.Set(ctx, cacheKey, &stats, 10*time.Minute)
+
 	return &stats, nil
 }
 
@@ -647,6 +713,13 @@ func (r *SQLiteJobRepository) GetRecentJobsByUserID(ctx context.Context, userID 
 // GetJobStatsByStatus returns job counts grouped by status for a specific user.
 // This is useful for homepage pipeline visualization.
 func (r *SQLiteJobRepository) GetJobStatsByStatus(ctx context.Context, userID int) (map[models.JobStatus]int, error) {
+	// Check cache first
+	cacheKey := fmt.Sprintf("stats:u%d:by-status", userID)
+	var statusCounts map[models.JobStatus]int
+	if err := r.cache.Get(ctx, cacheKey, &statusCounts); err == nil {
+		return statusCounts, nil
+	}
+
 	query := `
         SELECT
             status,
@@ -663,7 +736,7 @@ func (r *SQLiteJobRepository) GetJobStatsByStatus(ctx context.Context, userID in
 	}
 	defer rows.Close()
 
-	statusCounts := make(map[models.JobStatus]int)
+	statusCounts = make(map[models.JobStatus]int)
 
 	// Initialize all statuses to 0
 	for status := models.INTERESTED; status <= models.NOT_INTERESTED; status++ {
@@ -686,6 +759,9 @@ func (r *SQLiteJobRepository) GetJobStatsByStatus(ctx context.Context, userID in
 	if err := rows.Err(); err != nil {
 		return nil, models.WrapError(models.ErrFailedToGetJobStats, err)
 	}
+
+	// Cache the results for 10 minutes
+	_ = r.cache.Set(ctx, cacheKey, statusCounts, 10*time.Minute)
 
 	return statusCounts, nil
 }
@@ -737,11 +813,27 @@ func (r *SQLiteJobRepository) CreateMatchResult(ctx context.Context, userID int,
 	}
 
 	matchResult.ID = int(id)
+
+	// Invalidate related caches
+	if err == nil {
+		_ = r.cache.Delete(ctx,
+			fmt.Sprintf("match:u%d:job%d:history", userID, matchResult.JobID),
+		)
+		_ = r.cache.DeletePattern(ctx, fmt.Sprintf("match:u%d:recent:*", userID))
+	}
+
 	return nil
 }
 
 // GetJobMatchHistory retrieves all match results for a specific job
 func (r *SQLiteJobRepository) GetJobMatchHistory(ctx context.Context, userID int, jobID int) ([]*models.MatchResult, error) {
+	// Check cache first
+	cacheKey := fmt.Sprintf("match:u%d:job%d:history", userID, jobID)
+	var results []*models.MatchResult
+	if err := r.cache.Get(ctx, cacheKey, &results); err == nil {
+		return results, nil
+	}
+
 	query := `
 		SELECT id, job_id, match_score, strengths, weaknesses, highlights, feedback, created_at
 		FROM match_results
@@ -755,7 +847,7 @@ func (r *SQLiteJobRepository) GetJobMatchHistory(ctx context.Context, userID int
 	}
 	defer rows.Close()
 
-	var results []*models.MatchResult
+	results = []*models.MatchResult{}
 	for rows.Next() {
 		var mr models.MatchResult
 		var strengthsJSON, weaknessesJSON, highlightsJSON string
@@ -789,6 +881,11 @@ func (r *SQLiteJobRepository) GetJobMatchHistory(ctx context.Context, userID int
 
 	if err := rows.Err(); err != nil {
 		return nil, models.WrapError(models.ErrFailedToGetJob, err)
+	}
+
+	// Cache the results (no TTL for match history)
+	if err == nil {
+		_ = r.cache.Set(ctx, cacheKey, results, 0)
 	}
 
 	return results, nil
@@ -886,6 +983,13 @@ func (r *SQLiteJobRepository) GetRecentMatchResults(ctx context.Context, userID 
 		limit = 10
 	}
 
+	// Check cache first
+	cacheKey := fmt.Sprintf("match:u%d:recent:%d", userID, limit)
+	var results []*models.MatchResult
+	if err := r.cache.Get(ctx, cacheKey, &results); err == nil {
+		return results, nil
+	}
+
 	query := `
 		SELECT mr.id, mr.job_id, mr.match_score, mr.strengths, mr.weaknesses,
 		       mr.highlights, mr.feedback, mr.created_at
@@ -901,7 +1005,7 @@ func (r *SQLiteJobRepository) GetRecentMatchResults(ctx context.Context, userID 
 	}
 	defer rows.Close()
 
-	var results []*models.MatchResult
+	results = []*models.MatchResult{}
 	for rows.Next() {
 		var mr models.MatchResult
 		var strengthsJSON, weaknessesJSON, highlightsJSON string
@@ -937,6 +1041,11 @@ func (r *SQLiteJobRepository) GetRecentMatchResults(ctx context.Context, userID 
 		return nil, models.WrapError(models.ErrFailedToGetJob, err)
 	}
 
+	// Cache the results for 10 minutes
+	if err == nil {
+		_ = r.cache.Set(ctx, cacheKey, results, 10*time.Minute)
+	}
+
 	return results, nil
 }
 
@@ -944,6 +1053,19 @@ func (r *SQLiteJobRepository) GetRecentMatchResults(ctx context.Context, userID 
 func (r *SQLiteJobRepository) DeleteMatchResult(ctx context.Context, userID int, matchID int) error {
 	if matchID <= 0 {
 		return models.ErrInvalidJobID
+	}
+
+	// Get the jobID before deletion for cache invalidation
+	var jobID int
+	err := r.db.QueryRowContext(ctx,
+		`SELECT job_id FROM match_results WHERE id = ? AND user_id = ?`,
+		matchID, userID,
+	).Scan(&jobID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return models.ErrJobNotFound
+		}
+		return models.WrapError(models.ErrFailedToDeleteJob, err)
 	}
 
 	query := `DELETE FROM match_results WHERE id = ? AND user_id = ?`
@@ -961,6 +1083,12 @@ func (r *SQLiteJobRepository) DeleteMatchResult(ctx context.Context, userID int,
 	if rowsAffected == 0 {
 		return models.ErrJobNotFound
 	}
+
+	// Invalidate related caches
+	_ = r.cache.Delete(ctx,
+		fmt.Sprintf("match:u%d:job%d:history", userID, jobID),
+	)
+	_ = r.cache.DeletePattern(ctx, fmt.Sprintf("match:u%d:recent:*", userID))
 
 	return nil
 }

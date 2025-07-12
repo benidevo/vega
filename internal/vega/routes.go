@@ -33,16 +33,16 @@ func SetupRoutes(a *App) {
 	}
 
 	authHandler := auth.SetupAuth(a.db, &a.config)
-	homeHandler := home.Setup(a.db, &a.config)
-	jobHandler := job.Setup(a.db, &a.config)
+	homeHandler := home.Setup(a.db, &a.config, a.cache)
+	jobHandler := job.Setup(a.db, &a.config, a.cache)
 	settingsHandler := settings.Setup(&a.config, a.db, aiService)
 	authAPIHandler := authapi.Setup(a.db, &a.config)
-	jobAPIHandler := jobapi.Setup(a.db, &a.config)
+	jobAPIHandler := jobapi.Setup(a.db, &a.config, a.cache)
 
 	authGroup := a.router.Group("/auth")
 
-	// Register password-based auth routes only if not in OAuth-only mode
-	if !a.config.OAuthOnlyMode {
+	// Register password-based auth routes only if not in cloud mode
+	if !a.config.IsCloudMode {
 		auth.RegisterPublicRoutes(authGroup, authHandler)
 	}
 

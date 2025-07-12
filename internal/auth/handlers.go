@@ -28,8 +28,8 @@ func NewAuthHandler(service *services.AuthService, cfg *config.Settings) *AuthHa
 
 // GetLoginPage renders the login page template.
 func (h *AuthHandler) GetLoginPage(c *gin.Context) {
-	// In OAuth-only mode, redirect to Google login directly
-	if h.cfg.OAuthOnlyMode && h.cfg.GoogleOAuthEnabled {
+	// In cloud mode, redirect to Google login directly
+	if h.cfg.IsCloudMode && h.cfg.GoogleOAuthEnabled {
 		c.Redirect(http.StatusTemporaryRedirect, "/auth/google/login")
 		return
 	}
@@ -40,7 +40,7 @@ func (h *AuthHandler) GetLoginPage(c *gin.Context) {
 		"currentYear":         time.Now().Year(),
 		"securityPageEnabled": h.cfg.SecurityPageEnabled,
 		"googleOAuthEnabled":  h.cfg.GoogleOAuthEnabled,
-		"oAuthOnlyMode":       h.cfg.OAuthOnlyMode,
+		"isCloudMode":         h.cfg.IsCloudMode,
 	})
 }
 
