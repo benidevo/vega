@@ -1,11 +1,14 @@
 -- Create users table
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT NOT NULL,
+    username TEXT NOT NULL,
+    password TEXT,
+    role TEXT NOT NULL DEFAULT 'user',
+    last_login TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-CREATE UNIQUE INDEX idx_users_email ON users(email);
+CREATE UNIQUE INDEX idx_users_username ON users(username);
 
 -- Create companies table (shared across all users)
 CREATE TABLE IF NOT EXISTS companies (
@@ -50,17 +53,23 @@ CREATE INDEX idx_jobs_user_id_created_at ON jobs(user_id, created_at DESC);
 CREATE TABLE IF NOT EXISTS profiles (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL UNIQUE,
-    name TEXT NOT NULL,
-    email TEXT,
-    location TEXT,
-    linkedin TEXT,
-    bio TEXT NOT NULL,
-    skills TEXT NOT NULL, -- JSON array
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    first_name TEXT DEFAULT '',
+    last_name TEXT DEFAULT '',
+    title TEXT DEFAULT '',
+    industry INTEGER DEFAULT 64, -- Default to IndustryUnspecified (64)
+    career_summary TEXT DEFAULT '',
+    skills TEXT DEFAULT '', -- Stored as JSON string
+    phone_number TEXT DEFAULT '',
+    email TEXT DEFAULT '',
+    location TEXT DEFAULT '',
+    linkedin_profile TEXT DEFAULT '',
+    github_profile TEXT DEFAULT '',
+    website TEXT DEFAULT '',
+    context TEXT DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
-CREATE INDEX idx_profiles_user_id ON profiles(user_id);
 
 -- Create work_experiences table
 CREATE TABLE IF NOT EXISTS work_experiences (
@@ -68,15 +77,15 @@ CREATE TABLE IF NOT EXISTS work_experiences (
     profile_id INTEGER NOT NULL,
     company TEXT NOT NULL,
     title TEXT NOT NULL,
-    description TEXT NOT NULL,
-    start_date TEXT NOT NULL,
-    end_date TEXT,
-    is_current BOOLEAN NOT NULL DEFAULT 0,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    location TEXT,
+    start_date TIMESTAMP NOT NULL,
+    end_date TIMESTAMP,
+    description TEXT,
+    current BOOLEAN DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
 );
-CREATE INDEX idx_work_experiences_profile_id ON work_experiences(profile_id);
 
 -- Create education table
 CREATE TABLE IF NOT EXISTS education (
@@ -84,28 +93,46 @@ CREATE TABLE IF NOT EXISTS education (
     profile_id INTEGER NOT NULL,
     institution TEXT NOT NULL,
     degree TEXT NOT NULL,
-    field_of_study TEXT NOT NULL,
-    start_date TEXT NOT NULL,
-    end_date TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    field_of_study TEXT,
+    start_date TIMESTAMP NOT NULL,
+    end_date TIMESTAMP,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
 );
-CREATE INDEX idx_education_profile_id ON education(profile_id);
 
 -- Create certifications table
 CREATE TABLE IF NOT EXISTS certifications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     profile_id INTEGER NOT NULL,
     name TEXT NOT NULL,
-    issuer TEXT NOT NULL,
-    issued_date TEXT NOT NULL,
-    expires_date TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    issuing_org TEXT NOT NULL,
+    issue_date TIMESTAMP NOT NULL,
+    expiry_date TIMESTAMP,
+    credential_id TEXT,
+    credential_url TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
 );
-CREATE INDEX idx_certifications_profile_id ON certifications(profile_id);
+
+-- Create indexes for faster lookups
+CREATE INDEX IF NOT EXISTS idx_profiles_user_id ON profiles(user_id);
+CREATE INDEX IF NOT EXISTS idx_work_experiences_profile_id ON work_experiences(profile_id);
+CREATE INDEX IF NOT EXISTS idx_work_experiences_start_date ON work_experiences(start_date);
+CREATE INDEX IF NOT EXISTS idx_education_profile_id ON education(profile_id);
+CREATE INDEX IF NOT EXISTS idx_education_start_date ON education(start_date);
+CREATE INDEX IF NOT EXISTS idx_certifications_profile_id ON certifications(profile_id);
+CREATE INDEX IF NOT EXISTS idx_certifications_issue_date ON certifications(issue_date);
+
+-- Create trigger to automatically create a profile when a user is created
+CREATE TRIGGER create_profile_after_user_insert
+AFTER INSERT ON users
+FOR EACH ROW
+BEGIN
+  INSERT INTO profiles (user_id, created_at) VALUES (NEW.id, CURRENT_TIMESTAMP);
+END;
 
 -- Create match_results table with multi-tenancy
 CREATE TABLE IF NOT EXISTS match_results (

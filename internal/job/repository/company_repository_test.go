@@ -72,8 +72,6 @@ func TestSQLiteCompanyRepository_GetOrCreate(t *testing.T) {
 
 			repo := NewSQLiteCompanyRepository(db, cache.NewNoOpCache())
 
-			mock.ExpectBegin()
-
 			// Setup SELECT expectation
 			rows := sqlmock.NewRows([]string{"id", "name", "created_at", "updated_at"})
 			for _, r := range tt.existingRows {
@@ -89,8 +87,6 @@ func TestSQLiteCompanyRepository_GetOrCreate(t *testing.T) {
 					WithArgs(tt.companyName, sqlmock.AnyArg(), sqlmock.AnyArg()).
 					WillReturnResult(sqlmock.NewResult(1, 1))
 			}
-
-			mock.ExpectCommit()
 
 			company, err := repo.GetOrCreate(context.Background(), tt.companyName)
 

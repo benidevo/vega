@@ -130,7 +130,6 @@ func TestSQLiteJobRepository_Create(t *testing.T) {
 			},
 			setupMock: func(mock sqlmock.Sqlmock, j *models.Job) {
 				skillsJSON, _ := json.Marshal(j.RequiredSkills)
-				mock.ExpectBegin()
 				mock.ExpectExec("INSERT INTO jobs").
 					WithArgs(
 						j.Title, j.Description, j.Location, int(j.JobType),
@@ -139,7 +138,6 @@ func TestSQLiteJobRepository_Create(t *testing.T) {
 						sqlmock.AnyArg(), sqlmock.AnyArg(), testUserID,
 					).
 					WillReturnResult(sqlmock.NewResult(1, 1))
-				mock.ExpectCommit()
 			},
 			validateJob: func(t *testing.T, j *models.Job) {
 				assert.Equal(t, 1, j.ID)
@@ -669,7 +667,7 @@ func TestSQLiteJobRepository_CreateMatchResult(t *testing.T) {
 					WillReturnError(errors.New("database error"))
 			},
 			wantErr: true,
-			errMsg:  "failed to create job",
+			errMsg:  "Unable to save job. Please try again",
 		},
 	}
 

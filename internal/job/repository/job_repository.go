@@ -170,17 +170,6 @@ func (r *SQLiteJobRepository) Create(ctx context.Context, userID int, jobModel *
 		return nil, err
 	}
 
-	tx, err := r.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, models.WrapError(models.ErrTransactionFailed, err)
-	}
-
-	defer func() {
-		if tx != nil {
-			_ = tx.Rollback()
-		}
-	}()
-
 	now := time.Now().UTC()
 	if jobModel.CreatedAt.IsZero() {
 		jobModel.CreatedAt = now
@@ -204,7 +193,7 @@ func (r *SQLiteJobRepository) Create(ctx context.Context, userID int, jobModel *
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	result, err := tx.ExecContext(
+	result, err := r.db.ExecContext(
 		ctx,
 		query,
 		jobModel.Title,
@@ -229,12 +218,6 @@ func (r *SQLiteJobRepository) Create(ctx context.Context, userID int, jobModel *
 	if err != nil {
 		return nil, models.WrapError(models.ErrFailedToCreateJob, err)
 	}
-
-	if err = tx.Commit(); err != nil {
-		return nil, models.WrapError(models.ErrTransactionFailed, err)
-	}
-
-	tx = nil
 
 	jobModel.ID = int(id)
 	jobModel.Company = *company
@@ -399,17 +382,6 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, userID int, job *model
 		return err
 	}
 
-	tx, err := r.db.BeginTx(ctx, nil)
-	if err != nil {
-		return models.ErrTransactionFailed
-	}
-
-	defer func() {
-		if tx != nil {
-			_ = tx.Rollback()
-		}
-	}()
-
 	job.UpdatedAt = time.Now().UTC()
 
 	skillsJSON, err := json.Marshal(job.RequiredSkills)
@@ -426,7 +398,7 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, userID int, job *model
 		WHERE id = ? AND user_id = ?
 	`
 
-	result, err := tx.ExecContext(
+	result, err := r.db.ExecContext(
 		ctx,
 		query,
 		job.Title,
@@ -456,12 +428,6 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, userID int, job *model
 	if rowsAffected == 0 {
 		return models.ErrJobNotFound
 	}
-
-	if err = tx.Commit(); err != nil {
-		return models.ErrTransactionFailed
-	}
-
-	tx = nil
 
 	job.Company = *company
 

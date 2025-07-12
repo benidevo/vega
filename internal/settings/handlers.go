@@ -133,6 +133,7 @@ func (h *SettingsHandler) GetProfileSettingsPage(c *gin.Context) {
 	userID, _ := c.Get("userID")
 
 	profile, err := h.service.GetProfileWithRelated(c.Request.Context(), userID.(int))
+
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "layouts/base.html", gin.H{
 			"title":               "Something Went Wrong",
