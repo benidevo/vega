@@ -190,10 +190,11 @@ func TestSQLiteCompanyRepository_GetAll(t *testing.T) {
 		AddRow(2, "Company B", testTime, testTime).
 		AddRow(3, "Company C", testTime, testTime)
 
-	mock.ExpectQuery("SELECT id, name, created_at, updated_at FROM companies ORDER BY name").
+	mock.ExpectQuery("SELECT id, name, created_at, updated_at FROM companies WHERE user_id = \\? ORDER BY name").
+		WithArgs(testUserID).
 		WillReturnRows(rows)
 
-	companies, err := repo.GetAll(context.Background())
+	companies, err := repo.GetAll(context.Background(), testUserID)
 
 	require.NoError(t, err)
 	require.Len(t, companies, 3)
@@ -208,11 +209,11 @@ func TestSQLiteCompanyRepository_Delete(t *testing.T) {
 
 	repo := NewSQLiteCompanyRepository(db)
 
-	mock.ExpectExec("DELETE FROM companies WHERE id = ?").
-		WithArgs(1).
+	mock.ExpectExec("DELETE FROM companies WHERE id = \\? AND user_id = \\?").
+		WithArgs(1, testUserID).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
-	err := repo.Delete(context.Background(), 1)
+	err := repo.Delete(context.Background(), testUserID, 1)
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -227,11 +228,11 @@ func TestSQLiteCompanyRepository_Update(t *testing.T) {
 		Name: "Updated Company",
 	}
 
-	mock.ExpectExec("UPDATE companies SET name = \\?, updated_at = \\? WHERE id = \\?").
-		WithArgs(company.Name, sqlmock.AnyArg(), company.ID).
+	mock.ExpectExec("UPDATE companies SET name = \\?, updated_at = \\? WHERE id = \\? AND user_id = \\?").
+		WithArgs(company.Name, sqlmock.AnyArg(), company.ID, testUserID).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
-	err := repo.Update(context.Background(), company)
+	err := repo.Update(context.Background(), testUserID, company)
 
 	assert.NoError(t, err)
 	assert.NotZero(t, company.UpdatedAt)

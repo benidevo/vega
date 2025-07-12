@@ -19,10 +19,10 @@ func TestJobService_DeleteMatchResult(t *testing.T) {
 		jobID := 1
 		matchID := 100
 
-		mockRepo.On("MatchResultBelongsToJob", ctx, matchID, jobID).Return(true, nil)
-		mockRepo.On("DeleteMatchResult", ctx, matchID).Return(nil)
+		mockRepo.On("MatchResultBelongsToJob", ctx, testUserID, matchID, jobID).Return(true, nil)
+		mockRepo.On("DeleteMatchResult", ctx, testUserID, matchID).Return(nil)
 
-		err := service.DeleteMatchResult(ctx, jobID, matchID)
+		err := service.DeleteMatchResult(ctx, testUserID, jobID, matchID)
 
 		assert.NoError(t, err)
 		mockRepo.AssertExpectations(t)
@@ -34,7 +34,7 @@ func TestJobService_DeleteMatchResult(t *testing.T) {
 		service := NewJobService(mockRepo, nil, nil, cfg)
 		ctx := context.Background()
 
-		err := service.DeleteMatchResult(ctx, 0, 100)
+		err := service.DeleteMatchResult(ctx, testUserID, 0, 100)
 
 		assert.Equal(t, models.ErrInvalidJobID, err)
 		mockRepo.AssertNotCalled(t, "MatchResultBelongsToJob")
@@ -47,7 +47,7 @@ func TestJobService_DeleteMatchResult(t *testing.T) {
 		service := NewJobService(mockRepo, nil, nil, cfg)
 		ctx := context.Background()
 
-		err := service.DeleteMatchResult(ctx, 1, 0)
+		err := service.DeleteMatchResult(ctx, testUserID, 1, 0)
 
 		assert.Equal(t, models.ErrInvalidJobID, err)
 		mockRepo.AssertNotCalled(t, "MatchResultBelongsToJob")
@@ -62,9 +62,9 @@ func TestJobService_DeleteMatchResult(t *testing.T) {
 		jobID := 1
 		matchID := 100
 
-		mockRepo.On("MatchResultBelongsToJob", ctx, matchID, jobID).Return(false, nil)
+		mockRepo.On("MatchResultBelongsToJob", ctx, testUserID, matchID, jobID).Return(false, nil)
 
-		err := service.DeleteMatchResult(ctx, jobID, matchID)
+		err := service.DeleteMatchResult(ctx, testUserID, jobID, matchID)
 
 		assert.Equal(t, models.ErrJobNotFound, err)
 		mockRepo.AssertNotCalled(t, "DeleteMatchResult")
@@ -80,9 +80,9 @@ func TestJobService_DeleteMatchResult(t *testing.T) {
 		matchID := 100
 		expectedErr := errors.New("database error")
 
-		mockRepo.On("MatchResultBelongsToJob", ctx, matchID, jobID).Return(false, expectedErr)
+		mockRepo.On("MatchResultBelongsToJob", ctx, testUserID, matchID, jobID).Return(false, expectedErr)
 
-		err := service.DeleteMatchResult(ctx, jobID, matchID)
+		err := service.DeleteMatchResult(ctx, testUserID, jobID, matchID)
 
 		assert.Equal(t, expectedErr, err)
 		mockRepo.AssertNotCalled(t, "DeleteMatchResult")
@@ -99,10 +99,10 @@ func TestJobService_DeleteMatchResult(t *testing.T) {
 		matchID := 100
 		expectedErr := errors.New("delete error")
 
-		mockRepo.On("MatchResultBelongsToJob", ctx, matchID, jobID).Return(true, nil)
-		mockRepo.On("DeleteMatchResult", ctx, matchID).Return(expectedErr)
+		mockRepo.On("MatchResultBelongsToJob", ctx, testUserID, matchID, jobID).Return(true, nil)
+		mockRepo.On("DeleteMatchResult", ctx, testUserID, matchID).Return(expectedErr)
 
-		err := service.DeleteMatchResult(ctx, jobID, matchID)
+		err := service.DeleteMatchResult(ctx, testUserID, jobID, matchID)
 
 		assert.Equal(t, expectedErr, err)
 		mockRepo.AssertExpectations(t)

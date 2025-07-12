@@ -36,4 +36,9 @@ type JobRepository interface {
 	GetRecentMatchResultsWithDetails(ctx context.Context, userID int, limit int, currentJobID int) ([]*models.MatchSummary, error)
 	DeleteMatchResult(ctx context.Context, userID int, matchID int) error
 	MatchResultBelongsToJob(ctx context.Context, userID int, matchID, jobID int) (bool, error)
+
+	// User-specific methods
+	GetStatsByUserID(ctx context.Context, userID int) (*models.JobStats, error)
+	GetRecentJobsByUserID(ctx context.Context, userID int, limit int) ([]*models.Job, error)
+	GetJobStatsByStatus(ctx context.Context, userID int) (map[models.JobStatus]int, error)
 }

@@ -602,10 +602,10 @@ func (r *SQLiteJobRepository) GetStatsByUserID(ctx context.Context, userID int) 
             COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS applied,
             COALESCE(SUM(CASE WHEN match_score >= 70 THEN 1 ELSE 0 END), 0) AS high_match
         FROM jobs
+        WHERE user_id = ?
     `
-	// TODO: Add WHERE user_id = ? when user association is implemented
 
-	rows, err := r.db.QueryContext(ctx, query, int(models.APPLIED))
+	rows, err := r.db.QueryContext(ctx, query, int(models.APPLIED), userID)
 	if err != nil {
 		return nil, models.WrapError(models.ErrFailedToGetJobStats, err)
 	}
@@ -652,12 +652,12 @@ func (r *SQLiteJobRepository) GetJobStatsByStatus(ctx context.Context, userID in
             status,
             COUNT(*) as count
         FROM jobs
+        WHERE user_id = ?
         GROUP BY status
         ORDER BY status
     `
-	// TODO: Add WHERE user_id = ? when user association is implemented
 
-	rows, err := r.db.QueryContext(ctx, query)
+	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, models.WrapError(models.ErrFailedToGetJobStats, err)
 	}

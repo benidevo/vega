@@ -34,7 +34,7 @@ func NewMinimalMockCompanyRepository() *MinimalMockCompanyRepository {
 	}
 }
 
-func (r *MinimalMockCompanyRepository) GetOrCreate(ctx context.Context, name string) (*models.Company, error) {
+func (r *MinimalMockCompanyRepository) GetOrCreate(ctx context.Context, userID int, name string) (*models.Company, error) {
 	if name == "" {
 		return nil, models.ErrCompanyNameRequired
 	}
@@ -55,7 +55,7 @@ func (r *MinimalMockCompanyRepository) GetOrCreate(ctx context.Context, name str
 	return company, nil
 }
 
-func (r *MinimalMockCompanyRepository) GetByID(ctx context.Context, id int) (*models.Company, error) {
+func (r *MinimalMockCompanyRepository) GetByID(ctx context.Context, userID int, id int) (*models.Company, error) {
 	for _, company := range r.companies {
 		if company.ID == id {
 			return company, nil
@@ -64,14 +64,14 @@ func (r *MinimalMockCompanyRepository) GetByID(ctx context.Context, id int) (*mo
 	return nil, models.ErrCompanyNotFound
 }
 
-func (r *MinimalMockCompanyRepository) GetByName(ctx context.Context, name string) (*models.Company, error) {
+func (r *MinimalMockCompanyRepository) GetByName(ctx context.Context, userID int, name string) (*models.Company, error) {
 	if company, ok := r.companies[name]; ok {
 		return company, nil
 	}
 	return nil, models.ErrCompanyNotFound
 }
 
-func (r *MinimalMockCompanyRepository) GetAll(ctx context.Context) ([]*models.Company, error) {
+func (r *MinimalMockCompanyRepository) GetAll(ctx context.Context, userID int) ([]*models.Company, error) {
 	companies := make([]*models.Company, 0, len(r.companies))
 	for _, company := range r.companies {
 		companies = append(companies, company)
@@ -79,7 +79,7 @@ func (r *MinimalMockCompanyRepository) GetAll(ctx context.Context) ([]*models.Co
 	return companies, nil
 }
 
-func (r *MinimalMockCompanyRepository) Delete(ctx context.Context, id int) error {
+func (r *MinimalMockCompanyRepository) Delete(ctx context.Context, userID int, id int) error {
 	for name, company := range r.companies {
 		if company.ID == id {
 			delete(r.companies, name)
@@ -89,7 +89,7 @@ func (r *MinimalMockCompanyRepository) Delete(ctx context.Context, id int) error
 	return models.ErrCompanyNotFound
 }
 
-func (r *MinimalMockCompanyRepository) Update(ctx context.Context, company *models.Company) error {
+func (r *MinimalMockCompanyRepository) Update(ctx context.Context, userID int, company *models.Company) error {
 	if company == nil || company.ID == 0 {
 		return errors.New("invalid company")
 	}
@@ -133,7 +133,7 @@ func TestSQLiteJobRepository_Create(t *testing.T) {
 						j.Title, j.Description, j.Location, int(j.JobType),
 						j.SourceURL, skillsJSON, j.ApplicationURL, 1,
 						int(j.Status), j.Notes,
-						sqlmock.AnyArg(), sqlmock.AnyArg(),
+						sqlmock.AnyArg(), sqlmock.AnyArg(), testUserID,
 					).
 					WillReturnResult(sqlmock.NewResult(1, 1))
 				mock.ExpectCommit()
@@ -168,7 +168,7 @@ func TestSQLiteJobRepository_Create(t *testing.T) {
 				tt.setupMock(mock, tt.job)
 			}
 
-			createdJob, err := repo.Create(context.Background(), tt.job)
+			createdJob, err := repo.Create(context.Background(), testUserID, tt.job)
 
 			if tt.wantErr != nil {
 				assert.Error(t, err)
@@ -209,11 +209,11 @@ func TestSQLiteJobRepository_GetByID(t *testing.T) {
 			2, "Acme Corp", now, now,
 		)
 
-		mock.ExpectQuery("SELECT.*FROM jobs.*WHERE j.id = ?").
-			WithArgs(jobID).
+		mock.ExpectQuery("SELECT.*FROM jobs.*WHERE j.id = \\? AND j.user_id = \\?").
+			WithArgs(jobID, testUserID).
 			WillReturnRows(rows)
 
-		job, err := repo.GetByID(context.Background(), jobID)
+		job, err := repo.GetByID(context.Background(), testUserID, jobID)
 
 		require.NoError(t, err)
 		require.NotNil(t, job)
@@ -223,11 +223,11 @@ func TestSQLiteJobRepository_GetByID(t *testing.T) {
 	})
 
 	t.Run("non-existent job", func(t *testing.T) {
-		mock.ExpectQuery("SELECT.*FROM jobs.*WHERE j.id = ?").
-			WithArgs(999).
+		mock.ExpectQuery("SELECT.*FROM jobs.*WHERE j.id = \\? AND j.user_id = \\?").
+			WithArgs(999, testUserID).
 			WillReturnError(sql.ErrNoRows)
 
-		job, err := repo.GetByID(context.Background(), 999)
+		job, err := repo.GetByID(context.Background(), testUserID, 999)
 
 		assert.Error(t, err)
 		assert.True(t, errors.Is(err, models.ErrJobNotFound))
@@ -263,11 +263,11 @@ func TestSQLiteJobRepository_UpdateStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mock.ExpectExec("UPDATE jobs SET status = \\?, updated_at = \\? WHERE id = \\?").
-				WithArgs(int(tt.status), sqlmock.AnyArg(), tt.jobID).
+			mock.ExpectExec("UPDATE jobs SET status = \\?, updated_at = \\? WHERE id = \\? AND user_id = \\?").
+				WithArgs(int(tt.status), sqlmock.AnyArg(), tt.jobID, testUserID).
 				WillReturnResult(sqlmock.NewResult(0, tt.rowsAffected))
 
-			err := repo.UpdateStatus(context.Background(), tt.jobID, tt.status)
+			err := repo.UpdateStatus(context.Background(), testUserID, tt.jobID, tt.status)
 
 			if tt.wantErr != nil {
 				assert.Error(t, err)
@@ -283,11 +283,11 @@ func TestSQLiteJobRepository_Delete(t *testing.T) {
 	repo, mock, _ := setupJobRepositoryTest(t)
 	defer mock.ExpectClose()
 
-	mock.ExpectExec("DELETE FROM jobs WHERE id = \\?").
-		WithArgs(1).
+	mock.ExpectExec("DELETE FROM jobs WHERE id = \\? AND user_id = \\?").
+		WithArgs(1, testUserID).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
-	err := repo.Delete(context.Background(), 1)
+	err := repo.Delete(context.Background(), testUserID, 1)
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -314,12 +314,12 @@ func TestSQLiteJobRepository_GetAll(t *testing.T) {
 			companyID, "Acme Corp", now, now,
 		)
 
-		mock.ExpectQuery("SELECT.*FROM jobs.*WHERE.*company_id.*ORDER BY").
-			WithArgs(companyID).
+		mock.ExpectQuery("SELECT.*FROM jobs.*WHERE.*user_id.*company_id.*ORDER BY").
+			WithArgs(testUserID, companyID).
 			WillReturnRows(rows)
 
 		filter := models.JobFilter{CompanyID: &companyID}
-		jobs, err := repo.GetAll(context.Background(), filter)
+		jobs, err := repo.GetAll(context.Background(), testUserID, filter)
 
 		require.NoError(t, err)
 		require.Len(t, jobs, 1)
@@ -333,7 +333,7 @@ func TestGetStatsByUserID(t *testing.T) {
 	tests := []struct {
 		name        string
 		userID      int
-		setupMock   func()
+		setupMock   func(userID int)
 		want        *models.JobStats
 		wantErr     bool
 		expectedErr string
@@ -341,11 +341,11 @@ func TestGetStatsByUserID(t *testing.T) {
 		{
 			name:   "success with jobs",
 			userID: 1,
-			setupMock: func() {
+			setupMock: func(userID int) {
 				rows := sqlmock.NewRows([]string{"total_jobs", "applied", "high_match"}).
 					AddRow(15, 8, 5)
 				mock.ExpectQuery("SELECT.*COUNT.*total_jobs.*FROM jobs").
-					WithArgs(int(models.APPLIED)).
+					WithArgs(int(models.APPLIED), userID).
 					WillReturnRows(rows)
 			},
 			want: &models.JobStats{
@@ -358,11 +358,11 @@ func TestGetStatsByUserID(t *testing.T) {
 		{
 			name:   "success with no jobs",
 			userID: 2,
-			setupMock: func() {
+			setupMock: func(userID int) {
 				rows := sqlmock.NewRows([]string{"total_jobs", "applied", "high_match"}).
 					AddRow(0, 0, 0)
 				mock.ExpectQuery("SELECT.*COUNT.*total_jobs.*FROM jobs").
-					WithArgs(int(models.APPLIED)).
+					WithArgs(int(models.APPLIED), userID).
 					WillReturnRows(rows)
 			},
 			want: &models.JobStats{
@@ -375,9 +375,9 @@ func TestGetStatsByUserID(t *testing.T) {
 		{
 			name:   "database error",
 			userID: 1,
-			setupMock: func() {
+			setupMock: func(userID int) {
 				mock.ExpectQuery("SELECT.*COUNT.*total_jobs.*FROM jobs").
-					WithArgs(int(models.APPLIED)).
+					WithArgs(int(models.APPLIED), userID).
 					WillReturnError(errors.New("database connection failed"))
 			},
 			wantErr:     true,
@@ -387,7 +387,7 @@ func TestGetStatsByUserID(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.setupMock()
+			tt.setupMock(tt.userID)
 
 			got, err := repo.GetStatsByUserID(context.Background(), tt.userID)
 
@@ -411,7 +411,7 @@ func TestGetJobStatsByStatus(t *testing.T) {
 	tests := []struct {
 		name        string
 		userID      int
-		setupMock   func()
+		setupMock   func(userID int)
 		want        map[models.JobStatus]int
 		wantErr     bool
 		expectedErr string
@@ -419,13 +419,14 @@ func TestGetJobStatsByStatus(t *testing.T) {
 		{
 			name:   "success with mixed statuses",
 			userID: 1,
-			setupMock: func() {
+			setupMock: func(userID int) {
 				rows := sqlmock.NewRows([]string{"status", "count"}).
 					AddRow(int(models.INTERESTED), 3).
 					AddRow(int(models.APPLIED), 5).
 					AddRow(int(models.INTERVIEWING), 2).
 					AddRow(int(models.REJECTED), 4)
 				mock.ExpectQuery("SELECT.*status.*COUNT.*FROM jobs.*GROUP BY status").
+					WithArgs(userID).
 					WillReturnRows(rows)
 			},
 			want: map[models.JobStatus]int{
@@ -441,9 +442,10 @@ func TestGetJobStatsByStatus(t *testing.T) {
 		{
 			name:   "success with no jobs",
 			userID: 2,
-			setupMock: func() {
+			setupMock: func(userID int) {
 				rows := sqlmock.NewRows([]string{"status", "count"})
 				mock.ExpectQuery("SELECT.*status.*COUNT.*FROM jobs.*GROUP BY status").
+					WithArgs(userID).
 					WillReturnRows(rows)
 			},
 			want: map[models.JobStatus]int{
@@ -459,8 +461,9 @@ func TestGetJobStatsByStatus(t *testing.T) {
 		{
 			name:   "database error",
 			userID: 1,
-			setupMock: func() {
+			setupMock: func(userID int) {
 				mock.ExpectQuery("SELECT.*status.*COUNT.*FROM jobs.*GROUP BY status").
+					WithArgs(userID).
 					WillReturnError(errors.New("query execution failed"))
 			},
 			wantErr:     true,
@@ -470,7 +473,7 @@ func TestGetJobStatsByStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.setupMock()
+			tt.setupMock(tt.userID)
 
 			got, err := repo.GetJobStatsByStatus(context.Background(), tt.userID)
 
@@ -499,7 +502,7 @@ func TestGetRecentJobsByUserID(t *testing.T) {
 		name        string
 		userID      int
 		limit       int
-		setupMock   func()
+		setupMock   func(userID int)
 		want        []*models.Job
 		wantErr     bool
 		expectedErr string
@@ -508,7 +511,7 @@ func TestGetRecentJobsByUserID(t *testing.T) {
 			name:   "success with limit",
 			userID: 1,
 			limit:  2,
-			setupMock: func() {
+			setupMock: func(userID int) {
 				now := time.Now()
 				rows := sqlmock.NewRows([]string{
 					"id", "title", "description", "location", "job_type",
@@ -525,8 +528,8 @@ func TestGetRecentJobsByUserID(t *testing.T) {
 					"Interesting", now, now, 1, "Test Company", now, now,
 				)
 
-				mock.ExpectQuery("SELECT.*FROM jobs.*ORDER BY.*LIMIT").
-					WithArgs(2).
+				mock.ExpectQuery("SELECT.*FROM jobs.*WHERE.*user_id.*ORDER BY.*LIMIT").
+					WithArgs(testUserID, 2).
 					WillReturnRows(rows)
 			},
 			want: []*models.Job{
@@ -561,7 +564,7 @@ func TestGetRecentJobsByUserID(t *testing.T) {
 			name:   "success with zero limit uses default",
 			userID: 1,
 			limit:  0,
-			setupMock: func() {
+			setupMock: func(userID int) {
 				rows := sqlmock.NewRows([]string{
 					"id", "title", "description", "location", "job_type",
 					"source_url", "skills", "application_url", "company_id",
@@ -569,8 +572,8 @@ func TestGetRecentJobsByUserID(t *testing.T) {
 					"company_id", "company_name", "company_created_at", "company_updated_at",
 				})
 
-				mock.ExpectQuery("SELECT.*FROM jobs.*ORDER BY.*LIMIT").
-					WithArgs(10). // Default limit
+				mock.ExpectQuery("SELECT.*FROM jobs.*WHERE.*user_id.*ORDER BY.*LIMIT").
+					WithArgs(testUserID, 10). // Default limit
 					WillReturnRows(rows)
 			},
 			want:    []*models.Job{},
@@ -580,7 +583,7 @@ func TestGetRecentJobsByUserID(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.setupMock()
+			tt.setupMock(tt.userID)
 
 			got, err := repo.GetRecentJobsByUserID(context.Background(), tt.userID, tt.limit)
 
@@ -634,7 +637,7 @@ func TestSQLiteJobRepository_CreateMatchResult(t *testing.T) {
 				highlightsJSON, _ := json.Marshal([]string{"Led similar project"})
 
 				mock.ExpectExec("INSERT INTO match_results").
-					WithArgs(1, 85, string(strengthsJSON), string(weaknessesJSON), string(highlightsJSON), "Great match overall").
+					WithArgs(1, 85, string(strengthsJSON), string(weaknessesJSON), string(highlightsJSON), "Great match overall", testUserID).
 					WillReturnResult(sqlmock.NewResult(123, 1))
 			},
 			wantErr: false,
@@ -671,7 +674,7 @@ func TestSQLiteJobRepository_CreateMatchResult(t *testing.T) {
 
 			tt.setupMock(mock)
 
-			err := repo.CreateMatchResult(context.Background(), tt.matchResult)
+			err := repo.CreateMatchResult(context.Background(), testUserID, tt.matchResult)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -712,8 +715,8 @@ func TestSQLiteJobRepository_GetJobMatchHistory(t *testing.T) {
 					AddRow(2, 1, 90, string(strengths2), string(weaknesses2), string(highlights2), "Latest analysis", time.Now()).
 					AddRow(1, 1, 75, string(strengths1), string(weaknesses1), string(highlights1), "First analysis", time.Now().Add(-24*time.Hour))
 
-				mock.ExpectQuery("SELECT .* FROM match_results WHERE job_id = \\? ORDER BY created_at DESC").
-					WithArgs(1).
+				mock.ExpectQuery("SELECT .* FROM match_results WHERE job_id = \\? AND user_id = \\? ORDER BY created_at DESC").
+					WithArgs(1, testUserID).
 					WillReturnRows(rows)
 			},
 			want: []*models.MatchResult{
@@ -743,8 +746,8 @@ func TestSQLiteJobRepository_GetJobMatchHistory(t *testing.T) {
 			jobID: 999,
 			setupMock: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "job_id", "match_score", "strengths", "weaknesses", "highlights", "feedback", "created_at"})
-				mock.ExpectQuery("SELECT .* FROM match_results WHERE job_id = \\? ORDER BY created_at DESC").
-					WithArgs(999).
+				mock.ExpectQuery("SELECT .* FROM match_results WHERE job_id = \\? AND user_id = \\? ORDER BY created_at DESC").
+					WithArgs(999, testUserID).
 					WillReturnRows(rows)
 			},
 			want:    []*models.MatchResult{},
@@ -754,8 +757,8 @@ func TestSQLiteJobRepository_GetJobMatchHistory(t *testing.T) {
 			name:  "database error",
 			jobID: 1,
 			setupMock: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery("SELECT .* FROM match_results WHERE job_id = \\? ORDER BY created_at DESC").
-					WithArgs(1).
+				mock.ExpectQuery("SELECT .* FROM match_results WHERE job_id = \\? AND user_id = \\? ORDER BY created_at DESC").
+					WithArgs(1, testUserID).
 					WillReturnError(errors.New("database error"))
 			},
 			want:    nil,
@@ -769,7 +772,7 @@ func TestSQLiteJobRepository_GetJobMatchHistory(t *testing.T) {
 
 			tt.setupMock(mock)
 
-			got, err := repo.GetJobMatchHistory(context.Background(), tt.jobID)
+			got, err := repo.GetJobMatchHistory(context.Background(), testUserID, tt.jobID)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -814,8 +817,8 @@ func TestSQLiteJobRepository_GetRecentMatchResults(t *testing.T) {
 					AddRow(2, 1, 92, string(strengths), string(weaknesses), string(highlights), "Great match", time.Now().Add(-1*time.Hour)).
 					AddRow(1, 3, 75, string(strengths), string(weaknesses), string(highlights), "Good match", time.Now().Add(-2*time.Hour))
 
-				mock.ExpectQuery("SELECT mr\\.id, mr\\.job_id, mr\\.match_score, mr\\.strengths, mr\\.weaknesses, mr\\.highlights, mr\\.feedback, mr\\.created_at FROM match_results mr ORDER BY mr\\.created_at DESC LIMIT \\?").
-					WithArgs(5).
+				mock.ExpectQuery("SELECT mr\\.id, mr\\.job_id, mr\\.match_score, mr\\.strengths, mr\\.weaknesses, mr\\.highlights, mr\\.feedback, mr\\.created_at FROM match_results mr WHERE mr\\.user_id = \\? ORDER BY mr\\.created_at DESC LIMIT \\?").
+					WithArgs(testUserID, 5).
 					WillReturnRows(rows)
 			},
 			want: []*models.MatchResult{
@@ -830,8 +833,8 @@ func TestSQLiteJobRepository_GetRecentMatchResults(t *testing.T) {
 			limit: 0,
 			setupMock: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{"id", "job_id", "match_score", "strengths", "weaknesses", "highlights", "feedback", "created_at"})
-				mock.ExpectQuery("SELECT mr\\.id, mr\\.job_id, mr\\.match_score, mr\\.strengths, mr\\.weaknesses, mr\\.highlights, mr\\.feedback, mr\\.created_at FROM match_results mr ORDER BY mr\\.created_at DESC LIMIT \\?").
-					WithArgs(10). // Default limit
+				mock.ExpectQuery("SELECT mr\\.id, mr\\.job_id, mr\\.match_score, mr\\.strengths, mr\\.weaknesses, mr\\.highlights, mr\\.feedback, mr\\.created_at FROM match_results mr WHERE mr\\.user_id = \\? ORDER BY mr\\.created_at DESC LIMIT \\?").
+					WithArgs(testUserID, 10). // Default limit
 					WillReturnRows(rows)
 			},
 			want:    []*models.MatchResult{},
@@ -841,8 +844,8 @@ func TestSQLiteJobRepository_GetRecentMatchResults(t *testing.T) {
 			name:  "database error",
 			limit: 5,
 			setupMock: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery("SELECT mr\\.id, mr\\.job_id, mr\\.match_score, mr\\.strengths, mr\\.weaknesses, mr\\.highlights, mr\\.feedback, mr\\.created_at FROM match_results mr ORDER BY mr\\.created_at DESC LIMIT \\?").
-					WithArgs(5).
+				mock.ExpectQuery("SELECT mr\\.id, mr\\.job_id, mr\\.match_score, mr\\.strengths, mr\\.weaknesses, mr\\.highlights, mr\\.feedback, mr\\.created_at FROM match_results mr WHERE mr\\.user_id = \\? ORDER BY mr\\.created_at DESC LIMIT \\?").
+					WithArgs(testUserID, 5).
 					WillReturnError(errors.New("database error"))
 			},
 			want:    nil,
@@ -856,7 +859,7 @@ func TestSQLiteJobRepository_GetRecentMatchResults(t *testing.T) {
 
 			tt.setupMock(mock)
 
-			got, err := repo.GetRecentMatchResults(context.Background(), tt.limit)
+			got, err := repo.GetRecentMatchResults(context.Background(), testUserID, tt.limit)
 
 			if tt.wantErr {
 				assert.Error(t, err)

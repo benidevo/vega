@@ -18,121 +18,147 @@ func init() {
 	zerolog.SetGlobalLevel(zerolog.Disabled)
 }
 
+const testUserID = 1
+
 // MockJobRepository mocks the JobRepository interface
 type MockJobRepository struct {
 	mock.Mock
 }
 
-func (m *MockJobRepository) Create(ctx context.Context, job *models.Job) (*models.Job, error) {
-	args := m.Called(ctx, job)
+func (m *MockJobRepository) Create(ctx context.Context, userID int, job *models.Job) (*models.Job, error) {
+	args := m.Called(ctx, userID, job)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.Job), args.Error(1)
 }
 
-func (m *MockJobRepository) UpdateMatchScore(ctx context.Context, jobID int, matchScore *int) error {
-	args := m.Called(ctx, jobID, matchScore)
+func (m *MockJobRepository) UpdateMatchScore(ctx context.Context, userID int, jobID int, matchScore *int) error {
+	args := m.Called(ctx, userID, jobID, matchScore)
 	return args.Error(0)
 }
 
-func (m *MockJobRepository) GetBySourceURL(ctx context.Context, sourceURL string) (*models.Job, error) {
-	args := m.Called(ctx, sourceURL)
+func (m *MockJobRepository) GetBySourceURL(ctx context.Context, userID int, sourceURL string) (*models.Job, error) {
+	args := m.Called(ctx, userID, sourceURL)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.Job), args.Error(1)
 }
 
-func (m *MockJobRepository) GetOrCreate(ctx context.Context, job *models.Job) (*models.Job, error) {
-	args := m.Called(ctx, job)
+func (m *MockJobRepository) GetOrCreate(ctx context.Context, userID int, job *models.Job) (*models.Job, error) {
+	args := m.Called(ctx, userID, job)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.Job), args.Error(1)
 }
 
-func (m *MockJobRepository) GetByID(ctx context.Context, id int) (*models.Job, error) {
-	args := m.Called(ctx, id)
+func (m *MockJobRepository) GetByID(ctx context.Context, userID int, id int) (*models.Job, error) {
+	args := m.Called(ctx, userID, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.Job), args.Error(1)
 }
 
-func (m *MockJobRepository) GetAll(ctx context.Context, filter models.JobFilter) ([]*models.Job, error) {
-	args := m.Called(ctx, filter)
+func (m *MockJobRepository) GetAll(ctx context.Context, userID int, filter models.JobFilter) ([]*models.Job, error) {
+	args := m.Called(ctx, userID, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]*models.Job), args.Error(1)
 }
 
-func (m *MockJobRepository) GetCount(ctx context.Context, filter models.JobFilter) (int, error) {
-	args := m.Called(ctx, filter)
+func (m *MockJobRepository) GetCount(ctx context.Context, userID int, filter models.JobFilter) (int, error) {
+	args := m.Called(ctx, userID, filter)
 	return args.Int(0), args.Error(1)
 }
 
-func (m *MockJobRepository) Update(ctx context.Context, job *models.Job) error {
-	args := m.Called(ctx, job)
+func (m *MockJobRepository) Update(ctx context.Context, userID int, job *models.Job) error {
+	args := m.Called(ctx, userID, job)
 	return args.Error(0)
 }
 
-func (m *MockJobRepository) Delete(ctx context.Context, id int) error {
-	args := m.Called(ctx, id)
+func (m *MockJobRepository) Delete(ctx context.Context, userID int, id int) error {
+	args := m.Called(ctx, userID, id)
 	return args.Error(0)
 }
 
-func (m *MockJobRepository) UpdateStatus(ctx context.Context, id int, status models.JobStatus) error {
-	args := m.Called(ctx, id, status)
+func (m *MockJobRepository) UpdateStatus(ctx context.Context, userID int, id int, status models.JobStatus) error {
+	args := m.Called(ctx, userID, id, status)
 	return args.Error(0)
 }
 
-func (m *MockJobRepository) GetStats(ctx context.Context) (*models.JobStats, error) {
-	args := m.Called(ctx)
+func (m *MockJobRepository) GetStats(ctx context.Context, userID int) (*models.JobStats, error) {
+	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.JobStats), args.Error(1)
 }
 
-func (m *MockJobRepository) CreateMatchResult(ctx context.Context, matchResult *models.MatchResult) error {
-	args := m.Called(ctx, matchResult)
+func (m *MockJobRepository) CreateMatchResult(ctx context.Context, userID int, matchResult *models.MatchResult) error {
+	args := m.Called(ctx, userID, matchResult)
 	return args.Error(0)
 }
 
-func (m *MockJobRepository) GetJobMatchHistory(ctx context.Context, jobID int) ([]*models.MatchResult, error) {
-	args := m.Called(ctx, jobID)
+func (m *MockJobRepository) GetJobMatchHistory(ctx context.Context, userID int, jobID int) ([]*models.MatchResult, error) {
+	args := m.Called(ctx, userID, jobID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]*models.MatchResult), args.Error(1)
 }
 
-func (m *MockJobRepository) GetRecentMatchResults(ctx context.Context, limit int) ([]*models.MatchResult, error) {
-	args := m.Called(ctx, limit)
+func (m *MockJobRepository) GetRecentMatchResults(ctx context.Context, userID int, limit int) ([]*models.MatchResult, error) {
+	args := m.Called(ctx, userID, limit)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]*models.MatchResult), args.Error(1)
 }
 
-func (m *MockJobRepository) GetRecentMatchResultsWithDetails(ctx context.Context, limit int, currentJobID int) ([]*models.MatchSummary, error) {
-	args := m.Called(ctx, limit, currentJobID)
+func (m *MockJobRepository) GetRecentMatchResultsWithDetails(ctx context.Context, userID int, limit int, currentJobID int) ([]*models.MatchSummary, error) {
+	args := m.Called(ctx, userID, limit, currentJobID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]*models.MatchSummary), args.Error(1)
 }
 
-func (m *MockJobRepository) DeleteMatchResult(ctx context.Context, matchID int) error {
-	args := m.Called(ctx, matchID)
+func (m *MockJobRepository) DeleteMatchResult(ctx context.Context, userID int, matchID int) error {
+	args := m.Called(ctx, userID, matchID)
 	return args.Error(0)
 }
 
-func (m *MockJobRepository) MatchResultBelongsToJob(ctx context.Context, matchID, jobID int) (bool, error) {
-	args := m.Called(ctx, matchID, jobID)
+func (m *MockJobRepository) MatchResultBelongsToJob(ctx context.Context, userID int, matchID, jobID int) (bool, error) {
+	args := m.Called(ctx, userID, matchID, jobID)
 	return args.Bool(0), args.Error(1)
+}
+
+func (m *MockJobRepository) GetStatsByUserID(ctx context.Context, userID int) (*models.JobStats, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.JobStats), args.Error(1)
+}
+
+func (m *MockJobRepository) GetRecentJobsByUserID(ctx context.Context, userID int, limit int) ([]*models.Job, error) {
+	args := m.Called(ctx, userID, limit)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.Job), args.Error(1)
+}
+
+func (m *MockJobRepository) GetJobStatsByStatus(ctx context.Context, userID int) (map[models.JobStatus]int, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(map[models.JobStatus]int), args.Error(1)
 }
 
 func setupTestConfig() *config.Settings {
@@ -171,10 +197,10 @@ func TestJobService(t *testing.T) {
 
 	t.Run("should create job successfully", func(t *testing.T) {
 		mockRepo := new(MockJobRepository)
-		mockRepo.On("GetOrCreate", ctx, mock.AnythingOfType("*models.Job")).Return(job, nil)
+		mockRepo.On("GetOrCreate", ctx, testUserID, mock.AnythingOfType("*models.Job")).Return(job, nil)
 
 		service := NewJobService(mockRepo, nil, nil, cfg)
-		createdJob, err := service.CreateJob(ctx, job.Title, job.Description, company.Name)
+		createdJob, err := service.CreateJob(ctx, testUserID, job.Title, job.Description, company.Name)
 
 		require.NoError(t, err)
 		assert.Equal(t, job.ID, createdJob.ID)
@@ -184,10 +210,10 @@ func TestJobService(t *testing.T) {
 
 	t.Run("should return job when valid ID", func(t *testing.T) {
 		mockRepo := new(MockJobRepository)
-		mockRepo.On("GetByID", ctx, 1).Return(job, nil)
+		mockRepo.On("GetByID", ctx, testUserID, 1).Return(job, nil)
 
 		service := NewJobService(mockRepo, nil, nil, cfg)
-		foundJob, err := service.GetJob(ctx, 1)
+		foundJob, err := service.GetJob(ctx, testUserID, 1)
 
 		require.NoError(t, err)
 		assert.Equal(t, job.ID, foundJob.ID)
@@ -196,10 +222,10 @@ func TestJobService(t *testing.T) {
 
 	t.Run("should return error when invalid ID", func(t *testing.T) {
 		service := NewJobService(nil, nil, nil, cfg) // No repo calls expected
-		_, err := service.GetJob(ctx, 0)
+		_, err := service.GetJob(ctx, testUserID, 0)
 		assert.Equal(t, models.ErrInvalidJobID, err)
 
-		_, err = service.GetJob(ctx, -1)
+		_, err = service.GetJob(ctx, testUserID, -1)
 		assert.Equal(t, models.ErrInvalidJobID, err)
 	})
 
@@ -215,11 +241,11 @@ func TestJobService(t *testing.T) {
 				Search: "software",
 				Limit:  10,
 			}
-			mockRepo.On("GetAll", ctx, searchFilter).Return(jobs[:1], nil)
-			mockRepo.On("GetCount", ctx, searchFilter).Return(1, nil)
+			mockRepo.On("GetAll", ctx, testUserID, searchFilter).Return(jobs[:1], nil)
+			mockRepo.On("GetCount", ctx, testUserID, searchFilter).Return(1, nil)
 
 			service := NewJobService(mockRepo, nil, nil, cfg)
-			result, err := service.GetJobsWithPagination(ctx, searchFilter)
+			result, err := service.GetJobsWithPagination(ctx, testUserID, searchFilter)
 
 			require.NoError(t, err)
 			assert.Len(t, result.Jobs, 1)
@@ -233,11 +259,11 @@ func TestJobService(t *testing.T) {
 				Status: &status,
 				Limit:  12,
 			}
-			mockRepo.On("GetAll", ctx, statusFilter).Return(jobs, nil)
-			mockRepo.On("GetCount", ctx, statusFilter).Return(2, nil)
+			mockRepo.On("GetAll", ctx, testUserID, statusFilter).Return(jobs, nil)
+			mockRepo.On("GetCount", ctx, testUserID, statusFilter).Return(2, nil)
 
 			service := NewJobService(mockRepo, nil, nil, cfg)
-			result, err := service.GetJobsWithPagination(ctx, statusFilter)
+			result, err := service.GetJobsWithPagination(ctx, testUserID, statusFilter)
 
 			require.NoError(t, err)
 			assert.Len(t, result.Jobs, 2)
@@ -251,11 +277,11 @@ func TestJobService(t *testing.T) {
 				CompanyID: &companyID,
 				Limit:     12,
 			}
-			mockRepo.On("GetAll", ctx, companyFilter).Return(jobs, nil)
-			mockRepo.On("GetCount", ctx, companyFilter).Return(2, nil)
+			mockRepo.On("GetAll", ctx, testUserID, companyFilter).Return(jobs, nil)
+			mockRepo.On("GetCount", ctx, testUserID, companyFilter).Return(2, nil)
 
 			service := NewJobService(mockRepo, nil, nil, cfg)
-			result, err := service.GetJobsWithPagination(ctx, companyFilter)
+			result, err := service.GetJobsWithPagination(ctx, testUserID, companyFilter)
 
 			require.NoError(t, err)
 			assert.Len(t, result.Jobs, 2)
@@ -269,11 +295,11 @@ func TestJobService(t *testing.T) {
 				JobType: &jobType,
 				Limit:   12,
 			}
-			mockRepo.On("GetAll", ctx, typeFilter).Return(jobs, nil)
-			mockRepo.On("GetCount", ctx, typeFilter).Return(2, nil)
+			mockRepo.On("GetAll", ctx, testUserID, typeFilter).Return(jobs, nil)
+			mockRepo.On("GetCount", ctx, testUserID, typeFilter).Return(2, nil)
 
 			service := NewJobService(mockRepo, nil, nil, cfg)
-			result, err := service.GetJobsWithPagination(ctx, typeFilter)
+			result, err := service.GetJobsWithPagination(ctx, testUserID, typeFilter)
 
 			require.NoError(t, err)
 			assert.Len(t, result.Jobs, 2)
@@ -291,11 +317,11 @@ func TestJobService(t *testing.T) {
 				Limit:   5,
 				Offset:  10,
 			}
-			mockRepo.On("GetAll", ctx, complexFilter).Return(jobs[:1], nil)
-			mockRepo.On("GetCount", ctx, complexFilter).Return(1, nil)
+			mockRepo.On("GetAll", ctx, testUserID, complexFilter).Return(jobs[:1], nil)
+			mockRepo.On("GetCount", ctx, testUserID, complexFilter).Return(1, nil)
 
 			service := NewJobService(mockRepo, nil, nil, cfg)
-			result, err := service.GetJobsWithPagination(ctx, complexFilter)
+			result, err := service.GetJobsWithPagination(ctx, testUserID, complexFilter)
 
 			require.NoError(t, err)
 			assert.Len(t, result.Jobs, 1)
@@ -338,10 +364,10 @@ func TestJobService(t *testing.T) {
 
 	t.Run("should update job successfully", func(t *testing.T) {
 		mockRepo := new(MockJobRepository)
-		mockRepo.On("Update", ctx, mock.AnythingOfType("*models.Job")).Return(nil)
+		mockRepo.On("Update", ctx, testUserID, mock.AnythingOfType("*models.Job")).Return(nil)
 
 		service := NewJobService(mockRepo, nil, nil, cfg)
-		err := service.UpdateJob(ctx, job)
+		err := service.UpdateJob(ctx, testUserID, job)
 
 		require.NoError(t, err)
 		mockRepo.AssertExpectations(t)
@@ -351,22 +377,22 @@ func TestJobService(t *testing.T) {
 		service := NewJobService(nil, nil, nil, cfg) // No repo calls expected
 
 		// Test nil job
-		err := service.UpdateJob(ctx, nil)
+		err := service.UpdateJob(ctx, testUserID, nil)
 		assert.Equal(t, models.ErrInvalidJobID, err)
 
 		// Test job with invalid ID
 		invalidJob := createTestJob(0, "Invalid Job", company)
-		err = service.UpdateJob(ctx, invalidJob)
+		err = service.UpdateJob(ctx, testUserID, invalidJob)
 		assert.Equal(t, models.ErrInvalidJobID, err)
 	})
 
 	t.Run("should delete job successfully", func(t *testing.T) {
 		mockRepo := new(MockJobRepository)
-		mockRepo.On("GetByID", ctx, 1).Return(job, nil)
-		mockRepo.On("Delete", ctx, 1).Return(nil)
+		mockRepo.On("GetByID", ctx, testUserID, 1).Return(job, nil)
+		mockRepo.On("Delete", ctx, testUserID, 1).Return(nil)
 
 		service := NewJobService(mockRepo, nil, nil, cfg)
-		err := service.DeleteJob(ctx, 1)
+		err := service.DeleteJob(ctx, testUserID, 1)
 
 		require.NoError(t, err)
 		mockRepo.AssertExpectations(t)
@@ -374,7 +400,7 @@ func TestJobService(t *testing.T) {
 
 	t.Run("should return error when trying to delete with invalid ID", func(t *testing.T) {
 		service := NewJobService(nil, nil, nil, cfg) // No repo calls expected
-		err := service.DeleteJob(ctx, 0)
+		err := service.DeleteJob(ctx, testUserID, 0)
 		assert.Equal(t, models.ErrInvalidJobID, err)
 	})
 }
