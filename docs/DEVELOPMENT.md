@@ -249,3 +249,99 @@ make logs
 # Follow logs in real-time
 docker compose logs -f vega-ai
 ```
+
+## Cloud Mode Deployment
+
+### Overview
+
+Cloud mode enables multi-user deployments with:
+
+- OAuth-only authentication (no password login)
+- Multi-tenant data isolation
+- Shared reference data (companies)
+
+### Configuration
+
+Enable cloud mode with environment variables:
+
+```bash
+# Required for cloud mode
+CLOUD_MODE=true
+GOOGLE_OAUTH_ENABLED=true
+GOOGLE_CLIENT_ID=your-client-id
+GOOGLE_CLIENT_SECRET=your-client-secret
+GOOGLE_CLIENT_REDIRECT_URL=https://yourdomain.com/auth/google/callback
+```
+
+### Building Cloud Images
+
+#### Manual Build
+
+```bash
+# Via GitHub Actions
+# Go to Actions → "Build and Push Cloud Docker Image"
+# Click "Run workflow" and choose tag
+
+# Via git tags
+git tag v1.0.0-cloud
+git push origin v1.0.0-cloud
+```
+
+#### Running Cloud Mode
+
+```bash
+docker run -d \
+  -p 8765:8765 \
+  -v vega-data:/app/data \
+  -e GOOGLE_OAUTH_ENABLED=true \
+  -e GOOGLE_CLIENT_ID=your-client-id \
+  -e GOOGLE_CLIENT_SECRET=your-client-secret \
+  ghcr.io/benidevo/vega-cloud:latest
+```
+
+### Development Testing
+
+```bash
+# Using docker-compose
+CLOUD_MODE=true \
+GOOGLE_OAUTH_ENABLED=true \
+GOOGLE_CLIENT_ID=your-dev-client-id \
+GOOGLE_CLIENT_SECRET=your-dev-secret \
+docker compose up
+
+# Run tests with cloud mode
+CLOUD_MODE=true go test ./...
+```
+
+### Data Architecture
+
+#### Storage Model
+
+- **Database**: SQLite with multi-tenant support
+- **User Isolation**: Row-level security with user_id
+- **Shared Data**: Companies table (reference data)
+- **User Data**: Jobs, profiles, match results (isolated)
+
+#### Authentication Flow
+
+1. User redirected to Google OAuth
+2. Google returns with user info
+3. JWT token created with user claims
+4. All requests filtered by user_id
+
+### Multi-Tenant Considerations
+
+1. **Data Isolation**
+   - All queries automatically filtered by user_id
+   - Repository pattern enforces boundaries
+   - See `internal/job/repository/` for implementation
+
+2. **Shared Resources**
+   - Companies are reference data (shared)
+   - Prevents duplicate "Google Inc" entries
+   - Similar to how job boards handle companies
+
+3. **Security**
+   - No passwords stored (OAuth only)
+   - JWT tokens for session management
+   - Automatic user_id injection in middleware

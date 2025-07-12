@@ -12,11 +12,11 @@ type FieldCommand interface {
 	Execute(c *gin.Context, job *models.Job, service *JobService) (string, error)
 }
 
-// StatusCommand handles status field updates
-type StatusCommand struct{}
+// statusCommand handles status field updates
+type statusCommand struct{}
 
 // Execute updates the status of the given job based on the "status" form value from the request context.
-func (cmd *StatusCommand) Execute(c *gin.Context, job *models.Job, service *JobService) (string, error) {
+func (cmd *statusCommand) Execute(c *gin.Context, job *models.Job, service *JobService) (string, error) {
 	statusStr := c.PostForm("status")
 	if statusStr == "" {
 		return "", models.ErrStatusRequired
@@ -31,33 +31,33 @@ func (cmd *StatusCommand) Execute(c *gin.Context, job *models.Job, service *JobS
 	return "Job status updated to " + status.String(), nil
 }
 
-// NotesCommand handles notes field updates
-type NotesCommand struct{}
+// notesCommand handles notes field updates
+type notesCommand struct{}
 
 // Execute updates the Notes field of the given job with the value from the POST form and returns a success message.
-func (cmd *NotesCommand) Execute(c *gin.Context, job *models.Job, service *JobService) (string, error) {
+func (cmd *notesCommand) Execute(c *gin.Context, job *models.Job, service *JobService) (string, error) {
 	notes := strings.TrimSpace(c.PostForm("notes"))
 	job.Notes = notes
 	return "Notes updated successfully", nil
 }
 
-// SkillsCommand handles skills field updates
-type SkillsCommand struct{}
+// skillsCommand handles skills field updates
+type skillsCommand struct{}
 
 // Execute processes the "skills" form field, validates and filters the skills,
 // updates the job's RequiredSkills, and returns a success message or error.
-func (cmd *SkillsCommand) Execute(c *gin.Context, job *models.Job, service *JobService) (string, error) {
+func (cmd *skillsCommand) Execute(c *gin.Context, job *models.Job, service *JobService) (string, error) {
 	skillsStr := c.PostForm("skills")
 	skills := service.ValidateAndFilterSkills(skillsStr)
 	job.RequiredSkills = skills
 	return "Skills updated successfully", nil
 }
 
-// BasicCommand handles basic job information updates
-type BasicCommand struct{}
+// basicCommand handles basic job information updates
+type basicCommand struct{}
 
 // Execute updates the job fields (title, company name, and location) from the POST form data in the Gin context.
-func (cmd *BasicCommand) Execute(c *gin.Context, job *models.Job, service *JobService) (string, error) {
+func (cmd *basicCommand) Execute(c *gin.Context, job *models.Job, service *JobService) (string, error) {
 	title := strings.TrimSpace(c.PostForm("title"))
 	if title == "" {
 		return "", models.ErrJobTitleRequired
@@ -85,10 +85,10 @@ type CommandFactory struct {
 func NewCommandFactory() *CommandFactory {
 	return &CommandFactory{
 		commands: map[string]FieldCommand{
-			"status": &StatusCommand{},
-			"notes":  &NotesCommand{},
-			"skills": &SkillsCommand{},
-			"basic":  &BasicCommand{},
+			"status": &statusCommand{},
+			"notes":  &notesCommand{},
+			"skills": &skillsCommand{},
+			"basic":  &basicCommand{},
 		},
 	}
 }
