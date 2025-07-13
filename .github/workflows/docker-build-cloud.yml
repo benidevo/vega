@@ -77,3 +77,4 @@ jobs:
         cache-to: type=gha,mode=max
         build-args: |
           CLOUD_MODE=true
+          COOKIE_SECURE=true

@@ -19,6 +19,7 @@ RUN CGO_ENABLED=1 GOOS=linux go build \
 FROM alpine:3.20
 
 ARG CLOUD_MODE=false
+ARG COOKIE_SECURE=${CLOUD_MODE}
 
 RUN apk --no-cache add ca-certificates tzdata wget && \
     addgroup -g 1001 -S appgroup && \
@@ -27,18 +28,22 @@ RUN apk --no-cache add ca-certificates tzdata wget && \
 WORKDIR /app
 
 ENV CLOUD_MODE=${CLOUD_MODE}
+ENV COOKIE_SECURE=${COOKIE_SECURE}
 
 COPY --from=builder /build/vega .
 
 COPY --from=builder /build/templates ./templates
 COPY --from=builder /build/migrations ./migrations
 COPY --from=builder /build/static ./static
+COPY ./docker/entrypoint.sh /app/entrypoint.sh
 
 RUN mkdir -p /app/data && \
+    chmod +x /app/entrypoint.sh && \
     chown -R appuser:appgroup /app
 
 USER appuser
 
 EXPOSE 8765
 
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["./vega"]
