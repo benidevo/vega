@@ -132,9 +132,14 @@ func (h *SettingsHandler) formatValidationError(err error) string {
 
 // GetProfileSettingsPage handles the request to display the profile settings page
 func (h *SettingsHandler) GetProfileSettingsPage(c *gin.Context) {
-	userID, _ := c.Get("userID")
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		h.renderer.Error(c, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	userID := userIDValue.(int)
 
-	profile, err := h.service.GetProfileWithRelated(c.Request.Context(), userID.(int))
+	profile, err := h.service.GetProfileWithRelated(c.Request.Context(), userID)
 
 	if err != nil {
 		h.renderer.HTML(c, http.StatusInternalServerError, "layouts/base.html", gin.H{
@@ -165,7 +170,15 @@ func (h *SettingsHandler) GetProfileSettingsPage(c *gin.Context) {
 
 // HandleCreateProfile handles the creation or update of a user's profile settings
 func (h *SettingsHandler) HandleCreateProfile(c *gin.Context) {
-	userID := c.GetInt("userID")
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		h.renderer.HTML(c, http.StatusUnauthorized, "partials/alerts/alert.html", gin.H{
+			"message": "Unauthorized",
+			"type":    "error",
+		})
+		return
+	}
+	userID := userIDValue.(int)
 
 	firstName := strings.TrimSpace(c.PostForm("first_name"))
 	lastName := strings.TrimSpace(c.PostForm("last_name"))

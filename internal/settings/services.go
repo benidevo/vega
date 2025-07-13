@@ -187,7 +187,7 @@ func (s *SettingsService) DeleteEntity(ctx *gin.Context, entityID, profileID int
 
 	switch entityType {
 	case "Experience":
-		if err := s.settingsRepo.DeleteWorkExperience(ctx.Request.Context(), entityID); err != nil {
+		if err := s.settingsRepo.DeleteWorkExperience(ctx.Request.Context(), entityID, profileID); err != nil {
 			s.log.Error().Err(err).Int("experience_id", entityID).Msg("Failed to delete work experience")
 			if err == models.ErrWorkExperienceNotFound {
 				return err
@@ -197,7 +197,7 @@ func (s *SettingsService) DeleteEntity(ctx *gin.Context, entityID, profileID int
 		s.log.Info().Int("experience_id", entityID).Int("profile_id", profileID).Msg("Successfully deleted work experience")
 		return nil
 	case "Education":
-		if err := s.settingsRepo.DeleteEducation(ctx.Request.Context(), entityID); err != nil {
+		if err := s.settingsRepo.DeleteEducation(ctx.Request.Context(), entityID, profileID); err != nil {
 			s.log.Error().Err(err).Int("education_id", entityID).Msg("Failed to delete education entry")
 			if err == models.ErrEducationNotFound {
 				return err
@@ -207,7 +207,7 @@ func (s *SettingsService) DeleteEntity(ctx *gin.Context, entityID, profileID int
 		s.log.Info().Int("education_id", entityID).Int("profile_id", profileID).Msg("Successfully deleted education entry")
 		return nil
 	case "Certification":
-		if err := s.settingsRepo.DeleteCertification(ctx.Request.Context(), entityID); err != nil {
+		if err := s.settingsRepo.DeleteCertification(ctx.Request.Context(), entityID, profileID); err != nil {
 			s.log.Error().Err(err).Int("certification_id", entityID).Msg("Failed to delete certification")
 			if err == models.ErrCertificationNotFound {
 				return err

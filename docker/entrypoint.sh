@@ -22,20 +22,38 @@ if [ -z "$TOKEN_SECRET" ] || [ "$TOKEN_SECRET" = "default-secret-key" ]; then
     fi
 fi
 
+# Set COOKIE_SECURE based on mode
+if [ "$CLOUD_MODE" = "true" ]; then
+    # Cloud mode MUST use secure cookies for security
+    export COOKIE_SECURE="true"
+    echo "Cloud mode: Enforcing COOKIE_SECURE=true"
+else
+    # Regular mode: respect user settings, default to false if not set
+    if [ -z "$COOKIE_SECURE" ]; then
+        export COOKIE_SECURE="false"
+    fi
+fi
+
 # Validate required settings for cloud mode
 if [ "$CLOUD_MODE" = "true" ]; then
-    if [ -z "$GOOGLE_CLIENT_ID" ] || [ -z "$GOOGLE_CLIENT_SECRET" ]; then
-        echo "ERROR: Google OAuth credentials required for cloud mode"
+    missing_credentials=""
+    if [ -z "$GOOGLE_CLIENT_ID" ]; then
+        missing_credentials="GOOGLE_CLIENT_ID"
+    fi
+    if [ -z "$GOOGLE_CLIENT_SECRET" ]; then
+        if [ -n "$missing_credentials" ]; then
+            missing_credentials="$missing_credentials, GOOGLE_CLIENT_SECRET"
+        else
+            missing_credentials="GOOGLE_CLIENT_SECRET"
+        fi
+    fi
+    if [ -n "$missing_credentials" ]; then
+        echo "ERROR: Missing required Google OAuth credentials for cloud mode: $missing_credentials"
         exit 1
     fi
-    # Ensure HTTPS cookies for cloud mode
-    export COOKIE_SECURE="true"
 fi
 
 echo "Starting Vega AI..."
 echo "Mode: $([ "$CLOUD_MODE" = "true" ] && echo "Cloud" || echo "Self-hosted")"
-
-# Create data directory if it doesn't exist
-mkdir -p /app/data
 
 exec "$@"

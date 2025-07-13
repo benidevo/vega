@@ -181,7 +181,7 @@ func TestWorkExperienceOperations(t *testing.T) {
 		mock.ExpectExec("UPDATE work_experiences SET").
 			WithArgs(
 				exp.Company, exp.Title, exp.Location, exp.StartDate,
-				nil, exp.Description, exp.Current, sqlmock.AnyArg(), exp.ID, // nil for EndDate, AnyArg for updated_at
+				nil, exp.Description, exp.Current, sqlmock.AnyArg(), exp.ID, exp.ProfileID, // nil for EndDate, AnyArg for updated_at
 			).
 			WillReturnResult(sqlmock.NewResult(0, 1))
 
@@ -193,20 +193,20 @@ func TestWorkExperienceOperations(t *testing.T) {
 
 	t.Run("delete work experience", func(t *testing.T) {
 		mock.ExpectExec("DELETE FROM work_experiences WHERE").
-			WithArgs(10).
+			WithArgs(10, exp.ProfileID).
 			WillReturnResult(sqlmock.NewResult(0, 1))
 
-		err := repo.DeleteWorkExperience(ctx, 10)
+		err := repo.DeleteWorkExperience(ctx, 10, exp.ProfileID)
 		require.NoError(t, err)
 		require.NoError(t, mock.ExpectationsWereMet())
 	})
 
 	t.Run("delete non-existent work experience", func(t *testing.T) {
 		mock.ExpectExec("DELETE FROM work_experiences WHERE").
-			WithArgs(999).
+			WithArgs(999, exp.ProfileID).
 			WillReturnResult(sqlmock.NewResult(0, 0))
 
-		err := repo.DeleteWorkExperience(ctx, 999)
+		err := repo.DeleteWorkExperience(ctx, 999, exp.ProfileID)
 		assert.Error(t, err)
 		assert.Equal(t, models.ErrWorkExperienceNotFound, err)
 		require.NoError(t, mock.ExpectationsWereMet())
@@ -250,7 +250,7 @@ func TestEducationOperations(t *testing.T) {
 			WithArgs(
 				edu.Institution, edu.Degree, edu.FieldOfStudy,
 				edu.StartDate, sqlmock.AnyArg(), edu.Description,
-				sqlmock.AnyArg(), edu.ID, // updated_at, id
+				sqlmock.AnyArg(), edu.ID, edu.ProfileID, // updated_at, id, profileID
 			).
 			WillReturnResult(sqlmock.NewResult(0, 1))
 
@@ -262,10 +262,10 @@ func TestEducationOperations(t *testing.T) {
 
 	t.Run("delete education", func(t *testing.T) {
 		mock.ExpectExec("DELETE FROM education WHERE").
-			WithArgs(20).
+			WithArgs(20, edu.ProfileID).
 			WillReturnResult(sqlmock.NewResult(0, 1))
 
-		err := repo.DeleteEducation(ctx, 20)
+		err := repo.DeleteEducation(ctx, 20, edu.ProfileID)
 		require.NoError(t, err)
 		require.NoError(t, mock.ExpectationsWereMet())
 	})
@@ -307,7 +307,7 @@ func TestCertificationOperations(t *testing.T) {
 		mock.ExpectExec("UPDATE certifications SET").
 			WithArgs(
 				cert.Name, cert.IssuingOrg, cert.IssueDate, sqlmock.AnyArg(),
-				cert.CredentialID, cert.CredentialURL, sqlmock.AnyArg(), cert.ID, // updated_at, id
+				cert.CredentialID, cert.CredentialURL, sqlmock.AnyArg(), cert.ID, cert.ProfileID, // updated_at, id, profileID
 			).
 			WillReturnResult(sqlmock.NewResult(0, 1))
 
@@ -319,10 +319,10 @@ func TestCertificationOperations(t *testing.T) {
 
 	t.Run("delete certification", func(t *testing.T) {
 		mock.ExpectExec("DELETE FROM certifications WHERE").
-			WithArgs(30).
+			WithArgs(30, cert.ProfileID).
 			WillReturnResult(sqlmock.NewResult(0, 1))
 
-		err := repo.DeleteCertification(ctx, 30)
+		err := repo.DeleteCertification(ctx, 30, cert.ProfileID)
 		require.NoError(t, err)
 		require.NoError(t, mock.ExpectationsWereMet())
 	})

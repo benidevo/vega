@@ -17,17 +17,17 @@ type SettingsRepository interface {
 	GetWorkExperiences(ctx context.Context, profileID int) ([]models.WorkExperience, error)
 	AddWorkExperience(ctx context.Context, experience *models.WorkExperience) error
 	UpdateWorkExperience(ctx context.Context, experience *models.WorkExperience) (*models.WorkExperience, error)
-	DeleteWorkExperience(ctx context.Context, id int) error
+	DeleteWorkExperience(ctx context.Context, id int, profileID int) error
 	DeleteAllWorkExperience(ctx context.Context, profileID int) error
 
 	GetEducation(ctx context.Context, profileID int) ([]models.Education, error)
 	AddEducation(ctx context.Context, education *models.Education) error
 	UpdateEducation(ctx context.Context, education *models.Education) (*models.Education, error)
-	DeleteEducation(ctx context.Context, id int) error
+	DeleteEducation(ctx context.Context, id int, profileID int) error
 	DeleteAllEducation(ctx context.Context, profileID int) error
 
 	GetCertifications(ctx context.Context, profileID int) ([]models.Certification, error)
 	AddCertification(ctx context.Context, certification *models.Certification) error
 	UpdateCertification(ctx context.Context, certification *models.Certification) (*models.Certification, error)
-	DeleteCertification(ctx context.Context, id int) error
+	DeleteCertification(ctx context.Context, id int, profileID int) error
 }

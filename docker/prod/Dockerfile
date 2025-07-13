@@ -19,7 +19,6 @@ RUN CGO_ENABLED=1 GOOS=linux go build \
 FROM alpine:3.20
 
 ARG CLOUD_MODE=false
-ARG COOKIE_SECURE=${CLOUD_MODE}
 
 RUN apk --no-cache add ca-certificates tzdata wget && \
     addgroup -g 1001 -S appgroup && \
@@ -28,7 +27,6 @@ RUN apk --no-cache add ca-certificates tzdata wget && \
 WORKDIR /app
 
 ENV CLOUD_MODE=${CLOUD_MODE}
-ENV COOKIE_SECURE=${COOKIE_SECURE}
 
 COPY --from=builder /build/vega .
 

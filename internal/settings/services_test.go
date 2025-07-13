@@ -84,8 +84,8 @@ func (m *MockProfileRepository) UpdateWorkExperience(ctx context.Context, exp *s
 	return args.Get(0).(*settingsModels.WorkExperience), args.Error(1)
 }
 
-func (m *MockProfileRepository) DeleteWorkExperience(ctx context.Context, id int) error {
-	args := m.Called(ctx, id)
+func (m *MockProfileRepository) DeleteWorkExperience(ctx context.Context, id int, profileID int) error {
+	args := m.Called(ctx, id, profileID)
 	return args.Error(0)
 }
 
@@ -110,8 +110,8 @@ func (m *MockProfileRepository) UpdateEducation(ctx context.Context, edu *settin
 	return args.Get(0).(*settingsModels.Education), args.Error(1)
 }
 
-func (m *MockProfileRepository) DeleteEducation(ctx context.Context, id int) error {
-	args := m.Called(ctx, id)
+func (m *MockProfileRepository) DeleteEducation(ctx context.Context, id int, profileID int) error {
+	args := m.Called(ctx, id, profileID)
 	return args.Error(0)
 }
 
@@ -136,8 +136,8 @@ func (m *MockProfileRepository) UpdateCertification(ctx context.Context, cert *s
 	return args.Get(0).(*settingsModels.Certification), args.Error(1)
 }
 
-func (m *MockProfileRepository) DeleteCertification(ctx context.Context, id int) error {
-	args := m.Called(ctx, id)
+func (m *MockProfileRepository) DeleteCertification(ctx context.Context, id int, profileID int) error {
+	args := m.Called(ctx, id, profileID)
 	return args.Error(0)
 }
 

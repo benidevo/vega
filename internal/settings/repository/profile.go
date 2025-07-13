@@ -364,7 +364,7 @@ func (r *ProfileRepository) UpdateWorkExperience(ctx context.Context, experience
 		UPDATE work_experiences
 		SET company = ?, title = ?, location = ?, start_date = ?, end_date = ?,
 		    description = ?, current = ?, updated_at = ?
-		WHERE id = ?`
+		WHERE id = ? AND profile_id = ?`
 
 	endDate := toNullTime(experience.EndDate)
 	now := time.Now().UTC()
@@ -372,7 +372,7 @@ func (r *ProfileRepository) UpdateWorkExperience(ctx context.Context, experience
 	result, err := r.db.ExecContext(ctx, query,
 		experience.Company, experience.Title, experience.Location,
 		experience.StartDate, endDate, experience.Description,
-		experience.Current, now, experience.ID,
+		experience.Current, now, experience.ID, experience.ProfileID,
 	)
 
 	if err != nil {
@@ -393,10 +393,10 @@ func (r *ProfileRepository) UpdateWorkExperience(ctx context.Context, experience
 }
 
 // DeleteWorkExperience deletes a work experience entry by its ID.
-func (r *ProfileRepository) DeleteWorkExperience(ctx context.Context, id int) error {
-	query := "DELETE FROM work_experiences WHERE id = ?"
+func (r *ProfileRepository) DeleteWorkExperience(ctx context.Context, id int, profileID int) error {
+	query := "DELETE FROM work_experiences WHERE id = ? AND profile_id = ?"
 
-	result, err := r.db.ExecContext(ctx, query, id)
+	result, err := r.db.ExecContext(ctx, query, id, profileID)
 	if err != nil {
 		return err
 	}
@@ -492,7 +492,7 @@ func (r *ProfileRepository) UpdateEducation(ctx context.Context, education *mode
 		UPDATE education
 		SET institution = ?, degree = ?, field_of_study = ?, start_date = ?,
 		    end_date = ?, description = ?, updated_at = ?
-		WHERE id = ?`
+		WHERE id = ? AND profile_id = ?`
 
 	var endDate sql.NullTime
 	if education.EndDate != nil {
@@ -504,7 +504,7 @@ func (r *ProfileRepository) UpdateEducation(ctx context.Context, education *mode
 
 	result, err := r.db.ExecContext(ctx, query,
 		education.Institution, education.Degree, education.FieldOfStudy,
-		education.StartDate, endDate, education.Description, now, education.ID,
+		education.StartDate, endDate, education.Description, now, education.ID, education.ProfileID,
 	)
 
 	if err != nil {
@@ -525,10 +525,10 @@ func (r *ProfileRepository) UpdateEducation(ctx context.Context, education *mode
 }
 
 // DeleteEducation deletes an education record by its ID from the database.
-func (r *ProfileRepository) DeleteEducation(ctx context.Context, id int) error {
-	query := "DELETE FROM education WHERE id = ?"
+func (r *ProfileRepository) DeleteEducation(ctx context.Context, id int, profileID int) error {
+	query := "DELETE FROM education WHERE id = ? AND profile_id = ?"
 
-	result, err := r.db.ExecContext(ctx, query, id)
+	result, err := r.db.ExecContext(ctx, query, id, profileID)
 	if err != nil {
 		return err
 	}
@@ -625,7 +625,7 @@ func (r *ProfileRepository) UpdateCertification(ctx context.Context, certificati
 		UPDATE certifications
 		SET name = ?, issuing_org = ?, issue_date = ?, expiry_date = ?,
 		    credential_id = ?, credential_url = ?, updated_at = ?
-		WHERE id = ?`
+		WHERE id = ? AND profile_id = ?`
 
 	var expiryDate sql.NullTime
 	if certification.ExpiryDate != nil {
@@ -638,7 +638,7 @@ func (r *ProfileRepository) UpdateCertification(ctx context.Context, certificati
 	result, err := r.db.ExecContext(ctx, query,
 		certification.Name, certification.IssuingOrg, certification.IssueDate,
 		expiryDate, certification.CredentialID, certification.CredentialURL,
-		now, certification.ID,
+		now, certification.ID, certification.ProfileID,
 	)
 
 	if err != nil {
@@ -659,10 +659,10 @@ func (r *ProfileRepository) UpdateCertification(ctx context.Context, certificati
 }
 
 // DeleteCertification deletes a certification record by its ID from the database.
-func (r *ProfileRepository) DeleteCertification(ctx context.Context, id int) error {
-	query := "DELETE FROM certifications WHERE id = ?"
+func (r *ProfileRepository) DeleteCertification(ctx context.Context, id int, profileID int) error {
+	query := "DELETE FROM certifications WHERE id = ? AND profile_id = ?"
 
-	result, err := r.db.ExecContext(ctx, query, id)
+	result, err := r.db.ExecContext(ctx, query, id, profileID)
 	if err != nil {
 		return err
 	}
