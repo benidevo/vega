@@ -5,6 +5,9 @@ import (
 )
 
 var (
+	// Authentication errors
+	ErrUnauthorized = commonerrors.New("unauthorized")
+
 	// Model validation errors
 	ErrInvalidSettingsType = commonerrors.New("invalid settings type")
 	ErrFieldRequired       = commonerrors.New("field is required")

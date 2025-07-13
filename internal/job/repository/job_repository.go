@@ -71,7 +71,7 @@ func (r *SQLiteJobRepository) scanJob(s scanner) (*models.Job, error) {
 		&j.ID, &j.Title, &j.Description, &location, &jobType,
 		&sourceURL, &skillsJSON,
 		&applicationURL, &company.ID, &status, &matchScore,
-		&notes, &j.CreatedAt, &j.UpdatedAt,
+		&notes, &j.CreatedAt, &j.UpdatedAt, &j.UserID,
 		&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt,
 	)
 	if err != nil {
@@ -140,7 +140,7 @@ func (r *SQLiteJobRepository) GetBySourceURL(ctx context.Context, userID int, so
 			j.id, j.title, j.description, j.location, j.job_type,
 			j.source_url, j.required_skills,
 			j.application_url, j.company_id, j.status, j.match_score,
-			j.notes, j.created_at, j.updated_at,
+			j.notes, j.created_at, j.updated_at, j.user_id,
 			c.id, c.name, c.created_at, c.updated_at
 		FROM jobs j
 		JOIN companies c ON j.company_id = c.id
@@ -249,7 +249,7 @@ func (r *SQLiteJobRepository) GetByID(ctx context.Context, userID int, id int) (
 			j.id, j.title, j.description, j.location, j.job_type,
 			j.source_url, j.required_skills,
 			j.application_url, j.company_id, j.status, j.match_score,
-			j.notes, j.created_at, j.updated_at,
+			j.notes, j.created_at, j.updated_at, j.user_id,
 			c.id, c.name, c.created_at, c.updated_at
 		FROM jobs j
 		JOIN companies c ON j.company_id = c.id
@@ -282,7 +282,7 @@ func (r *SQLiteJobRepository) GetAll(ctx context.Context, userID int, filter mod
 			j.id, j.title, j.description, j.location, j.job_type,
 			j.source_url, j.required_skills,
 			j.application_url, j.company_id, j.status, j.match_score,
-			j.notes, j.created_at, j.updated_at,
+			j.notes, j.created_at, j.updated_at, j.user_id,
 			c.id, c.name, c.created_at, c.updated_at
 		FROM jobs j
 		JOIN companies c ON j.company_id = c.id

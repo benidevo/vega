@@ -64,9 +64,14 @@ func NewBaseSettingsHandler(service CRUDService, metadata EntityMetadata) *BaseS
 
 // GetAddPage handles the request to display the add entity page
 func (h *BaseSettingsHandler) GetAddPage(c *gin.Context) {
-	userID, _ := c.Get("userID")
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		h.renderer.Error(c, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	userID := userIDValue.(int)
 
-	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID.(int))
+	profile, err := h.service.GetProfileSettings(c.Request.Context(), userID)
 	if err != nil {
 		profile = &models.Profile{}
 	}

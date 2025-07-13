@@ -33,12 +33,15 @@ COPY --from=builder /build/vega .
 COPY --from=builder /build/templates ./templates
 COPY --from=builder /build/migrations ./migrations
 COPY --from=builder /build/static ./static
+COPY ./docker/entrypoint.sh /app/entrypoint.sh
 
 RUN mkdir -p /app/data && \
+    chmod +x /app/entrypoint.sh && \
     chown -R appuser:appgroup /app
 
 USER appuser
 
 EXPOSE 8765
 
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["./vega"]

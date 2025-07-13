@@ -55,6 +55,7 @@ func TestEntityOperations(t *testing.T) {
 		w := httptest.NewRecorder()
 		ctx, _ := gin.CreateTestContext(w)
 		ctx.Request = httptest.NewRequest("POST", "/test", nil)
+		ctx.Set("userID", 123)
 		edu := &settingsModels.Education{
 			ID:          1,
 			ProfileID:   1,
@@ -74,6 +75,7 @@ func TestEntityOperations(t *testing.T) {
 		w := httptest.NewRecorder()
 		ctx, _ := gin.CreateTestContext(w)
 		ctx.Request = httptest.NewRequest("POST", "/test", nil)
+		ctx.Set("userID", 123)
 		cert := &settingsModels.Certification{
 			ID:         1,
 			ProfileID:  1,
@@ -95,6 +97,7 @@ func TestEntityOperations(t *testing.T) {
 		w := httptest.NewRecorder()
 		ctx, _ := gin.CreateTestContext(w)
 		ctx.Request = httptest.NewRequest("POST", "/test", nil)
+		ctx.Set("userID", 123)
 
 		cert := &settingsModels.Certification{
 			ID:         1,
@@ -105,7 +108,7 @@ func TestEntityOperations(t *testing.T) {
 
 		// DeleteEntity first calls GetEntityByID to verify entity exists
 		mockProfileRepo.On("GetEntityByID", context.Background(), 1, 1, "Certification").Return(cert, nil).Once()
-		mockProfileRepo.On("DeleteCertification", context.Background(), 1).Return(nil).Once()
+		mockProfileRepo.On("DeleteCertification", context.Background(), 1, 1).Return(nil).Once()
 
 		err := service.DeleteEntity(ctx, 1, 1, "Certification")
 		require.NoError(t, err)
@@ -116,6 +119,7 @@ func TestEntityOperations(t *testing.T) {
 		w := httptest.NewRecorder()
 		ctx, _ := gin.CreateTestContext(w)
 		ctx.Request = httptest.NewRequest("POST", "/test", nil)
+		ctx.Set("userID", 123)
 
 		// GetEntityByID will be called first and should return an error for invalid type
 		mockProfileRepo.On("GetEntityByID", context.Background(), 1, 1, "invalid_type").Return(nil, settingsModels.ErrSettingsNotFound).Once()
