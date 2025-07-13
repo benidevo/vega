@@ -5,20 +5,20 @@ generate_token() {
     head -c 32 /dev/urandom | base64 | tr -d '\n'
 }
 
-# Generate TOKEN_SECRET if not provided
-if [ -z "$TOKEN_SECRET" ] || [ "$TOKEN_SECRET" = "default-secret-key" ]; then
-    if [ "$CLOUD_MODE" = "false" ]; then
-        echo "=================================================="
-        echo "WARNING: No TOKEN_SECRET provided."
-        echo "Generating a random secret..."
-        echo ""
-        echo "For production use, please set a persistent"
-        echo "TOKEN_SECRET environment variable."
-        echo "=================================================="
-        export TOKEN_SECRET=$(generate_token)
-    else
+# Validate TOKEN_SECRET for cloud deployments
+if [ "$CLOUD_MODE" = "true" ]; then
+    if [ -z "$TOKEN_SECRET" ] || [ "$TOKEN_SECRET" = "default-secret-key" ]; then
         echo "ERROR: TOKEN_SECRET must be set for cloud deployments"
         exit 1
+    fi
+else
+    # For self-hosted deployments, warn if using default secret
+    if [ -z "$TOKEN_SECRET" ] || [ "$TOKEN_SECRET" = "default-secret-key" ]; then
+        echo "=================================================="
+        echo "WARNING: Using default TOKEN_SECRET."
+        echo "For production use, please set a custom"
+        echo "TOKEN_SECRET environment variable."
+        echo "=================================================="
     fi
 fi
 
