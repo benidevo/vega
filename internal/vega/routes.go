@@ -33,11 +33,13 @@ func SetupRoutes(a *App) {
 	}
 
 	authHandler := auth.SetupAuth(a.db, &a.config)
-	homeHandler := home.Setup(a.db, &a.config, a.cache)
-	jobHandler := job.Setup(a.db, &a.config, a.cache)
+	jobService := job.SetupService(a.db, &a.config, a.cache)
+	jobHandler := job.NewJobHandler(jobService, &a.config)
 	settingsHandler := settings.Setup(&a.config, a.db, aiService)
 	authAPIHandler := authapi.Setup(a.db, &a.config)
 	jobAPIHandler := jobapi.Setup(a.db, &a.config, a.cache)
+
+	homeHandler := home.Setup(a.db, &a.config, a.cache, jobService)
 
 	authGroup := a.router.Group("/auth")
 

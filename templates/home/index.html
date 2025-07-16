@@ -93,6 +93,37 @@
     </div>
   </section>
 
+  {{if .quotaStatus}}
+  {{if gt .quotaStatus.Limit 0}}
+  <!-- Quota Usage Widget -->
+  <section class="mb-8 sm:mb-12" aria-labelledby="quota-heading">
+    <h2 id="quota-heading" class="text-lg sm:text-xl font-semibold text-white mb-4 font-heading">AI Analysis Quota</h2>
+    <div class="bg-slate-800 rounded-lg p-4 sm:p-6 border border-slate-700">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-base font-medium text-white">Monthly Job Analyses</h3>
+          <p class="text-sm text-gray-400 mt-1">{{.quotaStatus.Used}} of {{.quotaStatus.Limit}} used</p>
+        </div>
+        <div class="text-right">
+          <p class="text-2xl font-bold {{if eq .quotaStatus.Remaining 0}}text-red-400{{else}}text-primary{{end}}">{{.quotaStatus.Remaining}}</p>
+          <p class="text-xs text-gray-400">remaining</p>
+        </div>
+      </div>
+      
+      <!-- Progress bar -->
+      <div class="w-full bg-gray-700 rounded-full h-3 mb-3">
+        <div class="{{if eq .quotaStatus.Remaining 0}}bg-red-500{{else if le .quotaStatus.Remaining 1}}bg-yellow-500{{else}}bg-primary{{end}} rounded-full h-3 transition-all duration-300" style="width: {{.quotaStatus.Percentage}}%"></div>
+      </div>
+      
+      <div class="flex items-center justify-between text-xs text-gray-400">
+        <span>Resets on {{.quotaStatus.ResetDate.Format "Jan 2"}}</span>
+        <span class="text-gray-300">Re-analysis of existing jobs is always free</span>
+      </div>
+    </div>
+  </section>
+  {{end}}
+  {{end}}
+
   <!-- Quick Actions -->
   <section class="mb-8 sm:mb-12" aria-labelledby="quick-actions-heading">
     <h2 id="quick-actions-heading" class="text-lg sm:text-xl font-semibold text-white mb-4 font-heading">Quick Actions</h2>

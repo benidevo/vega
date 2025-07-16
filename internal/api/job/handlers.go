@@ -91,3 +91,36 @@ func (h *JobAPIHandler) CreateJob(c *gin.Context) {
 		JobID:   createdJob.ID,
 	})
 }
+
+// GetQuotaStatus returns the current quota status for the authenticated user
+func (h *JobAPIHandler) GetQuotaStatus(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized",
+		})
+		return
+	}
+	userID := userIDValue.(int)
+
+	quotaStatus, err := h.jobService.GetQuotaStatus(c.Request.Context(), userID)
+	if err != nil {
+		h.jobService.LogError(err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to get quota status",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"used":  quotaStatus.Used,
+		"limit": quotaStatus.Limit,
+		"remaining": func() int {
+			if quotaStatus.Limit < 0 {
+				return -1 // Unlimited
+			}
+			return quotaStatus.Limit - quotaStatus.Used
+		}(),
+		"reset_date": quotaStatus.ResetDate.Format("2006-01-02"),
+	})
+}

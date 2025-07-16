@@ -24,6 +24,7 @@
         <div class="flex items-center space-x-2">
           <span class="text-primary font-medium">Vega AI</span>
         </div>
+        {{if not .isCloudMode}}
         <div class="flex items-center space-x-2">
           <a href="https://github.com/benidevo/vega-ai" 
              class="text-primary hover:text-primary-dark transition-colors duration-200 underline decoration-1 underline-offset-2"
@@ -37,6 +38,7 @@
             </span>
           </a>
         </div>
+        {{end}}
       </div>
     </div>
   </div>

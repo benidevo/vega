@@ -69,5 +69,6 @@ func (h *Handler) GetHomePage(c *gin.Context) {
 		"recentJobs":     homeData.RecentJobs,
 		"hasJobs":        homeData.HasJobs,
 		"showOnboarding": homeData.ShowOnboarding,
+		"quotaStatus":    homeData.QuotaStatus,
 	})
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/benidevo/vega/internal/config"
 	"github.com/benidevo/vega/internal/job/interfaces"
 	"github.com/benidevo/vega/internal/job/models"
+	"github.com/benidevo/vega/internal/quota"
 	"github.com/benidevo/vega/internal/settings"
 	"github.com/go-playground/validator/v10"
 )
@@ -21,21 +22,55 @@ type JobService struct {
 	jobRepo         interfaces.JobRepository
 	aiService       *ai.AIService
 	settingsService *settings.SettingsService
+	quotaService    *quota.Service
 	cfg             *config.Settings
 	log             *logger.PrivacyLogger
 	validator       *validator.Validate
 }
 
 // NewJobService creates a new JobService instance.
-func NewJobService(jobRepo interfaces.JobRepository, aiService *ai.AIService, settingsService *settings.SettingsService, cfg *config.Settings) *JobService {
+func NewJobService(jobRepo interfaces.JobRepository, aiService *ai.AIService, settingsService *settings.SettingsService, quotaService *quota.Service, cfg *config.Settings) *JobService {
 	return &JobService{
 		jobRepo:         jobRepo,
 		aiService:       aiService,
 		settingsService: settingsService,
+		quotaService:    quotaService,
 		cfg:             cfg,
 		log:             logger.GetPrivacyLogger("job"),
 		validator:       validator.New(),
 	}
+}
+
+// GetQuotaStatus returns the current quota status for a user
+func (s *JobService) GetQuotaStatus(ctx context.Context, userID int) (*quota.QuotaStatus, error) {
+	if s.quotaService == nil {
+		// If quota service is not available, return unlimited quota
+		return &quota.QuotaStatus{
+			Used:      0,
+			Limit:     -1, // -1 indicates no limit
+			ResetDate: time.Now().AddDate(0, 1, 0),
+		}, nil
+	}
+
+	return s.quotaService.GetQuotaStatus(ctx, userID)
+}
+
+// CheckJobQuota checks if a user can analyze a specific job
+func (s *JobService) CheckJobQuota(ctx context.Context, userID int, jobID int) (*quota.QuotaCheckResult, error) {
+	if s.quotaService == nil {
+		// If quota service is not available, allow all operations
+		return &quota.QuotaCheckResult{
+			Allowed: true,
+			Reason:  quota.QuotaReasonOK,
+			Status: quota.QuotaStatus{
+				Used:      0,
+				Limit:     -1,
+				ResetDate: time.Now().AddDate(0, 1, 0),
+			},
+		}, nil
+	}
+
+	return s.quotaService.CanAnalyzeJob(ctx, userID, jobID)
 }
 
 // LogError logs the provided error using the service's logger if the error is not nil.

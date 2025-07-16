@@ -1,6 +1,8 @@
 package home
 
 import (
+	"time"
+
 	"github.com/benidevo/vega/internal/job/models"
 )
 
@@ -14,6 +16,16 @@ type HomePageData struct {
 	ShowOnboarding bool            `json:"show_onboarding"`
 	Title          string          `json:"title"`
 	Page           string          `json:"page"`
+	QuotaStatus    *QuotaStatus    `json:"quota_status"`
+}
+
+// QuotaStatus represents the current quota status for a user
+type QuotaStatus struct {
+	Used       int       `json:"used"`
+	Limit      int       `json:"limit"`
+	Remaining  int       `json:"remaining"`
+	ResetDate  time.Time `json:"reset_date"`
+	Percentage int       `json:"percentage"`
 }
 
 // JobStatsSummary provides key metrics for homepage display

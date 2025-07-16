@@ -162,6 +162,14 @@ func (s *AuthService) RefreshAccessToken(ctx context.Context, refreshToken strin
 		return "", models.ErrInvalidToken
 	}
 
+	if user == nil {
+		s.log.Error().
+			Str("event", "token_refresh_user_nil").
+			Str("user_ref", fmt.Sprintf("user_%d", claims.UserID)).
+			Msg("User not found for token refresh")
+		return "", models.ErrInvalidToken
+	}
+
 	accessToken, err := GenerateAccessToken(user, s.config)
 	if err != nil {
 		s.log.Error().Err(err).

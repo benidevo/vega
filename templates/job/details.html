@@ -240,12 +240,26 @@
           </select>
           <div id="status-response"></div>
 
-          <button id="analyze-button" class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+          {{if .isCloudMode}}
+          {{if gt .quotaCheck.Status.Limit 0}}
+          {{if and (not .isReanalysis) (not .quotaCheck.Allowed)}}
+          <!-- Quota exceeded message -->
+          <div class="w-full mb-3 p-3 bg-red-900 bg-opacity-30 border border-red-800 rounded-lg">
+            <p class="text-red-400 text-sm font-medium">Monthly Limit Reached</p>
+            <p class="text-gray-400 text-xs mt-1">You've used all {{.quotaCheck.Status.Limit}} job analyses this month. Limit resets on {{.quotaCheck.Status.ResetDate.Format "Jan 2"}}.</p>
+          </div>
+          {{end}}
+          {{end}}
+          {{end}}
+          
+          <button id="analyze-button" class="w-full mb-3 py-2.5 px-4 {{if and .isCloudMode (not .isReanalysis) (not .quotaCheck.Allowed)}}bg-gray-600 cursor-not-allowed{{else}}bg-primary hover:bg-primary-dark{{end}} text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+                  {{if and .isCloudMode (not .isReanalysis) (not .quotaCheck.Allowed)}}disabled{{else}}
                   hx-post="/jobs/{{.jobID}}/analyze"
                   hx-target="#ai-analysis"
                   hx-target-error="#analyze-error"
                   hx-swap="innerHTML"
-                  hx-indicator="#analyze-spinner">
+                  hx-indicator="#analyze-spinner"
+                  {{end}}>
             <span id="analyze-spinner" class="htmx-indicator">
               <svg class="animate-spin h-5 w-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -257,8 +271,35 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </span>
-            <span>Analyze Match</span>
+            <span>
+              {{if .isReanalysis}}
+                Re-analyze Job (Free)
+              {{else if .isCloudMode}}
+                {{if .quotaCheck.Allowed}}
+                  Analyze Match ({{.quotaRemaining}} left)
+                {{else}}
+                  Monthly Limit Reached
+                {{end}}
+              {{else}}
+                Analyze Match
+              {{end}}
+            </span>
           </button>
+          
+          {{if .isCloudMode}}
+          {{if gt .quotaCheck.Status.Limit 0}}
+          <!-- Quota usage indicator -->
+          <div class="w-full mb-3">
+            <div class="flex justify-between text-xs text-gray-400 mb-1">
+              <span>Monthly quota</span>
+              <span>{{.quotaCheck.Status.Used}}/{{.quotaCheck.Status.Limit}} used</span>
+            </div>
+            <div class="w-full bg-gray-700 rounded-full h-2">
+              <div class="bg-primary rounded-full h-2 transition-all duration-300" style="width: {{.quotaPercentage}}%"></div>
+            </div>
+          </div>
+          {{end}}
+          {{end}}
 
           <!-- Error display for analyze button -->
           <div id="analyze-error"></div>
