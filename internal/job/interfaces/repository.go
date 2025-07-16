@@ -41,4 +41,8 @@ type JobRepository interface {
 	GetStatsByUserID(ctx context.Context, userID int) (*models.JobStats, error)
 	GetRecentJobsByUserID(ctx context.Context, userID int, limit int) ([]*models.Job, error)
 	GetJobStatsByStatus(ctx context.Context, userID int) (map[models.JobStatus]int, error)
+
+	// Quota-related methods
+	GetMonthlyAnalysisCount(ctx context.Context, userID int) (int, error)
+	SetFirstAnalyzedAt(ctx context.Context, jobID int) error
 }

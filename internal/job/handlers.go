@@ -13,6 +13,7 @@ import (
 	"github.com/benidevo/vega/internal/common/render"
 	"github.com/benidevo/vega/internal/config"
 	"github.com/benidevo/vega/internal/job/models"
+	"github.com/benidevo/vega/internal/quota"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -418,6 +419,22 @@ func (h *JobHandler) GetJobDetails(c *gin.Context) {
 		}
 	}
 
+	// Check quota status for this job
+	quotaCheckResult, err := h.service.CheckJobQuota(c.Request.Context(), userID, jobID)
+	if err != nil {
+		// Log error but don't fail the page load
+		h.service.LogError(err)
+		// Create a default quota result that allows analysis
+		quotaCheckResult = &quota.QuotaCheckResult{
+			Allowed: true,
+			Reason:  "ok",
+			Status: quota.QuotaStatus{
+				Used:  0,
+				Limit: -1,
+			},
+		}
+	}
+
 	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", gin.H{
 		"title":                  "Job Details",
 		"page":                   "job-details",
@@ -431,6 +448,15 @@ func (h *JobHandler) GetJobDetails(c *gin.Context) {
 				return ""
 			}
 			return models.GetSentinelError(profileValidationError).Error()
+		}(),
+		"quotaCheck":     quotaCheckResult,
+		"isReanalysis":   job.FirstAnalyzedAt != nil,
+		"quotaRemaining": quotaCheckResult.Status.Limit - quotaCheckResult.Status.Used,
+		"quotaPercentage": func() int {
+			if quotaCheckResult.Status.Limit <= 0 {
+				return 0
+			}
+			return (quotaCheckResult.Status.Used * 100) / quotaCheckResult.Status.Limit
 		}(),
 	})
 }
@@ -552,6 +578,11 @@ func (h *JobHandler) AnalyzeJobMatch(c *gin.Context) {
 
 	analysis, err := h.service.AnalyzeJobMatch(c.Request.Context(), userID, jobID)
 	if err != nil {
+		// Check for quota exceeded error
+		if errors.Is(err, models.ErrQuotaExceeded) {
+			alerts.RenderError(c, http.StatusTooManyRequests, "Monthly quota exceeded. You can re-analyze existing jobs for free.", alerts.ContextGeneral)
+			return
+		}
 		alerts.RenderError(c, http.StatusBadRequest, models.GetSentinelError(err).Error(), alerts.ContextGeneral)
 		return
 	}

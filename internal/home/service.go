@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/benidevo/vega/internal/job"
 	"github.com/benidevo/vega/internal/job/models"
 	"github.com/benidevo/vega/internal/job/repository"
 )
@@ -11,12 +12,14 @@ import (
 // Service handles business logic for homepage data aggregation
 type Service struct {
 	jobRepository *repository.SQLiteJobRepository
+	jobService    *job.JobService
 }
 
 // NewService creates a new homepage service instance
-func NewService(jobRepository *repository.SQLiteJobRepository) *Service {
+func NewService(jobRepository *repository.SQLiteJobRepository, jobService *job.JobService) *Service {
 	return &Service{
 		jobRepository: jobRepository,
+		jobService:    jobService,
 	}
 }
 
@@ -55,6 +58,30 @@ func (s *Service) GetHomePageData(ctx context.Context, userID int, username stri
 
 	homeData.HasJobs = jobStats.TotalJobs > 0
 	homeData.ShowOnboarding = jobStats.TotalJobs == 0
+
+	// Get quota status if job service is available
+	if s.jobService != nil {
+		quotaStatus, err := s.jobService.GetQuotaStatus(ctx, userID)
+		if err == nil && quotaStatus != nil {
+			remaining := quotaStatus.Limit - quotaStatus.Used
+			if quotaStatus.Limit < 0 {
+				remaining = -1 // Unlimited
+			}
+
+			percentage := 0
+			if quotaStatus.Limit > 0 {
+				percentage = (quotaStatus.Used * 100) / quotaStatus.Limit
+			}
+
+			homeData.QuotaStatus = &QuotaStatus{
+				Used:       quotaStatus.Used,
+				Limit:      quotaStatus.Limit,
+				Remaining:  remaining,
+				ResetDate:  quotaStatus.ResetDate,
+				Percentage: percentage,
+			}
+		}
+	}
 
 	return homeData, nil
 }

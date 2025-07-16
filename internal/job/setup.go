@@ -9,6 +9,7 @@ import (
 	"github.com/benidevo/vega/internal/config"
 	"github.com/benidevo/vega/internal/job/interfaces"
 	"github.com/benidevo/vega/internal/job/repository"
+	"github.com/benidevo/vega/internal/quota"
 	"github.com/benidevo/vega/internal/settings"
 	settingsrepo "github.com/benidevo/vega/internal/settings/repository"
 )
@@ -31,7 +32,14 @@ func SetupService(db *sql.DB, cfg *config.Settings, cache cache.Cache) *JobServi
 	}
 
 	settingsService := SetupSettingsService(db, cfg)
-	return SetupJobService(jobRepo, aiService, settingsService, cfg)
+
+	// Setup quota service
+	quotaAdapter := quota.NewJobRepositoryAdapter(jobRepo)
+	quotaService := quota.NewService(db, quotaAdapter)
+
+	jobService := SetupJobService(jobRepo, aiService, settingsService, quotaService, cfg)
+
+	return jobService
 }
 
 // SetupJobRepository initializes and returns a job repository.
@@ -53,7 +61,7 @@ func SetupSettingsService(db *sql.DB, cfg *config.Settings) *settings.SettingsSe
 	return settings.NewSettingsService(settingsRepo, cfg, authRepo)
 }
 
-// SetupJobService initializes and returns a new JobService using the provided JobRepository, AIService, SettingsService and configuration settings.
-func SetupJobService(repo interfaces.JobRepository, aiService *ai.AIService, settingsService *settings.SettingsService, cfg *config.Settings) *JobService {
-	return NewJobService(repo, aiService, settingsService, cfg)
+// SetupJobService initializes and returns a new JobService using the provided JobRepository, AIService, SettingsService, QuotaService and configuration settings.
+func SetupJobService(repo interfaces.JobRepository, aiService *ai.AIService, settingsService *settings.SettingsService, quotaService *quota.Service, cfg *config.Settings) *JobService {
+	return NewJobService(repo, aiService, settingsService, quotaService, cfg)
 }

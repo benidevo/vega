@@ -43,6 +43,9 @@ var (
 	// Profile validation errors for AI operations
 	ErrProfileIncomplete      = commonerrors.New("please complete your profile to use AI features")
 	ErrProfileSummaryRequired = commonerrors.New("please add a career summary to your profile to use AI features")
+
+	// Quota errors
+	ErrQuotaExceeded = commonerrors.New("monthly quota exceeded")
 )
 
 // WrapError is a convenience function that calls the common errors package

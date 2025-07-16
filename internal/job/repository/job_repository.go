@@ -66,13 +66,14 @@ func (r *SQLiteJobRepository) scanJob(s scanner) (*models.Job, error) {
 	var jobType, status int
 	var matchScore sql.NullInt64
 	var notes, sourceURL, applicationURL, location sql.NullString
+	var firstAnalyzedAt sql.NullTime
 
 	err := s.Scan(
 		&j.ID, &j.Title, &j.Description, &location, &jobType,
 		&sourceURL, &skillsJSON,
 		&applicationURL, &company.ID, &status, &matchScore,
-		&notes, &j.CreatedAt, &j.UpdatedAt, &j.UserID,
-		&company.ID, &company.Name, &company.CreatedAt, &company.UpdatedAt,
+		&notes, &j.CreatedAt, &j.UpdatedAt, &j.UserID, &firstAnalyzedAt,
+		&company.Name, &company.CreatedAt, &company.UpdatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -93,6 +94,9 @@ func (r *SQLiteJobRepository) scanJob(s scanner) (*models.Job, error) {
 	if matchScore.Valid {
 		score := int(matchScore.Int64)
 		j.MatchScore = &score
+	}
+	if firstAnalyzedAt.Valid {
+		j.FirstAnalyzedAt = &firstAnalyzedAt.Time
 	}
 
 	if err := json.Unmarshal([]byte(skillsJSON), &j.RequiredSkills); err != nil {
@@ -140,8 +144,8 @@ func (r *SQLiteJobRepository) GetBySourceURL(ctx context.Context, userID int, so
 			j.id, j.title, j.description, j.location, j.job_type,
 			j.source_url, j.required_skills,
 			j.application_url, j.company_id, j.status, j.match_score,
-			j.notes, j.created_at, j.updated_at, j.user_id,
-			c.id, c.name, c.created_at, c.updated_at
+			j.notes, j.created_at, j.updated_at, j.user_id, j.first_analyzed_at,
+			c.name, c.created_at, c.updated_at
 		FROM jobs j
 		JOIN companies c ON j.company_id = c.id
 		WHERE j.source_url = ? AND j.user_id = ?
@@ -249,8 +253,8 @@ func (r *SQLiteJobRepository) GetByID(ctx context.Context, userID int, id int) (
 			j.id, j.title, j.description, j.location, j.job_type,
 			j.source_url, j.required_skills,
 			j.application_url, j.company_id, j.status, j.match_score,
-			j.notes, j.created_at, j.updated_at, j.user_id,
-			c.id, c.name, c.created_at, c.updated_at
+			j.notes, j.created_at, j.updated_at, j.user_id, j.first_analyzed_at,
+			c.name, c.created_at, c.updated_at
 		FROM jobs j
 		JOIN companies c ON j.company_id = c.id
 		WHERE j.id = ? AND j.user_id = ?
@@ -282,8 +286,8 @@ func (r *SQLiteJobRepository) GetAll(ctx context.Context, userID int, filter mod
 			j.id, j.title, j.description, j.location, j.job_type,
 			j.source_url, j.required_skills,
 			j.application_url, j.company_id, j.status, j.match_score,
-			j.notes, j.created_at, j.updated_at, j.user_id,
-			c.id, c.name, c.created_at, c.updated_at
+			j.notes, j.created_at, j.updated_at, j.user_id, j.first_analyzed_at,
+			c.name, c.created_at, c.updated_at
 		FROM jobs j
 		JOIN companies c ON j.company_id = c.id
 	`
@@ -1074,4 +1078,54 @@ func (r *SQLiteJobRepository) MatchResultBelongsToJob(ctx context.Context, userI
 	}
 
 	return exists, nil
+}
+
+// GetMonthlyAnalysisCount returns the count of jobs analyzed in the current month for a user
+func (r *SQLiteJobRepository) GetMonthlyAnalysisCount(ctx context.Context, userID int) (int, error) {
+	// Get the first day of the current month
+	now := time.Now()
+	firstOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+
+	query := `
+		SELECT COUNT(*) 
+		FROM jobs 
+		WHERE user_id = ? 
+		AND first_analyzed_at IS NOT NULL 
+		AND first_analyzed_at >= ?
+	`
+
+	var count int
+	err := r.db.QueryRowContext(ctx, query, userID, firstOfMonth).Scan(&count)
+	if err != nil {
+		return 0, models.WrapError(models.ErrFailedToGetJob, err)
+	}
+
+	return count, nil
+}
+
+// SetFirstAnalyzedAt sets the first_analyzed_at timestamp for a job if not already set
+func (r *SQLiteJobRepository) SetFirstAnalyzedAt(ctx context.Context, jobID int) error {
+	query := `
+		UPDATE jobs 
+		SET first_analyzed_at = CURRENT_TIMESTAMP 
+		WHERE id = ? 
+		AND first_analyzed_at IS NULL
+	`
+
+	result, err := r.db.ExecContext(ctx, query, jobID)
+	if err != nil {
+		return models.WrapError(models.ErrFailedToUpdateJob, err)
+	}
+
+	// Check if any rows were affected (should be 0 if already analyzed, 1 if newly analyzed)
+	_, err = result.RowsAffected()
+	if err != nil {
+		return models.WrapError(models.ErrFailedToUpdateJob, err)
+	}
+
+	// Invalidate caches for this job
+	// Note: We don't have userID here, so we can't invalidate user-specific caches
+	// This is acceptable as the quota service handles its own caching
+
+	return nil
 }

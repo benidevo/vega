@@ -39,6 +39,39 @@ func (s *JobService) AnalyzeJobMatch(ctx context.Context, userID, jobID int) (*m
 		return nil, models.ErrProfileServiceRequired
 	}
 
+	// Check quota if quota service is available
+	if s.quotaService != nil {
+		quotaResult, err := s.quotaService.CanAnalyzeJob(ctx, userID, jobID)
+		if err != nil {
+			s.log.Error().Err(err).
+				Str("user_ref", userRef).
+				Int("job_id", jobID).
+				Str("error_type", "quota_check_failed").
+				Msg("Failed to check quota")
+			return nil, fmt.Errorf("failed to check quota: %w", err)
+		}
+
+		if !quotaResult.Allowed {
+			s.log.Warn().
+				Str("user_ref", userRef).
+				Int("job_id", jobID).
+				Str("reason", quotaResult.Reason).
+				Int("used", quotaResult.Status.Used).
+				Int("limit", quotaResult.Status.Limit).
+				Str("error_type", "quota_exceeded").
+				Msg("Job analysis quota exceeded")
+			return nil, models.ErrQuotaExceeded
+		}
+
+		s.log.Debug().
+			Str("user_ref", userRef).
+			Int("job_id", jobID).
+			Str("reason", quotaResult.Reason).
+			Int("used", quotaResult.Status.Used).
+			Int("limit", quotaResult.Status.Limit).
+			Msg("Quota check passed")
+	}
+
 	job, err := s.GetJob(ctx, userID, jobID)
 	if err != nil {
 		s.log.Error().Err(err).
@@ -139,6 +172,18 @@ func (s *JobService) AnalyzeJobMatch(ctx context.Context, userID, jobID int) (*m
 			Int("job_id", jobID).
 			Int("match_score", result.MatchScore).
 			Msg("Job match score updated successfully")
+	}
+
+	// Record the analysis in quota system if available
+	if s.quotaService != nil {
+		if err := s.quotaService.RecordAnalysis(ctx, userID, jobID); err != nil {
+			s.log.Warn().Err(err).
+				Str("user_ref", userRef).
+				Int("job_id", jobID).
+				Str("error_type", "quota_record_failed").
+				Msg("Failed to record analysis in quota system, but analysis completed")
+			// Don't fail the operation if quota recording fails
+		}
 	}
 
 	s.log.Info().

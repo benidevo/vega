@@ -14,7 +14,7 @@ func TestJobService_DeleteMatchResult(t *testing.T) {
 		// Arrange
 		mockRepo := new(MockJobRepository)
 		cfg := setupTestConfig()
-		service := NewJobService(mockRepo, nil, nil, cfg)
+		service := NewJobService(mockRepo, nil, nil, nil, cfg)
 		ctx := context.Background()
 		jobID := 1
 		matchID := 100
@@ -31,7 +31,7 @@ func TestJobService_DeleteMatchResult(t *testing.T) {
 	t.Run("invalid job ID", func(t *testing.T) {
 		mockRepo := new(MockJobRepository)
 		cfg := setupTestConfig()
-		service := NewJobService(mockRepo, nil, nil, cfg)
+		service := NewJobService(mockRepo, nil, nil, nil, cfg)
 		ctx := context.Background()
 
 		err := service.DeleteMatchResult(ctx, testUserID, 0, 100)
@@ -44,7 +44,7 @@ func TestJobService_DeleteMatchResult(t *testing.T) {
 	t.Run("invalid match ID", func(t *testing.T) {
 		mockRepo := new(MockJobRepository)
 		cfg := setupTestConfig()
-		service := NewJobService(mockRepo, nil, nil, cfg)
+		service := NewJobService(mockRepo, nil, nil, nil, cfg)
 		ctx := context.Background()
 
 		err := service.DeleteMatchResult(ctx, testUserID, 1, 0)
@@ -57,7 +57,7 @@ func TestJobService_DeleteMatchResult(t *testing.T) {
 	t.Run("match result does not belong to job", func(t *testing.T) {
 		mockRepo := new(MockJobRepository)
 		cfg := setupTestConfig()
-		service := NewJobService(mockRepo, nil, nil, cfg)
+		service := NewJobService(mockRepo, nil, nil, nil, cfg)
 		ctx := context.Background()
 		jobID := 1
 		matchID := 100
@@ -74,7 +74,7 @@ func TestJobService_DeleteMatchResult(t *testing.T) {
 	t.Run("error checking match ownership", func(t *testing.T) {
 		mockRepo := new(MockJobRepository)
 		cfg := setupTestConfig()
-		service := NewJobService(mockRepo, nil, nil, cfg)
+		service := NewJobService(mockRepo, nil, nil, nil, cfg)
 		ctx := context.Background()
 		jobID := 1
 		matchID := 100
@@ -93,7 +93,7 @@ func TestJobService_DeleteMatchResult(t *testing.T) {
 		// Arrange
 		mockRepo := new(MockJobRepository)
 		cfg := setupTestConfig()
-		service := NewJobService(mockRepo, nil, nil, cfg)
+		service := NewJobService(mockRepo, nil, nil, nil, cfg)
 		ctx := context.Background()
 		jobID := 1
 		matchID := 100
