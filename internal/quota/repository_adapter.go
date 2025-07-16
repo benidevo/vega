@@ -32,11 +32,6 @@ func (a *JobRepositoryAdapter) GetByID(ctx context.Context, userID, jobID int) (
 	}, nil
 }
 
-// GetMonthlyAnalysisCount delegates to the job repository
-func (a *JobRepositoryAdapter) GetMonthlyAnalysisCount(ctx context.Context, userID int) (int, error) {
-	return a.jobRepo.GetMonthlyAnalysisCount(ctx, userID)
-}
-
 // SetFirstAnalyzedAt delegates to the job repository
 func (a *JobRepositoryAdapter) SetFirstAnalyzedAt(ctx context.Context, jobID int) error {
 	return a.jobRepo.SetFirstAnalyzedAt(ctx, jobID)

@@ -10,7 +10,6 @@ import (
 // JobRepository interface defines methods the quota service needs from the job repository
 type JobRepository interface {
 	GetByID(ctx context.Context, userID, jobID int) (*Job, error)
-	GetMonthlyAnalysisCount(ctx context.Context, userID int) (int, error)
 	SetFirstAnalyzedAt(ctx context.Context, jobID int) error
 }
 

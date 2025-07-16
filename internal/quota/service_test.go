@@ -32,11 +32,6 @@ func (m *MockJobRepository) GetByID(ctx context.Context, userID, jobID int) (*Jo
 	return args.Get(0).(*Job), args.Error(1)
 }
 
-func (m *MockJobRepository) GetMonthlyAnalysisCount(ctx context.Context, userID int) (int, error) {
-	args := m.Called(ctx, userID)
-	return args.Int(0), args.Error(1)
-}
-
 func (m *MockJobRepository) SetFirstAnalyzedAt(ctx context.Context, jobID int) error {
 	args := m.Called(ctx, jobID)
 	return args.Error(0)
@@ -62,7 +57,6 @@ func TestService_NonCloudMode(t *testing.T) {
 
 		// Should not call any repository methods in non-cloud mode
 		mockRepo.AssertNotCalled(t, "GetByID")
-		mockRepo.AssertNotCalled(t, "GetMonthlyAnalysisCount")
 	})
 
 	t.Run("GetQuotaStatus returns unlimited quota", func(t *testing.T) {
