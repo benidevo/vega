@@ -16,20 +16,36 @@ type JobRepository interface {
 
 // Service handles quota management
 type Service struct {
-	db      *sql.DB
-	jobRepo JobRepository
+	db          *sql.DB
+	jobRepo     JobRepository
+	isCloudMode bool
 }
 
 // NewService creates a new quota service
-func NewService(db *sql.DB, jobRepo JobRepository) *Service {
+func NewService(db *sql.DB, jobRepo JobRepository, isCloudMode bool) *Service {
 	return &Service{
-		db:      db,
-		jobRepo: jobRepo,
+		db:          db,
+		jobRepo:     jobRepo,
+		isCloudMode: isCloudMode,
 	}
 }
 
 // CanAnalyzeJob checks if a user can analyze a specific job
 func (s *Service) CanAnalyzeJob(ctx context.Context, userID int, jobID int) (*QuotaCheckResult, error) {
+	// In non-cloud mode, always allow unlimited access
+	if !s.isCloudMode {
+		return &QuotaCheckResult{
+			Allowed: true,
+			Reason:  QuotaReasonOK,
+			Status: QuotaStatus{
+				Used:      0,
+				Limit:     -1, // -1 indicates unlimited
+				ResetDate: time.Time{}, // No reset date for unlimited
+			},
+		}, nil
+	}
+
+	// Cloud mode: enforce quotas
 	// 1. Check if job was previously analyzed
 	job, err := s.jobRepo.GetByID(ctx, userID, jobID)
 	if err != nil {
@@ -75,6 +91,12 @@ func (s *Service) CanAnalyzeJob(ctx context.Context, userID int, jobID int) (*Qu
 
 // RecordAnalysis records that a job has been analyzed
 func (s *Service) RecordAnalysis(ctx context.Context, userID int, jobID int) error {
+	// In non-cloud mode, don't track quota usage
+	if !s.isCloudMode {
+		return nil
+	}
+
+	// Cloud mode: track quota usage
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
@@ -121,6 +143,16 @@ func (s *Service) RecordAnalysis(ctx context.Context, userID int, jobID int) err
 
 // GetMonthlyUsage gets the current month's usage for a user
 func (s *Service) GetMonthlyUsage(ctx context.Context, userID int) (*QuotaUsage, error) {
+	// In non-cloud mode, always return zero usage
+	if !s.isCloudMode {
+		return &QuotaUsage{
+			UserID:       userID,
+			MonthYear:    getCurrentMonthYear(),
+			JobsAnalyzed: 0,
+			UpdatedAt:    time.Now(),
+		}, nil
+	}
+
 	monthYear := getCurrentMonthYear()
 
 	usage := &QuotaUsage{
@@ -151,6 +183,16 @@ func (s *Service) GetMonthlyUsage(ctx context.Context, userID int) (*QuotaUsage,
 
 // GetQuotaStatus returns the current quota status for a user
 func (s *Service) GetQuotaStatus(ctx context.Context, userID int) (*QuotaStatus, error) {
+	// In non-cloud mode, return unlimited quota
+	if !s.isCloudMode {
+		return &QuotaStatus{
+			Used:      0,
+			Limit:     -1, // -1 indicates unlimited
+			ResetDate: time.Time{}, // No reset date for unlimited
+		}, nil
+	}
+
+	// Cloud mode: return actual quota status
 	usage, err := s.GetMonthlyUsage(ctx, userID)
 	if err != nil {
 		return nil, err

@@ -24,6 +24,7 @@ func (r *HTMLRenderer) BaseTemplateData(c *gin.Context) gin.H {
 		"currentYear":         time.Now().Year(),
 		"securityPageEnabled": r.cfg.SecurityPageEnabled,
 		"username":            username,
+		"isCloudMode":         r.cfg.IsCloudMode,
 	}
 }
 

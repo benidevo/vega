@@ -458,6 +458,7 @@ func (h *JobHandler) GetJobDetails(c *gin.Context) {
 			}
 			return (quotaCheckResult.Status.Used * 100) / quotaCheckResult.Status.Limit
 		}(),
+		"isCloudMode": h.cfg.IsCloudMode,
 	})
 }
 

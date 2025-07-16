@@ -35,7 +35,7 @@ func SetupService(db *sql.DB, cfg *config.Settings, cache cache.Cache) *JobServi
 
 	// Setup quota service
 	quotaAdapter := quota.NewJobRepositoryAdapter(jobRepo)
-	quotaService := quota.NewService(db, quotaAdapter)
+	quotaService := quota.NewService(db, quotaAdapter, cfg.IsCloudMode)
 
 	jobService := SetupJobService(jobRepo, aiService, settingsService, quotaService, cfg)
 

@@ -240,6 +240,7 @@
           </select>
           <div id="status-response"></div>
 
+          {{if .isCloudMode}}
           {{if .quotaCheck.Status.Limit}}
           {{if and (not .isReanalysis) (not .quotaCheck.Allowed)}}
           <!-- Quota exceeded message -->
@@ -249,9 +250,10 @@
           </div>
           {{end}}
           {{end}}
+          {{end}}
           
-          <button id="analyze-button" class="w-full mb-3 py-2.5 px-4 {{if and (not .isReanalysis) (not .quotaCheck.Allowed)}}bg-gray-600 cursor-not-allowed{{else}}bg-primary hover:bg-primary-dark{{end}} text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
-                  {{if and (not .isReanalysis) (not .quotaCheck.Allowed)}}disabled{{else}}
+          <button id="analyze-button" class="w-full mb-3 py-2.5 px-4 {{if and .isCloudMode (not .isReanalysis) (not .quotaCheck.Allowed)}}bg-gray-600 cursor-not-allowed{{else}}bg-primary hover:bg-primary-dark{{end}} text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+                  {{if and .isCloudMode (not .isReanalysis) (not .quotaCheck.Allowed)}}disabled{{else}}
                   hx-post="/jobs/{{.jobID}}/analyze"
                   hx-target="#ai-analysis"
                   hx-target-error="#analyze-error"
@@ -272,14 +274,19 @@
             <span>
               {{if .isReanalysis}}
                 Re-analyze Job (Free)
-              {{else if .quotaCheck.Allowed}}
-                Analyze Match ({{.quotaRemaining}} left)
+              {{else if .isCloudMode}}
+                {{if .quotaCheck.Allowed}}
+                  Analyze Match ({{.quotaRemaining}} left)
+                {{else}}
+                  Monthly Limit Reached
+                {{end}}
               {{else}}
-                Monthly Limit Reached
+                Analyze Match
               {{end}}
             </span>
           </button>
           
+          {{if .isCloudMode}}
           {{if and .quotaCheck.Status.Limit (gt .quotaCheck.Status.Limit 0)}}
           <!-- Quota usage indicator -->
           <div class="w-full mb-3">
@@ -291,6 +298,7 @@
               <div class="bg-primary rounded-full h-2 transition-all duration-300" style="width: {{.quotaPercentage}}%"></div>
             </div>
           </div>
+          {{end}}
           {{end}}
 
           <!-- Error display for analyze button -->
