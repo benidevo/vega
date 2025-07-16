@@ -241,7 +241,7 @@
           <div id="status-response"></div>
 
           {{if .isCloudMode}}
-          {{if .quotaCheck.Status.Limit}}
+          {{if gt .quotaCheck.Status.Limit 0}}
           {{if and (not .isReanalysis) (not .quotaCheck.Allowed)}}
           <!-- Quota exceeded message -->
           <div class="w-full mb-3 p-3 bg-red-900 bg-opacity-30 border border-red-800 rounded-lg">
@@ -287,7 +287,7 @@
           </button>
           
           {{if .isCloudMode}}
-          {{if and .quotaCheck.Status.Limit (gt .quotaCheck.Status.Limit 0)}}
+          {{if gt .quotaCheck.Status.Limit 0}}
           <!-- Quota usage indicator -->
           <div class="w-full mb-3">
             <div class="flex justify-between text-xs text-gray-400 mb-1">
