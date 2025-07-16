@@ -175,14 +175,13 @@ func (s *JobService) AnalyzeJobMatch(ctx context.Context, userID, jobID int) (*m
 	}
 
 	// Record the analysis in quota system if available
-	if s.quotaService != nil {
+	if s.quotaService != nil && job.FirstAnalyzedAt == nil {
 		if err := s.quotaService.RecordAnalysis(ctx, userID, jobID); err != nil {
 			s.log.Warn().Err(err).
 				Str("user_ref", userRef).
 				Int("job_id", jobID).
 				Str("error_type", "quota_record_failed").
 				Msg("Failed to record analysis in quota system, but analysis completed")
-			// Don't fail the operation if quota recording fails
 		}
 	}
 

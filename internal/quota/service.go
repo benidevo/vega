@@ -39,7 +39,7 @@ func (s *Service) CanAnalyzeJob(ctx context.Context, userID int, jobID int) (*Qu
 			Reason:  QuotaReasonOK,
 			Status: QuotaStatus{
 				Used:      0,
-				Limit:     -1, // -1 indicates unlimited
+				Limit:     -1,          // -1 indicates unlimited
 				ResetDate: time.Time{}, // No reset date for unlimited
 			},
 		}, nil
@@ -110,32 +110,18 @@ func (s *Service) RecordAnalysis(ctx context.Context, userID int, jobID int) err
 
 	monthYear := getCurrentMonthYear()
 
-	updateQuery := `
-		UPDATE user_quota_usage
-		SET jobs_analyzed = jobs_analyzed + 1,
-		    updated_at = CURRENT_TIMESTAMP
-		WHERE user_id = ? AND month_year = ?
+	// Use UPSERT pattern to avoid race conditions
+	upsertQuery := `
+		INSERT INTO user_quota_usage (user_id, month_year, jobs_analyzed, updated_at)
+		VALUES (?, ?, 1, CURRENT_TIMESTAMP)
+		ON CONFLICT(user_id, month_year) DO UPDATE SET
+			jobs_analyzed = jobs_analyzed + 1,
+			updated_at = CURRENT_TIMESTAMP
 	`
 
-	result, err := tx.ExecContext(ctx, updateQuery, userID, monthYear)
+	_, err = tx.ExecContext(ctx, upsertQuery, userID, monthYear)
 	if err != nil {
 		return fmt.Errorf("failed to update quota usage: %w", err)
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("failed to check rows affected: %w", err)
-	}
-
-	if rowsAffected == 0 {
-		insertQuery := `
-			INSERT INTO user_quota_usage (user_id, month_year, jobs_analyzed, updated_at)
-			VALUES (?, ?, 1, CURRENT_TIMESTAMP)
-		`
-		_, err = tx.ExecContext(ctx, insertQuery, userID, monthYear)
-		if err != nil {
-			return fmt.Errorf("failed to insert quota usage: %w", err)
-		}
 	}
 
 	return tx.Commit()
@@ -187,7 +173,7 @@ func (s *Service) GetQuotaStatus(ctx context.Context, userID int) (*QuotaStatus,
 	if !s.isCloudMode {
 		return &QuotaStatus{
 			Used:      0,
-			Limit:     -1, // -1 indicates unlimited
+			Limit:     -1,          // -1 indicates unlimited
 			ResetDate: time.Time{}, // No reset date for unlimited
 		}, nil
 	}
@@ -205,16 +191,16 @@ func (s *Service) GetQuotaStatus(ctx context.Context, userID int) (*QuotaStatus,
 	}, nil
 }
 
-// getCurrentMonthYear returns the current month in "YYYY-MM" format
+// getCurrentMonthYear returns the current month in "YYYY-MM" format (UTC)
 func getCurrentMonthYear() string {
-	return time.Now().Format("2006-01")
+	return time.Now().UTC().Format("2006-01")
 }
 
-// getNextMonthStart returns the first day of next month
+// getNextMonthStart returns the first day of next month (UTC)
 func getNextMonthStart() time.Time {
-	now := time.Now()
+	now := time.Now().UTC()
 	// Get first day of current month
-	firstOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	firstOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
 	// Add one month
 	return firstOfMonth.AddDate(0, 1, 0)
 }

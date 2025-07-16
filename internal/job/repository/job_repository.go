@@ -1082,15 +1082,15 @@ func (r *SQLiteJobRepository) MatchResultBelongsToJob(ctx context.Context, userI
 
 // GetMonthlyAnalysisCount returns the count of jobs analyzed in the current month for a user
 func (r *SQLiteJobRepository) GetMonthlyAnalysisCount(ctx context.Context, userID int) (int, error) {
-	// Get the first day of the current month
-	now := time.Now()
-	firstOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	// Get the first day of the current month (UTC)
+	now := time.Now().UTC()
+	firstOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
 
 	query := `
-		SELECT COUNT(*) 
-		FROM jobs 
-		WHERE user_id = ? 
-		AND first_analyzed_at IS NOT NULL 
+		SELECT COUNT(*)
+		FROM jobs
+		WHERE user_id = ?
+		AND first_analyzed_at IS NOT NULL
 		AND first_analyzed_at >= ?
 	`
 
@@ -1106,9 +1106,9 @@ func (r *SQLiteJobRepository) GetMonthlyAnalysisCount(ctx context.Context, userI
 // SetFirstAnalyzedAt sets the first_analyzed_at timestamp for a job if not already set
 func (r *SQLiteJobRepository) SetFirstAnalyzedAt(ctx context.Context, jobID int) error {
 	query := `
-		UPDATE jobs 
-		SET first_analyzed_at = CURRENT_TIMESTAMP 
-		WHERE id = ? 
+		UPDATE jobs
+		SET first_analyzed_at = CURRENT_TIMESTAMP
+		WHERE id = ?
 		AND first_analyzed_at IS NULL
 	`
 
@@ -1122,10 +1122,6 @@ func (r *SQLiteJobRepository) SetFirstAnalyzedAt(ctx context.Context, jobID int)
 	if err != nil {
 		return models.WrapError(models.ErrFailedToUpdateJob, err)
 	}
-
-	// Invalidate caches for this job
-	// Note: We don't have userID here, so we can't invalidate user-specific caches
-	// This is acceptable as the quota service handles its own caching
 
 	return nil
 }

@@ -50,16 +50,16 @@ func TestService_NonCloudMode(t *testing.T) {
 	t.Run("CanAnalyzeJob returns unlimited access", func(t *testing.T) {
 		mockRepo := new(MockJobRepository)
 		service := NewService(nil, mockRepo, false) // Non-cloud mode
-		
+
 		result, err := service.CanAnalyzeJob(ctx, userID, jobID)
-		
+
 		assert.NoError(t, err)
 		assert.True(t, result.Allowed)
 		assert.Equal(t, QuotaReasonOK, result.Reason)
 		assert.Equal(t, -1, result.Status.Limit) // Unlimited
 		assert.Equal(t, 0, result.Status.Used)
 		assert.Equal(t, time.Time{}, result.Status.ResetDate)
-		
+
 		// Should not call any repository methods in non-cloud mode
 		mockRepo.AssertNotCalled(t, "GetByID")
 		mockRepo.AssertNotCalled(t, "GetMonthlyAnalysisCount")
@@ -68,9 +68,9 @@ func TestService_NonCloudMode(t *testing.T) {
 	t.Run("GetQuotaStatus returns unlimited quota", func(t *testing.T) {
 		mockRepo := new(MockJobRepository)
 		service := NewService(nil, mockRepo, false) // Non-cloud mode
-		
+
 		status, err := service.GetQuotaStatus(ctx, userID)
-		
+
 		assert.NoError(t, err)
 		assert.Equal(t, -1, status.Limit) // Unlimited
 		assert.Equal(t, 0, status.Used)
@@ -80,11 +80,11 @@ func TestService_NonCloudMode(t *testing.T) {
 	t.Run("RecordAnalysis does nothing", func(t *testing.T) {
 		mockRepo := new(MockJobRepository)
 		service := NewService(nil, mockRepo, false) // Non-cloud mode
-		
+
 		err := service.RecordAnalysis(ctx, userID, jobID)
-		
+
 		assert.NoError(t, err)
-		
+
 		// Should not call any repository methods
 		mockRepo.AssertNotCalled(t, "SetFirstAnalyzedAt")
 	})
@@ -92,9 +92,9 @@ func TestService_NonCloudMode(t *testing.T) {
 	t.Run("GetMonthlyUsage returns zero usage", func(t *testing.T) {
 		mockRepo := new(MockJobRepository)
 		service := NewService(nil, mockRepo, false) // Non-cloud mode
-		
+
 		usage, err := service.GetMonthlyUsage(ctx, userID)
-		
+
 		assert.NoError(t, err)
 		assert.Equal(t, userID, usage.UserID)
 		assert.Equal(t, 0, usage.JobsAnalyzed)
@@ -131,7 +131,7 @@ func TestService_CloudMode(t *testing.T) {
 		assert.Equal(t, QuotaReasonOK, result.Reason)
 		assert.Equal(t, FreeUserMonthlyLimit, result.Status.Limit)
 		assert.Equal(t, 0, result.Status.Used)
-		
+
 		mockRepo.AssertExpectations(t)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
@@ -162,7 +162,7 @@ func TestService_CloudMode(t *testing.T) {
 		assert.Equal(t, QuotaReasonLimitReached, result.Reason)
 		assert.Equal(t, FreeUserMonthlyLimit, result.Status.Limit)
 		assert.Equal(t, FreeUserMonthlyLimit, result.Status.Used)
-		
+
 		mockRepo.AssertExpectations(t)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
@@ -192,7 +192,7 @@ func TestService_CloudMode(t *testing.T) {
 		assert.NoError(t, err)
 		assert.True(t, result.Allowed)
 		assert.Equal(t, QuotaReasonReanalysis, result.Reason)
-		
+
 		mockRepo.AssertExpectations(t)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
@@ -212,13 +212,8 @@ func TestService_CloudMode(t *testing.T) {
 		// Begin transaction
 		mock.ExpectBegin()
 
-		// Expect UPDATE attempt first
-		mock.ExpectExec("UPDATE user_quota_usage SET jobs_analyzed = jobs_analyzed \\+ 1").
-			WithArgs(userID, monthYear).
-			WillReturnResult(sqlmock.NewResult(0, 0)) // No rows affected
-
-		// Since no rows were updated, expect INSERT
-		mock.ExpectExec("INSERT INTO user_quota_usage \\(user_id, month_year, jobs_analyzed, updated_at\\) VALUES \\(\\?, \\?, 1, CURRENT_TIMESTAMP\\)").
+		// Expect UPSERT query
+		mock.ExpectExec("INSERT INTO user_quota_usage \\(user_id, month_year, jobs_analyzed, updated_at\\) VALUES \\(\\?, \\?, 1, CURRENT_TIMESTAMP\\) ON CONFLICT\\(user_id, month_year\\) DO UPDATE SET jobs_analyzed = jobs_analyzed \\+ 1, updated_at = CURRENT_TIMESTAMP").
 			WithArgs(userID, monthYear).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
@@ -247,10 +242,10 @@ func TestService_CloudMode(t *testing.T) {
 		// Begin transaction
 		mock.ExpectBegin()
 
-		// Expect UPDATE to succeed
-		mock.ExpectExec("UPDATE user_quota_usage SET jobs_analyzed = jobs_analyzed \\+ 1").
+		// Expect UPSERT query (same as new record, but will update existing)
+		mock.ExpectExec("INSERT INTO user_quota_usage \\(user_id, month_year, jobs_analyzed, updated_at\\) VALUES \\(\\?, \\?, 1, CURRENT_TIMESTAMP\\) ON CONFLICT\\(user_id, month_year\\) DO UPDATE SET jobs_analyzed = jobs_analyzed \\+ 1, updated_at = CURRENT_TIMESTAMP").
 			WithArgs(userID, monthYear).
-			WillReturnResult(sqlmock.NewResult(0, 1)) // 1 row affected
+			WillReturnResult(sqlmock.NewResult(0, 1)) // 1 row affected (update path)
 
 		// Commit transaction
 		mock.ExpectCommit()
@@ -284,7 +279,7 @@ func TestService_CloudMode(t *testing.T) {
 		assert.Equal(t, FreeUserMonthlyLimit, status.Limit)
 		assert.Equal(t, usedCount, status.Used)
 		assert.NotEqual(t, time.Time{}, status.ResetDate)
-		
+
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 }
