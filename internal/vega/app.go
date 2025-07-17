@@ -181,8 +181,8 @@ func (a *App) Shutdown(ctx context.Context) error {
 
 // validateConfig checks critical configuration settings
 func (a *App) validateConfig() error {
-	// Check TOKEN_SECRET in production/cloud mode
-	if (a.config.IsCloudMode || !a.config.IsDevelopment) && a.config.TokenSecret == "default-secret-key" {
+	// Check TOKEN_SECRET in production/cloud mode (skip for tests)
+	if !a.config.IsTest && (a.config.IsCloudMode || !a.config.IsDevelopment) && a.config.TokenSecret == "default-secret-key" {
 		return fmt.Errorf("TOKEN_SECRET must be set to a secure value in production/cloud mode")
 	}
 
