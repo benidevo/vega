@@ -9,19 +9,20 @@ import (
 	"github.com/benidevo/vega/internal/config"
 	"github.com/benidevo/vega/internal/job/interfaces"
 	"github.com/benidevo/vega/internal/job/repository"
+	"github.com/benidevo/vega/internal/monitoring"
 	"github.com/benidevo/vega/internal/quota"
 	"github.com/benidevo/vega/internal/settings"
 	settingsrepo "github.com/benidevo/vega/internal/settings/repository"
 )
 
 // Setup initializes the job package dependencies and returns a JobHandler.
-func Setup(db *sql.DB, cfg *config.Settings, cache cache.Cache) *JobHandler {
-	service := SetupService(db, cfg, cache)
+func Setup(db *sql.DB, cfg *config.Settings, cache cache.Cache, monitor *monitoring.Monitor) *JobHandler {
+	service := SetupService(db, cfg, cache, monitor)
 	return NewJobHandler(service, cfg)
 }
 
 // SetupService initializes just the job service without the handler.
-func SetupService(db *sql.DB, cfg *config.Settings, cache cache.Cache) *JobService {
+func SetupService(db *sql.DB, cfg *config.Settings, cache cache.Cache, monitor *monitoring.Monitor) *JobService {
 	jobRepo := SetupJobRepository(db, cache)
 	aiService, err := SetupAIService(cfg)
 	if err != nil {
@@ -37,7 +38,18 @@ func SetupService(db *sql.DB, cfg *config.Settings, cache cache.Cache) *JobServi
 	quotaAdapter := quota.NewJobRepositoryAdapter(jobRepo)
 	quotaService := quota.NewService(db, quotaAdapter, cfg.IsCloudMode)
 
-	jobService := SetupJobService(jobRepo, aiService, settingsService, quotaService, cfg)
+	// Wrap quota service with monitoring if available and in cloud mode
+	var quotaServiceWithMetrics quota.QuotaService
+	if monitor != nil && cfg.IsCloudMode {
+		quotaServiceWithMetrics = monitoring.NewQuotaServiceWithMetrics(quotaService, monitor)
+	} else {
+		quotaServiceWithMetrics = quotaService
+	}
+
+	jobService := NewJobService(jobRepo, aiService, settingsService, quotaServiceWithMetrics, cfg)
+	if monitor != nil && cfg.IsCloudMode {
+		jobService.monitor = monitor
+	}
 
 	return jobService
 }
@@ -61,7 +73,3 @@ func SetupSettingsService(db *sql.DB, cfg *config.Settings) *settings.SettingsSe
 	return settings.NewSettingsService(settingsRepo, cfg, authRepo)
 }
 
-// SetupJobService initializes and returns a new JobService using the provided JobRepository, AIService, SettingsService, QuotaService and configuration settings.
-func SetupJobService(repo interfaces.JobRepository, aiService *ai.AIService, settingsService *settings.SettingsService, quotaService *quota.Service, cfg *config.Settings) *JobService {
-	return NewJobService(repo, aiService, settingsService, quotaService, cfg)
-}

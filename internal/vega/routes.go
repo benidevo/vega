@@ -10,6 +10,7 @@ import (
 	"github.com/benidevo/vega/internal/common/render"
 	"github.com/benidevo/vega/internal/home"
 	"github.com/benidevo/vega/internal/job"
+	"github.com/benidevo/vega/internal/middleware"
 	"github.com/benidevo/vega/internal/settings"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -19,12 +20,20 @@ import (
 func SetupRoutes(a *App) {
 	a.router.Use(globalErrorHandler(a.renderer))
 
+	// rate limiting middleware
+	a.router.Use(middleware.PathRateLimiter())
+
 	a.router.Static("/static", "./static")
 
 	// health check
 	a.router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
+
+	// metrics endpoint (protected in cloud mode)
+	if a.monitor != nil {
+		a.router.GET("/metrics", gin.WrapH(a.monitor))
+	}
 
 	aiService, err := ai.Setup(&a.config)
 	if err != nil {
@@ -33,11 +42,11 @@ func SetupRoutes(a *App) {
 	}
 
 	authHandler := auth.SetupAuth(a.db, &a.config)
-	jobService := job.SetupService(a.db, &a.config, a.cache)
+	jobService := job.SetupService(a.db, &a.config, a.cache, a.monitor)
 	jobHandler := job.NewJobHandler(jobService, &a.config)
 	settingsHandler := settings.Setup(&a.config, a.db, aiService)
 	authAPIHandler := authapi.Setup(a.db, &a.config)
-	jobAPIHandler := jobapi.Setup(a.db, &a.config, a.cache)
+	jobAPIHandler := jobapi.Setup(a.db, &a.config, a.cache, a.monitor)
 
 	homeHandler := home.Setup(a.db, &a.config, a.cache, jobService)
 

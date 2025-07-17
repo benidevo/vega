@@ -63,6 +63,11 @@ type Settings struct {
 	CachePath        string
 	CacheMaxMemoryMB int
 	CacheDefaultTTL  time.Duration
+
+	// Monitoring settings
+	MetricsEnabled bool
+	MetricsPort    string
+	Version        string
 }
 
 // NewSettings initializes and returns a Settings struct with default values
@@ -167,6 +172,10 @@ func NewSettings() Settings {
 		CachePath:        getEnv("CACHE_PATH", "./data/cache"),
 		CacheMaxMemoryMB: getCacheMaxMemoryMB(),
 		CacheDefaultTTL:  getCacheDefaultTTL(),
+
+		MetricsEnabled: getEnv("METRICS_ENABLED", "false") == "true",
+		MetricsPort:    getEnv("METRICS_PORT", "9090"),
+		Version:        getEnv("VERSION", "dev"),
 	}
 }
 

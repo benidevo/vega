@@ -3,6 +3,7 @@ package vega
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"html/template"
 	"net/http"
 	"os"
@@ -16,6 +17,7 @@ import (
 	"github.com/benidevo/vega/internal/common/render"
 	"github.com/benidevo/vega/internal/config"
 	"github.com/benidevo/vega/internal/db"
+	"github.com/benidevo/vega/internal/monitoring"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -32,6 +34,7 @@ type App struct {
 	server   *http.Server
 	done     chan os.Signal
 	renderer *render.HTMLRenderer
+	monitor  *monitoring.Monitor
 }
 
 // New creates and returns a new instance of App with the provided configuration.
@@ -48,6 +51,15 @@ func New(cfg config.Settings) *App {
 
 	router.Use(cors.New(corsConfig))
 
+	// Initialize monitoring if enabled
+	monitor, err := monitoring.Setup(&cfg)
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to initialize monitoring")
+	}
+	if monitor != nil {
+		router.Use(monitor.GinMiddleware())
+	}
+
 	// Only load templates in non-test environment
 	if !cfg.IsTest {
 		// Setup template functions
@@ -60,6 +72,7 @@ func New(cfg config.Settings) *App {
 		router:   router,
 		done:     make(chan os.Signal, 1),
 		renderer: render.NewHTMLRenderer(&cfg),
+		monitor:  monitor,
 	}
 }
 
@@ -71,6 +84,12 @@ func (a *App) Setup() error {
 	)
 
 	log.Info().Msg("Starting application setup")
+
+	// Validate critical configuration
+	if err := a.validateConfig(); err != nil {
+		log.Fatal().Err(err).Msg("Configuration validation failed")
+		return err
+	}
 
 	if err := a.setupDependencies(); err != nil {
 		log.Error().Err(err).Msg("Failed to setup dependencies")
@@ -146,11 +165,40 @@ func (a *App) Shutdown(ctx context.Context) error {
 		}
 	}
 
+	if a.monitor != nil {
+		monitorErr := a.monitor.Shutdown(ctx)
+		if err == nil {
+			err = monitorErr
+		}
+	}
+
 	a.server = nil
 	a.db = nil
 	a.cache = nil
 
 	return err
+}
+
+// validateConfig checks critical configuration settings
+func (a *App) validateConfig() error {
+	// Check TOKEN_SECRET in production/cloud mode
+	if (a.config.IsCloudMode || !a.config.IsDevelopment) && a.config.TokenSecret == "default-secret-key" {
+		return fmt.Errorf("TOKEN_SECRET must be set to a secure value in production/cloud mode")
+	}
+
+	// Check OAuth credentials in cloud mode
+	if a.config.IsCloudMode {
+		if a.config.GoogleClientID == "" || a.config.GoogleClientSecret == "" {
+			return fmt.Errorf("Google OAuth credentials are required in cloud mode")
+		}
+	}
+
+	// Check Gemini API key if AI is expected to work
+	if a.config.GeminiAPIKey == "" {
+		log.Warn().Msg("GEMINI_API_KEY not set - AI features will be disabled")
+	}
+
+	return nil
 }
 
 func (a *App) setupDependencies() error {
