@@ -8,6 +8,7 @@ import (
 
 	aimodels "github.com/benidevo/vega/internal/ai/models"
 	"github.com/benidevo/vega/internal/job/models"
+	"github.com/benidevo/vega/internal/monitoring"
 	settingsmodels "github.com/benidevo/vega/internal/settings/models"
 )
 
@@ -128,14 +129,25 @@ func (s *JobService) AnalyzeJobMatch(ctx context.Context, userID, jobID int) (*m
 		}
 	}
 
-	aiResult, err := s.aiService.JobMatcher.AnalyzeMatch(ctx, aiRequest)
-	if err != nil {
-		s.log.Error().Err(err).
+	// Track AI operation metrics
+	var aiResult *aimodels.MatchResult
+	var aiErr error
+
+	if s.monitor != nil {
+		recordComplete := s.monitor.RecordAIOperationStart(monitoring.AIOpJobMatch)
+		aiResult, aiErr = s.aiService.JobMatcher.AnalyzeMatch(ctx, aiRequest)
+		recordComplete(ctx, aiErr == nil)
+	} else {
+		aiResult, aiErr = s.aiService.JobMatcher.AnalyzeMatch(ctx, aiRequest)
+	}
+
+	if aiErr != nil {
+		s.log.Error().Err(aiErr).
 			Str("user_ref", userRef).
 			Int("job_id", jobID).
 			Str("error_type", "ai_analysis_failed").
 			Msg("Job match analysis failed")
-		return nil, err
+		return nil, aiErr
 	}
 
 	result := s.convertToJobMatchAnalysis(aiResult, userID, jobID)
@@ -254,14 +266,26 @@ func (s *JobService) GenerateCoverLetter(ctx context.Context, userID, jobID int)
 	}
 
 	aiRequest := s.buildAIRequest(job, profile)
-	aiResult, err := s.aiService.CoverLetterGenerator.GenerateCoverLetter(ctx, aiRequest)
-	if err != nil {
-		s.log.Error().Err(err).
+
+	// Track AI operation metrics
+	var aiResult *aimodels.CoverLetter
+	var aiErr error
+
+	if s.monitor != nil {
+		recordComplete := s.monitor.RecordAIOperationStart(monitoring.AIOpCoverLetter)
+		aiResult, aiErr = s.aiService.CoverLetterGenerator.GenerateCoverLetter(ctx, aiRequest)
+		recordComplete(ctx, aiErr == nil)
+	} else {
+		aiResult, aiErr = s.aiService.CoverLetterGenerator.GenerateCoverLetter(ctx, aiRequest)
+	}
+
+	if aiErr != nil {
+		s.log.Error().Err(aiErr).
 			Str("user_ref", userRef).
 			Int("job_id", jobID).
 			Str("error_type", "ai_generation_failed").
 			Msg("Cover letter generation failed")
-		return nil, err
+		return nil, aiErr
 	}
 
 	coverLetter := s.convertToCoverLetter(aiResult, userID, jobID)

@@ -12,6 +12,7 @@ import (
 	"github.com/benidevo/vega/internal/config"
 	"github.com/benidevo/vega/internal/job/interfaces"
 	"github.com/benidevo/vega/internal/job/models"
+	"github.com/benidevo/vega/internal/monitoring"
 	"github.com/benidevo/vega/internal/quota"
 	"github.com/benidevo/vega/internal/settings"
 	"github.com/go-playground/validator/v10"
@@ -22,14 +23,15 @@ type JobService struct {
 	jobRepo         interfaces.JobRepository
 	aiService       *ai.AIService
 	settingsService *settings.SettingsService
-	quotaService    *quota.Service
+	quotaService    quota.QuotaService
 	cfg             *config.Settings
 	log             *logger.PrivacyLogger
 	validator       *validator.Validate
+	monitor         *monitoring.Monitor
 }
 
 // NewJobService creates a new JobService instance.
-func NewJobService(jobRepo interfaces.JobRepository, aiService *ai.AIService, settingsService *settings.SettingsService, quotaService *quota.Service, cfg *config.Settings) *JobService {
+func NewJobService(jobRepo interfaces.JobRepository, aiService *ai.AIService, settingsService *settings.SettingsService, quotaService quota.QuotaService, cfg *config.Settings) *JobService {
 	return &JobService{
 		jobRepo:         jobRepo,
 		aiService:       aiService,
