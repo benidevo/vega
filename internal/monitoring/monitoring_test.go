@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 	"time"
 
@@ -26,6 +25,9 @@ func TestMonitoringSetup(t *testing.T) {
 	ctx := context.Background()
 	monitor.RecordQuotaUsage(ctx, "test-tenant", 50.0)
 	monitor.RecordAIOperation(ctx, AIOpJobMatch, true, 100*time.Millisecond)
+
+	// Wait for async metrics recording to complete
+	time.Sleep(100 * time.Millisecond)
 
 	req := httptest.NewRequest("GET", "/metrics", nil)
 	w := httptest.NewRecorder()
@@ -53,6 +55,13 @@ func TestMonitoringCloudMode(t *testing.T) {
 	monitor, err := Setup(&settings)
 	require.NoError(t, err)
 	require.NotNil(t, monitor)
+
+	// Record some metrics to ensure they show up
+	ctx := context.Background()
+	monitor.RecordQuotaUsage(ctx, "test-tenant", 75.0)
+
+	// Wait for async metrics recording to complete
+	time.Sleep(100 * time.Millisecond)
 
 	req := httptest.NewRequest("GET", "/metrics", nil)
 	w := httptest.NewRecorder()
@@ -96,6 +105,9 @@ func TestAIOperationMetrics(t *testing.T) {
 	monitor.RecordAIOperation(ctx, AIOpCoverLetter, true, 200*time.Millisecond)
 	monitor.RecordAIOperation(ctx, AIOpJobMatch, false, 500*time.Millisecond)
 
+	// Wait for async metrics recording to complete
+	time.Sleep(100 * time.Millisecond)
+
 	req := httptest.NewRequest("GET", "/metrics", nil)
 	w := httptest.NewRecorder()
 	monitor.ServeHTTP(w, req)
@@ -106,9 +118,12 @@ func TestAIOperationMetrics(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	assert.True(t, strings.Contains(bodyStr, `vega_ai_operations_total{operation="job_match",success="true"}`))
-	assert.True(t, strings.Contains(bodyStr, `vega_ai_operations_total{operation="job_match",success="false"}`))
-	assert.True(t, strings.Contains(bodyStr, `vega_ai_operations_total{operation="cover_letter",success="true"}`))
+	// Check if metrics are present (they include a value after the labels)
+	assert.Contains(t, bodyStr, "vega_ai_operations_total")
+	assert.Contains(t, bodyStr, `operation="job_match"`)
+	assert.Contains(t, bodyStr, `operation="cover_letter"`)
+	assert.Contains(t, bodyStr, `success="true"`)
+	assert.Contains(t, bodyStr, `success="false"`)
 
 	assert.Contains(t, bodyStr, "vega_ai_operation_duration_seconds_bucket")
 

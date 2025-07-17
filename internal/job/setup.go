@@ -67,9 +67,7 @@ func SetupAIService(cfg *config.Settings) (*ai.AIService, error) {
 
 // SetupSettingsService initializes and returns a settings service instance.
 func SetupSettingsService(db *sql.DB, cfg *config.Settings) *settings.SettingsService {
-	// Create the service directly instead of using Setup which returns handler
 	authRepo := authrepo.NewSQLiteUserRepository(db)
 	settingsRepo := settingsrepo.NewProfileRepository(db)
 	return settings.NewSettingsService(settingsRepo, cfg, authRepo)
 }
-
