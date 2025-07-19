@@ -45,4 +45,11 @@ func RegisterRoutes(settingsGroup *gin.RouterGroup, handler *SettingsHandler) {
 	// Support both methods for maximum compatibility
 	settingsGroup.DELETE("/profile/certification/:id", handler.HandleDeleteCertification)
 	settingsGroup.POST("/profile/certification/:id/delete", handler.HandleDeleteCertification)
+
+	// Job Search Preference routes
+	settingsGroup.GET("/search-preferences", handler.GetJobSearchPreferencesPage)
+	settingsGroup.POST("/search-preferences", handler.CreateJobSearchPreference)
+	settingsGroup.PUT("/search-preferences/:id", handler.UpdateJobSearchPreference)
+	settingsGroup.DELETE("/search-preferences/:id", handler.DeleteJobSearchPreference)
+	settingsGroup.PATCH("/search-preferences/:id/toggle", handler.ToggleJobSearchPreference)
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/benidevo/vega/internal/ai"
 	authapi "github.com/benidevo/vega/internal/api/auth"
 	jobapi "github.com/benidevo/vega/internal/api/job"
+	preferencesapi "github.com/benidevo/vega/internal/api/preferences"
 	"github.com/benidevo/vega/internal/auth"
 	"github.com/benidevo/vega/internal/common/render"
 	"github.com/benidevo/vega/internal/home"
@@ -35,7 +36,7 @@ func SetupRoutes(a *App) {
 	authHandler := auth.SetupAuth(a.db, &a.config)
 	jobService := job.SetupService(a.db, &a.config, a.cache)
 	jobHandler := job.NewJobHandler(jobService, &a.config)
-	settingsHandler := settings.Setup(&a.config, a.db, aiService)
+	settingsHandler, settingsService := settings.SetupWithService(&a.config, a.db, aiService)
 	authAPIHandler := authapi.Setup(a.db, &a.config)
 	jobAPIHandler := jobapi.Setup(a.db, &a.config, a.cache)
 
@@ -82,6 +83,10 @@ func SetupRoutes(a *App) {
 	jobAPIGroup := a.router.Group("/api/jobs")
 	jobAPIGroup.Use(authHandler.APIAuthMiddleware())
 	jobapi.RegisterRoutes(jobAPIGroup, jobAPIHandler)
+
+	preferencesAPIGroup := a.router.Group("/api")
+	preferencesAPIGroup.Use(authHandler.APIAuthMiddleware())
+	preferencesapi.Setup(preferencesAPIGroup, settingsService)
 
 	a.router.NoRoute(func(c *gin.Context) {
 		a.renderer.Error(c, http.StatusNotFound, "Page Not Found")

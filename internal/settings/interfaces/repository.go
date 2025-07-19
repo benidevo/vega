@@ -30,4 +30,13 @@ type SettingsRepository interface {
 	AddCertification(ctx context.Context, certification *models.Certification) error
 	UpdateCertification(ctx context.Context, certification *models.Certification) (*models.Certification, error)
 	DeleteCertification(ctx context.Context, id int, profileID int) error
+
+	// JobSearchPreference methods
+	CreateJobSearchPreference(ctx context.Context, userID int, preference *models.JobSearchPreference) error
+	GetJobSearchPreferenceByID(ctx context.Context, userID int, preferenceID string) (*models.JobSearchPreference, error)
+	GetJobSearchPreferencesByUserID(ctx context.Context, userID int) ([]*models.JobSearchPreference, error)
+	GetActiveJobSearchPreferencesByUserID(ctx context.Context, userID int) ([]*models.JobSearchPreference, error)
+	UpdateJobSearchPreference(ctx context.Context, userID int, preference *models.JobSearchPreference) error
+	DeleteJobSearchPreference(ctx context.Context, userID int, preferenceID string) error
+	ToggleJobSearchPreferenceActive(ctx context.Context, userID int, preferenceID string) error
 }
