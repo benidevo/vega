@@ -292,6 +292,14 @@
       </div>
       {{template "footer" .}}
     </div>
+  {{else if eq .page "settings-quotas" }}
+    <!-- Settings quotas page -->
+    <div class="min-h-screen bg-slate-900 flex flex-col">
+      <div class="flex-1">
+        {{template "settings-layout" .}}
+      </div>
+      {{template "footer" .}}
+    </div>
   {{else}}
     <!-- Modern layout with enhanced backgrounds for home and login pages -->
     <div class="{{if eq .page "login"}}h-screen overflow-hidden{{else}}min-h-screen{{end}} flex {{if eq .page "home"}}flex-col{{end}} items-center justify-center relative overflow-hidden">

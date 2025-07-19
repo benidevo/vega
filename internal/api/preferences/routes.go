@@ -7,5 +7,6 @@ func RegisterRoutes(apiGroup *gin.RouterGroup, handler *PreferencesHandler) {
 	preferencesGroup := apiGroup.Group("/preferences")
 	{
 		preferencesGroup.GET("/active", handler.GetActivePreferences)
+		preferencesGroup.POST("/search-results", handler.RecordJobSearchResults)
 	}
 }

@@ -3,6 +3,7 @@ package preferences
 import (
 	"net/http"
 
+	"github.com/benidevo/vega/internal/quota"
 	"github.com/benidevo/vega/internal/settings"
 	"github.com/gin-gonic/gin"
 )
@@ -10,12 +11,14 @@ import (
 // PreferencesHandler manages API requests for job search preferences
 type PreferencesHandler struct {
 	settingsService *settings.SettingsService
+	quotaService    *quota.UnifiedService
 }
 
 // NewPreferencesHandler creates a new PreferencesHandler instance
-func NewPreferencesHandler(settingsService *settings.SettingsService) *PreferencesHandler {
+func NewPreferencesHandler(settingsService *settings.SettingsService, quotaService *quota.UnifiedService) *PreferencesHandler {
 	return &PreferencesHandler{
 		settingsService: settingsService,
+		quotaService:    quotaService,
 	}
 }
 
@@ -30,12 +33,36 @@ func (h *PreferencesHandler) GetActivePreferences(c *gin.Context) {
 	}
 	userID := userIDValue.(int)
 
+	// Check search quota before returning preferences
+	canSearch, err := h.quotaService.CheckQuota(c.Request.Context(), userID, quota.QuotaTypeSearchRuns, nil)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to check quota",
+		})
+		return
+	}
+
+	if !canSearch.Allowed {
+		c.JSON(http.StatusTooManyRequests, gin.H{
+			"error":        "Search quota exceeded",
+			"quota_status": canSearch.Status,
+		})
+		return
+	}
+
 	preferences, err := h.settingsService.GetActivePreferences(c.Request.Context(), userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to retrieve preferences",
 		})
 		return
+	}
+
+	// Get quota status to include in response
+	quotaStatus, err := h.quotaService.GetAllQuotaStatus(c.Request.Context(), userID)
+	if err != nil {
+		// Log error but don't fail the request
+		quotaStatus = nil
 	}
 
 	// Transform preferences to API response format
@@ -56,7 +83,66 @@ func (h *PreferencesHandler) GetActivePreferences(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	result := gin.H{
 		"preferences": response,
+	}
+
+	if quotaStatus != nil {
+		result["quota_status"] = quotaStatus
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+// RecordJobSearchResults records job search results from the extension
+func (h *PreferencesHandler) RecordJobSearchResults(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized",
+		})
+		return
+	}
+	userID := userIDValue.(int)
+
+	var payload struct {
+		PreferenceID string `json:"preference_id"`
+		JobsFound    int    `json:"jobs_found"`
+	}
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid request body",
+		})
+		return
+	}
+
+	// Validate payload
+	if payload.PreferenceID == "" || payload.JobsFound < 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid preference_id or jobs_found count",
+		})
+		return
+	}
+
+	// Record the usage
+	err := h.quotaService.RecordUsage(c.Request.Context(), userID, quota.QuotaTypeJobSearch, map[string]interface{}{
+		"count": payload.JobsFound,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to record usage",
+		})
+		return
+	}
+
+	// Also record that a search was run
+	err = h.quotaService.RecordUsage(c.Request.Context(), userID, quota.QuotaTypeSearchRuns, nil)
+	if err != nil {
+		// Log error but don't fail the request since job count was already recorded
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Usage recorded successfully",
 	})
 }

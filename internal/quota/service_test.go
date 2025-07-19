@@ -43,8 +43,21 @@ func TestService_NonCloudMode(t *testing.T) {
 	jobID := 100
 
 	t.Run("CanAnalyzeJob returns unlimited access", func(t *testing.T) {
-		mockRepo := new(MockJobRepository)
-		service := NewService(nil, mockRepo, false) // Non-cloud mode
+		db, mock := setupMockDB(t)
+		defer db.Close()
+
+		mockJobRepo := new(MockJobRepository)
+		service := NewService(db, mockJobRepo, false) // Non-cloud mode
+
+		// Mock job that hasn't been analyzed
+		job := &Job{ID: jobID, FirstAnalyzedAt: nil}
+		mockJobRepo.On("GetByID", ctx, userID, jobID).Return(job, nil).Once()
+
+		// Mock GetMonthlyUsage query - no existing usage
+		monthYear := getCurrentMonthYear()
+		mock.ExpectQuery("SELECT user_id, month_year, jobs_analyzed, updated_at FROM user_quota_usage").
+			WithArgs(userID, monthYear).
+			WillReturnError(sql.ErrNoRows)
 
 		result, err := service.CanAnalyzeJob(ctx, userID, jobID)
 
@@ -55,13 +68,22 @@ func TestService_NonCloudMode(t *testing.T) {
 		assert.Equal(t, 0, result.Status.Used)
 		assert.Equal(t, time.Time{}, result.Status.ResetDate)
 
-		// Should not call any repository methods in non-cloud mode
-		mockRepo.AssertNotCalled(t, "GetByID")
+		mockJobRepo.AssertExpectations(t)
+		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
 	t.Run("GetQuotaStatus returns unlimited quota", func(t *testing.T) {
-		mockRepo := new(MockJobRepository)
-		service := NewService(nil, mockRepo, false) // Non-cloud mode
+		db, mock := setupMockDB(t)
+		defer db.Close()
+
+		mockJobRepo := new(MockJobRepository)
+		service := NewService(db, mockJobRepo, false) // Non-cloud mode
+
+		// Mock GetMonthlyUsage query - no existing usage
+		monthYear := getCurrentMonthYear()
+		mock.ExpectQuery("SELECT user_id, month_year, jobs_analyzed, updated_at FROM user_quota_usage").
+			WithArgs(userID, monthYear).
+			WillReturnError(sql.ErrNoRows)
 
 		status, err := service.GetQuotaStatus(ctx, userID)
 
@@ -69,30 +91,64 @@ func TestService_NonCloudMode(t *testing.T) {
 		assert.Equal(t, -1, status.Limit) // Unlimited
 		assert.Equal(t, 0, status.Used)
 		assert.Equal(t, time.Time{}, status.ResetDate)
+
+		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
-	t.Run("RecordAnalysis does nothing", func(t *testing.T) {
-		mockRepo := new(MockJobRepository)
-		service := NewService(nil, mockRepo, false) // Non-cloud mode
+	t.Run("RecordAnalysis records usage but doesn't enforce", func(t *testing.T) {
+		db, mock := setupMockDB(t)
+		defer db.Close()
+
+		mockJobRepo := new(MockJobRepository)
+		service := NewService(db, mockJobRepo, false) // Non-cloud mode
+
+		// Mock SetFirstAnalyzedAt
+		mockJobRepo.On("SetFirstAnalyzedAt", ctx, jobID).Return(nil).Once()
+
+		monthYear := getCurrentMonthYear()
+
+		// Begin transaction
+		mock.ExpectBegin()
+
+		// Expect UPSERT query - still records usage in non-cloud mode
+		mock.ExpectExec("INSERT INTO user_quota_usage \\(user_id, month_year, jobs_analyzed, updated_at\\) VALUES \\(\\?, \\?, 1, CURRENT_TIMESTAMP\\) ON CONFLICT\\(user_id, month_year\\) DO UPDATE SET jobs_analyzed = jobs_analyzed \\+ 1, updated_at = CURRENT_TIMESTAMP").
+			WithArgs(userID, monthYear).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		// Commit transaction
+		mock.ExpectCommit()
 
 		err := service.RecordAnalysis(ctx, userID, jobID)
 
 		assert.NoError(t, err)
-
-		// Should not call any repository methods
-		mockRepo.AssertNotCalled(t, "SetFirstAnalyzedAt")
+		mockJobRepo.AssertExpectations(t)
+		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
-	t.Run("GetMonthlyUsage returns zero usage", func(t *testing.T) {
-		mockRepo := new(MockJobRepository)
-		service := NewService(nil, mockRepo, false) // Non-cloud mode
+	t.Run("GetMonthlyUsage returns actual usage", func(t *testing.T) {
+		db, mock := setupMockDB(t)
+		defer db.Close()
+
+		mockJobRepo := new(MockJobRepository)
+		service := NewService(db, mockJobRepo, false) // Non-cloud mode
+
+		// Mock GetMonthlyUsage query - with some existing usage
+		monthYear := getCurrentMonthYear()
+		usedCount := 3
+		rows := sqlmock.NewRows([]string{"user_id", "month_year", "jobs_analyzed", "updated_at"}).
+			AddRow(userID, monthYear, usedCount, time.Now())
+		mock.ExpectQuery("SELECT user_id, month_year, jobs_analyzed, updated_at FROM user_quota_usage").
+			WithArgs(userID, monthYear).
+			WillReturnRows(rows)
 
 		usage, err := service.GetMonthlyUsage(ctx, userID)
 
 		assert.NoError(t, err)
 		assert.Equal(t, userID, usage.UserID)
-		assert.Equal(t, 0, usage.JobsAnalyzed)
+		assert.Equal(t, usedCount, usage.JobsAnalyzed)
 		assert.Equal(t, getCurrentMonthYear(), usage.MonthYear)
+
+		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 }
 

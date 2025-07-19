@@ -23,6 +23,8 @@
         {{template "settings-security-content" .}}
       {{else if eq .page "settings-search-preferences"}}
         {{template "settings-search-preferences-content" .}}
+      {{else if eq .page "settings-quotas"}}
+        {{template "settings-quotas-content" .}}
       {{else}}
         <!-- Fallback content if no specific template is defined -->
         <div class="text-center py-8">

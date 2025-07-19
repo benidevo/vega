@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -18,8 +19,11 @@ import (
 
 // SettingsHandler manages settings-related HTTP requests
 type SettingsHandler struct {
-	service              *SettingsService
-	aiService            *ai.AIService
+	service      *SettingsService
+	aiService    *ai.AIService
+	quotaService interface {
+		GetAllQuotaStatus(ctx context.Context, userID int) (interface{}, error)
+	}
 	experienceHandler    *BaseSettingsHandler
 	educationHandler     *BaseSettingsHandler
 	certificationHandler *BaseSettingsHandler
@@ -27,7 +31,9 @@ type SettingsHandler struct {
 }
 
 // NewSettingsHandler creates a new SettingsHandler instance
-func NewSettingsHandler(service *SettingsService, aiService *ai.AIService) *SettingsHandler {
+func NewSettingsHandler(service *SettingsService, aiService *ai.AIService, quotaService interface {
+	GetAllQuotaStatus(ctx context.Context, userID int) (interface{}, error)
+}) *SettingsHandler {
 	experienceMetadata := EntityMetadata{
 		Name:      "Experience",
 		URLPrefix: "experience",
@@ -55,6 +61,7 @@ func NewSettingsHandler(service *SettingsService, aiService *ai.AIService) *Sett
 	return &SettingsHandler{
 		service:              service,
 		aiService:            aiService,
+		quotaService:         quotaService,
 		experienceHandler:    NewBaseSettingsHandler(service, experienceMetadata),
 		educationHandler:     NewBaseSettingsHandler(service, educationMetadata),
 		certificationHandler: NewBaseSettingsHandler(service, certificationMetadata),
@@ -615,6 +622,39 @@ func (h *SettingsHandler) HandleUpdateCertificationForm(c *gin.Context) {
 // HandleDeleteCertification handles HTTP DELETE requests for removing a certification.
 func (h *SettingsHandler) HandleDeleteCertification(c *gin.Context) {
 	h.certificationHandler.HandleDelete(c)
+}
+
+// Quota Page Handler
+
+// GetQuotasPage displays the quotas page with usage statistics
+func (h *SettingsHandler) GetQuotasPage(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		h.renderer.Error(c, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	userID := userIDValue.(int)
+
+	// Get quota status
+	var quotaStatus interface{}
+	var hasQuotaData bool
+	if h.quotaService != nil {
+		quotaStatus, _ = h.quotaService.GetAllQuotaStatus(c.Request.Context(), userID)
+		hasQuotaData = quotaStatus != nil
+	}
+
+	data := gin.H{
+		"title":          "Usage & Quotas",
+		"activeNav":      "quotas",
+		"page":           "settings-quotas",
+		"activeSettings": "quotas",
+		"pageTitle":      "Usage & Quotas",
+		"quotaStatus":    quotaStatus,
+		"hasQuotaData":   hasQuotaData,
+		"isCloudMode":    h.service.cfg.IsCloudMode,
+	}
+
+	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", data)
 }
 
 // Job Search Preference Handlers

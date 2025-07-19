@@ -52,4 +52,7 @@ func RegisterRoutes(settingsGroup *gin.RouterGroup, handler *SettingsHandler) {
 	settingsGroup.PUT("/search-preferences/:id", handler.UpdateJobSearchPreference)
 	settingsGroup.DELETE("/search-preferences/:id", handler.DeleteJobSearchPreference)
 	settingsGroup.PATCH("/search-preferences/:id/toggle", handler.ToggleJobSearchPreference)
+
+	// Quota routes
+	settingsGroup.GET("/quotas", handler.GetQuotasPage)
 }
