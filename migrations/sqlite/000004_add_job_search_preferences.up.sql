@@ -1,8 +1,9 @@
 CREATE TABLE job_search_preferences (
     id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
     job_title TEXT NOT NULL,
     location TEXT NOT NULL,
+    skills JSON,
     max_age INTEGER NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

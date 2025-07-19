@@ -23,9 +23,10 @@ const (
 // JobSearchPreference represents a user's job search criteria
 type JobSearchPreference struct {
 	ID        string    `db:"id" json:"id"`
-	UserID    string    `db:"user_id" json:"user_id"`
+	UserID    int       `db:"user_id" json:"user_id"`
 	JobTitle  string    `db:"job_title" json:"job_title" validate:"required,min=1,max=100"`
 	Location  string    `db:"location" json:"location" validate:"required,min=1,max=100"`
+	Skills    []string  `db:"skills" json:"skills,omitempty" validate:"max=10,dive,min=1,max=50"`
 	MaxAge    int       `db:"max_age" json:"max_age" validate:"required,min=3600,max=2592000"` // MinMaxAge to MaxMaxAge
 	IsActive  bool      `db:"is_active" json:"is_active"`
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
@@ -36,6 +37,16 @@ type JobSearchPreference struct {
 func (j *JobSearchPreference) Sanitize() {
 	j.JobTitle = strings.TrimSpace(j.JobTitle)
 	j.Location = strings.TrimSpace(j.Location)
+
+	// Clean up skills
+	cleanedSkills := []string{}
+	for _, skill := range j.Skills {
+		trimmed := strings.TrimSpace(skill)
+		if trimmed != "" {
+			cleanedSkills = append(cleanedSkills, trimmed)
+		}
+	}
+	j.Skills = cleanedSkills
 }
 
 // Validate validates the JobSearchPreference struct

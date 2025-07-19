@@ -284,6 +284,14 @@
       </div>
       {{template "footer" .}}
     </div>
+  {{else if eq .page "settings-search-preferences" }}
+    <!-- Settings search preferences page -->
+    <div class="min-h-screen bg-slate-900 flex flex-col">
+      <div class="flex-1">
+        {{template "settings-layout" .}}
+      </div>
+      {{template "footer" .}}
+    </div>
   {{else}}
     <!-- Modern layout with enhanced backgrounds for home and login pages -->
     <div class="{{if eq .page "login"}}h-screen overflow-hidden{{else}}min-h-screen{{end}} flex {{if eq .page "home"}}flex-col{{end}} items-center justify-center relative overflow-hidden">
@@ -600,6 +608,9 @@
   <script src="/static/js/skills-management.js"></script>
   <script src="/static/js/cv-upload.js"></script>
   <script src="/static/js/profile-scroll.js"></script>
+  {{end}}
+  {{if eq .page "settings-search-preferences"}}
+  <script src="/static/js/skills-management.js"></script>
   {{end}}
 </body>
 </html>
