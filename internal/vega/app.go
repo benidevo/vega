@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -34,6 +35,28 @@ type App struct {
 	renderer *render.HTMLRenderer
 }
 
+// loadTemplates walks the templates directory and loads all HTML files
+func loadTemplates(router *gin.Engine) error {
+	var files []string
+	err := filepath.Walk("templates", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && filepath.Ext(path) == ".html" {
+			files = append(files, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	if len(files) > 0 {
+		router.LoadHTMLFiles(files...)
+	}
+	return nil
+}
+
 // New creates and returns a new instance of App with the provided configuration.
 // It initializes the router using the Gin framework and sets up a channel to handle OS signals.
 func New(cfg config.Settings) *App {
@@ -52,7 +75,10 @@ func New(cfg config.Settings) *App {
 	if !cfg.IsTest {
 		// Setup template functions
 		router.SetFuncMap(templateFuncMap())
-		router.LoadHTMLGlob("templates/**/*.html")
+		// Load all templates including nested directories
+		if err := loadTemplates(router); err != nil {
+			log.Fatal().Err(err).Msg("Failed to load templates")
+		}
 	}
 
 	return &App{

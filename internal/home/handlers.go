@@ -26,12 +26,23 @@ func NewHandler(cfg *config.Settings, service *Service) *Handler {
 }
 
 // GetHomePage renders the home page template with dynamic user data.
+// Note: Despite the name, this renders the dashboard (templates/home/index.html), not the landing page.
 func (h *Handler) GetHomePage(c *gin.Context) {
+	// In cloud mode, show landing page only for "/" route
+	if h.cfg.IsCloudMode && c.Request.URL.Path == "/" {
+		username, _ := c.Get("username")
+		h.renderer.HTML(c, http.StatusOK, "landing/index.html", gin.H{
+			"title":    "Vega AI - AI-Powered Job Search Assistant",
+			"username": username,
+		})
+		return
+	}
+
+	// In self-hosted mode, show dashboard
 	userIDValue, exists := c.Get("userID")
 	if !exists {
-		// Fallback to static template if no authentication
+		// Show dashboard with onboarding for non-authenticated users
 		emptyHomeData := NewHomePageData(0, "")
-
 		h.renderer.HTML(c, http.StatusOK, "layouts/base.html", gin.H{
 			"title":              emptyHomeData.Title,
 			"page":               emptyHomeData.Page,
@@ -63,7 +74,7 @@ func (h *Handler) GetHomePage(c *gin.Context) {
 	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", gin.H{
 		"title":          homeData.Title,
 		"page":           homeData.Page,
-		"activeNav":      "home",
+		"activeNav":      "dashboard",
 		"pageTitle":      "Dashboard",
 		"stats":          homeData.Stats,
 		"recentJobs":     homeData.RecentJobs,

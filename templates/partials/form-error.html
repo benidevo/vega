@@ -1,5 +1,5 @@
 {{define "partials/form-error.html"}}
-<div id="form-response" class="text-center text-sm block mb-4 p-4 rounded-md bg-red-900 bg-opacity-50 border border-red-700 text-red-200 auto-dismiss-alert" hx-target="this" hx-swap="outerHTML" hx-trigger="click delay:5s">
+<div id="form-response" class="text-center text-sm block mb-4 p-4 rounded-md bg-red-900 bg-opacity-50 border border-red-700 text-red-200 auto-dismiss-alert server-alert" data-alert-type="error" data-alert-message="{{ .message }}" hx-target="this" hx-swap="outerHTML" hx-trigger="click delay:5s">
   <div class="flex items-center justify-center">
     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

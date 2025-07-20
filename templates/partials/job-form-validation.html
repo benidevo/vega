@@ -4,8 +4,6 @@
          if #form-response.textContent contains 'successfully'
            call me.clearForm()
          end
-         show #form-response
-         call #form-response.scrollIntoView({behavior: 'smooth'})
          
        def clearForm()
          set form to the first <form[hx-post]/> in document

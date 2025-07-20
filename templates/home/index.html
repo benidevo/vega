@@ -1,45 +1,19 @@
 {{define "home-content"}}
-<!-- User Dashboard -->
+<!-- User Dashboard (Note: "home" here refers to the dashboard, not landing page) -->
 <main id="main-content" class="w-full max-w-7xl z-10 relative px-6 sm:px-8 lg:px-12 py-8 lg:py-12" role="main">
 
-  <!-- Welcome Section -->
-  <div class="mb-12">
-    <!-- Logo and Brand -->
-    <div class="flex flex-col sm:flex-row items-center sm:items-center text-center sm:text-left mb-6">
-      <div class="p-3 bg-slate-800 rounded-xl border border-slate-700 mb-4 sm:mb-0 sm:mr-4">
-        <svg class="h-12 w-12 sm:h-14 sm:w-14 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <!-- Dashboard Header -->
+  <div class="mb-8">
+    <a href="/" class="flex items-center group mb-4 inline-flex">
+      <div class="p-2 bg-slate-800 rounded-lg border border-slate-700 mr-3 group-hover:bg-slate-700 group-hover:border-primary transition-all duration-200">
+        <svg class="h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
         </svg>
       </div>
-      <div>
-        <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white font-heading">
-          Vega AI
-        </h1>
-        <p class="text-primary text-sm sm:text-base font-medium">
-          Your Job Search Assistant
-        </p>
-      </div>
-    </div>
-
-    <h2 class="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold mb-3 text-gray-200 text-center sm:text-left">
-      Your Job Search Dashboard
-    </h2>
-    <p class="text-gray-300 text-sm sm:text-base lg:text-lg mb-8 max-w-3xl text-center sm:text-left mx-auto sm:mx-0">
-      Stop losing track of applications. Organize every opportunity, see how well you match each role, and create tailored documents that get responses.
-    </p>
-    
-    <!-- Dynamic CTA Button - Changes based on authentication -->
-    <div class="text-center mb-8">
-      {{if .username}}
-        <a href="/jobs" class="inline-flex items-center px-6 py-3 sm:px-8 sm:py-4 bg-primary hover:bg-primary-dark text-white rounded-lg font-semibold text-base sm:text-lg shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105">
-          View Jobs
-        </a>
-      {{else}}
-        <a href="/auth/login" class="inline-flex items-center px-6 py-3 sm:px-8 sm:py-4 bg-primary hover:bg-primary-dark text-white rounded-lg font-semibold text-base sm:text-lg shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105">
-          Get Started
-        </a>
-      {{end}}
-    </div>
+      <span class="text-2xl sm:text-3xl font-bold text-white font-heading group-hover:text-primary transition-colors">Vega AI</span>
+    </a>
+    <h1 class="sr-only">Dashboard</h1>
+    <p class="text-gray-400 text-sm sm:text-base">Track applications, monitor progress, and manage your job search</p>
   </div>
 
   <!-- Quick Stats -->
@@ -112,7 +86,7 @@
       
       <!-- Progress bar -->
       <div class="w-full bg-gray-700 rounded-full h-3 mb-3">
-        <div class="{{if eq .quotaStatus.Remaining 0}}bg-red-500{{else if le .quotaStatus.Remaining 1}}bg-yellow-500{{else}}bg-primary{{end}} rounded-full h-3 transition-all duration-300" style="width: {{.quotaStatus.Percentage}}%"></div>
+        <div class="{{if eq .quotaStatus.Remaining 0}}bg-red-500{{else if le .quotaStatus.Remaining 1}}bg-yellow-500{{else}}bg-primary{{end}} rounded-full h-3 transition-all duration-300" style="width: {{.quotaStatus.Percentage}}%;"></div>
       </div>
       
       <div class="flex items-center justify-between text-xs text-gray-400">
@@ -125,9 +99,9 @@
   {{end}}
 
   <!-- Quick Actions -->
-  <section class="mb-8 sm:mb-12" aria-labelledby="quick-actions-heading">
+  <section class="mb-6 sm:mb-8" aria-labelledby="quick-actions-heading">
     <h2 id="quick-actions-heading" class="text-lg sm:text-xl font-semibold text-white mb-4 font-heading">Quick Actions</h2>
-    <nav class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4" aria-label="Quick action navigation">
+    <nav class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4" aria-label="Quick action navigation">
       <a href="/jobs/new" class="bg-slate-800 hover:bg-slate-700 rounded-lg p-4 sm:p-5 border border-slate-700 hover:border-primary group min-h-[90px] sm:min-h-[100px] flex items-center">
         <div class="flex items-center w-full">
           <svg class="h-7 w-7 sm:h-8 sm:w-8 text-primary mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -151,155 +125,12 @@
           </div>
         </div>
       </a>
-
-      <a href="/settings/profile" class="bg-slate-800 hover:bg-slate-700 rounded-lg p-4 sm:p-5 border border-slate-700 hover:border-primary group min-h-[90px] sm:min-h-[100px] flex items-center md:col-span-2 xl:col-span-1">
-        <div class="flex items-center w-full">
-          <svg class="h-7 w-7 sm:h-8 sm:w-8 text-primary mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          <div class="min-w-0">
-            <h3 class="text-sm sm:text-base font-semibold text-white group-hover:text-primary">Settings</h3>
-            <p class="text-xs text-gray-300 mt-1">Manage your profile</p>
-          </div>
-        </div>
-      </a>
     </nav>
   </section>
 
-  <!-- How It Works with Enhanced Visuals -->
-  <section class="mb-8 sm:mb-12" aria-labelledby="how-it-works-heading">
-    <h2 id="how-it-works-heading" class="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6 font-heading">How It Works</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-      <!-- Step 1 -->
-      <div class="bg-slate-800 rounded-lg p-4 sm:p-6 border border-slate-700 hover:border-slate-600 group">
-        <div class="mb-4">
-          <!-- Simple illustration for adding jobs -->
-          <div class="w-full h-32 bg-slate-700 rounded-lg p-4 group-hover:bg-slate-600/50">
-            <svg viewBox="0 0 200 100" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <!-- Browser window -->
-              <rect x="20" y="10" width="160" height="80" rx="4" stroke="#0D9488" stroke-width="2"/>
-              <line x1="20" y1="25" x2="180" y2="25" stroke="#0D9488" stroke-width="2"/>
-              <circle cx="35" cy="17.5" r="3" fill="#F59E0B"/>
-              <circle cx="45" cy="17.5" r="3" fill="#F59E0B"/>
-              <circle cx="55" cy="17.5" r="3" fill="#F59E0B"/>
-              <!-- URL bar -->
-              <rect x="70" y="15" width="100" height="5" rx="2.5" fill="#0D9488" opacity="0.3"/>
-              <!-- Content lines -->
-              <rect x="30" y="35" width="80" height="3" rx="1.5" fill="#0D9488" opacity="0.5"/>
-              <rect x="30" y="45" width="100" height="3" rx="1.5" fill="#0D9488" opacity="0.3"/>
-              <rect x="30" y="55" width="60" height="3" rx="1.5" fill="#0D9488" opacity="0.3"/>
-              <!-- Plus icon -->
-              <circle cx="150" cy="60" r="15" fill="#0D9488"/>
-              <path d="M150 52V68M142 60H158" stroke="white" stroke-width="3" stroke-linecap="round"/>
-            </svg>
-          </div>
-        </div>
-        <h3 class="text-lg font-semibold text-white mb-2 group-hover:text-primary">1. Capture Opportunities</h3>
-        <p class="text-sm text-gray-300">Use our browser extension on job boards or manually enter details through our intuitive form</p>
-      </div>
-
-      <!-- Step 2 -->
-      <div class="bg-slate-800 rounded-lg p-4 sm:p-6 border border-slate-700 hover:border-slate-600 group">
-        <div class="mb-4">
-          <!-- AI analysis illustration -->
-          <div class="w-full h-32 bg-slate-700 rounded-lg p-4 group-hover:bg-slate-600/50">
-            <svg viewBox="0 0 200 100" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <!-- Brain/AI icon -->
-              <circle cx="100" cy="50" r="30" stroke="#0D9488" stroke-width="2" opacity="0.3"/>
-              <circle cx="100" cy="50" r="20" stroke="#0D9488" stroke-width="2" opacity="0.5"/>
-              <circle cx="100" cy="50" r="10" fill="#0D9488"/>
-              <!-- Connection lines -->
-              <path d="M70 50H30M130 50H170M100 20V10M100 80V90M75 25L50 10M125 25L150 10M75 75L50 90M125 75L150 90" stroke="#0D9488" stroke-width="1.5" opacity="0.5" stroke-linecap="round"/>
-              <!-- Dots at ends -->
-              <circle cx="30" cy="50" r="4" fill="#F59E0B"/>
-              <circle cx="170" cy="50" r="4" fill="#F59E0B"/>
-              <circle cx="100" cy="10" r="4" fill="#F59E0B"/>
-              <circle cx="100" cy="90" r="4" fill="#F59E0B"/>
-              <circle cx="50" cy="10" r="4" fill="#F59E0B"/>
-              <circle cx="150" cy="10" r="4" fill="#F59E0B"/>
-              <circle cx="50" cy="90" r="4" fill="#F59E0B"/>
-              <circle cx="150" cy="90" r="4" fill="#F59E0B"/>
-            </svg>
-          </div>
-        </div>
-        <h3 class="text-lg font-semibold text-white mb-2 group-hover:text-primary">2. Get Smart Insights</h3>
-        <p class="text-sm text-gray-300">AI analyzes your fit based on your complete profile. Know which roles to prioritize instantly</p>
-      </div>
-
-      <!-- Step 3 -->
-      <div class="bg-slate-800 rounded-lg p-4 sm:p-6 border border-slate-700 hover:border-slate-600 group">
-        <div class="mb-4">
-          <!-- Success illustration -->
-          <div class="w-full h-32 bg-slate-700 rounded-lg p-4 group-hover:bg-slate-600/50">
-            <svg viewBox="0 0 200 100" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <!-- Document -->
-              <rect x="60" y="15" width="80" height="70" rx="4" fill="white" opacity="0.1"/>
-              <rect x="60" y="15" width="80" height="70" rx="4" stroke="#0D9488" stroke-width="2"/>
-              <!-- Document lines -->
-              <rect x="70" y="25" width="60" height="3" rx="1.5" fill="#0D9488" opacity="0.5"/>
-              <rect x="70" y="35" width="40" height="3" rx="1.5" fill="#0D9488" opacity="0.3"/>
-              <rect x="70" y="45" width="50" height="3" rx="1.5" fill="#0D9488" opacity="0.3"/>
-              <rect x="70" y="55" width="45" height="3" rx="1.5" fill="#0D9488" opacity="0.3"/>
-              <!-- Checkmark -->
-              <circle cx="120" cy="65" r="15" fill="#10B981"/>
-              <path d="M112 65L117 70L128 59" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-        </div>
-        <h3 class="text-lg font-semibold text-white mb-2 group-hover:text-primary">3. Apply in Seconds</h3>
-        <p class="text-sm text-gray-300">Generate professional application documents instantly. Each one tailored to match specific requirements</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Why Vega -->
-  <section class="mb-12" aria-labelledby="why-heading">
-    <h2 id="why-heading" class="text-xl font-semibold text-white mb-6 font-heading">Why Choose Vega AI?</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <!-- Track Everything -->
-      <div class="bg-slate-800 rounded-lg p-4 sm:p-6 border border-slate-700">
-        <div class="mb-4">
-          <div class="bg-primary/10 rounded-full p-3 w-12 h-12 flex items-center justify-center">
-            <svg class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-          </div>
-        </div>
-        <h3 class="text-lg font-semibold text-white mb-2">Complete Pipeline Control</h3>
-        <p class="text-sm text-gray-300">Visualize your entire job search journey. Track applications, set reminders, and never miss a follow-up.</p>
-      </div>
-
-      <!-- AI-Powered -->
-      <div class="bg-slate-800 rounded-lg p-4 sm:p-6 border border-slate-700">
-        <div class="mb-4">
-          <div class="bg-primary/10 rounded-full p-3 w-12 h-12 flex items-center justify-center">
-            <svg class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
-        </div>
-        <h3 class="text-lg font-semibold text-white mb-2">Profile-Driven Intelligence</h3>
-        <p class="text-sm text-gray-300">AI that adapts to your profession and experience. Get match scores and application documents that showcase your unique value.</p>
-      </div>
-
-      <!-- Land Interviews -->
-      <div class="bg-slate-800 rounded-lg p-4 sm:p-6 border border-slate-700">
-        <div class="mb-4">
-          <div class="bg-primary/10 rounded-full p-3 w-12 h-12 flex items-center justify-center">
-            <svg class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-          </div>
-        </div>
-        <h3 class="text-lg font-semibold text-white mb-2">Privacy First, Lightweight</h3>
-        <p class="text-sm text-gray-300">Self-hosted on your infrastructure using less than 50MB RAM. Your career data stays yours. No subscriptions, no data mining.</p>
-      </div>
-    </div>
-  </section>
 
   <!-- Recent Activity -->
-  <section class="mb-8 sm:mb-12" aria-labelledby="recent-activity-heading">
+  <section aria-labelledby="recent-activity-heading">
     <h2 id="recent-activity-heading" class="text-lg sm:text-xl font-semibold text-white mb-4 font-heading">Recent Activity</h2>
     <div class="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
       {{if .showOnboarding}}

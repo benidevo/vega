@@ -23,6 +23,13 @@
     </div>
 
     <nav class="space-y-1 px-2">
+      <a href="/dashboard" class="{{if eq .activeNav "dashboard"}}bg-slate-700 text-white{{else}}text-gray-300 hover:bg-slate-700 hover:text-white{{end}} group flex items-center px-3 py-2.5 text-sm font-medium rounded-md">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 {{if eq .activeNav "dashboard"}}text-primary{{else}}text-gray-400 group-hover:text-primary{{end}}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+        Dashboard
+      </a>
+
       <a href="/jobs" class="{{if eq .activeNav "jobs"}}bg-slate-700 text-white{{else}}text-gray-300 hover:bg-slate-700 hover:text-white{{end}} group flex items-center px-3 py-2.5 text-sm font-medium rounded-md">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 {{if eq .activeNav "jobs"}}text-primary{{else}}text-gray-400 group-hover:text-primary{{end}}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />

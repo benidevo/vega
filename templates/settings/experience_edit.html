@@ -43,6 +43,7 @@
           hx-swap="innerHTML"
           hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
           class="space-y-6">
+      <div id="form-alert-container"></div>
       <input type="hidden" name="csrf_token" value="{{.csrfToken}}">
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -97,8 +98,6 @@
                   placeholder="• Managed team of 5 developers&#10;• Increased revenue by 20%&#10;• Implemented CI/CD pipeline">{{.experience.Description | html}}</textarea>
       </div>
 
-      <!-- Alert container for form responses -->
-      <div id="form-alert-container" class="mb-4"></div>
 
       <!-- Form Actions -->
       <div class="flex justify-end space-x-4 pt-6 border-t border-slate-700">
