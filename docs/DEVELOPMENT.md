@@ -139,23 +139,24 @@ go test -cover ./...
 
 #### Admin User Management
 
+**Self-Hosted Mode Only**: Admin user creation is disabled in cloud mode. In cloud mode, users authenticate via Google OAuth and admin privileges must be granted manually in the database.
+
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `CREATE_ADMIN_USER` | No | `false` | Create admin user automatically on startup |
-| `ADMIN_USERNAME` | No | - | Admin username (3-50 characters, enforced client-side) |
-| `ADMIN_PASSWORD` | No | - | Admin password (8-64 characters, enforced client-side) |
+| `ADMIN_USERNAME` | No | `admin` | Admin username (3-50 characters) |
+| `ADMIN_PASSWORD` | No | `VegaAdmin` | Admin password (8-64 characters) |
 | `RESET_ADMIN_PASSWORD` | No | `false` | Reset admin password on startup if user exists |
+
+**Note**: In self-hosted mode, if no admin user exists, one is created automatically on startup using the configured credentials.
 
 **Admin User Setup Examples:**
 
 ```bash
-# Create new admin user
-CREATE_ADMIN_USER=true
-ADMIN_USERNAME=admin
+# Self-hosted with custom admin credentials
+ADMIN_USERNAME=myadmin
 ADMIN_PASSWORD=SecurePassword123
 
 # Reset existing admin password
-CREATE_ADMIN_USER=true
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=NewSecurePassword456
 RESET_ADMIN_PASSWORD=true
@@ -312,6 +313,49 @@ docker compose up
 # Run tests with cloud mode
 CLOUD_MODE=true go test ./...
 ```
+
+### Quota System
+
+#### Overview
+
+Vega AI implements a quota system to manage resource usage in cloud deployments:
+
+- **AI Analysis**: 5 analyses per month (per user)
+- **Job Search Results**: 100 jobs per day
+- **Search Runs**: 20 searches per day
+
+#### Configuration
+
+Quotas are stored in the `quota_configs` table and can be modified via direct database access:
+
+```sql
+-- View current quota limits
+SELECT * FROM quota_configs;
+
+-- Update quota limits
+UPDATE quota_configs SET free_limit = 10 WHERE quota_type = 'ai_analysis_monthly';
+```
+
+#### Admin Users
+
+Admin users have unlimited quotas in cloud mode. To grant admin access:
+
+```sql
+-- Make a user admin
+UPDATE users SET role = 'admin' WHERE username = 'user@example.com';
+```
+
+#### Quota Types
+
+| Quota Type | Period | Default Limit | Description |
+|------------|--------|---------------|-------------|
+| `ai_analysis_monthly` | Monthly | 5 | AI job analysis quota |
+| `job_search_daily` | Daily | 100 | Job search results limit |
+| `search_runs_daily` | Daily | 20 | Number of searches allowed |
+
+#### Self-Hosted Mode
+
+In self-hosted mode (`CLOUD_MODE=false`), all quotas are unlimited by default.
 
 ### Data Architecture
 
