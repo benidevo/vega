@@ -395,12 +395,13 @@
       }
       
       // Remove any existing notifications
-      const existingToasts = container.querySelectorAll('div');
+      const existingToasts = container.querySelectorAll('.toast-notification');
       existingToasts.forEach(toast => {
         toast.remove();
       });
       
       const toast = document.createElement('div');
+      toast.classList.add('toast-notification');
 
       // Style to match app's design system with slate theme
       const baseClasses = 'px-3 sm:px-4 py-2 sm:py-3 rounded-lg shadow-2xl border pointer-events-auto animate-slide-in-right backdrop-blur-sm w-full sm:w-auto';

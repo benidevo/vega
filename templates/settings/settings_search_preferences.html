@@ -393,8 +393,12 @@ function deletePreference(id) {
   if (modal) {
     modal.classList.remove('hidden');
     
-    // Set up the confirm button
-    confirmBtn.onclick = function() {
+    // Remove any existing event listeners to prevent memory leaks
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+    
+    // Set up the confirm button with event listener
+    newConfirmBtn.addEventListener('click', function handleDelete() {
       modal.classList.add('hidden');
       
       fetch(`/settings/search-preferences/${id}`, {
@@ -431,7 +435,7 @@ function deletePreference(id) {
           showToast('Failed to delete preference', 'error');
         }
       });
-    };
+    });
   }
 }
 
@@ -553,7 +557,7 @@ function createEditSkillTag(skill) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'ml-1 inline-flex items-center justify-center w-4 h-4 text-primary hover:text-red-400 focus:outline-none';
-  button.onclick = function() { removeEditSkillTag(this); };
+  button.addEventListener('click', function() { removeEditSkillTag(this); });
 
   button.innerHTML = `
     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
