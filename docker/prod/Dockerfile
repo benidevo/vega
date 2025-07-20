@@ -35,9 +35,10 @@ COPY --from=builder /build/migrations ./migrations
 COPY --from=builder /build/static ./static
 COPY ./docker/entrypoint.sh /app/entrypoint.sh
 
-RUN mkdir -p /app/data && \
+RUN mkdir -p /app/data /app/data/cache && \
     chmod +x /app/entrypoint.sh && \
-    chown -R appuser:appgroup /app
+    chown -R appuser:appgroup /app && \
+    chmod -R 755 /app/data
 
 USER appuser
 
