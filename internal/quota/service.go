@@ -7,6 +7,7 @@ import (
 	"time"
 
 	ctxutil "github.com/benidevo/vega/internal/common/context"
+	timeutil "github.com/benidevo/vega/internal/common/time"
 )
 
 // JobRepository interface defines methods the quota service needs from the job repository
@@ -48,7 +49,7 @@ func (s *Service) CanAnalyzeJob(ctx context.Context, userID int, jobID int) (*Qu
 	}
 
 	// Get current usage for status
-	monthYear := getCurrentMonthYear()
+	monthYear := timeutil.GetCurrentMonthYear()
 	usage, err := s.repo.GetMonthlyUsage(ctx, userID, monthYear)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get monthly usage: %w", err)
@@ -108,7 +109,7 @@ func (s *Service) CanAnalyzeJob(ctx context.Context, userID int, jobID int) (*Qu
 	status := QuotaStatus{
 		Used:      usage.JobsAnalyzed,
 		Limit:     limit,
-		ResetDate: getNextMonthStart(),
+		ResetDate: timeutil.GetNextMonthStart(),
 	}
 
 	// If job was previously analyzed, it's a re-analysis (always allowed)
@@ -150,7 +151,7 @@ func (s *Service) RecordAnalysis(ctx context.Context, userID int, jobID int) err
 		return fmt.Errorf("failed to set first analyzed at: %w", err)
 	}
 
-	monthYear := getCurrentMonthYear()
+	monthYear := timeutil.GetCurrentMonthYear()
 
 	// Use repository to increment usage
 	err = s.repo.IncrementMonthlyUsage(ctx, userID, monthYear)
@@ -164,7 +165,7 @@ func (s *Service) RecordAnalysis(ctx context.Context, userID int, jobID int) err
 // GetMonthlyUsage gets the current month's usage for a user
 func (s *Service) GetMonthlyUsage(ctx context.Context, userID int) (*QuotaUsage, error) {
 	// Always get actual usage data for tracking purposes
-	monthYear := getCurrentMonthYear()
+	monthYear := timeutil.GetCurrentMonthYear()
 	return s.repo.GetMonthlyUsage(ctx, userID, monthYear)
 }
 
@@ -204,20 +205,6 @@ func (s *Service) GetQuotaStatus(ctx context.Context, userID int) (*QuotaStatus,
 	return &QuotaStatus{
 		Used:      usage.JobsAnalyzed,
 		Limit:     quotaConfig.FreeLimit,
-		ResetDate: getNextMonthStart(),
+		ResetDate: timeutil.GetNextMonthStart(),
 	}, nil
-}
-
-// getCurrentMonthYear returns the current month in "YYYY-MM" format (UTC)
-func getCurrentMonthYear() string {
-	return time.Now().UTC().Format("2006-01")
-}
-
-// getNextMonthStart returns the first day of next month (UTC)
-func getNextMonthStart() time.Time {
-	now := time.Now().UTC()
-	// Get first day of current month
-	firstOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
-	// Add one month
-	return firstOfMonth.AddDate(0, 1, 0)
 }

@@ -2,13 +2,14 @@ package settings
 
 import (
 	"context"
-	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/benidevo/vega/internal/ai"
 	aimodels "github.com/benidevo/vega/internal/ai/models"
+	authmodels "github.com/benidevo/vega/internal/auth/models"
 	"github.com/benidevo/vega/internal/common/alerts"
 	"github.com/benidevo/vega/internal/common/render"
 	"github.com/benidevo/vega/internal/settings/models"
@@ -756,8 +757,8 @@ func (h *SettingsHandler) CreateJobSearchPreference(c *gin.Context) {
 	}
 
 	// Convert max_age to int
-	maxAge := 0
-	if _, err := fmt.Sscanf(maxAgeStr, "%d", &maxAge); err != nil {
+	maxAge, err := strconv.Atoi(maxAgeStr)
+	if err != nil {
 		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
 			"type":    "error",
 			"context": "dashboard",
@@ -777,7 +778,7 @@ func (h *SettingsHandler) CreateJobSearchPreference(c *gin.Context) {
 		IsActive: isActive,
 	}
 
-	_, err := h.service.CreatePreference(c.Request.Context(), userID, input)
+	_, err = h.service.CreatePreference(c.Request.Context(), userID, input)
 	if err != nil {
 		var message string
 		if err == services.ErrMaxPreferencesReached {
@@ -947,6 +948,15 @@ func (h *SettingsHandler) HandleUpdateSecurityAccount(c *gin.Context) {
 
 	// Update username if provided and different
 	if newUsername != "" && newUsername != user.Username {
+		if err := authmodels.ValidateUsername(newUsername); err != nil {
+			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "dashboard",
+				"message": err.Error(),
+			})
+			return
+		}
+
 		// Check if new username already exists
 		existingUser, _ := h.service.userRepo.FindByUsername(c.Request.Context(), newUsername)
 		if existingUser != nil {

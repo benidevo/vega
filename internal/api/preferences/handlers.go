@@ -3,6 +3,7 @@ package preferences
 import (
 	"net/http"
 
+	"github.com/benidevo/vega/internal/common/logger"
 	"github.com/benidevo/vega/internal/quota"
 	"github.com/benidevo/vega/internal/settings"
 	"github.com/gin-gonic/gin"
@@ -12,6 +13,7 @@ import (
 type PreferencesHandler struct {
 	settingsService *settings.SettingsService
 	quotaService    *quota.UnifiedService
+	log             *logger.PrivacyLogger
 }
 
 // NewPreferencesHandler creates a new PreferencesHandler instance
@@ -19,6 +21,7 @@ func NewPreferencesHandler(settingsService *settings.SettingsService, quotaServi
 	return &PreferencesHandler{
 		settingsService: settingsService,
 		quotaService:    quotaService,
+		log:             logger.GetPrivacyLogger("preferences_api"),
 	}
 }
 
@@ -58,10 +61,11 @@ func (h *PreferencesHandler) GetActivePreferences(c *gin.Context) {
 		return
 	}
 
-	// Get quota status to include in response
 	quotaStatus, err := h.quotaService.GetAllQuotaStatus(c.Request.Context(), userID)
 	if err != nil {
-		// Log error but don't fail the request
+		h.log.Error().Err(err).
+			Int("user_id", userID).
+			Msg("Failed to get quota status for preferences response")
 		quotaStatus = nil
 	}
 
@@ -124,8 +128,6 @@ func (h *PreferencesHandler) RecordJobSearchResults(c *gin.Context) {
 		})
 		return
 	}
-
-	// Record the usage
 	err := h.quotaService.RecordUsage(c.Request.Context(), userID, quota.QuotaTypeJobSearch, map[string]interface{}{
 		"count": payload.JobsFound,
 	})
@@ -136,10 +138,12 @@ func (h *PreferencesHandler) RecordJobSearchResults(c *gin.Context) {
 		return
 	}
 
-	// Also record that a search was run
 	err = h.quotaService.RecordUsage(c.Request.Context(), userID, quota.QuotaTypeSearchRuns, nil)
 	if err != nil {
-		// Log error but don't fail the request since job count was already recorded
+		h.log.Error().Err(err).
+			Int("user_id", userID).
+			Str("preference_id", payload.PreferenceID).
+			Msg("Failed to record search run usage")
 	}
 
 	c.JSON(http.StatusOK, gin.H{

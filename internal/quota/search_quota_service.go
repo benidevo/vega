@@ -6,6 +6,7 @@ import (
 	"time"
 
 	ctxutil "github.com/benidevo/vega/internal/common/context"
+	timeutil "github.com/benidevo/vega/internal/common/time"
 )
 
 // SearchQuotaService handles search-related quota management
@@ -30,7 +31,7 @@ func (s *SearchQuotaService) isUserAdmin(ctx context.Context) bool {
 
 // CanSearchJobs checks if a user can search for more jobs
 func (s *SearchQuotaService) CanSearchJobs(ctx context.Context, userID int) (*QuotaCheckResult, error) {
-	today := getCurrentDate()
+	today := timeutil.GetCurrentDate()
 	usage, err := s.repo.GetDailyUsage(ctx, userID, today, QuotaKeyJobsFound)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get job search usage: %w", err)
@@ -72,7 +73,7 @@ func (s *SearchQuotaService) CanSearchJobs(ctx context.Context, userID int) (*Qu
 	status := QuotaStatus{
 		Used:      usage,
 		Limit:     limit,
-		ResetDate: getTomorrowStart(),
+		ResetDate: timeutil.GetTomorrowStart(),
 	}
 
 	if usage >= limit {
@@ -92,7 +93,7 @@ func (s *SearchQuotaService) CanSearchJobs(ctx context.Context, userID int) (*Qu
 
 // CanRunSearch checks if a user can run another search
 func (s *SearchQuotaService) CanRunSearch(ctx context.Context, userID int) (*QuotaCheckResult, error) {
-	today := getCurrentDate()
+	today := timeutil.GetCurrentDate()
 	usage, err := s.repo.GetDailyUsage(ctx, userID, today, QuotaKeySearchesRun)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get search run usage: %w", err)
@@ -134,7 +135,7 @@ func (s *SearchQuotaService) CanRunSearch(ctx context.Context, userID int) (*Quo
 	status := QuotaStatus{
 		Used:      usage,
 		Limit:     limit,
-		ResetDate: getTomorrowStart(),
+		ResetDate: timeutil.GetTomorrowStart(),
 	}
 
 	if usage >= limit {
@@ -155,20 +156,20 @@ func (s *SearchQuotaService) CanRunSearch(ctx context.Context, userID int) (*Quo
 // RecordJobsFound records that jobs were found
 func (s *SearchQuotaService) RecordJobsFound(ctx context.Context, userID int, count int) error {
 	// Always record usage for tracking purposes
-	today := getCurrentDate()
+	today := timeutil.GetCurrentDate()
 	return s.repo.IncrementDailyUsage(ctx, userID, today, QuotaKeyJobsFound, count)
 }
 
 // RecordSearchRun records that a search was run
 func (s *SearchQuotaService) RecordSearchRun(ctx context.Context, userID int) error {
 	// Always record usage for tracking purposes
-	today := getCurrentDate()
+	today := timeutil.GetCurrentDate()
 	return s.repo.IncrementDailyUsage(ctx, userID, today, QuotaKeySearchesRun, 1)
 }
 
 // GetStatus returns the current search quota status
 func (s *SearchQuotaService) GetStatus(ctx context.Context, userID int) (*QuotaCheckResult, error) {
-	today := getCurrentDate()
+	today := timeutil.GetCurrentDate()
 	jobsFound, err := s.repo.GetDailyUsage(ctx, userID, today, QuotaKeyJobsFound)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get job search usage: %w", err)
@@ -213,26 +214,14 @@ func (s *SearchQuotaService) GetStatus(ctx context.Context, userID int) (*QuotaC
 		Status: QuotaStatus{
 			Used:      jobsFound,
 			Limit:     limit,
-			ResetDate: getTomorrowStart(),
+			ResetDate: timeutil.GetTomorrowStart(),
 		},
 	}, nil
 }
 
-// getCurrentDate returns the current date in "2006-01-02" format (UTC)
-func getCurrentDate() string {
-	return time.Now().UTC().Format("2006-01-02")
-}
-
-// getTomorrowStart returns the start of tomorrow (UTC)
-func getTomorrowStart() time.Time {
-	now := time.Now().UTC()
-	tomorrow := now.AddDate(0, 0, 1)
-	return time.Date(tomorrow.Year(), tomorrow.Month(), tomorrow.Day(), 0, 0, 0, 0, time.UTC)
-}
-
 // GetSearchRunStatus returns the current search run quota status
 func (s *SearchQuotaService) GetSearchRunStatus(ctx context.Context, userID int) (*QuotaCheckResult, error) {
-	today := getCurrentDate()
+	today := timeutil.GetCurrentDate()
 	searchesRun, err := s.repo.GetDailyUsage(ctx, userID, today, QuotaKeySearchesRun)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get search run usage: %w", err)
@@ -277,7 +266,7 @@ func (s *SearchQuotaService) GetSearchRunStatus(ctx context.Context, userID int)
 		Status: QuotaStatus{
 			Used:      searchesRun,
 			Limit:     limit,
-			ResetDate: getTomorrowStart(),
+			ResetDate: timeutil.GetTomorrowStart(),
 		},
 	}, nil
 }

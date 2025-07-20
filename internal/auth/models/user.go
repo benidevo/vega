@@ -6,6 +6,19 @@ import (
 	"time"
 )
 
+// ValidateUsername validates a username
+func ValidateUsername(username string) error {
+	if username == "" {
+		return errors.New("username cannot be empty")
+	}
+
+	if len(username) < 3 || len(username) > 30 {
+		return errors.New("username must be between 3 and 30 characters")
+	}
+
+	return nil
+}
+
 // Role represents the role of a user in the system.
 // It is an enumerated type with predefined constants for different roles.
 //
@@ -67,8 +80,8 @@ func (u *User) IsAdmin() bool {
 
 // NewUser creates a new User instance with the provided username, password, and role.
 func NewUser(username, password string, role Role) (*User, error) {
-	if username == "" {
-		return nil, errors.New("username cannot be empty")
+	if err := ValidateUsername(username); err != nil {
+		return nil, err
 	}
 
 	if password == "" {
