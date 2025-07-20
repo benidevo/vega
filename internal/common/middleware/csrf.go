@@ -10,9 +10,10 @@ import (
 )
 
 const (
-	csrfTokenLength = 32
-	csrfCookieName  = "csrf_token"
-	csrfHeaderName  = "X-CSRF-Token"
+	csrfTokenLength  = 32
+	csrfCookieName   = "csrf_token"
+	csrfHeaderName   = "X-CSRF-Token"
+	csrfCookieMaxAge = 86400 // 24 hours in seconds
 )
 
 func generateCSRFToken() (string, error) {
@@ -57,11 +58,11 @@ func CSRF() gin.HandlerFunc {
 			c.SetCookie(
 				csrfCookieName,
 				token,
-				3600*24, // 24 hours
+				csrfCookieMaxAge,
 				"/",
 				"",
-				c.Request.TLS != nil, // Secure in production (HTTPS)
-				true,                 // HttpOnly
+				c.Request.TLS != nil || strings.EqualFold(c.GetHeader("X-Forwarded-Proto"), "https"), // Secure in production (HTTPS or via reverse proxy)
+				true, // HttpOnly
 			)
 		} else {
 			token = cookie

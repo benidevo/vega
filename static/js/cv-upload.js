@@ -1,4 +1,11 @@
 // CV Upload functionality
+
+// Helper function to get CSRF token from meta tag
+function getCSRFToken() {
+    const metaTag = document.querySelector('meta[name="csrf-token"]');
+    return metaTag ? metaTag.getAttribute('content') : '';
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
     const uploadButton = document.getElementById('cv-upload-button');
     const fileInput = document.getElementById('cv-file-input');
@@ -80,9 +87,15 @@ document.addEventListener('DOMContentLoaded', async function() {
                 return showError('The document is too long. Please upload a standard CV/Resume (typically 1-3 pages).');
             }
 
+            // Get CSRF token from meta tag
+            const csrfToken = getCSRFToken();
+            
             const response = await fetch('/settings/profile/parse-cv', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken
+                },
                 body: JSON.stringify({ cv_text: text })
             });
 
