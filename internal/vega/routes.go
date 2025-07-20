@@ -82,8 +82,11 @@ func SetupRoutes(a *App) {
 	authGroup.Use(authHandler.AuthMiddleware())
 	auth.RegisterPrivateRoutes(authGroup, authHandler)
 
-	// Homepage route with optional auth (accessible to all, populates context when authenticated)
+	// Homepage route - register different handlers based on mode
 	a.router.GET("/", authHandler.OptionalAuthMiddleware(), homeHandler.GetHomePage)
+	
+	// Dashboard route - always shows dashboard
+	a.router.GET("/dashboard", authHandler.OptionalAuthMiddleware(), homeHandler.GetHomePage)
 
 	jobGroup := a.router.Group("/jobs")
 	jobGroup.Use(authHandler.AuthMiddleware())

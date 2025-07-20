@@ -3,6 +3,7 @@ package home
 import (
 	"net/http"
 
+	"github.com/benidevo/vega/internal/common/alerts"
 	"github.com/benidevo/vega/internal/common/render"
 	"github.com/benidevo/vega/internal/config"
 	"github.com/gin-gonic/gin"
@@ -25,22 +26,60 @@ func NewHandler(cfg *config.Settings, service *Service) *Handler {
 }
 
 // GetHomePage renders the home page template with dynamic user data.
+// Note: Despite the name, this renders the dashboard (templates/home/index.html), not the landing page.
 func (h *Handler) GetHomePage(c *gin.Context) {
-	_, exists := c.Get("userID")
+	// In cloud mode, show landing page only for "/" route
+	if h.cfg.IsCloudMode && c.Request.URL.Path == "/" {
+		username, _ := c.Get("username")
+		h.renderer.HTML(c, http.StatusOK, "landing/index.html", gin.H{
+			"title": "Vega AI - AI-Powered Job Search Assistant",
+			"username": username,
+		})
+		return
+	}
+	
+	// In self-hosted mode, show dashboard
+	userIDValue, exists := c.Get("userID")
 	if !exists {
-		// In cloud mode, show landing page to non-authenticated users
-		if h.cfg.IsCloudMode {
-			h.renderer.HTML(c, http.StatusOK, "landing/index.html", gin.H{
-				"title": "Vega AI - AI-Powered Job Search Assistant",
-			})
-			return
-		}
-
-		// In self-hosted mode, redirect to login
-		c.Redirect(http.StatusTemporaryRedirect, "/auth/login")
+		// Show dashboard with onboarding for non-authenticated users
+		emptyHomeData := NewHomePageData(0, "")
+		h.renderer.HTML(c, http.StatusOK, "layouts/base.html", gin.H{
+			"title":              emptyHomeData.Title,
+			"page":               emptyHomeData.Page,
+			"googleOAuthEnabled": h.cfg.GoogleOAuthEnabled,
+			"isCloudMode":        h.cfg.IsCloudMode,
+			"showOnboarding":     emptyHomeData.ShowOnboarding,
+			"stats":              emptyHomeData.Stats,
+			"recentJobs":         emptyHomeData.RecentJobs,
+			"hasJobs":            emptyHomeData.HasJobs,
+		})
 		return
 	}
 
-	// If authenticated, redirect to jobs dashboard
-	c.Redirect(http.StatusTemporaryRedirect, "/jobs")
+	userID := userIDValue.(int)
+	username, _ := c.Get("username")
+	usernameStr := ""
+	if username != nil {
+		if str, ok := username.(string); ok {
+			usernameStr = str
+		}
+	}
+
+	homeData, err := h.service.GetHomePageData(c.Request.Context(), userID, usernameStr)
+	if err != nil {
+		alerts.RenderError(c, http.StatusInternalServerError, "Failed to load homepage data", alerts.ContextGeneral)
+		return
+	}
+
+	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", gin.H{
+		"title":          homeData.Title,
+		"page":           homeData.Page,
+		"activeNav":      "dashboard",
+		"pageTitle":      "Dashboard",
+		"stats":          homeData.Stats,
+		"recentJobs":     homeData.RecentJobs,
+		"hasJobs":        homeData.HasJobs,
+		"showOnboarding": homeData.ShowOnboarding,
+		"quotaStatus":    homeData.QuotaStatus,
+	})
 }
