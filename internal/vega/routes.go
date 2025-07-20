@@ -8,6 +8,7 @@ import (
 	jobapi "github.com/benidevo/vega/internal/api/job"
 	preferencesapi "github.com/benidevo/vega/internal/api/preferences"
 	"github.com/benidevo/vega/internal/auth"
+	"github.com/benidevo/vega/internal/common/middleware"
 	"github.com/benidevo/vega/internal/common/render"
 	"github.com/benidevo/vega/internal/home"
 	"github.com/benidevo/vega/internal/job"
@@ -20,6 +21,14 @@ import (
 // SetupRoutes configures all application routes and middleware
 func SetupRoutes(a *App) {
 	a.router.Use(globalErrorHandler(a.renderer))
+
+	if a.config.EnableSecurityHeaders {
+		a.router.Use(middleware.SecurityHeaders())
+	}
+
+	if a.config.EnableCSRF {
+		a.router.Use(middleware.CSRF())
+	}
 
 	a.router.Static("/static", "./static")
 

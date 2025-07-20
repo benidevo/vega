@@ -60,7 +60,8 @@
     <div class="mb-6 pb-6 border-b border-slate-700 border-opacity-50">
       <h3 class="text-lg md:text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Account Management</h3>
 
-      <form id="security-account-form" action="/settings/security/account" method="POST" hx-post="/settings/security/account" hx-target="#form-alert-container" hx-swap="innerHTML" hx-on::after-request="if(event.detail.successful && event.detail.xhr.responseText.includes('successfully')) { document.getElementById('current_password').value = ''; document.getElementById('new_password').value = ''; document.getElementById('confirm_password').value = ''; }" class="space-y-6">
+      <form id="security-account-form" action="/settings/security/account" method="POST" hx-post="/settings/security/account" hx-target="#form-alert-container" hx-swap="innerHTML" hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}' hx-on::after-request="if(event.detail.successful && event.detail.xhr.responseText.includes('successfully')) { document.getElementById('current_password').value = ''; document.getElementById('new_password').value = ''; document.getElementById('confirm_password').value = ''; }" class="space-y-6">
+        <input type="hidden" name="csrf_token" value="{{.csrfToken}}">
         <!-- Current Password (Required for any changes) -->
         <div class="bg-slate-700 bg-opacity-40 rounded-lg p-4 md:p-6">
           <h4 class="text-md font-medium text-white mb-4">Authentication Required</h4>

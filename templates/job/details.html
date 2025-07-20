@@ -60,6 +60,7 @@
             <button
               class="px-3 py-1 bg-primary hover:bg-primary-dark text-white text-sm rounded-md"
               hx-put="/jobs/{{.jobID}}/basic"
+              hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
               hx-include="#job-title-input, #job-company-input, #job-location-input"
               hx-target="#header-response"
               hx-swap="innerHTML"
@@ -135,6 +136,7 @@
               <button
                 class="px-3 py-1 bg-primary hover:bg-primary-dark text-white text-sm rounded-md"
                 hx-put="/jobs/{{.jobID}}/skills"
+                hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
                 hx-include="#skills-input"
                 hx-target="#skills-response"
                 hx-swap="innerHTML"
@@ -185,6 +187,7 @@
             <button id="save-notes-btn"
               class="px-3 py-1 bg-primary hover:bg-primary-dark text-white text-sm rounded-md hidden"
               hx-put="/jobs/{{.jobID}}/notes"
+              hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
               hx-include="#job-notes"
               hx-target="#notes-response"
               hx-swap="innerHTML">
@@ -227,6 +230,7 @@
           <select
             class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors mb-4"
             hx-put="/jobs/{{.jobID}}/status"
+            hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
             hx-target="#status-response"
             hx-trigger="change"
             name="status"
@@ -255,6 +259,7 @@
           <button id="analyze-button" class="w-full mb-3 py-2.5 px-4 {{if and .isCloudMode (not .isReanalysis) (not .quotaCheck.Allowed)}}bg-gray-600 cursor-not-allowed{{else}}bg-primary hover:bg-primary-dark{{end}} text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
                   {{if and .isCloudMode (not .isReanalysis) (not .quotaCheck.Allowed)}}disabled{{else}}
                   hx-post="/jobs/{{.jobID}}/analyze"
+                  hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
                   hx-target="#ai-analysis"
                   hx-target-error="#analyze-error"
                   hx-swap="innerHTML"
@@ -306,6 +311,7 @@
 
           <button id="cover-letter-button" class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
                   hx-post="/jobs/{{.jobID}}/cover-letter"
+                  hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
                   hx-target="#cover-letter-section"
                   hx-target-4xx="#cover-letter-error"
                   hx-swap="innerHTML">
@@ -324,6 +330,7 @@
 
           <button id="cv-button" class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
                   hx-post="/jobs/{{.jobID}}/cv"
+                  hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
                   hx-target="#cv-section"
                   hx-target-4xx="#cv-error"
                   hx-swap="innerHTML">

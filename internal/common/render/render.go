@@ -20,11 +20,13 @@ func NewHTMLRenderer(cfg *config.Settings) *HTMLRenderer {
 // BaseTemplateData returns common template data that all handlers need
 func (r *HTMLRenderer) BaseTemplateData(c *gin.Context) gin.H {
 	username, _ := c.Get("username")
+	csrfToken, _ := c.Get("csrfToken")
 	return gin.H{
 		"currentYear":         time.Now().Year(),
 		"securityPageEnabled": true, // Always enabled
 		"username":            username,
 		"isCloudMode":         r.cfg.IsCloudMode,
+		"csrfToken":           csrfToken,
 	}
 }
 

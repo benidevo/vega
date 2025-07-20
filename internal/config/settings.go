@@ -60,6 +60,10 @@ type Settings struct {
 	CachePath        string
 	CacheMaxMemoryMB int
 	CacheDefaultTTL  time.Duration
+
+	// Security settings
+	EnableSecurityHeaders bool
+	EnableCSRF            bool
 }
 
 // NewSettings initializes and returns a Settings struct with default values
@@ -163,6 +167,9 @@ func NewSettings() Settings {
 		CachePath:        getEnv("CACHE_PATH", "./data/cache"),
 		CacheMaxMemoryMB: getCacheMaxMemoryMB(),
 		CacheDefaultTTL:  getCacheDefaultTTL(),
+
+		EnableSecurityHeaders: getEnv("ENABLE_SECURITY_HEADERS", "true") == "true",
+		EnableCSRF:            getEnv("ENABLE_CSRF", "true") == "true",
 	}
 }
 
