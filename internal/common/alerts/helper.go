@@ -58,10 +58,8 @@ func RenderErrorWithConfig(c *gin.Context, statusCode int, message string, conte
 			"currentYear": time.Now().Year(),
 		}
 
-		// Add security page enabled flag if config is provided
-		if cfg != nil {
-			templateData["securityPageEnabled"] = cfg.SecurityPageEnabled
-		}
+		// Security page is always enabled
+		templateData["securityPageEnabled"] = true
 
 		c.HTML(http.StatusInternalServerError, "layouts/base.html", templateData)
 		return

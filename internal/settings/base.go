@@ -162,7 +162,7 @@ func (h *BaseSettingsHandler) HandleCreate(c *gin.Context) {
 				"activeSettings":      "profile",
 				"pageTitle":           "Profile Settings",
 				"currentYear":         time.Now().Year(),
-				"securityPageEnabled": h.service.GetConfig().SecurityPageEnabled,
+				"securityPageEnabled": true, // Always enabled
 				"username":            username,
 				"profile":             profile,
 				fmt.Sprintf("isAdding%s", h.metadata.Name): true,

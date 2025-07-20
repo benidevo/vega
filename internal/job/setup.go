@@ -53,12 +53,12 @@ func SetupAIService(cfg *config.Settings) (*ai.AIService, error) {
 	return ai.Setup(cfg)
 }
 
-// SetupSettingsService initializes and returns a settings service instance.
+// SetupSettingsService initializes and returns a settings service instance for profile management.
 func SetupSettingsService(db *sql.DB, cfg *config.Settings) *settings.SettingsService {
-	// Create the service directly instead of using Setup which returns handler
+	// Create the service for profile management only (no auth needed)
 	authRepo := authrepo.NewSQLiteUserRepository(db)
 	settingsRepo := settingsrepo.NewProfileRepository(db)
-	return settings.NewSettingsService(settingsRepo, cfg, authRepo)
+	return settings.NewSettingsServiceForProfiles(settingsRepo, cfg, authRepo)
 }
 
 // SetupJobService initializes and returns a new JobService using the provided JobRepository, AIService, SettingsService, QuotaService and configuration settings.

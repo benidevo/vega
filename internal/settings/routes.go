@@ -18,6 +18,7 @@ func RegisterRoutes(settingsGroup *gin.RouterGroup, handler *SettingsHandler) {
 
 	// Security settings
 	settingsGroup.GET("/security", handler.GetSecuritySettingsPage)
+	settingsGroup.POST("/security/account", handler.HandleUpdateSecurityAccount)
 
 	// Experience routes
 	settingsGroup.GET("/profile/experience/new", handler.GetAddExperiencePage)
@@ -45,4 +46,14 @@ func RegisterRoutes(settingsGroup *gin.RouterGroup, handler *SettingsHandler) {
 	// Support both methods for maximum compatibility
 	settingsGroup.DELETE("/profile/certification/:id", handler.HandleDeleteCertification)
 	settingsGroup.POST("/profile/certification/:id/delete", handler.HandleDeleteCertification)
+
+	// Job Search Preference routes
+	settingsGroup.GET("/search-preferences", handler.GetJobSearchPreferencesPage)
+	settingsGroup.POST("/search-preferences", handler.CreateJobSearchPreference)
+	settingsGroup.PUT("/search-preferences/:id", handler.UpdateJobSearchPreference)
+	settingsGroup.DELETE("/search-preferences/:id", handler.DeleteJobSearchPreference)
+	settingsGroup.PATCH("/search-preferences/:id/toggle", handler.ToggleJobSearchPreference)
+
+	// Quota routes
+	settingsGroup.GET("/quotas", handler.GetQuotasPage)
 }

@@ -44,6 +44,20 @@
         Profile
       </a>
 
+      <a href="/settings/search-preferences" class="{{if eq .activeNav "search-preferences"}}bg-slate-700 text-white{{else}}text-gray-300 hover:bg-slate-700 hover:text-white{{end}} group flex items-center px-3 py-2.5 text-sm font-medium rounded-md">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 {{if eq .activeNav "search-preferences"}}text-primary{{else}}text-gray-400 group-hover:text-primary{{end}}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        Search Preferences
+      </a>
+
+      <a href="/settings/quotas" class="{{if eq .activeNav "quotas"}}bg-slate-700 text-white{{else}}text-gray-300 hover:bg-slate-700 hover:text-white{{end}} group flex items-center px-3 py-2.5 text-sm font-medium rounded-md">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 {{if eq .activeNav "quotas"}}text-primary{{else}}text-gray-400 group-hover:text-primary{{end}}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+        Usage & Quotas
+      </a>
+
       {{if .securityPageEnabled}}
       <a href="/settings/security" class="{{if eq .activeNav "security"}}bg-slate-700 text-white{{else}}text-gray-300 hover:bg-slate-700 hover:text-white{{end}} group flex items-center px-3 py-2.5 text-sm font-medium rounded-md">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 {{if eq .activeNav "security"}}text-primary{{else}}text-gray-400 group-hover:text-primary{{end}}" fill="none" viewBox="0 0 24 24" stroke="currentColor">

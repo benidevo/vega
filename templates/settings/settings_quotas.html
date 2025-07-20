@@ -1,0 +1,319 @@
+{{define "settings-quotas-content"}}
+<div class="mx-0 md:max-w-6xl md:mx-auto relative">
+  <!-- Alert container for any notifications -->
+  <div id="form-alert-container" class="mb-4 md:mb-6 px-4 md:px-0" hx-swap-oob="true" aria-live="polite"></div>
+  
+  <!-- Content container with responsive padding -->
+  <div class="relative p-4 md:p-6 bg-slate-800 bg-opacity-70 backdrop-blur-xl rounded-none md:rounded-xl shadow-2xl border-0 md:border border-white border-opacity-10">
+    
+    <!-- Page Header -->
+    <div class="mb-6 pb-6 border-b border-slate-700 border-opacity-50">
+      <h2 class="text-xl md:text-2xl font-bold text-white mb-2">Usage & Quotas</h2>
+      <p class="text-sm md:text-base text-gray-400">
+        {{if .isCloudMode}}
+          Monitor your usage and quota limits for all features.
+        {{else}}
+          Your self-hosted instance has unlimited usage for all features.
+        {{end}}
+      </p>
+    </div>
+
+    {{if .hasQuotaData}}
+    <!-- Current Usage Section -->
+    <div class="mb-8">
+      <h3 class="text-lg md:text-xl font-semibold mb-4 text-white">Current Usage</h3>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6">
+        <!-- Jobs Found Today -->
+        <div class="bg-slate-700 bg-opacity-50 rounded-lg p-4 md:p-5 lg:p-6 hover:bg-opacity-70 transition-all duration-200">
+          <div class="flex items-center justify-between mb-2 md:mb-3">
+            <h4 class="text-sm md:text-base font-medium text-white">Jobs Found Today</h4>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 md:h-6 w-5 md:w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <p class="text-xl md:text-2xl font-bold text-white mb-2">
+            {{if eq .quotaStatus.JobSearch.Limit -1}}{{.quotaStatus.JobSearch.Used}}{{else}}{{.quotaStatus.JobSearch.Used}} / {{.quotaStatus.JobSearch.Limit}}{{end}}
+          </p>
+          {{if ne .quotaStatus.JobSearch.Limit -1}}
+          <div class="w-full bg-slate-600 rounded-full h-2 mb-2">
+            <div class="bg-primary h-2 rounded-full transition-all duration-300" data-used="{{.quotaStatus.JobSearch.Used}}" data-limit="{{.quotaStatus.JobSearch.Limit}}"></div>
+          </div>
+          <p class="text-xs text-gray-400">
+            {{if eq .quotaStatus.JobSearch.Used .quotaStatus.JobSearch.Limit}}
+              Limit reached
+            {{else}}
+              {{sub .quotaStatus.JobSearch.Limit .quotaStatus.JobSearch.Used}} remaining
+            {{end}}
+          </p>
+          {{else}}
+          <p class="text-xs text-gray-400">Unlimited</p>
+          {{end}}
+          {{if and (ne .quotaStatus.JobSearch.Limit -1) (not .quotaStatus.JobSearch.ResetDate.IsZero)}}
+          <p class="text-xs text-gray-500 mt-2">
+            Resets {{.quotaStatus.JobSearch.ResetDate.Format "Jan 2, 3:04 PM"}}
+          </p>
+          {{end}}
+        </div>
+
+        <!-- Search Runs Today -->
+        <div class="bg-slate-700 bg-opacity-50 rounded-lg p-4 md:p-5 lg:p-6 hover:bg-opacity-70 transition-all duration-200">
+          <div class="flex items-center justify-between mb-2 md:mb-3">
+            <h4 class="text-sm md:text-base font-medium text-white">Search Runs Today</h4>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 md:h-6 w-5 md:w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <p class="text-xl md:text-2xl font-bold text-white mb-2">
+            {{if eq .quotaStatus.SearchRuns.Limit -1}}{{.quotaStatus.SearchRuns.Used}}{{else}}{{.quotaStatus.SearchRuns.Used}} / {{.quotaStatus.SearchRuns.Limit}}{{end}}
+          </p>
+          {{if ne .quotaStatus.SearchRuns.Limit -1}}
+          <div class="w-full bg-slate-600 rounded-full h-2 mb-2">
+            <div class="bg-primary h-2 rounded-full transition-all duration-300" data-used="{{.quotaStatus.SearchRuns.Used}}" data-limit="{{.quotaStatus.SearchRuns.Limit}}"></div>
+          </div>
+          <p class="text-xs text-gray-400">
+            {{if eq .quotaStatus.SearchRuns.Used .quotaStatus.SearchRuns.Limit}}
+              Limit reached
+            {{else}}
+              {{sub .quotaStatus.SearchRuns.Limit .quotaStatus.SearchRuns.Used}} remaining
+            {{end}}
+          </p>
+          {{else}}
+          <p class="text-xs text-gray-400">Unlimited</p>
+          {{end}}
+          {{if and (ne .quotaStatus.SearchRuns.Limit -1) (not .quotaStatus.SearchRuns.ResetDate.IsZero)}}
+          <p class="text-xs text-gray-500 mt-2">
+            Resets {{.quotaStatus.SearchRuns.ResetDate.Format "Jan 2, 3:04 PM"}}
+          </p>
+          {{end}}
+        </div>
+
+        <!-- AI Analyses This Month -->
+        <div class="bg-slate-700 bg-opacity-50 rounded-lg p-4 md:p-5 lg:p-6 hover:bg-opacity-70 transition-all duration-200">
+          <div class="flex items-center justify-between mb-2 md:mb-3">
+            <h4 class="text-sm md:text-base font-medium text-white">AI Analyses This Month</h4>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 md:h-6 w-5 md:w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <p class="text-xl md:text-2xl font-bold text-white mb-2">
+            {{if eq .quotaStatus.AIAnalysis.Limit -1}}{{.quotaStatus.AIAnalysis.Used}}{{else}}{{.quotaStatus.AIAnalysis.Used}} / {{.quotaStatus.AIAnalysis.Limit}}{{end}}
+          </p>
+          {{if ne .quotaStatus.AIAnalysis.Limit -1}}
+          <div class="w-full bg-slate-600 rounded-full h-2 mb-2">
+            <div class="bg-primary h-2 rounded-full transition-all duration-300" data-used="{{.quotaStatus.AIAnalysis.Used}}" data-limit="{{.quotaStatus.AIAnalysis.Limit}}"></div>
+          </div>
+          <p class="text-xs text-gray-400">
+            {{if eq .quotaStatus.AIAnalysis.Used .quotaStatus.AIAnalysis.Limit}}
+              Limit reached
+            {{else}}
+              {{sub .quotaStatus.AIAnalysis.Limit .quotaStatus.AIAnalysis.Used}} remaining
+            {{end}}
+          </p>
+          {{else}}
+          <p class="text-xs text-gray-400">Unlimited</p>
+          {{end}}
+          {{if and (ne .quotaStatus.AIAnalysis.Limit -1) (not .quotaStatus.AIAnalysis.ResetDate.IsZero)}}
+          <p class="text-xs text-gray-500 mt-2">
+            Resets {{.quotaStatus.AIAnalysis.ResetDate.Format "Jan 2, 2006"}}
+          </p>
+          {{end}}
+        </div>
+      </div>
+    </div>
+
+    <!-- Quota Details Section -->
+    <div class="mb-8">
+      <h3 class="text-lg md:text-xl font-semibold mb-4 text-white">Quota Details</h3>
+      
+      <!-- Desktop Table View -->
+      <div class="hidden md:block bg-slate-700 bg-opacity-50 rounded-lg overflow-hidden">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-slate-600">
+              <th class="text-left px-4 py-3 text-sm font-medium text-gray-300">Feature</th>
+              <th class="text-center px-4 py-3 text-sm font-medium text-gray-300">Period</th>
+              <th class="text-center px-4 py-3 text-sm font-medium text-gray-300">Free Limit</th>
+              <th class="text-center px-4 py-3 text-sm font-medium text-gray-300">Your Limit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b border-slate-600 hover:bg-slate-600 hover:bg-opacity-30 transition-colors">
+              <td class="px-4 py-3 text-sm text-gray-300">Job Search Results</td>
+              <td class="text-center px-4 py-3 text-sm text-gray-400">Daily</td>
+              <td class="text-center px-4 py-3 text-sm text-gray-400">100</td>
+              <td class="text-center px-4 py-3 text-sm font-medium text-white">
+                {{if eq .quotaStatus.JobSearch.Limit -1}}Unlimited{{else}}{{.quotaStatus.JobSearch.Limit}}{{end}}
+              </td>
+            </tr>
+            <tr class="border-b border-slate-600 hover:bg-slate-600 hover:bg-opacity-30 transition-colors">
+              <td class="px-4 py-3 text-sm text-gray-300">Search Runs</td>
+              <td class="text-center px-4 py-3 text-sm text-gray-400">Daily</td>
+              <td class="text-center px-4 py-3 text-sm text-gray-400">20</td>
+              <td class="text-center px-4 py-3 text-sm font-medium text-white">
+                {{if eq .quotaStatus.SearchRuns.Limit -1}}Unlimited{{else}}{{.quotaStatus.SearchRuns.Limit}}{{end}}
+              </td>
+            </tr>
+            <tr class="hover:bg-slate-600 hover:bg-opacity-30 transition-colors">
+              <td class="px-4 py-3 text-sm text-gray-300">AI Job Analysis</td>
+              <td class="text-center px-4 py-3 text-sm text-gray-400">Monthly</td>
+              <td class="text-center px-4 py-3 text-sm text-gray-400">5</td>
+              <td class="text-center px-4 py-3 text-sm font-medium text-white">
+                {{if eq .quotaStatus.AIAnalysis.Limit -1}}Unlimited{{else}}{{.quotaStatus.AIAnalysis.Limit}}{{end}}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile Card View -->
+      <div class="md:hidden space-y-3">
+        <!-- Job Search Results Card -->
+        <div class="bg-slate-700 bg-opacity-50 rounded-lg p-4">
+          <h4 class="font-medium text-white mb-2">Job Search Results</h4>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <span class="text-gray-400">Period:</span>
+              <span class="ml-2 text-gray-300">Daily</span>
+            </div>
+            <div>
+              <span class="text-gray-400">Free:</span>
+              <span class="ml-2 text-gray-300">100</span>
+            </div>
+            <div class="col-span-2">
+              <span class="text-gray-400">Your Limit:</span>
+              <span class="ml-2 font-medium text-white">
+                {{if eq .quotaStatus.JobSearch.Limit -1}}Unlimited{{else}}{{.quotaStatus.JobSearch.Limit}}{{end}}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search Runs Card -->
+        <div class="bg-slate-700 bg-opacity-50 rounded-lg p-4">
+          <h4 class="font-medium text-white mb-2">Search Runs</h4>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <span class="text-gray-400">Period:</span>
+              <span class="ml-2 text-gray-300">Daily</span>
+            </div>
+            <div>
+              <span class="text-gray-400">Free:</span>
+              <span class="ml-2 text-gray-300">20</span>
+            </div>
+            <div class="col-span-2">
+              <span class="text-gray-400">Your Limit:</span>
+              <span class="ml-2 font-medium text-white">
+                {{if eq .quotaStatus.SearchRuns.Limit -1}}Unlimited{{else}}{{.quotaStatus.SearchRuns.Limit}}{{end}}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Job Analysis Card -->
+        <div class="bg-slate-700 bg-opacity-50 rounded-lg p-4">
+          <h4 class="font-medium text-white mb-2">AI Job Analysis</h4>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <span class="text-gray-400">Period:</span>
+              <span class="ml-2 text-gray-300">Monthly</span>
+            </div>
+            <div>
+              <span class="text-gray-400">Free:</span>
+              <span class="ml-2 text-gray-300">5</span>
+            </div>
+            <div class="col-span-2">
+              <span class="text-gray-400">Your Limit:</span>
+              <span class="ml-2 font-medium text-white">
+                {{if eq .quotaStatus.AIAnalysis.Limit -1}}Unlimited{{else}}{{.quotaStatus.AIAnalysis.Limit}}{{end}}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Information Section -->
+    <div class="space-y-3 md:space-y-4">
+      <div class="bg-blue-900 bg-opacity-30 border border-blue-700 rounded-lg p-3 md:p-4">
+        <div class="flex">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-400 mr-2 md:mr-3 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <h4 class="text-sm font-medium text-blue-300 mb-1">About Quotas</h4>
+            <p class="text-xs md:text-sm text-gray-300">
+              {{if .isCloudMode}}
+                Quotas help ensure fair usage and system stability. Daily quotas reset at midnight UTC, while monthly quotas reset on the first day of each month.
+              {{else}}
+                As a self-hosted user, you have unlimited access to all features. The usage tracking is for informational purposes only.
+              {{end}}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {{if .isCloudMode}}
+      <div class="bg-primary bg-opacity-20 border border-primary rounded-lg p-3 md:p-4">
+        <div class="flex">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary mr-2 md:mr-3 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          </svg>
+          <div>
+            <h4 class="text-sm font-medium text-primary mb-1">Need Higher Limits?</h4>
+            <p class="text-xs md:text-sm text-gray-300">
+              You can create a self-hosted version with unlimited usage. Visit 
+              <a href="https://vega.benidevo.com" target="_blank" rel="noopener noreferrer" class="text-primary hover:text-primary-light underline">
+                vega.benidevo.com
+              </a> 
+              for instructions on how to get started.
+            </p>
+          </div>
+        </div>
+      </div>
+      {{end}}
+    </div>
+
+    {{else}}
+    <!-- No quota data available -->
+    <div class="bg-slate-700 bg-opacity-50 rounded-lg p-8 text-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+      <p class="text-gray-400 text-base">Unable to load quota information. Please try again later.</p>
+    </div>
+    {{end}}
+  </div>
+</div>
+
+<!-- JavaScript for progress bars -->
+<script>
+// Set quota progress bars on page load
+document.addEventListener('DOMContentLoaded', function() {
+  const progressBars = document.querySelectorAll('.bg-primary[data-used][data-limit]');
+  progressBars.forEach(bar => {
+    const used = parseInt(bar.dataset.used);
+    const limit = parseInt(bar.dataset.limit);
+    
+    if (limit > 0) {
+      const percentage = Math.min((used / limit) * 100, 100);
+      bar.style.width = percentage + '%';
+      
+      // Add color variations based on usage
+      if (percentage >= 90) {
+        bar.classList.add('bg-red-500');
+        bar.classList.remove('bg-primary');
+      } else if (percentage >= 75) {
+        bar.classList.add('bg-yellow-500');
+        bar.classList.remove('bg-primary');
+      }
+    } else {
+      bar.style.width = '0%';
+    }
+  });
+});
+</script>
+
+<!-- Include auto-dismiss alerts script -->
+{{template "partials/auto-dismiss-alerts.html" .}}
+{{end}}

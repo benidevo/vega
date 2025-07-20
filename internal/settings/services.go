@@ -2,6 +2,7 @@ package settings
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
 	authrepo "github.com/benidevo/vega/internal/auth/repository"
@@ -20,16 +21,36 @@ type SettingsService struct {
 	cfg              *config.Settings
 	log              *logger.PrivacyLogger
 	centralValidator *services.CentralizedValidator
+	authService      AuthServiceInterface
+}
+
+// AuthServiceInterface defines the methods we need from the auth service
+type AuthServiceInterface interface {
+	ChangePassword(ctx context.Context, userID int, newPassword string) error
+	VerifyPassword(hashedPassword, password string) bool
 }
 
 // NewSettingsService creates a new SettingsService instance
-func NewSettingsService(settingsRepo interfaces.SettingsRepository, cfg *config.Settings, userRepo authrepo.UserRepository) *SettingsService {
+func NewSettingsService(settingsRepo interfaces.SettingsRepository, cfg *config.Settings, userRepo authrepo.UserRepository, authService AuthServiceInterface) *SettingsService {
 	return &SettingsService{
 		userRepo:         userRepo,
 		settingsRepo:     settingsRepo,
 		cfg:              cfg,
 		log:              logger.GetPrivacyLogger("settings"),
 		centralValidator: services.NewCentralizedValidator(),
+		authService:      authService,
+	}
+}
+
+// NewSettingsServiceForProfiles creates a settings service instance for profile management only (no auth required)
+func NewSettingsServiceForProfiles(settingsRepo interfaces.SettingsRepository, cfg *config.Settings, userRepo authrepo.UserRepository) *SettingsService {
+	return &SettingsService{
+		userRepo:         userRepo,
+		settingsRepo:     settingsRepo,
+		cfg:              cfg,
+		log:              logger.GetPrivacyLogger("settings"),
+		centralValidator: services.NewCentralizedValidator(),
+		authService:      nil, // No auth service needed for profile-only operations
 	}
 }
 
@@ -287,4 +308,140 @@ func (s *SettingsService) validateEntity(entity CRUDEntity) error {
 	default:
 		return fmt.Errorf("unsupported entity type for validation")
 	}
+}
+
+// Job Search Preference Methods
+
+// CreatePreference creates a new job search preference
+func (s *SettingsService) CreatePreference(ctx context.Context, userID int, input services.CreatePreferenceInput) (*models.JobSearchPreference, error) {
+	// Validate max age
+	if err := services.ValidateMaxAge(input.MaxAge); err != nil {
+		return nil, err
+	}
+
+	// Check if user has reached the maximum number of preferences
+	existingPrefs, err := s.settingsRepo.GetJobSearchPreferencesByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(existingPrefs) >= services.MaxPreferencesPerUser {
+		return nil, services.ErrMaxPreferencesReached
+	}
+
+	// Create the preference
+	preference := &models.JobSearchPreference{
+		JobTitle: input.JobTitle,
+		Location: input.Location,
+		Skills:   input.Skills,
+		MaxAge:   input.MaxAge,
+		IsActive: input.IsActive,
+	}
+
+	preference.Sanitize()
+	if err := preference.Validate(); err != nil {
+		return nil, err
+	}
+
+	if err := s.settingsRepo.CreateJobSearchPreference(ctx, userID, preference); err != nil {
+		return nil, err
+	}
+
+	return preference, nil
+}
+
+// GetUserPreferences retrieves all preferences for a user
+func (s *SettingsService) GetUserPreferences(ctx context.Context, userID int) ([]*models.JobSearchPreference, error) {
+	preferences, err := s.settingsRepo.GetJobSearchPreferencesByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return empty slice instead of nil for consistent API response
+	if preferences == nil {
+		return []*models.JobSearchPreference{}, nil
+	}
+
+	return preferences, nil
+}
+
+// GetActivePreferences retrieves only active preferences for a user
+func (s *SettingsService) GetActivePreferences(ctx context.Context, userID int) ([]*models.JobSearchPreference, error) {
+	preferences, err := s.settingsRepo.GetActiveJobSearchPreferencesByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return empty slice instead of nil for consistent API response
+	if preferences == nil {
+		return []*models.JobSearchPreference{}, nil
+	}
+
+	return preferences, nil
+}
+
+// UpdatePreference updates an existing preference
+func (s *SettingsService) UpdatePreference(ctx context.Context, userID int, preferenceID string, input services.UpdatePreferenceInput) error {
+	// Validate max age
+	if err := services.ValidateMaxAge(input.MaxAge); err != nil {
+		return err
+	}
+
+	// Check if preference exists and belongs to user
+	existingPref, err := s.settingsRepo.GetJobSearchPreferenceByID(ctx, userID, preferenceID)
+	if err != nil {
+		return err
+	}
+	if existingPref == nil {
+		return services.ErrPreferenceNotFound
+	}
+
+	// Update the preference
+	preference := &models.JobSearchPreference{
+		ID:       preferenceID,
+		JobTitle: input.JobTitle,
+		Location: input.Location,
+		Skills:   input.Skills,
+		MaxAge:   input.MaxAge,
+		IsActive: input.IsActive,
+	}
+
+	preference.Sanitize()
+	if err := preference.Validate(); err != nil {
+		return err
+	}
+
+	err = s.settingsRepo.UpdateJobSearchPreference(ctx, userID, preference)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return services.ErrPreferenceNotFound
+		}
+		return err
+	}
+
+	return nil
+}
+
+// DeletePreference deletes a preference
+func (s *SettingsService) DeletePreference(ctx context.Context, userID int, preferenceID string) error {
+	err := s.settingsRepo.DeleteJobSearchPreference(ctx, userID, preferenceID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return services.ErrPreferenceNotFound
+		}
+		return err
+	}
+	return nil
+}
+
+// TogglePreferenceStatus toggles the active status of a preference
+func (s *SettingsService) TogglePreferenceStatus(ctx context.Context, userID int, preferenceID string) error {
+	err := s.settingsRepo.ToggleJobSearchPreferenceActive(ctx, userID, preferenceID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return services.ErrPreferenceNotFound
+		}
+		return err
+	}
+	return nil
 }

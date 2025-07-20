@@ -1,23 +1,30 @@
 package settings
 
 import (
+	"context"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/benidevo/vega/internal/ai"
 	aimodels "github.com/benidevo/vega/internal/ai/models"
+	authmodels "github.com/benidevo/vega/internal/auth/models"
 	"github.com/benidevo/vega/internal/common/alerts"
 	"github.com/benidevo/vega/internal/common/render"
 	"github.com/benidevo/vega/internal/settings/models"
+	"github.com/benidevo/vega/internal/settings/services"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
 // SettingsHandler manages settings-related HTTP requests
 type SettingsHandler struct {
-	service              *SettingsService
-	aiService            *ai.AIService
+	service      *SettingsService
+	aiService    *ai.AIService
+	quotaService interface {
+		GetAllQuotaStatus(ctx context.Context, userID int) (interface{}, error)
+	}
 	experienceHandler    *BaseSettingsHandler
 	educationHandler     *BaseSettingsHandler
 	certificationHandler *BaseSettingsHandler
@@ -25,7 +32,9 @@ type SettingsHandler struct {
 }
 
 // NewSettingsHandler creates a new SettingsHandler instance
-func NewSettingsHandler(service *SettingsService, aiService *ai.AIService) *SettingsHandler {
+func NewSettingsHandler(service *SettingsService, aiService *ai.AIService, quotaService interface {
+	GetAllQuotaStatus(ctx context.Context, userID int) (interface{}, error)
+}) *SettingsHandler {
 	experienceMetadata := EntityMetadata{
 		Name:      "Experience",
 		URLPrefix: "experience",
@@ -53,6 +62,7 @@ func NewSettingsHandler(service *SettingsService, aiService *ai.AIService) *Sett
 	return &SettingsHandler{
 		service:              service,
 		aiService:            aiService,
+		quotaService:         quotaService,
 		experienceHandler:    NewBaseSettingsHandler(service, experienceMetadata),
 		educationHandler:     NewBaseSettingsHandler(service, educationMetadata),
 		certificationHandler: NewBaseSettingsHandler(service, certificationMetadata),
@@ -510,18 +520,14 @@ func (h *SettingsHandler) parseAIDate(dateStr string) time.Time {
 
 // GetSecuritySettings handles the request to display the security settings page
 func (h *SettingsHandler) GetSecuritySettingsPage(c *gin.Context) {
-	// Return 404 if security page is disabled
-	if !h.service.cfg.SecurityPageEnabled {
-		h.renderer.HTML(c, http.StatusNotFound, "layouts/base.html", gin.H{
-			"title": "Page Not Found",
-			"page":  "404",
-		})
-		return
-	}
+	// Security page is always enabled, no need to check
 
 	username, _ := c.Get("username")
+	userIDValue, _ := c.Get("userID")
+	userID := userIDValue.(int)
 
-	security, err := h.service.GetSecuritySettings(c.Request.Context(), username.(string))
+	// Get user information
+	user, err := h.service.userRepo.FindByID(c.Request.Context(), userID)
 	if err != nil {
 		h.renderer.HTML(c, http.StatusInternalServerError, "layouts/base.html", gin.H{
 			"title": "Something Went Wrong",
@@ -530,14 +536,25 @@ func (h *SettingsHandler) GetSecuritySettingsPage(c *gin.Context) {
 		return
 	}
 
-	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", gin.H{
+	data := gin.H{
 		"title":          "Security",
 		"page":           "settings-security",
 		"activeNav":      "security",
 		"activeSettings": "security",
 		"pageTitle":      "Security",
-		"security":       security,
-	})
+		"user":           user,
+		"isCloudMode":    h.service.cfg.IsCloudMode,
+	}
+
+	// For cloud mode, get security settings (Google account info)
+	if h.service.cfg.IsCloudMode {
+		security, err := h.service.GetSecuritySettings(c.Request.Context(), username.(string))
+		if err == nil {
+			data["security"] = security
+		}
+	}
+
+	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", data)
 }
 
 // GetAddExperiencePage handles the HTTP request to render the page for adding a new experience.
@@ -613,4 +630,404 @@ func (h *SettingsHandler) HandleUpdateCertificationForm(c *gin.Context) {
 // HandleDeleteCertification handles HTTP DELETE requests for removing a certification.
 func (h *SettingsHandler) HandleDeleteCertification(c *gin.Context) {
 	h.certificationHandler.HandleDelete(c)
+}
+
+// Quota Page Handler
+
+// GetQuotasPage displays the quotas page with usage statistics
+func (h *SettingsHandler) GetQuotasPage(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		h.renderer.Error(c, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	userID := userIDValue.(int)
+
+	// Get quota status
+	var quotaStatus interface{}
+	var hasQuotaData bool
+	if h.quotaService != nil {
+		quotaStatus, _ = h.quotaService.GetAllQuotaStatus(c.Request.Context(), userID)
+		hasQuotaData = quotaStatus != nil
+	}
+
+	data := gin.H{
+		"title":          "Usage & Quotas",
+		"activeNav":      "quotas",
+		"page":           "settings-quotas",
+		"activeSettings": "quotas",
+		"pageTitle":      "Usage & Quotas",
+		"quotaStatus":    quotaStatus,
+		"hasQuotaData":   hasQuotaData,
+		"isCloudMode":    h.service.cfg.IsCloudMode,
+	}
+
+	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", data)
+}
+
+// Job Search Preference Handlers
+
+// GetJobSearchPreferencesPage displays the job search preferences page
+func (h *SettingsHandler) GetJobSearchPreferencesPage(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		h.renderer.Error(c, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	userID := userIDValue.(int)
+
+	preferences, err := h.service.GetUserPreferences(c.Request.Context(), userID)
+	if err != nil {
+		h.renderer.Error(c, http.StatusInternalServerError, "Failed to retrieve preferences")
+		return
+	}
+
+	// Pass MaxAge constants to template - using slice of structs to maintain order
+	type maxAgeOption struct {
+		Label    string
+		Value    int
+		Selected bool
+	}
+
+	maxAgeOptions := []maxAgeOption{
+		{"1 hour", models.MaxAgeOneHour, false},
+		{"6 hours", models.MaxAgeSixHours, false},
+		{"12 hours", models.MaxAgeTwelveHours, false},
+		{"1 day", models.MaxAgeOneDay, true},
+		{"3 days", models.MaxAgeThreeDays, false},
+		{"1 week", models.MaxAgeOneWeek, false},
+		{"2 weeks", models.MaxAgeTwoWeeks, false},
+		{"30 days", models.MaxAgeThirtyDays, false},
+	}
+
+	data := gin.H{
+		"title":          "Search Preferences",
+		"activeNav":      "search-preferences",
+		"page":           "settings-search-preferences",
+		"activeSettings": "search-preferences",
+		"pageTitle":      "Search Preferences",
+		"preferences":    preferences,
+		"maxAgeOptions":  maxAgeOptions,
+		"maxPreferences": services.MaxPreferencesPerUser,
+	}
+
+	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", data)
+}
+
+// CreateJobSearchPreference handles creating a new job search preference
+func (h *SettingsHandler) CreateJobSearchPreference(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.HTML(http.StatusUnauthorized, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "dashboard",
+			"message": "Unauthorized",
+		})
+		return
+	}
+	userID := userIDValue.(int)
+
+	// Parse form data manually to handle type conversions
+	jobTitle := strings.TrimSpace(c.PostForm("job_title"))
+	location := strings.TrimSpace(c.PostForm("location"))
+	skillsStr := strings.TrimSpace(c.PostForm("skills"))
+	maxAgeStr := c.PostForm("max_age")
+	isActiveStr := c.PostForm("is_active")
+
+	// Validate required fields
+	if jobTitle == "" || location == "" || maxAgeStr == "" {
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "dashboard",
+			"message": "Please fill in all required fields",
+		})
+		return
+	}
+
+	// Parse skills from comma-separated string
+	var skills []string
+	if skillsStr != "" {
+		skillsParts := strings.Split(skillsStr, ",")
+		for _, s := range skillsParts {
+			skill := strings.TrimSpace(s)
+			if skill != "" {
+				skills = append(skills, skill)
+			}
+		}
+	}
+
+	// Convert max_age to int
+	maxAge, err := strconv.Atoi(maxAgeStr)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "dashboard",
+			"message": "Invalid maximum job age",
+		})
+		return
+	}
+
+	// Handle checkbox - if present it's checked, if not it's unchecked
+	isActive := isActiveStr == "on"
+
+	input := services.CreatePreferenceInput{
+		JobTitle: jobTitle,
+		Location: location,
+		Skills:   skills,
+		MaxAge:   maxAge,
+		IsActive: isActive,
+	}
+
+	_, err = h.service.CreatePreference(c.Request.Context(), userID, input)
+	if err != nil {
+		var message string
+		if err == services.ErrMaxPreferencesReached {
+			message = "Maximum number of preferences reached (4)"
+		} else if err == services.ErrInvalidPreferenceData {
+			message = "Invalid preference data. Please check your inputs."
+		} else {
+			message = "Failed to create preference"
+		}
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "dashboard",
+			"message": message,
+		})
+		return
+	}
+
+	// Redirect with success
+	c.Header("HX-Redirect", "/settings/search-preferences")
+	c.HTML(http.StatusOK, "partials/alert.html", gin.H{
+		"type":    "success",
+		"context": "dashboard",
+		"message": "Job search preference created successfully",
+	})
+}
+
+// UpdateJobSearchPreference handles updating an existing job search preference
+func (h *SettingsHandler) UpdateJobSearchPreference(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	userID := userIDValue.(int)
+	preferenceID := c.Param("id")
+
+	var input services.UpdatePreferenceInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input data"})
+		return
+	}
+
+	err := h.service.UpdatePreference(c.Request.Context(), userID, preferenceID, input)
+	if err != nil {
+		if err == services.ErrPreferenceNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Preference not found"})
+		} else if err == services.ErrInvalidPreferenceData {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid preference data"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update preference"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Preference updated successfully"})
+}
+
+// DeleteJobSearchPreference handles deleting a job search preference
+func (h *SettingsHandler) DeleteJobSearchPreference(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	userID := userIDValue.(int)
+	preferenceID := c.Param("id")
+
+	err := h.service.DeletePreference(c.Request.Context(), userID, preferenceID)
+	if err != nil {
+		if err == services.ErrPreferenceNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Preference not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete preference"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Preference deleted successfully"})
+}
+
+// ToggleJobSearchPreference handles toggling the active status of a preference
+func (h *SettingsHandler) ToggleJobSearchPreference(c *gin.Context) {
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	userID := userIDValue.(int)
+	preferenceID := c.Param("id")
+
+	err := h.service.TogglePreferenceStatus(c.Request.Context(), userID, preferenceID)
+	if err != nil {
+		if err == services.ErrPreferenceNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Preference not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to toggle preference status"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Preference status toggled successfully"})
+}
+
+// HandleUpdateSecurityAccount handles updating username and/or password for self-hosted users
+func (h *SettingsHandler) HandleUpdateSecurityAccount(c *gin.Context) {
+	// This endpoint is only for self-hosted mode
+	if h.service.cfg.IsCloudMode {
+		c.HTML(http.StatusForbidden, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "dashboard",
+			"message": "Account management is not available in cloud mode",
+		})
+		return
+	}
+
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.HTML(http.StatusUnauthorized, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "dashboard",
+			"message": "Unauthorized",
+		})
+		return
+	}
+	userID := userIDValue.(int)
+
+	// Get form data
+	currentPassword := c.PostForm("current_password")
+	newUsername := strings.TrimSpace(c.PostForm("new_username"))
+	newPassword := c.PostForm("new_password")
+	confirmPassword := c.PostForm("confirm_password")
+
+	// Validate current password is provided
+	if currentPassword == "" {
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "dashboard",
+			"message": "Current password is required",
+		})
+		return
+	}
+
+	// Get current user
+	user, err := h.service.userRepo.FindByID(c.Request.Context(), userID)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "dashboard",
+			"message": "Failed to retrieve user information",
+		})
+		return
+	}
+
+	// Verify current password
+	if !h.service.authService.VerifyPassword(user.Password, currentPassword) {
+		c.HTML(http.StatusUnauthorized, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "dashboard",
+			"message": "Current password is incorrect",
+		})
+		return
+	}
+
+	// Track what was updated
+	usernameUpdated := false
+	passwordUpdated := false
+
+	// Update username if provided and different
+	if newUsername != "" && newUsername != user.Username {
+		if err := authmodels.ValidateUsername(newUsername); err != nil {
+			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "dashboard",
+				"message": err.Error(),
+			})
+			return
+		}
+
+		// Check if new username already exists
+		existingUser, _ := h.service.userRepo.FindByUsername(c.Request.Context(), newUsername)
+		if existingUser != nil {
+			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "dashboard",
+				"message": "Username already exists",
+			})
+			return
+		}
+		user.Username = newUsername
+		usernameUpdated = true
+	}
+
+	// Update password if provided
+	if newPassword != "" {
+		// Validate passwords match
+		if newPassword != confirmPassword {
+			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "dashboard",
+				"message": "New passwords do not match",
+			})
+			return
+		}
+
+		// Validate password strength (minimum 8 characters)
+		if len(newPassword) < 8 {
+			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "dashboard",
+				"message": "Password must be at least 8 characters long",
+			})
+			return
+		}
+
+		err = h.service.authService.ChangePassword(c.Request.Context(), user.ID, newPassword)
+		if err != nil {
+			c.HTML(http.StatusInternalServerError, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "dashboard",
+				"message": "Failed to update password",
+			})
+			return
+		}
+		passwordUpdated = true
+	}
+
+	if usernameUpdated {
+		_, err = h.service.userRepo.UpdateUser(c.Request.Context(), user)
+		if err != nil {
+			c.HTML(http.StatusInternalServerError, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "dashboard",
+				"message": "Failed to update username",
+			})
+			return
+		}
+	}
+
+	if usernameUpdated || passwordUpdated {
+		c.HTML(http.StatusOK, "partials/alert.html", gin.H{
+			"type":    "success",
+			"context": "dashboard",
+			"message": "Account updated successfully",
+		})
+	} else {
+		c.HTML(http.StatusOK, "partials/alert.html", gin.H{
+			"type":    "info",
+			"context": "dashboard",
+			"message": "No changes were made",
+		})
+	}
 }

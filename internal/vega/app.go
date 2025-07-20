@@ -97,9 +97,18 @@ func (a *App) Run() error {
 	signal.Notify(a.done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		log.Printf("Starting server on %s\n", a.config.ServerPort)
+		log.Info().Str("port", a.config.ServerPort).Msg("Starting server")
+
+		if !a.config.IsCloudMode {
+			log.Info().Msgf("🚀 Vega AI is running at http://localhost%s", a.config.ServerPort)
+			log.Info().Msg("📋 Default login: Username 'admin', Password 'VegaAdmin'")
+			log.Info().Msgf("🔒 Change your password at http://localhost%s/settings/security", a.config.ServerPort)
+		} else {
+			log.Info().Str("port", a.config.ServerPort).Msg("🚀 Vega AI is running in cloud mode")
+		}
+
 		if err := a.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Printf("Error starting server: %v\n", err)
+			log.Error().Err(err).Msg("Error starting server")
 		}
 	}()
 

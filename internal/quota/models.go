@@ -32,9 +32,40 @@ type Job struct {
 	FirstAnalyzedAt *time.Time `db:"first_analyzed_at"`
 }
 
+// DailyQuota represents daily quota usage
+type DailyQuota struct {
+	UserID    int       `db:"user_id"`
+	Date      string    `db:"date"`
+	QuotaKey  string    `db:"quota_key"`
+	Value     int       `db:"value"`
+	UpdatedAt time.Time `db:"updated_at"`
+}
+
+// UnifiedQuotaStatus combines all quota statuses
+type UnifiedQuotaStatus struct {
+	AIAnalysis QuotaStatus `json:"ai_analysis"`
+	JobSearch  QuotaStatus `json:"job_search"`
+	SearchRuns QuotaStatus `json:"search_runs"`
+}
+
+// QuotaConfig represents quota configuration from database
+type QuotaConfig struct {
+	QuotaType   string    `db:"quota_type"`
+	FreeLimit   int       `db:"free_limit"`
+	Description string    `db:"description"`
+	CreatedAt   time.Time `db:"created_at"`
+	UpdatedAt   time.Time `db:"updated_at"`
+}
+
 const (
-	// FreeUserMonthlyLimit is the number of new job analyses allowed per month for free users
-	FreeUserMonthlyLimit = 5
+	// Quota types
+	QuotaTypeAIAnalysis = "ai_analysis"
+	QuotaTypeJobSearch  = "job_search"
+	QuotaTypeSearchRuns = "search_runs"
+
+	// Period types
+	PeriodDaily   = "daily"
+	PeriodMonthly = "monthly"
 
 	// QuotaReasonOK indicates the operation is allowed
 	QuotaReasonOK = "ok"
@@ -42,6 +73,10 @@ const (
 	// QuotaReasonReanalysis indicates this is a re-analysis (always allowed)
 	QuotaReasonReanalysis = "re-analysis allowed"
 
-	// QuotaReasonLimitReached indicates the monthly limit has been reached
-	QuotaReasonLimitReached = "Monthly limit of 5 job analyses reached"
+	// QuotaReasonLimitReached indicates the quota limit has been reached
+	QuotaReasonLimitReached = "quota limit reached"
+
+	// Daily quota keys
+	QuotaKeyJobsFound   = "jobs_found"
+	QuotaKeySearchesRun = "searches_run"
 )

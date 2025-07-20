@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/benidevo/vega/internal/common/alerts"
+	ctxutil "github.com/benidevo/vega/internal/common/context"
 	"github.com/benidevo/vega/internal/common/render"
 	"github.com/benidevo/vega/internal/config"
 	"github.com/benidevo/vega/internal/job/models"
@@ -577,7 +578,14 @@ func (h *JobHandler) AnalyzeJobMatch(c *gin.Context) {
 	}
 	userID := userIDValue.(int)
 
-	analysis, err := h.service.AnalyzeJobMatch(c.Request.Context(), userID, jobID)
+	ctx := c.Request.Context()
+	if roleValue, exists := c.Get("role"); exists {
+		if role, ok := roleValue.(string); ok {
+			ctx = ctxutil.WithRole(ctx, role)
+		}
+	}
+
+	analysis, err := h.service.AnalyzeJobMatch(ctx, userID, jobID)
 	if err != nil {
 		// Check for quota exceeded error
 		if errors.Is(err, models.ErrQuotaExceeded) {
