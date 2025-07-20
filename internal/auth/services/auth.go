@@ -278,6 +278,11 @@ func (s *AuthService) ChangePassword(ctx context.Context, userID int, newPasswor
 	return nil
 }
 
+// VerifyPassword checks if the provided password matches the hashed password
+func (s *AuthService) VerifyPassword(hashedPassword, password string) bool {
+	return verifyPassword(hashedPassword, password)
+}
+
 // TokenType defines the type of JWT token
 type TokenType string
 

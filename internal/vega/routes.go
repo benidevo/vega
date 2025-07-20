@@ -34,7 +34,7 @@ func SetupRoutes(a *App) {
 		aiService = nil
 	}
 
-	authHandler := auth.SetupAuth(a.db, &a.config)
+	authHandler, authService := auth.SetupAuthWithService(a.db, &a.config)
 	jobService := job.SetupService(a.db, &a.config, a.cache)
 	jobHandler := job.NewJobHandler(jobService, &a.config)
 
@@ -43,7 +43,7 @@ func SetupRoutes(a *App) {
 	quotaAdapter := quota.NewJobRepositoryAdapter(jobRepo)
 	unifiedQuotaService := quota.NewUnifiedService(a.db, quotaAdapter, a.config.IsCloudMode)
 
-	settingsHandler, settingsService := settings.SetupWithService(&a.config, a.db, aiService, unifiedQuotaService)
+	settingsHandler, settingsService := settings.SetupWithService(&a.config, a.db, aiService, unifiedQuotaService, authService)
 	authAPIHandler := authapi.Setup(a.db, &a.config)
 	jobAPIHandler := jobapi.Setup(a.db, &a.config, a.cache)
 

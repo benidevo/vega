@@ -21,16 +21,36 @@ type SettingsService struct {
 	cfg              *config.Settings
 	log              *logger.PrivacyLogger
 	centralValidator *services.CentralizedValidator
+	authService      AuthServiceInterface
+}
+
+// AuthServiceInterface defines the methods we need from the auth service
+type AuthServiceInterface interface {
+	ChangePassword(ctx context.Context, userID int, newPassword string) error
+	VerifyPassword(hashedPassword, password string) bool
 }
 
 // NewSettingsService creates a new SettingsService instance
-func NewSettingsService(settingsRepo interfaces.SettingsRepository, cfg *config.Settings, userRepo authrepo.UserRepository) *SettingsService {
+func NewSettingsService(settingsRepo interfaces.SettingsRepository, cfg *config.Settings, userRepo authrepo.UserRepository, authService AuthServiceInterface) *SettingsService {
 	return &SettingsService{
 		userRepo:         userRepo,
 		settingsRepo:     settingsRepo,
 		cfg:              cfg,
 		log:              logger.GetPrivacyLogger("settings"),
 		centralValidator: services.NewCentralizedValidator(),
+		authService:      authService,
+	}
+}
+
+// NewSettingsServiceForProfiles creates a settings service instance for profile management only (no auth required)
+func NewSettingsServiceForProfiles(settingsRepo interfaces.SettingsRepository, cfg *config.Settings, userRepo authrepo.UserRepository) *SettingsService {
+	return &SettingsService{
+		userRepo:         userRepo,
+		settingsRepo:     settingsRepo,
+		cfg:              cfg,
+		log:              logger.GetPrivacyLogger("settings"),
+		centralValidator: services.NewCentralizedValidator(),
+		authService:      nil, // No auth service needed for profile-only operations
 	}
 }
 

@@ -21,6 +21,16 @@ func SetupAuth(db *sql.DB, cfg *config.Settings) *AuthHandler {
 	return handler
 }
 
+// SetupAuthWithService initializes and returns both AuthHandler and AuthService
+// This allows other services to inject the auth service as a dependency
+func SetupAuthWithService(db *sql.DB, cfg *config.Settings) (*AuthHandler, *services.AuthService) {
+	repo := repository.NewSQLiteUserRepository(db)
+	service := services.NewAuthService(repo, cfg)
+	handler := NewAuthHandler(service, cfg)
+
+	return handler, service
+}
+
 // SetupGoogleAuth initializes and returns a GoogleAuthHandler using the provided configuration settings.
 // It sets up the GoogleAuthService and handler dependencies.
 func SetupGoogleAuth(cfg *config.Settings, db *sql.DB) (*GoogleAuthHandler, error) {
@@ -38,11 +48,6 @@ func SetupGoogleAuth(cfg *config.Settings, db *sql.DB) (*GoogleAuthHandler, erro
 // and the admin user doesn't already exist. This should be called during application startup.
 func CreateAdminUserIfRequired(db *sql.DB, cfg *config.Settings) error {
 	if !cfg.CreateAdminUser {
-		return nil
-	}
-
-	if cfg.AdminUsername == "" || cfg.AdminPassword == "" {
-		log.Warn().Msg("CREATE_ADMIN_USER is true but ADMIN_USERNAME or ADMIN_PASSWORD is not set")
 		return nil
 	}
 
@@ -75,6 +80,9 @@ func CreateAdminUserIfRequired(db *sql.DB, cfg *config.Settings) error {
 		return nil
 	}
 
+	// Check if using default credentials
+	usingDefaults := cfg.AdminUsername == "admin" && cfg.AdminPassword == "VegaAdmin"
+
 	user, err := authService.Register(ctx, cfg.AdminUsername, cfg.AdminPassword, "admin")
 	if err != nil {
 		log.Error().Err(err).
@@ -85,9 +93,17 @@ func CreateAdminUserIfRequired(db *sql.DB, cfg *config.Settings) error {
 
 	log.Info().
 		Str("hashed_id", logger.HashIdentifier(cfg.AdminUsername)).
-		Str("hashed_email", logger.HashIdentifier(cfg.AdminEmail)).
 		Int("user_id", user.ID).
 		Msg("Admin user created successfully")
+
+	if usingDefaults {
+		log.Warn().
+			Msg("⚠️  DEFAULT CREDENTIALS IN USE: Username 'admin', Password 'VegaAdmin'")
+		log.Warn().
+			Msg("⚠️  Please change the default password immediately at /settings/security")
+		log.Warn().
+			Msg("⚠️  Or set ADMIN_USERNAME and ADMIN_PASSWORD environment variables")
+	}
 
 	return nil
 }

@@ -519,18 +519,14 @@ func (h *SettingsHandler) parseAIDate(dateStr string) time.Time {
 
 // GetSecuritySettings handles the request to display the security settings page
 func (h *SettingsHandler) GetSecuritySettingsPage(c *gin.Context) {
-	// Return 404 if security page is disabled
-	if !h.service.cfg.SecurityPageEnabled {
-		h.renderer.HTML(c, http.StatusNotFound, "layouts/base.html", gin.H{
-			"title": "Page Not Found",
-			"page":  "404",
-		})
-		return
-	}
+	// Security page is always enabled, no need to check
 
 	username, _ := c.Get("username")
+	userIDValue, _ := c.Get("userID")
+	userID := userIDValue.(int)
 
-	security, err := h.service.GetSecuritySettings(c.Request.Context(), username.(string))
+	// Get user information
+	user, err := h.service.userRepo.FindByID(c.Request.Context(), userID)
 	if err != nil {
 		h.renderer.HTML(c, http.StatusInternalServerError, "layouts/base.html", gin.H{
 			"title": "Something Went Wrong",
@@ -539,14 +535,25 @@ func (h *SettingsHandler) GetSecuritySettingsPage(c *gin.Context) {
 		return
 	}
 
-	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", gin.H{
+	data := gin.H{
 		"title":          "Security",
 		"page":           "settings-security",
 		"activeNav":      "security",
 		"activeSettings": "security",
 		"pageTitle":      "Security",
-		"security":       security,
-	})
+		"user":           user,
+		"isCloudMode":    h.service.cfg.IsCloudMode,
+	}
+
+	// For cloud mode, get security settings (Google account info)
+	if h.service.cfg.IsCloudMode {
+		security, err := h.service.GetSecuritySettings(c.Request.Context(), username.(string))
+		if err == nil {
+			data["security"] = security
+		}
+	}
+
+	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", data)
 }
 
 // GetAddExperiencePage handles the HTTP request to render the page for adding a new experience.
@@ -872,4 +879,145 @@ func (h *SettingsHandler) ToggleJobSearchPreference(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Preference status toggled successfully"})
+}
+
+// HandleUpdateSecurityAccount handles updating username and/or password for self-hosted users
+func (h *SettingsHandler) HandleUpdateSecurityAccount(c *gin.Context) {
+	// This endpoint is only for self-hosted mode
+	if h.service.cfg.IsCloudMode {
+		c.HTML(http.StatusForbidden, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "dashboard",
+			"message": "Account management is not available in cloud mode",
+		})
+		return
+	}
+
+	userIDValue, exists := c.Get("userID")
+	if !exists {
+		c.HTML(http.StatusUnauthorized, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "dashboard",
+			"message": "Unauthorized",
+		})
+		return
+	}
+	userID := userIDValue.(int)
+
+	// Get form data
+	currentPassword := c.PostForm("current_password")
+	newUsername := strings.TrimSpace(c.PostForm("new_username"))
+	newPassword := c.PostForm("new_password")
+	confirmPassword := c.PostForm("confirm_password")
+
+	// Validate current password is provided
+	if currentPassword == "" {
+		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "dashboard",
+			"message": "Current password is required",
+		})
+		return
+	}
+
+	// Get current user
+	user, err := h.service.userRepo.FindByID(c.Request.Context(), userID)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "dashboard",
+			"message": "Failed to retrieve user information",
+		})
+		return
+	}
+
+	// Verify current password
+	if !h.service.authService.VerifyPassword(user.Password, currentPassword) {
+		c.HTML(http.StatusUnauthorized, "partials/alert.html", gin.H{
+			"type":    "error",
+			"context": "dashboard",
+			"message": "Current password is incorrect",
+		})
+		return
+	}
+
+	// Track what was updated
+	usernameUpdated := false
+	passwordUpdated := false
+
+	// Update username if provided and different
+	if newUsername != "" && newUsername != user.Username {
+		// Check if new username already exists
+		existingUser, _ := h.service.userRepo.FindByUsername(c.Request.Context(), newUsername)
+		if existingUser != nil {
+			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "dashboard",
+				"message": "Username already exists",
+			})
+			return
+		}
+		user.Username = newUsername
+		usernameUpdated = true
+	}
+
+	// Update password if provided
+	if newPassword != "" {
+		// Validate passwords match
+		if newPassword != confirmPassword {
+			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "dashboard",
+				"message": "New passwords do not match",
+			})
+			return
+		}
+
+		// Validate password strength (minimum 8 characters)
+		if len(newPassword) < 8 {
+			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "dashboard",
+				"message": "Password must be at least 8 characters long",
+			})
+			return
+		}
+
+		err = h.service.authService.ChangePassword(c.Request.Context(), user.ID, newPassword)
+		if err != nil {
+			c.HTML(http.StatusInternalServerError, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "dashboard",
+				"message": "Failed to update password",
+			})
+			return
+		}
+		passwordUpdated = true
+	}
+
+	if usernameUpdated {
+		_, err = h.service.userRepo.UpdateUser(c.Request.Context(), user)
+		if err != nil {
+			c.HTML(http.StatusInternalServerError, "partials/alert.html", gin.H{
+				"type":    "error",
+				"context": "dashboard",
+				"message": "Failed to update username",
+			})
+			return
+		}
+	}
+
+	if usernameUpdated || passwordUpdated {
+		c.HTML(http.StatusOK, "partials/alert.html", gin.H{
+			"type":    "success",
+			"context": "dashboard",
+			"message": "Account updated successfully",
+		})
+	} else {
+		c.HTML(http.StatusOK, "partials/alert.html", gin.H{
+			"type":    "info",
+			"context": "dashboard",
+			"message": "No changes were made",
+		})
+	}
 }

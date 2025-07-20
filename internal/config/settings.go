@@ -44,10 +44,7 @@ type Settings struct {
 	CreateAdminUser    bool
 	AdminUsername      string
 	AdminPassword      string
-	AdminEmail         string
 	ResetAdminPassword bool
-
-	SecurityPageEnabled bool
 
 	AIProvider             string
 	GeminiAPIKey           string
@@ -147,13 +144,12 @@ func NewSettings() Settings {
 		CORSAllowedOrigins:   corsOrigins,
 		CORSAllowCredentials: false,
 
-		CreateAdminUser:    getEnv("CREATE_ADMIN_USER", "false") == "true",
-		AdminUsername:      getEnv("ADMIN_USERNAME", ""),
-		AdminPassword:      getEnv("ADMIN_PASSWORD", ""),
+		// In self-hosted mode, always create admin user if it doesn't exist
+		// In cloud mode, admin user creation is disabled
+		CreateAdminUser:    !isCloudMode,
+		AdminUsername:      getEnv("ADMIN_USERNAME", "admin"),
+		AdminPassword:      getEnv("ADMIN_PASSWORD", "VegaAdmin"),
 		ResetAdminPassword: getEnv("RESET_ADMIN_PASSWORD", "false") == "true",
-		AdminEmail:         getEnv("ADMIN_EMAIL", ""),
-
-		SecurityPageEnabled: isCloudMode, // Security page is only available in cloud mode
 
 		AIProvider:             "gemini",
 		GeminiAPIKey:           getEnv("GEMINI_API_KEY", ""),

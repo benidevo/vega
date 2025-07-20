@@ -2,10 +2,10 @@
 <div class="mx-0 md:max-w-6xl md:mx-auto relative">
   <!-- Alert container for form responses -->
   <div id="form-alert-container" class="mb-4 md:mb-6 px-4 md:px-0" hx-swap-oob="true" aria-live="polite"></div>
-  
+
   <!-- Content container with responsive padding -->
   <div class="relative p-4 md:p-6 bg-slate-800 bg-opacity-70 backdrop-blur-xl rounded-none md:rounded-xl shadow-2xl border-0 md:border border-white border-opacity-10">
-    
+
     <!-- Page Header -->
     <div class="mb-6 pb-6 border-b border-slate-700 border-opacity-50">
       <h2 class="text-xl md:text-2xl font-bold text-white mb-2">Job Search Preferences</h2>
@@ -16,36 +16,36 @@
     <!-- Add New Preference Form -->
     <div class="mb-6 pb-6 border-b border-slate-700 border-opacity-50">
       <h3 class="text-lg md:text-xl font-semibold mb-4 text-white">Add New Search Preference</h3>
-      
+
       <form action="/settings/search-preferences" method="POST" hx-post="/settings/search-preferences" hx-target="#form-alert-container" hx-swap="innerHTML" hx-indicator=".preference-indicator" class="space-y-4 md:space-y-6">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
           <div class="space-y-1">
             <label for="job_title" class="block text-sm font-medium text-gray-300">
               Job Title <span class="text-red-500">*</span>
             </label>
-            <input type="text" 
-                   id="job_title" 
-                   name="job_title" 
-                   required 
+            <input type="text"
+                   id="job_title"
+                   name="job_title"
+                   required
                    maxlength="100"
                    placeholder="e.g., Senior Backend Engineer"
                    class="w-full px-3 py-3 md:py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base md:text-sm touch-manipulation">
           </div>
-          
+
           <div class="space-y-1">
             <label for="location" class="block text-sm font-medium text-gray-300">
               Location <span class="text-red-500">*</span>
             </label>
-            <input type="text" 
-                   id="location" 
-                   name="location" 
-                   required 
+            <input type="text"
+                   id="location"
+                   name="location"
+                   required
                    maxlength="100"
                    placeholder="e.g., Remote, San Francisco, New York"
                    class="w-full px-3 py-3 md:py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base md:text-sm touch-manipulation">
           </div>
         </div>
-        
+
         <div class="space-y-1">
           <label for="skills" class="block text-sm font-medium text-gray-300">Skills (Optional)</label>
           <div class="skills-input-container">
@@ -63,14 +63,14 @@
             <textarea id="skills" name="skills" class="hidden"></textarea>
           </div>
         </div>
-        
+
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
           <div class="space-y-1">
             <label for="max_age" class="block text-sm font-medium text-gray-300">
               Maximum Job Age <span class="text-red-500">*</span>
             </label>
-            <select id="max_age" 
-                    name="max_age" 
+            <select id="max_age"
+                    name="max_age"
                     required
                     class="w-full px-3 py-3 md:py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base md:text-sm touch-manipulation">
               {{range .maxAgeOptions}}
@@ -78,11 +78,11 @@
               {{end}}
             </select>
           </div>
-          
+
           <div class="flex items-end">
             <label class="flex items-center cursor-pointer h-[46px] md:h-[38px]">
-              <input type="checkbox" 
-                     name="is_active" 
+              <input type="checkbox"
+                     name="is_active"
                      value="on"
                      checked
                      class="mr-2 h-5 w-5 md:h-4 md:w-4 text-primary bg-slate-700 border-slate-600 rounded focus:ring-2 focus:ring-primary focus:ring-offset-0 focus:ring-offset-slate-800">
@@ -90,9 +90,9 @@
             </label>
           </div>
         </div>
-        
+
         <div class="flex flex-col sm:flex-row justify-end gap-4 pt-4 md:pt-6 border-t border-slate-700">
-          <button type="submit" 
+          <button type="submit"
                   class="px-4 py-2 bg-primary hover:bg-primary-dark text-white font-medium rounded-md transition-colors duration-300 flex items-center justify-center touch-manipulation text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
             <span class="preference-indicator hidden mr-2">
               <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -109,15 +109,15 @@
     <!-- Existing Preferences List -->
     <div>
       <h3 class="text-lg md:text-xl font-semibold mb-4 text-white">Your Search Preferences</h3>
-      
+
       {{if not .preferences}}
         <div class="bg-slate-700 bg-opacity-50 rounded-lg p-6 md:p-8 text-center">
-          <p class="text-gray-400 text-sm md:text-base">No search preferences configured yet. Add your first preference above to get started!</p>
+          <p class="text-gray-400 text-sm md:text-base">No search preferences configured yet. Add your first preference to get started!</p>
         </div>
       {{else}}
         <div class="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {{range .preferences}}
-            <div class="preference-card bg-slate-800 rounded-lg shadow-lg overflow-hidden hover:bg-slate-700 transition-all duration-200 group cursor-pointer" 
+            <div class="preference-card bg-slate-800 rounded-lg shadow-lg overflow-hidden hover:bg-slate-700 transition-all duration-200 group cursor-pointer"
                  data-id="{{.ID}}"
                  data-job-title="{{.JobTitle}}"
                  data-location="{{.Location}}"
@@ -140,7 +140,7 @@
                     </span>
                   </div>
                 </div>
-                
+
                 <!-- Details -->
                 <div class="space-y-2 mb-4">
                   <p class="text-sm text-gray-300 flex items-center">
@@ -167,11 +167,11 @@
                   </div>
                   {{end}}
                 </div>
-                
+
                 <!-- Actions -->
                 <div class="flex items-center justify-between border-t border-slate-700 pt-3 -mx-4 md:-mx-5 px-4 md:px-5" onclick="event.stopPropagation()">
                   <!-- Toggle Switch -->
-                  <button onclick="togglePreference('{{.ID}}')" 
+                  <button onclick="togglePreference('{{.ID}}')"
                           class="flex items-center space-x-2 text-sm text-gray-400 hover:text-white transition-colors">
                     <span class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors {{if .IsActive}}bg-primary{{else}}bg-slate-600{{end}}">
                       <span class="sr-only">Toggle active</span>
@@ -179,9 +179,9 @@
                     </span>
                     <span>Toggle</span>
                   </button>
-                  
+
                   <!-- Delete Button -->
-                  <button onclick="deletePreference('{{.ID}}')" 
+                  <button onclick="deletePreference('{{.ID}}')"
                           class="text-sm text-red-400 hover:text-red-300 transition-colors flex items-center space-x-1">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -194,7 +194,7 @@
           {{end}}
         </div>
       {{end}}
-      
+
       <!-- Limit Notice -->
       {{if .preferences}}
         <div class="mt-6 text-xs md:text-sm text-gray-500 text-center">
@@ -210,34 +210,34 @@
   <div class="flex items-center justify-center min-h-screen px-4">
     <div class="bg-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6 relative" onclick="event.stopPropagation()">
       <h3 class="text-xl font-semibold text-white mb-4">Edit Search Preference</h3>
-      
+
       <form id="editForm" method="POST" class="space-y-4">
         <input type="hidden" id="edit_preference_id" name="preference_id">
-        
+
         <div class="space-y-1">
           <label for="edit_job_title" class="block text-sm font-medium text-gray-300">
             Job Title <span class="text-red-500">*</span>
           </label>
-          <input type="text" 
-                 id="edit_job_title" 
-                 name="job_title" 
-                 required 
+          <input type="text"
+                 id="edit_job_title"
+                 name="job_title"
+                 required
                  maxlength="100"
                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
         </div>
-        
+
         <div class="space-y-1">
           <label for="edit_location" class="block text-sm font-medium text-gray-300">
             Location <span class="text-red-500">*</span>
           </label>
-          <input type="text" 
-                 id="edit_location" 
-                 name="location" 
-                 required 
+          <input type="text"
+                 id="edit_location"
+                 name="location"
+                 required
                  maxlength="100"
                  class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
         </div>
-        
+
         <div class="space-y-1">
           <label for="edit_skills" class="block text-sm font-medium text-gray-300">Skills (Optional)</label>
           <div class="skills-input-container" id="edit-skills-container">
@@ -255,13 +255,13 @@
             <textarea id="edit_skills" name="skills" class="hidden"></textarea>
           </div>
         </div>
-        
+
         <div class="space-y-1">
           <label for="edit_max_age" class="block text-sm font-medium text-gray-300">
             Maximum Job Age <span class="text-red-500">*</span>
           </label>
-          <select id="edit_max_age" 
-                  name="max_age" 
+          <select id="edit_max_age"
+                  name="max_age"
                   required
                   class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
             {{range .maxAgeOptions}}
@@ -269,25 +269,25 @@
             {{end}}
           </select>
         </div>
-        
+
         <div class="flex items-center">
           <label class="flex items-center cursor-pointer">
-            <input type="checkbox" 
+            <input type="checkbox"
                    id="edit_is_active"
-                   name="is_active" 
+                   name="is_active"
                    value="on"
                    class="mr-2 h-4 w-4 text-primary bg-slate-700 border-slate-600 rounded focus:ring-2 focus:ring-primary focus:ring-offset-0 focus:ring-offset-slate-800">
             <span class="text-sm text-gray-300">Active</span>
           </label>
         </div>
-        
+
         <div class="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-slate-700">
-          <button type="button" 
-                  onclick="closeEditModal()" 
+          <button type="button"
+                  onclick="closeEditModal()"
                   class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-md transition-colors duration-300">
             Cancel
           </button>
-          <button type="submit" 
+          <button type="submit"
                   class="px-4 py-2 bg-primary hover:bg-primary-dark text-white font-medium rounded-md transition-colors duration-300 flex items-center justify-center">
             <span class="edit-indicator hidden mr-2">
               <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -312,7 +312,7 @@ function togglePreference(id) {
     card.style.opacity = '0.6';
     card.style.pointerEvents = 'none';
   }
-  
+
   fetch(`/settings/search-preferences/${id}/toggle`, {
     method: 'PATCH',
     headers: {
@@ -327,7 +327,7 @@ function togglePreference(id) {
         const badge = card.querySelector('.rounded-full');
         const toggle = card.querySelector('span.relative');
         const toggleDot = toggle.querySelector('span.inline-block');
-        
+
         if (badge.classList.contains('bg-primary')) {
           // Deactivating
           badge.classList.remove('bg-primary', 'text-primary');
@@ -347,10 +347,10 @@ function togglePreference(id) {
           toggleDot.classList.remove('translate-x-1');
           toggleDot.classList.add('translate-x-5');
         }
-        
+
         card.style.opacity = '1';
         card.style.pointerEvents = 'auto';
-        
+
         // Show toast notification if available
         if (typeof showToast === 'function') {
           showToast(data.message || 'Preference updated', 'success');
@@ -382,7 +382,7 @@ function deletePreference(id) {
   if (!confirm('Are you sure you want to delete this search preference?')) {
     return;
   }
-  
+
   fetch(`/settings/search-preferences/${id}`, {
     method: 'DELETE',
     headers: {
@@ -412,25 +412,25 @@ function deletePreference(id) {
 function editPreference(id) {
   const card = document.querySelector(`.preference-card[data-id="${id}"]`);
   if (!card) return;
-  
+
   // Get preference data from card attributes
   const jobTitle = card.dataset.jobTitle;
   const location = card.dataset.location;
   const skillsStr = card.dataset.skills;
   const maxAge = card.dataset.maxAge;
   const isActive = card.dataset.isActive === 'true';
-  
+
   // Populate the edit form
   document.getElementById('edit_preference_id').value = id;
   document.getElementById('edit_job_title').value = jobTitle;
   document.getElementById('edit_location').value = location;
   document.getElementById('edit_max_age').value = maxAge;
   document.getElementById('edit_is_active').checked = isActive;
-  
+
   // Clear and populate skills
   const editSkillsContainer = document.getElementById('edit-skills-tags');
   editSkillsContainer.innerHTML = '';
-  
+
   if (skillsStr) {
     const skills = skillsStr.split(',');
     skills.forEach(skill => {
@@ -440,7 +440,7 @@ function editPreference(id) {
     });
     updateEditSkills();
   }
-  
+
   // Show the modal
   document.getElementById('editModal').classList.remove('hidden');
 }
@@ -454,14 +454,14 @@ function closeEditModal(event) {
 // Handle edit form submission
 document.getElementById('editForm').addEventListener('submit', function(e) {
   e.preventDefault();
-  
+
   const formData = new FormData(this);
   const preferenceId = formData.get('preference_id');
-  
+
   // Show loading indicator
   const indicator = document.querySelector('.edit-indicator');
   indicator.classList.remove('hidden');
-  
+
   // Prepare data
   const data = {
     job_title: formData.get('job_title'),
@@ -470,7 +470,7 @@ document.getElementById('editForm').addEventListener('submit', function(e) {
     max_age: parseInt(formData.get('max_age')),
     is_active: formData.has('is_active')
   };
-  
+
   fetch(`/settings/search-preferences/${preferenceId}`, {
     method: 'PUT',
     headers: {
@@ -481,7 +481,7 @@ document.getElementById('editForm').addEventListener('submit', function(e) {
   .then(response => response.json())
   .then(data => {
     indicator.classList.add('hidden');
-    
+
     if (data.message) {
       closeEditModal();
       window.location.reload(); // Reload to show updated preferences
@@ -500,7 +500,7 @@ document.getElementById('editForm').addEventListener('submit', function(e) {
 function addEditSkill(skillText = null) {
   const input = document.getElementById('edit-skills-input');
   const skill = (skillText || input.value).trim();
-  
+
   if (skill && !hasEditSkill(skill)) {
     createEditSkillTag(skill);
     input.value = '';
@@ -510,7 +510,7 @@ function addEditSkill(skillText = null) {
 
 function hasEditSkill(skill) {
   const tags = document.querySelectorAll('#edit-skills-tags .skill-tag');
-  return Array.from(tags).some(tag => 
+  return Array.from(tags).some(tag =>
     tag.textContent.trim().toLowerCase() === skill.toLowerCase()
   );
 }
@@ -519,21 +519,21 @@ function createEditSkillTag(skill) {
   const container = document.getElementById('edit-skills-tags');
   const tag = document.createElement('span');
   tag.className = 'skill-tag inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-primary bg-opacity-20 text-primary border border-primary border-opacity-30';
-  
+
   const skillText = document.createTextNode(skill);
   tag.appendChild(skillText);
-  
+
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'ml-1 inline-flex items-center justify-center w-4 h-4 text-primary hover:text-red-400 focus:outline-none';
   button.onclick = function() { removeEditSkillTag(this); };
-  
+
   button.innerHTML = `
     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
     </svg>
   `;
-  
+
   tag.appendChild(button);
   container.appendChild(tag);
 }
@@ -574,7 +574,7 @@ function updateEditSkills() {
   .preference-card {
     touch-action: manipulation;
   }
-  
+
   /* Stack actions on very small screens */
   @media (max-width: 360px) {
     .preference-card .border-t {
@@ -582,7 +582,7 @@ function updateEditSkills() {
       gap: 0.75rem;
       align-items: stretch;
     }
-    
+
     .preference-card button {
       justify-content: center;
     }
@@ -612,11 +612,11 @@ function updateEditSkills() {
 }
 
 @keyframes slideIn {
-  from { 
+  from {
     transform: translateY(-20px);
     opacity: 0;
   }
-  to { 
+  to {
     transform: translateY(0);
     opacity: 1;
   }

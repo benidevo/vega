@@ -18,6 +18,7 @@ func RegisterRoutes(settingsGroup *gin.RouterGroup, handler *SettingsHandler) {
 
 	// Security settings
 	settingsGroup.GET("/security", handler.GetSecuritySettingsPage)
+	settingsGroup.POST("/security/account", handler.HandleUpdateSecurityAccount)
 
 	// Experience routes
 	settingsGroup.GET("/profile/experience/new", handler.GetAddExperiencePage)

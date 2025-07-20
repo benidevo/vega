@@ -49,13 +49,11 @@
           {{else}}
           <p class="text-xs text-gray-400">Unlimited</p>
           {{end}}
+          {{if and (ne .quotaStatus.JobSearch.Limit -1) (not .quotaStatus.JobSearch.ResetDate.IsZero)}}
           <p class="text-xs text-gray-500 mt-2">
-            {{if and (ne .quotaStatus.JobSearch.Limit -1) (not .quotaStatus.JobSearch.ResetDate.IsZero)}}
-              Resets {{.quotaStatus.JobSearch.ResetDate.Format "Jan 2, 3:04 PM"}}
-            {{else}}
-              No reset - unlimited usage
-            {{end}}
+            Resets {{.quotaStatus.JobSearch.ResetDate.Format "Jan 2, 3:04 PM"}}
           </p>
+          {{end}}
         </div>
 
         <!-- Search Runs Today -->
@@ -83,13 +81,11 @@
           {{else}}
           <p class="text-xs text-gray-400">Unlimited</p>
           {{end}}
+          {{if and (ne .quotaStatus.SearchRuns.Limit -1) (not .quotaStatus.SearchRuns.ResetDate.IsZero)}}
           <p class="text-xs text-gray-500 mt-2">
-            {{if and (ne .quotaStatus.SearchRuns.Limit -1) (not .quotaStatus.SearchRuns.ResetDate.IsZero)}}
-              Resets {{.quotaStatus.SearchRuns.ResetDate.Format "Jan 2, 3:04 PM"}}
-            {{else}}
-              No reset - unlimited usage
-            {{end}}
+            Resets {{.quotaStatus.SearchRuns.ResetDate.Format "Jan 2, 3:04 PM"}}
           </p>
+          {{end}}
         </div>
 
         <!-- AI Analyses This Month -->
@@ -117,13 +113,11 @@
           {{else}}
           <p class="text-xs text-gray-400">Unlimited</p>
           {{end}}
+          {{if and (ne .quotaStatus.AIAnalysis.Limit -1) (not .quotaStatus.AIAnalysis.ResetDate.IsZero)}}
           <p class="text-xs text-gray-500 mt-2">
-            {{if and (ne .quotaStatus.AIAnalysis.Limit -1) (not .quotaStatus.AIAnalysis.ResetDate.IsZero)}}
-              Resets {{.quotaStatus.AIAnalysis.ResetDate.Format "Jan 2, 2006"}}
-            {{else}}
-              No reset - unlimited usage
-            {{end}}
+            Resets {{.quotaStatus.AIAnalysis.ResetDate.Format "Jan 2, 2006"}}
           </p>
+          {{end}}
         </div>
       </div>
     </div>
@@ -266,9 +260,13 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
           </svg>
           <div>
-            <h4 class="text-sm font-medium text-primary mb-1">Need More?</h4>
+            <h4 class="text-sm font-medium text-primary mb-1">Need Higher Limits?</h4>
             <p class="text-xs md:text-sm text-gray-300">
-              Premium plans with higher limits are coming soon. Stay tuned for updates!
+              You can create a self-hosted version with unlimited usage. Visit 
+              <a href="https://vega.benidevo.com" target="_blank" rel="noopener noreferrer" class="text-primary hover:text-primary-light underline">
+                vega.benidevo.com
+              </a> 
+              for instructions on how to get started.
             </p>
           </div>
         </div>
