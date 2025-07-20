@@ -41,7 +41,9 @@
     <form hx-post="/settings/profile/certification/{{.certification.ID}}"
           hx-target="#form-alert-container"
           hx-swap="innerHTML"
+          hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
           class="space-y-6">
+      <input type="hidden" name="csrf_token" value="{{.csrfToken}}">
 
       <div>
         <label for="name" class="block text-sm font-medium text-gray-300 mb-2">Certification Name *</label>

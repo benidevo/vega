@@ -57,7 +57,8 @@
     <div class="mb-6 pb-6 border-b border-slate-700 border-opacity-50">
       <h3 class="text-lg md:text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Personal Information</h3>
 
-      <form class="space-y-4 md:space-y-6" hx-post="/settings/profile/personal" hx-target="#form-alert-container" hx-swap="innerHTML" hx-indicator=".personal-indicator">
+      <form class="space-y-4 md:space-y-6" hx-post="/settings/profile/personal" hx-target="#form-alert-container" hx-swap="innerHTML" hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}' hx-indicator=".personal-indicator">
+        <input type="hidden" name="csrf_token" value="{{.csrfToken}}">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
           <div class="space-y-1">
             <label for="first_name" class="block text-sm font-medium text-gray-300">First Name</label>
@@ -163,7 +164,8 @@
     <div class="mb-6 pb-6 border-b border-slate-700 border-opacity-50">
       <h3 class="text-lg md:text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Online Presence</h3>
 
-      <form class="space-y-4 md:space-y-6" hx-post="/settings/profile/online" hx-target="#form-alert-container" hx-swap="innerHTML" hx-indicator=".online-indicator">
+      <form class="space-y-4 md:space-y-6" hx-post="/settings/profile/online" hx-target="#form-alert-container" hx-swap="innerHTML" hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}' hx-indicator=".online-indicator">
+        <input type="hidden" name="csrf_token" value="{{.csrfToken}}">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
           <div class="space-y-1">
             <label for="linkedin_profile" class="block text-sm font-medium text-gray-300">LinkedIn Profile</label>
@@ -202,7 +204,8 @@
     <div class="mb-6 pb-6 border-b border-slate-700 border-opacity-50">
       <h3 class="text-lg md:text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Personal Context</h3>
 
-      <form class="space-y-4 md:space-y-6" hx-post="/settings/profile/context" hx-target="#form-alert-container" hx-swap="innerHTML" hx-indicator=".context-indicator">
+      <form class="space-y-4 md:space-y-6" hx-post="/settings/profile/context" hx-target="#form-alert-container" hx-swap="innerHTML" hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}' hx-indicator=".context-indicator">
+        <input type="hidden" name="csrf_token" value="{{.csrfToken}}">
         <div class="space-y-1">
           <label for="context" class="block text-sm font-medium text-gray-300">About You</label>
           <p class="text-xs text-gray-400 mb-2">

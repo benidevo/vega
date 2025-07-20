@@ -41,7 +41,9 @@
     <form hx-post="/settings/profile/education/{{.education.ID}}"
           hx-target="#form-alert-container"
           hx-swap="innerHTML"
+          hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
           class="space-y-6">
+      <input type="hidden" name="csrf_token" value="{{.csrfToken}}">
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
