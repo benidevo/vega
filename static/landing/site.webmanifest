@@ -1,7 +1,7 @@
 {
-  "name": "Vega AI • Track Jobs & Create Resumes",
+  "name": "Vega AI • Smart Job Search Assistant",
   "short_name": "Vega AI",
-  "description": "Track job applications, see which roles match best, and create resumes and cover letters that lead to interviews.",
+  "description": "Track applications, get instant match scores, and generate tailored resumes.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",

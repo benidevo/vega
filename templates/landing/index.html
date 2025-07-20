@@ -4,18 +4,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vega AI • Private Job Search Assistant • Track Applications & Create Documents</title>
-  <meta name="description" content="Vega AI is a 100% free, private job search assistant that runs on your computer. Track applications, smart job matching, create custom resumes & cover letters. No subscription, your data stays private.">
+  <title>Vega AI • Smart Job Search Assistant • Track Applications & Match Jobs</title>
+  <meta name="description" content="Vega AI is a free job search assistant with smart job matching. Track applications, get instant match scores, and generate tailored resumes. Available as cloud or self-hosted.">
 
   <!-- SEO Meta Tags -->
-  <meta name="keywords" content="job search tool, private job tracker, AI job matching, resume builder, cover letter generator, free job application tracker, privacy-focused job search, open source job search">
+  <meta name="keywords" content="job search tool, job application tracker, AI job matching, resume builder, cover letter generator, match score, browser extension, cloud job tracker, self-hosted job search">
   <meta name="author" content="Vega AI">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://vega.benidevo.com/">
 
   <!-- Open Graph Meta Tags -->
-  <meta property="og:title" content="Vega AI • Free Private Job Search Assistant">
-  <meta property="og:description" content="Track job applications, match roles with AI, and create professional documents. 100% free, runs privately on your computer.">
+  <meta property="og:title" content="Vega AI • Smart Job Search Assistant">
+  <meta property="og:description" content="Track applications, get instant match scores, and generate tailored resumes. Free forever with cloud and self-hosted options.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://vega.benidevo.com/">
   <meta property="og:image" content="https://vega.benidevo.com/assets/images/og-image.png">
@@ -23,8 +23,8 @@
 
   <!-- Twitter Card Meta Tags -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Vega AI • Free Private Job Search Assistant">
-  <meta name="twitter:description" content="Track job applications, match roles with AI, and create professional documents. 100% free and runs privately on your computer.">
+  <meta name="twitter:title" content="Vega AI • Smart Job Search Assistant">
+  <meta name="twitter:description" content="Track applications, get instant match scores, and generate tailored resumes. Free forever with cloud and self-hosted options.">
   <meta name="twitter:image" content="https://vega.benidevo.com/assets/images/twitter-card.png">
 
   <!-- Additional Meta Tags -->
@@ -61,7 +61,7 @@
     "@type": "SoftwareApplication",
     "name": "Vega AI",
     "applicationCategory": "BusinessApplication",
-    "description": "Free private job search assistant with smart job matching and document generation",
+    "description": "Free job search assistant with smart matching, application tracking, and resume generation",
     "operatingSystem": "Windows, macOS, Linux",
     "offers": {
       "@type": "Offer",
@@ -70,12 +70,12 @@
     },
     "featureList": [
       "Job application tracking",
-      "Smart job matching",
+      "Smart job matching with scores",
       "Resume generation",
       "Cover letter generation",
-      "Chrome extension for job scraping",
-      "Private solution",
-      "Privacy-focused"
+      "Browser extension",
+      "Cloud and self-hosted options",
+      "Free forever"
     ],
     "softwareVersion": "1.0",
     "aggregateRating": {
@@ -95,17 +95,11 @@
   <main role="main">
   {{template "landing/partials/hero.html" .}}
 
-  {{template "landing/partials/problem-statement.html" .}}
-
-  {{template "landing/partials/why-privacy-matters.html" .}}
-
   </main>
 
   {{template "landing/partials/features.html" .}}
 
-  {{template "landing/partials/how-it-works.html" .}}
 
-  {{template "landing/partials/browser-extension.html" .}}
 
   {{template "landing/partials/pricing.html" .}}
 
@@ -113,13 +107,11 @@
 
   {{template "landing/partials/faq.html" .}}
 
-  {{template "landing/partials/feedback.html" .}}
 
   {{template "landing/partials/footer.html" .}}
 
   <!-- Custom JavaScript -->
   <script src="/static/landing/assets/js/script.js"></script>
-  <script src="/static/landing/assets/js/feedback.js"></script>
   <script>
     // Copy to clipboard functionality
     function copyToClipboard(button) {

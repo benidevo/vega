@@ -14,10 +14,10 @@
       <!-- Two Options Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 max-w-5xl mx-auto">
         <!-- Cloud Version Card -->
-        <div class="bg-slate-800 rounded-xl p-6 sm:p-8 border border-slate-700 hover:border-primary transition-all duration-300">
-          <div class="text-center mb-6">
-            <div class="bg-primary/20 rounded-full p-4 w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <svg class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-700 hover:border-primary transition-all duration-300">
+          <div class="text-center mb-4">
+            <div class="bg-primary/20 rounded-full p-3 w-12 h-12 flex items-center justify-center mx-auto mb-3">
+              <svg class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
               </svg>
             </div>
@@ -25,12 +25,12 @@
             <p class="text-gray-400 text-sm">Ready to use, no setup required</p>
           </div>
           
-          <ul class="space-y-3 mb-6">
+          <ul class="space-y-2 mb-4">
             <li class="flex items-start">
               <svg class="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
-              <span class="text-gray-300 text-sm">Instant access, no installation</span>
+              <span class="text-gray-300 text-sm">Zero setup, works in your browser</span>
             </li>
             <li class="flex items-start">
               <svg class="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -62,18 +62,24 @@
               </svg>
               <span class="text-gray-300 text-sm">Sign in with Google</span>
             </li>
+            <li class="flex items-start">
+              <svg class="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-gray-300 text-sm">Data secured in the cloud</span>
+            </li>
           </ul>
           
-          <a href="/auth/login" class="block w-full bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-medium text-center transition-all">
+          <a href="/auth/login" class="block w-full bg-primary hover:bg-primary-dark text-white px-4 py-2.5 rounded-lg font-medium text-center transition-all">
             Start Using Cloud Version
           </a>
         </div>
 
         <!-- Self-Hosted Card -->
-        <div class="bg-slate-800 rounded-xl p-6 sm:p-8 border border-slate-700 hover:border-primary transition-all duration-300">
-          <div class="text-center mb-6">
-            <div class="bg-primary/20 rounded-full p-4 w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <svg class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-700 hover:border-primary transition-all duration-300">
+          <div class="text-center mb-4">
+            <div class="bg-primary/20 rounded-full p-3 w-12 h-12 flex items-center justify-center mx-auto mb-3">
+              <svg class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </div>
@@ -81,12 +87,12 @@
             <p class="text-gray-400 text-sm">Run on your own computer</p>
           </div>
           
-          <ul class="space-y-3 mb-6">
+          <ul class="space-y-2 mb-4">
             <li class="flex items-start">
               <svg class="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
-              <span class="text-gray-300 text-sm">100% private, data stays local</span>
+              <span class="text-gray-300 text-sm">100% private, data stays on your computer</span>
             </li>
             <li class="flex items-start">
               <svg class="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -108,7 +114,7 @@
             </li>
           </ul>
           
-          <button onclick="showSelfHostedInstructions()" class="block w-full bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg font-medium text-center transition-all">
+          <button onclick="showSelfHostedInstructions()" class="block w-full bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-lg font-medium text-center transition-all">
             View Setup Instructions
           </button>
         </div>
@@ -133,31 +139,15 @@
                 1
               </div>
               <div class="flex-1 min-w-0">
-                <h4 class="font-semibold mb-2 text-white">Create Configuration</h4>
-                <p class="text-gray-400 text-xs mb-2">Get your <a href="https://aistudio.google.com/app/apikey" class="text-primary hover:text-primary-dark" target="_blank" rel="noopener">free Gemini API key</a>, then follow these steps:</p>
-
-                <p class="text-gray-300 text-xs mb-1 font-medium">Step 1: Create a vega-ai folder</p>
-                <div class="bg-slate-800 rounded-lg p-3 font-mono text-xs overflow-x-auto relative group mb-3">
-                  <code class="text-primary block">mkdir vega-ai</code>
-                  <button onclick="copyToClipboard(this)" data-text="mkdir vega-ai" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-xs text-gray-300">
-                    Copy
-                  </button>
-                </div>
-
-                <p class="text-gray-300 text-xs mb-1 font-medium">Step 2: Create a config file with your settings</p>
-                <p class="text-gray-400 text-xs mb-2">Create a file called <code class="bg-slate-700 text-primary px-1 py-0.5 rounded text-xs font-mono">config</code> in the vega-ai folder with this content (replace your-gemini-api-key with your actual key):</p>
+                <h4 class="font-semibold mb-2 text-white">Create a config file</h4>
+                <p class="text-gray-400 text-xs mb-2">First, get your <a href="https://aistudio.google.com/app/apikey" class="text-primary hover:text-primary-dark" target="_blank" rel="noopener">free Gemini API key</a>. Then create a file named <code class="bg-slate-700 text-primary px-1 py-0.5 rounded text-xs font-mono">config</code> with:</p>
                 <div class="bg-slate-800 rounded-lg p-3 font-mono text-xs overflow-x-auto relative group">
-                  <code class="text-gray-300 block">GEMINI_API_KEY=your-gemini-api-key</code>
-                  <code class="text-gray-300 block">CREATE_ADMIN_USER=true</code>
-                  <code class="text-gray-300 block">ADMIN_USERNAME=admin</code>
-                  <code class="text-gray-300 block">ADMIN_PASSWORD=your-secure-password</code>
-                  <button onclick="copyToClipboard(this)" data-text="GEMINI_API_KEY=your-gemini-api-key
-CREATE_ADMIN_USER=true
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=your-secure-password" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-xs text-gray-300">
+                  <code class="text-gray-300 block">GEMINI_API_KEY=your-api-key-here</code>
+                  <button onclick="copyToClipboard(this)" data-text="GEMINI_API_KEY=your-api-key-here" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-xs text-gray-300">
                     Copy
                   </button>
                 </div>
+                <p class="text-xs text-gray-400 mt-2">Replace <code class="font-mono">your-api-key-here</code> with your actual key.</p>
               </div>
             </div>
 
@@ -167,20 +157,15 @@ ADMIN_PASSWORD=your-secure-password" class="absolute top-2 right-2 opacity-0 gro
                 2
               </div>
               <div class="flex-1 min-w-0">
-                <h4 class="font-semibold mb-2 text-white">Run with Docker</h4>
-                <p class="text-gray-400 text-xs mb-2">Navigate to your vega-ai folder and start Vega with persistent data storage:</p>
+                <h4 class="font-semibold mb-2 text-white">Run Vega</h4>
+                <p class="text-gray-400 text-xs mb-2">Run this command in the same folder as your config file:</p>
                 <div class="bg-slate-800 rounded-lg p-3 font-mono text-xs overflow-x-auto relative group">
-                  <code class="text-primary block">docker run --pull always -d \</code>
-                  <code class="text-primary block">  --name vega-ai \</code>
-                  <code class="text-primary block">  -p 8765:8765 \</code>
-                  <code class="text-primary block">  -v vega-data:/app/data \</code>
-                  <code class="text-primary block">  --env-file config \</code>
-                  <code class="text-primary block">  ghcr.io/benidevo/vega-ai:latest</code>
-                  <button onclick="copyToClipboard(this)" data-text="docker run --pull always -d --name vega-ai -p 8765:8765 -v vega-data:/app/data --env-file config ghcr.io/benidevo/vega-ai:latest
-" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-xs text-gray-300">
+                  <code class="text-primary block">docker run -d --name vega-ai -p 8765:8765 --env-file config ghcr.io/benidevo/vega-ai:latest</code>
+                  <button onclick="copyToClipboard(this)" data-text="docker run -d --name vega-ai -p 8765:8765 --env-file config ghcr.io/benidevo/vega-ai:latest" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-xs text-gray-300">
                     Copy
                   </button>
                 </div>
+                <p class="text-xs text-gray-400 mt-2">This starts Vega with your API key configured.</p>
               </div>
             </div>
 
@@ -190,8 +175,13 @@ ADMIN_PASSWORD=your-secure-password" class="absolute top-2 right-2 opacity-0 gro
                 3
               </div>
               <div class="flex-1 min-w-0">
-                <h4 class="font-semibold mb-2 text-white">Access & Configure</h4>
-                <p class="text-gray-400 text-sm">Visit <a href="http://localhost:8765" class="text-primary hover:text-primary-dark transition-colors" target="_blank" rel="noopener">http://localhost:8765</a> and log in with your admin credentials.</p>
+                <h4 class="font-semibold mb-2 text-white">Start Using Vega</h4>
+                <p class="text-gray-400 text-sm">Visit <a href="http://localhost:8765" class="text-primary hover:text-primary-dark transition-colors" target="_blank" rel="noopener">http://localhost:8765</a> and log in with:</p>
+                <div class="bg-slate-800 rounded-lg p-2 mt-2 text-xs">
+                  <p class="text-gray-300">Username: <code class="text-primary">admin</code></p>
+                  <p class="text-gray-300">Password: <code class="text-primary">VegaAdmin</code></p>
+                  <p class="text-gray-400 mt-1 text-xs">Remember to change your password in Settings > Security</p>
+                </div>
               </div>
             </div>
 
@@ -202,7 +192,7 @@ ADMIN_PASSWORD=your-secure-password" class="absolute top-2 right-2 opacity-0 gro
               </div>
               <div class="flex-1 min-w-0">
                 <h4 class="font-semibold mb-2 text-white">Browser Extension <span class="text-gray-400 text-sm font-normal">(Optional)</span></h4>
-                <p class="text-gray-400 text-sm mb-3">Add the browser extension for one-click job capture:</p>
+                <p class="text-gray-400 text-sm mb-3">Add the browser extension for one-click job capture (works with Chrome and Edge):</p>
                 <ol class="space-y-2 text-sm text-gray-300">
                   <li class="flex items-start">
                     <span class="text-primary font-medium mr-2 flex-shrink-0">a.</span>
@@ -210,11 +200,11 @@ ADMIN_PASSWORD=your-secure-password" class="absolute top-2 right-2 opacity-0 gro
                   </li>
                   <li class="flex items-start">
                     <span class="text-primary font-medium mr-2 flex-shrink-0">b.</span>
-                    <span>Unzip and go to <code class="bg-slate-700 px-1 py-0.5 rounded text-xs">chrome://extensions/</code></span>
+                    <span>Unzip and go to <code class="bg-slate-700 px-1 py-0.5 rounded text-xs">chrome://extensions/</code> (Chrome) or <code class="bg-slate-700 px-1 py-0.5 rounded text-xs">edge://extensions/</code> (Edge)</span>
                   </li>
                   <li class="flex items-start">
                     <span class="text-primary font-medium mr-2 flex-shrink-0">c.</span>
-                    <span>Turn on "Developer mode" → "Load unpacked" → select folder</span>
+                    <span>Turn on "Developer mode" > "Load unpacked" > select folder</span>
                   </li>
                 </ol>
               </div>
@@ -250,7 +240,7 @@ ADMIN_PASSWORD=your-secure-password" class="absolute top-2 right-2 opacity-0 gro
                 <svg class="h-4 w-4 text-primary mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Less than 50MB RAM
+                1GB RAM
               </li>
             </ul>
           </div>
