@@ -1,0 +1,162 @@
+{{define "landing/partials/faq.html"}}
+  <!-- FAQ Section -->
+  <section id="faq" class="py-12 sm:py-16 lg:py-20 bg-slate-800/50 w-full overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-8 sm:mb-12 md:mb-16">
+        <h2 class="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold font-heading mb-3 tracking-tight text-white">
+          Frequently Asked Questions
+        </h2>
+        <p class="text-sm sm:text-base lg:text-lg text-gray-400 max-w-2xl mx-auto">
+          Everything you need to know
+        </p>
+      </div>
+
+      <div class="max-w-3xl mx-auto">
+        <div class="space-y-4">
+          <!-- FAQ 1 -->
+          <details class="bg-slate-800 rounded-lg border border-slate-700 group">
+            <summary class="flex items-center justify-between p-4 sm:p-6 cursor-pointer list-none">
+              <h3 class="text-base sm:text-lg font-semibold text-white pr-4">How do I install and set up the browser extension?</h3>
+              <svg class="h-5 w-5 text-primary transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <div class="px-4 sm:px-6 pb-4 sm:pb-6">
+              <p class="text-gray-300 text-sm sm:text-base">Download the extension ZIP from <a href="https://github.com/benidevo/vega-ai/releases" class="text-primary hover:text-primary-dark" target="_blank" rel="noopener">GitHub releases</a>, unzip it, then load it in Chrome at <code class="bg-slate-700 text-primary px-1 py-0.5 rounded text-xs font-mono">chrome://extensions/</code> with Developer mode on. Click the Vega icon, configure your connection (usually localhost:8765), and you're set. Your Vega backend needs to be running first.</p>
+            </div>
+          </details>
+
+          <!-- FAQ 2 -->
+          <details class="bg-slate-800 rounded-lg border border-slate-700 group">
+            <summary class="flex items-center justify-between p-4 sm:p-6 cursor-pointer list-none">
+              <h3 class="text-base sm:text-lg font-semibold text-white pr-4">How do I capture job listings from LinkedIn?</h3>
+              <svg class="h-5 w-5 text-primary transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <div class="px-4 sm:px-6 pb-4 sm:pb-6">
+              <p class="text-gray-300 text-sm sm:text-base">Just browse LinkedIn job listings. The extension adds a capture button on each post. Click it, add notes if you want (salary expectations, interest level), and save. All job details are extracted automatically. No manual copying needed.</p>
+            </div>
+          </details>
+
+          <!-- FAQ 3 -->
+          <details class="bg-slate-800 rounded-lg border border-slate-700 group">
+            <summary class="flex items-center justify-between p-4 sm:p-6 cursor-pointer list-none">
+              <h3 class="text-base sm:text-lg font-semibold text-white pr-4">What should I do if the extension isn't working?</h3>
+              <svg class="h-5 w-5 text-primary transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <div class="px-4 sm:px-6 pb-4 sm:pb-6">
+              <p class="text-gray-300 text-sm sm:text-base">Try these steps: Check you're signed in (click the extension icon). Test your connection in settings. Make sure you're on a LinkedIn job page and the backend is running. Still stuck? Refresh the page or check the extension is enabled at <code class="bg-slate-700 text-primary px-1 py-0.5 rounded text-xs font-mono">chrome://extensions/</code>.</p>
+            </div>
+          </details>
+
+          <!-- FAQ 4 -->
+          <details class="bg-slate-800 rounded-lg border border-slate-700 group">
+            <summary class="flex items-center justify-between p-4 sm:p-6 cursor-pointer list-none">
+              <h3 class="text-base sm:text-lg font-semibold text-white pr-4">Do I need technical skills to use Vega AI?</h3>
+              <svg class="h-5 w-5 text-primary transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <div class="px-4 sm:px-6 pb-4 sm:pb-6">
+              <p class="text-gray-300 text-sm sm:text-base">Not really. If you can install apps on your computer, you can set up Vega AI. We provide step-by-step instructions. The interface itself is as easy to use as any website.</p>
+            </div>
+          </details>
+
+          <!-- FAQ 5 -->
+          <details class="bg-slate-800 rounded-lg border border-slate-700 group">
+            <summary class="flex items-center justify-between p-4 sm:p-6 cursor-pointer list-none">
+              <h3 class="text-base sm:text-lg font-semibold text-white pr-4">What's a Google Gemini API key and how do I get one?</h3>
+              <svg class="h-5 w-5 text-primary transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <div class="px-4 sm:px-6 pb-4 sm:pb-6">
+              <p class="text-gray-300 text-sm sm:text-base">Google Gemini provides the AI capabilities for job matching and document generation. You can get a free API key from <a href="https://makersuite.google.com/app/apikey" class="text-primary hover:text-primary-dark" target="_blank" rel="noopener">Google AI Studio</a>. The free tier is generous enough for personal job searching. You get 60 requests per minute for free.</p>
+            </div>
+          </details>
+
+          <!-- FAQ 6 -->
+          <details class="bg-slate-800 rounded-lg border border-slate-700 group">
+            <summary class="flex items-center justify-between p-4 sm:p-6 cursor-pointer list-none">
+              <h3 class="text-base sm:text-lg font-semibold text-white pr-4">Can I use this for any type of job search?</h3>
+              <svg class="h-5 w-5 text-primary transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <div class="px-4 sm:px-6 pb-4 sm:pb-6">
+              <p class="text-gray-300 text-sm sm:text-base">Yes! Vega AI works for any profession: developers, designers, teachers, analysts, managers, and more. The AI adapts to your specific field and experience level.</p>
+            </div>
+          </details>
+
+          <!-- FAQ 7 -->
+          <details class="bg-slate-800 rounded-lg border border-slate-700 group">
+            <summary class="flex items-center justify-between p-4 sm:p-6 cursor-pointer list-none">
+              <h3 class="text-base sm:text-lg font-semibold text-white pr-4">Is my data really private?</h3>
+              <svg class="h-5 w-5 text-primary transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <div class="px-4 sm:px-6 pb-4 sm:pb-6">
+              <p class="text-gray-300 text-sm sm:text-base">Absolutely. Vega AI runs entirely on your own server. Your job search data, salary expectations, and personal information never leave your control. Only the AI prompts go to Google Gemini for processing.</p>
+            </div>
+          </details>
+
+          <!-- FAQ 8 -->
+          <details class="bg-slate-800 rounded-lg border border-slate-700 group">
+            <summary class="flex items-center justify-between p-4 sm:p-6 cursor-pointer list-none">
+              <h3 class="text-base sm:text-lg font-semibold text-white pr-4">What if I need help or find a bug?</h3>
+              <svg class="h-5 w-5 text-primary transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <div class="px-4 sm:px-6 pb-4 sm:pb-6">
+              <p class="text-gray-300 text-sm sm:text-base">The Vega AI community is active on GitHub. You can <a href="https://github.com/benidevo/vega/issues" class="text-primary hover:text-primary-dark" target="_blank" rel="noopener">open issues</a>, ask questions, or contribute improvements. Since it's open source, you can also modify it to fit your specific needs.</p>
+            </div>
+          </details>
+
+          <!-- FAQ 9 -->
+          <details class="bg-slate-800 rounded-lg border border-slate-700 group">
+            <summary class="flex items-center justify-between p-4 sm:p-6 cursor-pointer list-none">
+              <h3 class="text-base sm:text-lg font-semibold text-white pr-4">Can I run this on my personal computer?</h3>
+              <svg class="h-5 w-5 text-primary transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <div class="px-4 sm:px-6 pb-4 sm:pb-6">
+              <p class="text-gray-300 text-sm sm:text-base">Absolutely! Vega AI runs perfectly on your personal laptop or desktop. No need for cloud providers or monthly hosting fees. Just <a href="https://docs.docker.com/get-docker/" class="text-primary hover:text-primary-dark" target="_blank" rel="noopener">install Docker</a> and run it locally. Your job search data never leaves your machine.</p>
+            </div>
+          </details>
+
+          <!-- FAQ 10 -->
+          <details class="bg-slate-800 rounded-lg border border-slate-700 group">
+            <summary class="flex items-center justify-between p-4 sm:p-6 cursor-pointer list-none">
+              <h3 class="text-base sm:text-lg font-semibold text-white pr-4">What about resource usage?</h3>
+              <svg class="h-5 w-5 text-primary transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <div class="px-4 sm:px-6 pb-4 sm:pb-6">
+              <p class="text-gray-300 text-sm sm:text-base">Vega AI is lightweight and runs well on most computers. You can run it alongside your other applications without performance issues. It works great on laptops, desktops, or a VPS if you prefer remote access.</p>
+            </div>
+          </details>
+
+          <!-- FAQ 11 -->
+          <details class="bg-slate-800 rounded-lg border border-slate-700 group">
+            <summary class="flex items-center justify-between p-4 sm:p-6 cursor-pointer list-none">
+              <h3 class="text-base sm:text-lg font-semibold text-white pr-4">How do I reset my admin password?</h3>
+              <svg class="h-5 w-5 text-primary transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <div class="px-4 sm:px-6 pb-4 sm:pb-6">
+              <p class="text-gray-300 text-sm sm:text-base">Stop the container, update your password in the config file, then add <code class="bg-slate-700 text-primary px-1 py-0.5 rounded text-xs font-mono">RESET_ADMIN_PASSWORD=true</code> and restart.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </section>
+{{end}}

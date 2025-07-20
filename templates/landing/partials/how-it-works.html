@@ -1,0 +1,108 @@
+{{define "landing/partials/how-it-works.html"}}
+  <!-- How It Works Section with SVG Illustrations -->
+  <section id="how-it-works" class="py-12 sm:py-16 lg:py-20 bg-slate-800/50 w-full overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-8 sm:mb-12 md:mb-16">
+        <h2 class="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold font-heading mb-3 sm:mb-4 tracking-tight text-white">
+          How It Works
+        </h2>
+        <p class="text-sm sm:text-base lg:text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">
+          Get started with one Docker command
+        </p>
+      </div>
+
+      <!-- How It Works Illustrated Steps -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+        <!-- Step 1: Add Jobs -->
+        <div class="bg-slate-800 rounded-xl p-5 sm:p-6 border border-slate-700 hover:border-slate-600 group transition-all duration-300">
+          <div class="mb-6">
+            <div class="w-full h-32 bg-slate-700/50 rounded-lg p-4 group-hover:bg-slate-600/50 transition-colors">
+              <svg viewBox="0 0 200 100" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Browser window -->
+                <rect x="20" y="10" width="160" height="80" rx="4" stroke="#0D9488" stroke-width="2"/>
+                <line x1="20" y1="25" x2="180" y2="25" stroke="#0D9488" stroke-width="2"/>
+                <circle cx="35" cy="17.5" r="3" fill="#F59E0B"/>
+                <circle cx="45" cy="17.5" r="3" fill="#F59E0B"/>
+                <circle cx="55" cy="17.5" r="3" fill="#F59E0B"/>
+                <!-- Content lines -->
+                <rect x="30" y="35" width="80" height="3" rx="1.5" fill="#0D9488" opacity="0.5"/>
+                <rect x="30" y="45" width="100" height="3" rx="1.5" fill="#0D9488" opacity="0.3"/>
+                <rect x="30" y="55" width="60" height="3" rx="1.5" fill="#0D9488" opacity="0.3"/>
+                <!-- Plus icon -->
+                <circle cx="150" cy="60" r="15" fill="#0D9488"/>
+                <path d="M150 52V68M142 60H158" stroke="white" stroke-width="3" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+          <h3 class="text-lg sm:text-xl font-semibold text-white mb-2 group-hover:text-primary transition-colors">1. Install like any app</h3>
+          <p class="text-sm sm:text-base text-gray-300 leading-relaxed">Simple installation. We'll guide you through each step.</p>
+        </div>
+
+        <!-- Step 2: AI Analysis -->
+        <div class="bg-slate-800 rounded-xl p-5 sm:p-6 border border-slate-700 hover:border-slate-600 group transition-all duration-300">
+          <div class="mb-6">
+            <div class="w-full h-32 bg-slate-700/50 rounded-lg p-4 group-hover:bg-slate-600/50 transition-colors">
+              <svg viewBox="0 0 200 100" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Brain/AI icon -->
+                <circle cx="100" cy="50" r="30" stroke="#0D9488" stroke-width="2" opacity="0.3"/>
+                <circle cx="100" cy="50" r="20" stroke="#0D9488" stroke-width="2" opacity="0.5"/>
+                <circle cx="100" cy="50" r="10" fill="#0D9488"/>
+                <!-- Connection lines -->
+                <path d="M70 50H30M130 50H170M100 20V10M100 80V90M75 25L50 10M125 25L150 10M75 75L50 90M125 75L150 90" stroke="#0D9488" stroke-width="1.5" opacity="0.5" stroke-linecap="round"/>
+                <!-- Dots at ends -->
+                <circle cx="30" cy="50" r="4" fill="#F59E0B"/>
+                <circle cx="170" cy="50" r="4" fill="#F59E0B"/>
+                <circle cx="100" cy="10" r="4" fill="#F59E0B"/>
+                <circle cx="100" cy="90" r="4" fill="#F59E0B"/>
+                <circle cx="50" cy="10" r="4" fill="#F59E0B"/>
+                <circle cx="150" cy="10" r="4" fill="#F59E0B"/>
+                <circle cx="50" cy="90" r="4" fill="#F59E0B"/>
+                <circle cx="150" cy="90" r="4" fill="#F59E0B"/>
+              </svg>
+            </div>
+          </div>
+          <h3 class="text-xl sm:text-2xl font-semibold text-white mb-3 group-hover:text-primary transition-colors">2. Build Your Profile</h3>
+          <p class="text-base text-gray-300 leading-relaxed">Enter your experience once. Use it for every application.</p>
+        </div>
+
+        <!-- Step 3: Apply -->
+        <div class="bg-slate-800 rounded-xl p-5 sm:p-6 border border-slate-700 hover:border-slate-600 group transition-all duration-300">
+          <div class="mb-6">
+            <div class="w-full h-32 bg-slate-700/50 rounded-lg p-4 group-hover:bg-slate-600/50 transition-colors">
+              <svg viewBox="0 0 200 100" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Document -->
+                <rect x="60" y="15" width="80" height="70" rx="4" fill="white" opacity="0.1"/>
+                <rect x="60" y="15" width="80" height="70" rx="4" stroke="#0D9488" stroke-width="2"/>
+                <!-- Document lines -->
+                <rect x="70" y="25" width="60" height="3" rx="1.5" fill="#0D9488" opacity="0.5"/>
+                <rect x="70" y="35" width="40" height="3" rx="1.5" fill="#0D9488" opacity="0.3"/>
+                <rect x="70" y="45" width="50" height="3" rx="1.5" fill="#0D9488" opacity="0.3"/>
+                <rect x="70" y="55" width="45" height="3" rx="1.5" fill="#0D9488" opacity="0.3"/>
+                <!-- Checkmark -->
+                <circle cx="120" cy="65" r="15" fill="#10B981"/>
+                <path d="M112 65L117 70L128 59" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <h3 class="text-xl sm:text-2xl font-semibold text-white mb-3 group-hover:text-primary transition-colors">3. Start Tracking</h3>
+          <p class="text-base text-gray-300 leading-relaxed">Add jobs via browser extension or manual entry. Stay organized automatically.</p>
+        </div>
+      </div>
+
+      <!-- Status Badge Examples -->
+      <div class="mt-12 sm:mt-16 text-center">
+        <h4 class="text-lg sm:text-xl font-semibold text-white mb-6 sm:mb-8">Track Your Application Status</h4>
+        <div class="flex flex-wrap justify-center gap-3 sm:gap-4">
+          <!-- Success/Active -->
+          <span class="px-4 sm:px-5 py-2 sm:py-2.5 bg-green-500/20 text-green-400 text-sm sm:text-base font-medium rounded-full">Active</span>
+          <!-- Primary/Applied -->
+          <span class="px-4 sm:px-5 py-2 sm:py-2.5 bg-primary/20 text-primary text-sm sm:text-base font-medium rounded-full">Applied</span>
+          <!-- Info/Interested -->
+          <span class="px-4 sm:px-5 py-2 sm:py-2.5 bg-blue-500/20 text-blue-400 text-sm sm:text-base font-medium rounded-full">Interested</span>
+          <!-- Warning/Pending -->
+          <span class="px-4 sm:px-5 py-2 sm:py-2.5 bg-secondary/20 text-secondary text-sm sm:text-base font-medium rounded-full">Pending</span>
+        </div>
+      </div>
+    </div>
+  </section>
+{{end}}
