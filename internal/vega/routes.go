@@ -84,7 +84,7 @@ func SetupRoutes(a *App) {
 
 	// Homepage route - register different handlers based on mode
 	a.router.GET("/", authHandler.OptionalAuthMiddleware(), homeHandler.GetHomePage)
-	
+
 	// Dashboard route - always shows dashboard
 	a.router.GET("/dashboard", authHandler.OptionalAuthMiddleware(), homeHandler.GetHomePage)
 

@@ -32,12 +32,12 @@ func (h *Handler) GetHomePage(c *gin.Context) {
 	if h.cfg.IsCloudMode && c.Request.URL.Path == "/" {
 		username, _ := c.Get("username")
 		h.renderer.HTML(c, http.StatusOK, "landing/index.html", gin.H{
-			"title": "Vega AI - AI-Powered Job Search Assistant",
+			"title":    "Vega AI - AI-Powered Job Search Assistant",
 			"username": username,
 		})
 		return
 	}
-	
+
 	// In self-hosted mode, show dashboard
 	userIDValue, exists := c.Get("userID")
 	if !exists {
