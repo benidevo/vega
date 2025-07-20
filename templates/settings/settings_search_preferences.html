@@ -1,7 +1,8 @@
 {{define "settings-search-preferences-content"}}
 <div class="mx-0 md:max-w-6xl md:mx-auto relative">
-  <!-- Alert container for form responses -->
-  <div id="form-alert-container" class="mb-4 md:mb-6 px-4 md:px-0" hx-swap-oob="true" aria-live="polite"></div>
+
+  <!-- Alert Container -->
+  <div id="form-alert-container"></div>
 
   <!-- Content container with responsive padding -->
   <div class="relative p-4 md:p-6 bg-slate-800 bg-opacity-70 backdrop-blur-xl rounded-none md:rounded-xl shadow-2xl border-0 md:border border-white border-opacity-10">
@@ -381,35 +382,53 @@ function togglePreference(id) {
 }
 
 function deletePreference(id) {
-  if (!confirm('Are you sure you want to delete this search preference?')) {
-    return;
+  // Show delete modal
+  const modal = document.getElementById('delete-modal-shared');
+  const confirmBtn = document.getElementById('confirm-delete-btn');
+  
+  if (modal) {
+    modal.classList.remove('hidden');
+    
+    // Set up the confirm button
+    confirmBtn.onclick = function() {
+      modal.classList.add('hidden');
+      
+      fetch(`/settings/search-preferences/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': '{{.csrfToken}}'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.message) {
+          // Show success toast
+          if (typeof showToast === 'function') {
+            showToast('Search preference deleted successfully', 'success');
+          }
+          
+          // Remove the card with animation
+          const card = document.querySelector(`.preference-card[data-id="${id}"]`);
+          card.style.opacity = '0';
+          card.style.transform = 'translateX(-20px)';
+          setTimeout(() => {
+            window.location.reload();
+          }, 300);
+        } else {
+          if (typeof showToast === 'function') {
+            showToast(data.error || 'Failed to delete preference', 'error');
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        if (typeof showToast === 'function') {
+          showToast('Failed to delete preference', 'error');
+        }
+      });
+    };
   }
-
-  fetch(`/settings/search-preferences/${id}`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-Token': '{{.csrfToken}}'
-    }
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.message) {
-      // Remove the card with animation
-      const card = document.querySelector(`.preference-card[data-id="${id}"]`);
-      card.style.opacity = '0';
-      card.style.transform = 'translateX(-20px)';
-      setTimeout(() => {
-        window.location.reload();
-      }, 300);
-    } else {
-      alert(data.error || 'Failed to delete preference');
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    alert('Failed to delete preference');
-  });
 }
 
 function editPreference(id) {

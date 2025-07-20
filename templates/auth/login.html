@@ -58,9 +58,11 @@
             hx-target="#form-response"
             hx-swap="outerHTML"
             hx-indicator="#spinner"
+            hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
             class="relative z-10"
             aria-label="Login form"
             onsubmit="return validateLoginForm(event)">
+        <input type="hidden" name="csrf_token" value="{{.csrfToken}}">
         <div class="space-y-4 sm:space-y-5 lg:space-y-6">
           <!-- Username field with premium styling -->
           <div class="group">

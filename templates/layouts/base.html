@@ -219,6 +219,37 @@
       }
     }
 
+    /* Notification animations */
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes slideOutRight {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+    
+    .animate-slide-in-right {
+      animation: slideInRight 0.3s ease-out;
+    }
+    
+    .animate-slide-out-right {
+      animation: slideOutRight 0.3s ease-out forwards;
+    }
+
   </style>
 </head>
 <body class="bg-slate-900 text-gray-100 font-sans">
@@ -330,9 +361,6 @@
   <!-- Shared Delete Modal -->
   {{template "delete-modal" .}}
 
-  <!-- Shared Notification Modal -->
-  {{template "notification-modal" .}}
-
 
   <!-- Global scripts -->
   <script>
@@ -359,34 +387,39 @@
     }
 
     // Toast notification system
-    function showToast(message, type = 'success', duration = 3000) {
+    window.showToast = function(message, type = 'success', duration = 3000) {
+      const container = document.getElementById('notification-container');
+      if (!container) {
+        console.error('Notification container not found');
+        return;
+      }
+      
+      // Remove any existing notifications
+      const existingToasts = container.querySelectorAll('div');
+      existingToasts.forEach(toast => {
+        toast.remove();
+      });
+      
       const toast = document.createElement('div');
 
-      // Style to match app's design system
-      const baseClasses = 'fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg animate-fade-in border flex items-center';
+      // Style to match app's design system with slate theme
+      const baseClasses = 'px-3 sm:px-4 py-2 sm:py-3 rounded-lg shadow-2xl border pointer-events-auto animate-slide-in-right backdrop-blur-sm w-full sm:w-auto';
       const typeClasses = {
-        success: 'bg-slate-800 border-primary text-white',
-        error: 'bg-slate-800 border-red-500 text-white',
-        warning: 'bg-slate-800 border-yellow-500 text-white',
-        info: 'bg-slate-800 border-blue-500 text-white'
+        success: 'bg-emerald-900/80 border-emerald-700 text-emerald-100',
+        error: 'bg-red-900/80 border-red-700 text-red-100',
+        warning: 'bg-yellow-900/80 border-yellow-700 text-yellow-100',
+        info: 'bg-blue-900/80 border-blue-700 text-blue-100'
       };
 
       toast.className = `${baseClasses} ${typeClasses[type] || typeClasses.info}`;
 
-      // Add icon based on type
-      const icons = {
-        success: '<svg class="h-5 w-5 mr-2 text-primary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>',
-        error: '<svg class="h-5 w-5 mr-2 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>',
-        warning: '<svg class="h-5 w-5 mr-2 text-yellow-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L12.732 4.5c-.77-.833-2.186-.833-2.56 0L2.732 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>',
-        info: '<svg class="h-5 w-5 mr-2 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>'
-      };
+      toast.innerHTML = `<span class="text-sm font-medium block text-center">${message}</span>`;
 
-      toast.innerHTML = `${icons[type] || icons.info}<span class="text-sm">${message}</span>`;
-
-      document.body.appendChild(toast);
+      container.appendChild(toast);
 
       setTimeout(() => {
-        toast.classList.add('animate-fade-out');
+        toast.classList.remove('animate-slide-in-right');
+        toast.classList.add('animate-slide-out-right');
         setTimeout(() => {
           if (toast.parentNode) {
             toast.parentNode.removeChild(toast);
@@ -513,11 +546,46 @@
       formatUTCDates();
       trackFormChanges();
       setupUnsavedChangesWarning();
+      
+      // Convert server alerts to toast notifications on page load
+      setTimeout(() => {
+        const serverAlerts = document.querySelectorAll('.server-alert');
+        serverAlerts.forEach(alert => {
+          const type = alert.getAttribute('data-alert-type') || 'info';
+          const message = alert.getAttribute('data-alert-message');
+          
+          if (message) {
+            // Show toast notification
+            showToast(message, type);
+            
+            // Remove the server alert element
+            alert.remove();
+          }
+        });
+      }, 100); // Small delay to ensure all content is loaded
     });
-    document.body.addEventListener('htmx:afterSwap', function() {
+    document.body.addEventListener('htmx:afterSwap', function(event) {
       setupAutoDismissAlerts();
       formatUTCDates();
       trackFormChanges();
+      
+      // Convert server alerts to toast notifications
+      // Check for alerts in the swapped content
+      setTimeout(() => {
+        const serverAlerts = document.querySelectorAll('.server-alert');
+        serverAlerts.forEach(alert => {
+          const type = alert.getAttribute('data-alert-type') || 'info';
+          const message = alert.getAttribute('data-alert-message');
+          
+          if (message) {
+            // Show toast notification
+            showToast(message, type);
+            
+            // Remove the server alert element
+            alert.remove();
+          }
+        });
+      }, 50); // Small delay to ensure DOM is updated
     });
 
     // Setup page functionality
@@ -526,8 +594,17 @@
       if (typeof htmx !== 'undefined') {
         // Handle different response statuses
         document.body.addEventListener('htmx:beforeSwap', function(event) {
-          if (event.detail.xhr.status === 401 || event.detail.xhr.status === 400) {
-            // Allow 400/401 responses to be swapped as they contain user-friendly error messages
+          if (event.detail.xhr.status === 404) {
+            // For 404 errors, check if it's a full page response
+            const contentType = event.detail.xhr.getResponseHeader('content-type');
+            if (contentType && contentType.includes('text/html') && event.detail.xhr.responseText.includes('404-content')) {
+              // This is a full 404 page, redirect to show it properly
+              window.location.href = event.detail.pathInfo.requestPath;
+              event.detail.shouldSwap = false;
+              return;
+            }
+          } else if (event.detail.xhr.status === 401 || event.detail.xhr.status === 400 || event.detail.xhr.status === 403) {
+            // Allow 400/401/403 responses to be swapped as they contain user-friendly error messages
             event.detail.shouldSwap = true;
             event.detail.isError = false;
           } else if (event.detail.xhr.status >= 500) {
@@ -555,58 +632,32 @@
           if (spinner) {
             spinner.classList.add('htmx-hide');
           }
+          
+          // Handle 403 errors specifically
+          if (event.detail.xhr.status === 403) {
+            // Try to parse JSON error response
+            try {
+              const response = JSON.parse(event.detail.xhr.responseText);
+              if (response.error) {
+                showToast(response.error, 'error');
+              } else {
+                showToast('Access denied. Please check your credentials or try again.', 'error');
+              }
+            } catch (e) {
+              // If not JSON, show generic error
+              showToast('Access denied. Please check your credentials or try again.', 'error');
+            }
+          }
         });
       }
     });
 
-  // Notification modal system (global functions)
+  // Notification modal system - redirected to toast system
   window.showNotification = function(message, type = 'info', title = null) {
-    const modal = document.getElementById('notification-modal-shared');
-    const iconElement = document.getElementById('notification-icon');
-    const titleElement = document.getElementById('notification-title');
-    const messageElement = document.getElementById('notification-message');
-
-    if (!modal || !iconElement || !titleElement || !messageElement) return;
-
-    // Set icon and title based on type
-    iconElement.innerHTML = getNotificationIcon(type);
-    titleElement.textContent = title || getNotificationTitle(type);
-    messageElement.textContent = message;
-
-    // Show modal
-    modal.classList.remove('hidden');
+    // Redirect to the toast system instead of using modal
+    showToast(message, type);
   };
 
-  function getNotificationTitle(type) {
-    switch(type) {
-      case 'error': return 'Error';
-      case 'success': return 'Success';
-      case 'warning': return 'Warning';
-      default: return 'Notification';
-    }
-  }
-
-  function getNotificationIcon(type) {
-    const baseClasses = 'h-6 w-6';
-    switch(type) {
-      case 'error':
-        return '<svg class="' + baseClasses + ' text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">' +
-               '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />' +
-               '</svg>';
-      case 'success':
-        return '<svg class="' + baseClasses + ' text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">' +
-               '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />' +
-               '</svg>';
-      case 'warning':
-        return '<svg class="' + baseClasses + ' text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">' +
-               '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />' +
-               '</svg>';
-      default:
-        return '<svg class="' + baseClasses + ' text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">' +
-               '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />' +
-               '</svg>';
-    }
-  }
   </script>
 
   <!-- Page-specific scripts -->
@@ -621,6 +672,11 @@
   {{if eq .page "settings-search-preferences"}}
   <script src="/static/js/skills-management.js"></script>
   {{end}}
+  
+  <!-- Unified notification container -->
+  <div id="notification-container" class="fixed right-2 sm:right-4 bottom-4 left-2 sm:left-auto z-50 flex flex-col-reverse gap-2 pointer-events-none sm:max-w-sm">
+    <!-- Notifications stack here -->
+  </div>
 </body>
 </html>
 {{end}}

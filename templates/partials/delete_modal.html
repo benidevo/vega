@@ -28,10 +28,13 @@
                }
                
                // Otherwise, proceed with server-side deletion
+               const metaTag = document.querySelector('meta[name=csrf-token]');
+               const csrfToken = metaTag ? metaTag.getAttribute('content') : '';
                fetch(window.itemToDelete.url, {
                  method: window.itemToDelete.method || 'DELETE',
                  headers: {
-                   'HX-Request': 'true'
+                   'HX-Request': 'true',
+                   'X-CSRF-Token': csrfToken
                  }
                })
                .then(response => {

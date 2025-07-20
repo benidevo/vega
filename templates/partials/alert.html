@@ -1,7 +1,9 @@
 {{define "partials/alert.html"}}
 {{if eq .context "dashboard"}}
-  <div class="inline-flex items-center auto-dismiss-alert
+  <div class="inline-flex items-center auto-dismiss-alert server-alert
     {{if eq .type "error"}}text-red-400{{else if eq .type "success"}}text-emerald-400{{else if eq .type "warning"}}text-yellow-400{{else}}text-blue-400{{end}}"
+       data-alert-type="{{.type}}"
+       data-alert-message="{{.message}}"
        _="on load wait 3s then transition opacity to 0 over 0.5s then remove me">
     {{if eq .type "error"}}
       <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -23,8 +25,10 @@
     <span>{{.message}}</span>
   </div>
 {{else}}
-  <div class="text-center text-sm block mb-4 p-4 rounded-md auto-dismiss-alert
+  <div class="text-center text-sm block mb-4 p-4 rounded-md auto-dismiss-alert server-alert
     {{if eq .type "error"}}bg-red-900 bg-opacity-50 border border-red-700 text-red-200{{else if eq .type "success"}}bg-emerald-900 bg-opacity-50 border border-emerald-700 text-emerald-200{{else if eq .type "warning"}}bg-yellow-900 bg-opacity-50 border border-yellow-700 text-yellow-200{{else}}bg-blue-900 bg-opacity-50 border border-blue-700 text-blue-200{{end}}"
+       data-alert-type="{{.type}}"
+       data-alert-message="{{.message}}"
        hx-target="this" hx-swap="outerHTML" hx-trigger="click delay:5s">
     <div class="flex items-center justify-center">
       {{if eq .type "error"}}
