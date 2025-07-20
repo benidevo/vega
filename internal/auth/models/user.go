@@ -60,6 +60,11 @@ type User struct {
 	LastLogin time.Time `json:"last_login" db:"last_login"`
 }
 
+// IsAdmin returns true if the user has admin role
+func (u *User) IsAdmin() bool {
+	return u.Role == ADMIN
+}
+
 // NewUser creates a new User instance with the provided username, password, and role.
 func NewUser(username, password string, role Role) (*User, error) {
 	if username == "" {

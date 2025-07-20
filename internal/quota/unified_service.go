@@ -89,7 +89,7 @@ func (s *UnifiedService) GetAllQuotaStatus(ctx context.Context, userID int) (int
 	status.JobSearch = searchResult.Status
 
 	// Get search runs quota (daily)
-	searchRunsResult, err := s.searchQuota.CanRunSearch(ctx, userID)
+	searchRunsResult, err := s.searchQuota.GetSearchRunStatus(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get search runs quota status: %w", err)
 	}

@@ -48,6 +48,15 @@ type UnifiedQuotaStatus struct {
 	SearchRuns QuotaStatus `json:"search_runs"`
 }
 
+// QuotaConfig represents quota configuration from database
+type QuotaConfig struct {
+	QuotaType   string    `db:"quota_type"`
+	FreeLimit   int       `db:"free_limit"`
+	Description string    `db:"description"`
+	CreatedAt   time.Time `db:"created_at"`
+	UpdatedAt   time.Time `db:"updated_at"`
+}
+
 const (
 	// Quota types
 	QuotaTypeAIAnalysis = "ai_analysis"
@@ -58,21 +67,14 @@ const (
 	PeriodDaily   = "daily"
 	PeriodMonthly = "monthly"
 
-	// Existing constants
-	FreeUserMonthlyLimit = 5
-
 	// QuotaReasonOK indicates the operation is allowed
 	QuotaReasonOK = "ok"
 
 	// QuotaReasonReanalysis indicates this is a re-analysis (always allowed)
 	QuotaReasonReanalysis = "re-analysis allowed"
 
-	// QuotaReasonLimitReached indicates the monthly limit has been reached
-	QuotaReasonLimitReached = "Monthly limit of 5 job analyses reached"
-
-	// Daily quota limits for free users
-	FreeUserDailyJobSearchLimit = 100
-	FreeUserDailySearchRunLimit = 20
+	// QuotaReasonLimitReached indicates the quota limit has been reached
+	QuotaReasonLimitReached = "quota limit reached"
 
 	// Daily quota keys
 	QuotaKeyJobsFound   = "jobs_found"

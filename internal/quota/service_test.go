@@ -7,9 +7,14 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	ctxutil "github.com/benidevo/vega/internal/common/context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+)
+
+const (
+	testMonthlyQuotaLimit = 5
 )
 
 // setupMockDB creates a new mock database for testing
@@ -17,6 +22,19 @@ func setupMockDB(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
 	return db, mock
+}
+
+// mockCloudModeQueries adds common mock expectations for cloud mode queries
+func mockCloudModeQueries(mock sqlmock.Sqlmock, userID int, isAdmin bool) {
+	// Only add these if not admin (admin skips these checks)
+	if !isAdmin {
+		// Mock quota config query
+		rows := sqlmock.NewRows([]string{"quota_type", "free_limit", "description", "created_at", "updated_at"}).
+			AddRow("ai_analysis_monthly", testMonthlyQuotaLimit, "AI job analysis per month", time.Now(), time.Now())
+		mock.ExpectQuery("SELECT quota_type, free_limit, description, created_at, updated_at FROM quota_configs").
+			WithArgs("ai_analysis_monthly").
+			WillReturnRows(rows)
+	}
 }
 
 // MockJobRepository is a mock implementation of JobRepository
@@ -174,12 +192,15 @@ func TestService_CloudMode(t *testing.T) {
 			WithArgs(userID, monthYear).
 			WillReturnError(sql.ErrNoRows)
 
+		// Mock cloud mode queries (not admin)
+		mockCloudModeQueries(mock, userID, false)
+
 		result, err := service.CanAnalyzeJob(ctx, userID, jobID)
 
 		assert.NoError(t, err)
 		assert.True(t, result.Allowed)
 		assert.Equal(t, QuotaReasonOK, result.Reason)
-		assert.Equal(t, FreeUserMonthlyLimit, result.Status.Limit)
+		assert.Equal(t, testMonthlyQuotaLimit, result.Status.Limit)
 		assert.Equal(t, 0, result.Status.Used)
 
 		mockRepo.AssertExpectations(t)
@@ -200,18 +221,21 @@ func TestService_CloudMode(t *testing.T) {
 		// Mock GetMonthlyUsage query - at limit
 		monthYear := getCurrentMonthYear()
 		rows := sqlmock.NewRows([]string{"user_id", "month_year", "jobs_analyzed", "updated_at"}).
-			AddRow(userID, monthYear, FreeUserMonthlyLimit, time.Now())
+			AddRow(userID, monthYear, testMonthlyQuotaLimit, time.Now())
 		mock.ExpectQuery("SELECT user_id, month_year, jobs_analyzed, updated_at FROM user_quota_usage").
 			WithArgs(userID, monthYear).
 			WillReturnRows(rows)
+
+		// Mock cloud mode queries (not admin)
+		mockCloudModeQueries(mock, userID, false)
 
 		result, err := service.CanAnalyzeJob(ctx, userID, jobID)
 
 		assert.NoError(t, err)
 		assert.False(t, result.Allowed)
 		assert.Equal(t, QuotaReasonLimitReached, result.Reason)
-		assert.Equal(t, FreeUserMonthlyLimit, result.Status.Limit)
-		assert.Equal(t, FreeUserMonthlyLimit, result.Status.Used)
+		assert.Equal(t, testMonthlyQuotaLimit, result.Status.Limit)
+		assert.Equal(t, testMonthlyQuotaLimit, result.Status.Used)
 
 		mockRepo.AssertExpectations(t)
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -232,10 +256,13 @@ func TestService_CloudMode(t *testing.T) {
 		// Mock GetMonthlyUsage query - even if at limit, reanalysis is allowed
 		monthYear := getCurrentMonthYear()
 		rows := sqlmock.NewRows([]string{"user_id", "month_year", "jobs_analyzed", "updated_at"}).
-			AddRow(userID, monthYear, FreeUserMonthlyLimit, time.Now())
+			AddRow(userID, monthYear, testMonthlyQuotaLimit, time.Now())
 		mock.ExpectQuery("SELECT user_id, month_year, jobs_analyzed, updated_at FROM user_quota_usage").
 			WithArgs(userID, monthYear).
 			WillReturnRows(rows)
+
+		// Mock cloud mode queries (not admin)
+		mockCloudModeQueries(mock, userID, false)
 
 		result, err := service.CanAnalyzeJob(ctx, userID, jobID)
 
@@ -323,13 +350,53 @@ func TestService_CloudMode(t *testing.T) {
 			WithArgs(userID, monthYear).
 			WillReturnRows(rows)
 
+		// Mock cloud mode queries (not admin)
+		mockCloudModeQueries(mock, userID, false)
+
 		status, err := service.GetQuotaStatus(ctx, userID)
 
 		assert.NoError(t, err)
-		assert.Equal(t, FreeUserMonthlyLimit, status.Limit)
+		assert.Equal(t, testMonthlyQuotaLimit, status.Limit)
 		assert.Equal(t, usedCount, status.Used)
 		assert.NotEqual(t, time.Time{}, status.ResetDate)
 
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("Admin users get unlimited quota in cloud mode", func(t *testing.T) {
+		db, mock := setupMockDB(t)
+		defer db.Close()
+
+		mockRepo := new(MockJobRepository)
+		service := NewService(db, mockRepo, true) // Cloud mode enabled
+
+		// Create context with admin role
+		adminCtx := ctxutil.WithRole(ctx, "Admin")
+
+		// Mock job that hasn't been analyzed
+		job := &Job{ID: jobID, FirstAnalyzedAt: nil}
+		mockRepo.On("GetByID", adminCtx, userID, jobID).Return(job, nil).Once()
+
+		// Mock GetMonthlyUsage query - even if at limit
+		monthYear := getCurrentMonthYear()
+		rows := sqlmock.NewRows([]string{"user_id", "month_year", "jobs_analyzed", "updated_at"}).
+			AddRow(userID, monthYear, testMonthlyQuotaLimit+10, time.Now()) // Over limit
+		mock.ExpectQuery("SELECT user_id, month_year, jobs_analyzed, updated_at FROM user_quota_usage").
+			WithArgs(userID, monthYear).
+			WillReturnRows(rows)
+
+		// Mock cloud mode queries (admin user)
+		mockCloudModeQueries(mock, userID, true)
+
+		result, err := service.CanAnalyzeJob(adminCtx, userID, jobID)
+
+		assert.NoError(t, err)
+		assert.True(t, result.Allowed)
+		assert.Equal(t, QuotaReasonOK, result.Reason)
+		assert.Equal(t, -1, result.Status.Limit) // Unlimited for admin
+		assert.Equal(t, testMonthlyQuotaLimit+10, result.Status.Used)
+
+		mockRepo.AssertExpectations(t)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 }

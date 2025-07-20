@@ -17,6 +17,9 @@ type Repository interface {
 	GetDailyUsage(ctx context.Context, userID int, date string, quotaKey string) (int, error)
 	IncrementDailyUsage(ctx context.Context, userID int, date string, quotaKey string, amount int) error
 	GetAllDailyUsage(ctx context.Context, userID int, date string) (map[string]int, error)
+
+	// Configuration methods
+	GetQuotaConfig(ctx context.Context, quotaType string) (*QuotaConfig, error)
 }
 
 // repository implements the Repository interface
@@ -147,4 +150,23 @@ func (r *repository) GetAllDailyUsage(ctx context.Context, userID int, date stri
 	}
 
 	return usage, nil
+}
+
+// GetQuotaConfig gets the quota configuration for a specific quota type
+func (r *repository) GetQuotaConfig(ctx context.Context, quotaType string) (*QuotaConfig, error) {
+	config := &QuotaConfig{}
+
+	query := `
+		SELECT quota_type, free_limit, description, created_at, updated_at
+		FROM quota_configs
+		WHERE quota_type = ?
+	`
+
+	row := r.db.QueryRowContext(ctx, query, quotaType)
+	err := row.Scan(&config.QuotaType, &config.FreeLimit, &config.Description, &config.CreatedAt, &config.UpdatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get quota config for %s: %w", quotaType, err)
+	}
+
+	return config, nil
 }

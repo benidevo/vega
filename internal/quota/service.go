@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 	"time"
+
+	ctxutil "github.com/benidevo/vega/internal/common/context"
 )
 
 // JobRepository interface defines methods the quota service needs from the job repository
@@ -31,6 +33,12 @@ func NewService(db *sql.DB, jobRepo JobRepository, isCloudMode bool) *Service {
 	}
 }
 
+// isUserAdmin checks if the user in context has admin role
+func (s *Service) isUserAdmin(ctx context.Context) bool {
+	role, _ := ctxutil.GetRole(ctx)
+	return role == "Admin"
+}
+
 // CanAnalyzeJob checks if a user can analyze a specific job
 func (s *Service) CanAnalyzeJob(ctx context.Context, userID int, jobID int) (*QuotaCheckResult, error) {
 	// Check if job was previously analyzed
@@ -44,6 +52,27 @@ func (s *Service) CanAnalyzeJob(ctx context.Context, userID int, jobID int) (*Qu
 	usage, err := s.repo.GetMonthlyUsage(ctx, userID, monthYear)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get monthly usage: %w", err)
+	}
+
+	// Check if user is admin (admins have unlimited quota in cloud mode)
+	if s.isCloudMode && s.isUserAdmin(ctx) {
+		status := QuotaStatus{
+			Used:      usage.JobsAnalyzed,
+			Limit:     -1,          // -1 indicates unlimited
+			ResetDate: time.Time{}, // No reset date for unlimited
+		}
+
+		// If job was previously analyzed, note it as re-analysis
+		reason := QuotaReasonOK
+		if job.FirstAnalyzedAt != nil {
+			reason = QuotaReasonReanalysis
+		}
+
+		return &QuotaCheckResult{
+			Allowed: true,
+			Reason:  reason,
+			Status:  status,
+		}, nil
 	}
 
 	// In non-cloud mode, always allow but show actual usage
@@ -67,10 +96,18 @@ func (s *Service) CanAnalyzeJob(ctx context.Context, userID int, jobID int) (*Qu
 		}, nil
 	}
 
+	// Cloud mode: get quota configuration
+	quotaConfig, err := s.repo.GetQuotaConfig(ctx, "ai_analysis_monthly")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get quota config: %w", err)
+	}
+
+	limit := quotaConfig.FreeLimit
+
 	// Cloud mode: enforce quotas
 	status := QuotaStatus{
 		Used:      usage.JobsAnalyzed,
-		Limit:     FreeUserMonthlyLimit,
+		Limit:     limit,
 		ResetDate: getNextMonthStart(),
 	}
 
@@ -84,7 +121,7 @@ func (s *Service) CanAnalyzeJob(ctx context.Context, userID int, jobID int) (*Qu
 	}
 
 	// Check monthly limit for new analyses
-	if usage.JobsAnalyzed >= FreeUserMonthlyLimit {
+	if usage.JobsAnalyzed >= limit {
 		return &QuotaCheckResult{
 			Allowed: false,
 			Reason:  QuotaReasonLimitReached,
@@ -139,6 +176,15 @@ func (s *Service) GetQuotaStatus(ctx context.Context, userID int) (*QuotaStatus,
 		return nil, err
 	}
 
+	// Check if user is admin (admins have unlimited quota in cloud mode)
+	if s.isCloudMode && s.isUserAdmin(ctx) {
+		return &QuotaStatus{
+			Used:      usage.JobsAnalyzed,
+			Limit:     -1,          // -1 indicates unlimited
+			ResetDate: time.Time{}, // No reset date for unlimited
+		}, nil
+	}
+
 	if !s.isCloudMode {
 		// In self-hosted mode, return actual usage but unlimited limit
 		return &QuotaStatus{
@@ -148,10 +194,16 @@ func (s *Service) GetQuotaStatus(ctx context.Context, userID int) (*QuotaStatus,
 		}, nil
 	}
 
+	// Cloud mode: get quota configuration
+	quotaConfig, err := s.repo.GetQuotaConfig(ctx, "ai_analysis_monthly")
+	if err != nil {
+		return nil, err
+	}
+
 	// Cloud mode: return actual quota status with limits
 	return &QuotaStatus{
 		Used:      usage.JobsAnalyzed,
-		Limit:     FreeUserMonthlyLimit,
+		Limit:     quotaConfig.FreeLimit,
 		ResetDate: getNextMonthStart(),
 	}, nil
 }
