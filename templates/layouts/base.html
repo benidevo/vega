@@ -633,7 +633,7 @@
             spinner.classList.add('htmx-hide');
           }
           
-          // Handle 403 errors specifically
+          // Handle specific HTTP errors
           if (event.detail.xhr.status === 403) {
             // Try to parse JSON error response
             try {
@@ -647,6 +647,12 @@
               // If not JSON, show generic error
               showToast('Access denied. Please check your credentials or try again.', 'error');
             }
+          } else if (event.detail.xhr.status === 404) {
+            showToast('The requested item was not found', 'error');
+          } else if (event.detail.xhr.status === 500) {
+            showToast('Something went wrong. Please try again later.', 'error');
+          } else if (event.detail.xhr.status === 0) {
+            showToast('Connection error. Please check your internet connection.', 'error');
           }
         });
       }
