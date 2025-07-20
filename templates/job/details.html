@@ -419,42 +419,37 @@
 
 <script>
 document.addEventListener('htmx:afterRequest', function(evt) {
+  // Check if this is a successful AI content generation request
+  const isAIContent = (
+    evt.detail.target.id === 'ai-analysis' || 
+    evt.detail.target.id === 'cover-letter-section' || 
+    evt.detail.target.id === 'cv-section'
+  ) && evt.detail.xhr.status === 200;
 
-  if (evt.detail.target.id === 'ai-analysis' && evt.detail.xhr.status === 200) {
-    // Clear any previous errors and hide other sections
-    document.getElementById('analyze-error').innerHTML = '';
-    document.getElementById('cover-letter-error').innerHTML = '';
-    document.getElementById('cv-error').innerHTML = '';
-    document.getElementById('cover-letter-section').innerHTML = '';
-    document.getElementById('cv-section').innerHTML = '';
-    // Scroll to analysis
+  if (isAIContent) {
+    // Clear any error containers
+    const errorContainers = ['analyze-error', 'cover-letter-error', 'cv-error'];
+    errorContainers.forEach(id => {
+      const element = document.getElementById(id);
+      if (element) element.innerHTML = '';
+    });
+
+    // Clear other content sections (keep only the one that was just loaded)
+    const contentSections = ['ai-analysis', 'cover-letter-section', 'cv-section'];
+    contentSections.forEach(id => {
+      if (id !== evt.detail.target.id) {
+        const element = document.getElementById(id);
+        if (element) element.innerHTML = '';
+      }
+    });
+
+    // Scroll to bottom of page after content is rendered
     setTimeout(() => {
-      document.getElementById('ai-analysis').scrollIntoView({behavior: 'smooth', block: 'start'});
-    }, 100);
-  }
-  if (evt.detail.target.id === 'cover-letter-section' && evt.detail.xhr.status === 200) {
-    // Clear any previous errors and hide other sections
-    document.getElementById('analyze-error').innerHTML = '';
-    document.getElementById('cover-letter-error').innerHTML = '';
-    document.getElementById('cv-error').innerHTML = '';
-    document.getElementById('ai-analysis').innerHTML = '';
-    document.getElementById('cv-section').innerHTML = '';
-    // Scroll to cover letter
-    setTimeout(() => {
-      document.getElementById('cover-letter-section').scrollIntoView({behavior: 'smooth', block: 'start'});
-    }, 100);
-  }
-  if (evt.detail.target.id === 'cv-section' && evt.detail.xhr.status === 200) {
-    // Clear any previous errors and hide other sections
-    document.getElementById('analyze-error').innerHTML = '';
-    document.getElementById('cover-letter-error').innerHTML = '';
-    document.getElementById('cv-error').innerHTML = '';
-    document.getElementById('ai-analysis').innerHTML = '';
-    document.getElementById('cover-letter-section').innerHTML = '';
-    // Scroll to CV
-    setTimeout(() => {
-      document.getElementById('cv-section').scrollIntoView({behavior: 'smooth', block: 'start'});
-    }, 100);
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: 'smooth'
+      });
+    }, 300);
   }
 });
 
