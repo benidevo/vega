@@ -1,7 +1,13 @@
 {{define "landing/partials/get-started.html"}}
   <!-- Enhanced Get Started Section -->
   <section id="get-started" class="py-12 sm:py-16 relative w-full overflow-hidden">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Background Pattern -->
+    <div class="absolute inset-0 z-0">
+      <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1920&q=80&fm=webp" 
+           alt="Technology pattern" 
+           class="absolute inset-0 w-full h-full object-cover opacity-5">
+    </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
       <div class="text-center mb-8 sm:mb-12 md:mb-16 fade-in-up">
         <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold font-heading mb-3 tracking-tight">
           Choose how to use Vega AI
@@ -43,12 +49,6 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
               <span class="text-gray-300 text-sm">100 job searches per day</span>
-            </li>
-            <li class="flex items-start">
-              <svg class="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="text-gray-300 text-sm">20 search runs per day</span>
             </li>
             <li class="flex items-start">
               <svg class="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">

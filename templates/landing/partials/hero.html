@@ -1,8 +1,28 @@
 {{define "landing/partials/hero.html"}}
   <!-- Hero Section with New Design -->
   <section class="relative min-h-screen flex items-center justify-center overflow-hidden w-full">
-    <!-- Background -->
-    <div class="absolute inset-0 z-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"></div>
+    <!-- Background with image texture -->
+    <div class="absolute inset-0 z-0">
+      <!-- Base gradient -->
+      <div class="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"></div>
+      
+      <!-- Background image with proper visibility and mobile optimization -->
+      <div class="absolute inset-0 mix-blend-overlay">
+        <!-- Mobile background (simpler, lighter) -->
+        <img src="/static/landing/images/ocean-tech-mobile.jpg" 
+             alt="Abstract technology pattern" 
+             class="w-full h-full object-cover opacity-30 lg:hidden"
+             loading="lazy">
+        <!-- Desktop background (higher quality) -->
+        <img src="/static/landing/images/ocean-tech-desktop.jpg" 
+             alt="Abstract technology pattern" 
+             class="w-full h-full object-cover opacity-30 hidden lg:block"
+             loading="lazy">
+      </div>
+      
+      <!-- Final overlay for color consistency -->
+      <div class="absolute inset-0 bg-slate-900/70"></div>
+    </div>
 
     <!-- Content -->
     <div class="relative z-10 w-full">

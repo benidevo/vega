@@ -347,8 +347,33 @@
           </div>
           {{template "footer" .}}
         {{else if eq .page "login"}}
-          <div class="w-full h-full flex items-center justify-center py-4 sm:py-8">
-            {{template "login-content" .}}
+          <div class="w-full h-full flex relative">
+            <!-- Background image spans full width -->
+            <div class="absolute inset-0 hidden lg:block">
+              <img src="/static/images/login/team-meeting.jpg" 
+                   alt="Diverse team in meeting" 
+                   class="w-full h-full object-cover">
+            </div>
+            
+            <!-- Left side - Content overlay -->
+            <div class="hidden lg:block lg:w-1/2 relative">
+              <div class="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/75 to-slate-900/70"></div>
+              <!-- Better text placement -->
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="text-center px-8">
+                  <h2 class="text-5xl font-bold text-white mb-4">Land Your Dream Job</h2>
+                  <p class="text-xl text-white/90">Join other job seekers who use AI to optimize their job search</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Right side - Login form with darker background -->
+            <div class="w-full lg:w-1/2 flex items-center justify-center py-0 sm:py-8 px-0 sm:px-4 relative">
+              <div class="absolute inset-0 bg-slate-900 sm:bg-slate-900/95 backdrop-blur-sm"></div>
+              <div class="w-full h-full sm:h-auto relative z-10">
+                {{template "login-content" .}}
+              </div>
+            </div>
           </div>
         {{else}}
           <div class="z-10 text-white">Unknown page template</div>
