@@ -6,18 +6,21 @@ import (
 	apimodels "github.com/benidevo/vega/internal/api/job/models"
 	"github.com/benidevo/vega/internal/job"
 	"github.com/benidevo/vega/internal/job/models"
+	"github.com/benidevo/vega/internal/quota"
 	"github.com/gin-gonic/gin"
 )
 
 // JobAPIHandler handles job-related API requests
 type JobAPIHandler struct {
-	jobService *job.JobService
+	jobService   *job.JobService
+	quotaService *quota.UnifiedService
 }
 
 // NewJobAPIHandler creates a new job API handler
-func NewJobAPIHandler(jobService *job.JobService) *JobAPIHandler {
+func NewJobAPIHandler(jobService *job.JobService, quotaService *quota.UnifiedService) *JobAPIHandler {
 	return &JobAPIHandler{
-		jobService: jobService,
+		jobService:   jobService,
+		quotaService: quotaService,
 	}
 }
 
@@ -53,7 +56,7 @@ func (h *JobAPIHandler) CreateJob(c *gin.Context) {
 		models.WithStatus(models.INTERESTED),
 	}
 
-	createdJob, err := h.jobService.CreateJob(
+	createdJob, isNew, err := h.jobService.CreateJob(
 		c.Request.Context(),
 		userID,
 		req.Title,
@@ -84,6 +87,18 @@ func (h *JobAPIHandler) CreateJob(c *gin.Context) {
 			})
 		}
 		return
+	}
+
+	// Record job creation in the job search quota only if it's a new job
+	// This tracks jobs captured via the extension
+	if h.quotaService != nil && isNew {
+		err = h.quotaService.RecordUsage(c.Request.Context(), userID, quota.QuotaTypeJobSearch, map[string]interface{}{
+			"count": 1,
+		})
+		if err != nil {
+			// Log the error but don't fail the job creation
+			h.jobService.LogError(err)
+		}
 	}
 
 	c.JSON(http.StatusOK, apimodels.CreateJobResponse{

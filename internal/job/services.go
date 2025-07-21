@@ -165,7 +165,8 @@ func (s *JobService) ValidateURL(urlStr string) error {
 
 // CreateJob creates a new job with the given title, description, and company name.
 // Additional job options can be provided.
-func (s *JobService) CreateJob(ctx context.Context, userID int, title, description, companyName string, options ...models.JobOption) (*models.Job, error) {
+// Returns the job and a boolean indicating whether it was newly created.
+func (s *JobService) CreateJob(ctx context.Context, userID int, title, description, companyName string, options ...models.JobOption) (*models.Job, bool, error) {
 	s.log.Debug().
 		Str("title", title).
 		Str("company", companyName).
@@ -181,7 +182,7 @@ func (s *JobService) CreateJob(ctx context.Context, userID int, title, descripti
 			Str("company", companyName).
 			Err(err).
 			Msg("Job validation failed")
-		return nil, err
+		return nil, false, err
 	}
 
 	if err := job.Validate(); err != nil {
@@ -190,26 +191,34 @@ func (s *JobService) CreateJob(ctx context.Context, userID int, title, descripti
 			Str("company", companyName).
 			Err(err).
 			Msg("Job validation failed")
-		return nil, err
+		return nil, false, err
 	}
 
-	createdJob, err := s.jobRepo.GetOrCreate(ctx, userID, job)
+	createdJob, isNew, err := s.jobRepo.GetOrCreate(ctx, userID, job)
 	if err != nil {
 		s.log.Error().
 			Str("title", title).
 			Str("company", companyName).
 			Err(err).
 			Msg("Failed to create job")
-		return nil, err
+		return nil, false, err
 	}
 
-	s.log.Info().
-		Int("job_id", createdJob.ID).
-		Str("title", createdJob.Title).
-		Str("company", createdJob.Company.Name).
-		Msg("Job created successfully")
+	if isNew {
+		s.log.Info().
+			Int("job_id", createdJob.ID).
+			Str("title", createdJob.Title).
+			Str("company", createdJob.Company.Name).
+			Msg("Job created successfully")
+	} else {
+		s.log.Info().
+			Int("job_id", createdJob.ID).
+			Str("title", createdJob.Title).
+			Str("company", createdJob.Company.Name).
+			Msg("Job already exists")
+	}
 
-	return createdJob, nil
+	return createdJob, isNew, nil
 }
 
 // GetJob retrieves a job by its ID.

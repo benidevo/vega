@@ -111,26 +111,30 @@ func (r *SQLiteJobRepository) scanJob(s scanner) (*models.Job, error) {
 }
 
 // GetOrCreate retrieves a job by its SourceURL or creates it if it does not exist.
-// Returns the existing or newly created job, or an error if the operation fails.
-func (r *SQLiteJobRepository) GetOrCreate(ctx context.Context, userID int, jobModel *models.Job) (*models.Job, error) {
+// Returns the existing or newly created job, a boolean indicating if it was newly created, or an error if the operation fails.
+func (r *SQLiteJobRepository) GetOrCreate(ctx context.Context, userID int, jobModel *models.Job) (*models.Job, bool, error) {
 	if err := validateJob(jobModel); err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	if jobModel.SourceURL == "" {
-		return nil, models.ErrInvalidJobID
+		return nil, false, models.ErrInvalidJobID
 	}
 
 	existingJob, err := r.GetBySourceURL(ctx, userID, jobModel.SourceURL)
 	if err == nil {
-		return existingJob, nil
+		return existingJob, false, nil // Job already exists, not newly created
 	}
 
 	if !errors.Is(err, models.ErrJobNotFound) {
-		return nil, err
+		return nil, false, err
 	}
 
-	return r.Create(ctx, userID, jobModel)
+	newJob, err := r.Create(ctx, userID, jobModel)
+	if err != nil {
+		return nil, false, err
+	}
+	return newJob, true, nil // Job was newly created
 }
 
 // GetBySourceURL retrieves a job by its source URL

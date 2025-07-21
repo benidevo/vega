@@ -364,7 +364,7 @@ func (h *JobHandler) CreateJob(c *gin.Context) {
 		options = append(options, models.WithNotes(notes))
 	}
 
-	_, err = h.service.CreateJob(c.Request.Context(), userID, title, description, companyName, options...)
+	_, _, err = h.service.CreateJob(c.Request.Context(), userID, title, description, companyName, options...)
 	if err != nil {
 		h.renderError(c, err)
 		return

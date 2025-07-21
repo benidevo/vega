@@ -37,9 +37,6 @@ func (s *UnifiedService) CheckQuota(ctx context.Context, userID int, quotaType s
 	case QuotaTypeJobSearch:
 		return s.searchQuota.CanSearchJobs(ctx, userID)
 
-	case QuotaTypeSearchRuns:
-		return s.searchQuota.CanRunSearch(ctx, userID)
-
 	default:
 		return nil, fmt.Errorf("unknown quota type: %s", quotaType)
 	}
@@ -61,9 +58,6 @@ func (s *UnifiedService) RecordUsage(ctx context.Context, userID int, quotaType 
 			count = 1
 		}
 		return s.searchQuota.RecordJobsFound(ctx, userID, count)
-
-	case QuotaTypeSearchRuns:
-		return s.searchQuota.RecordSearchRun(ctx, userID)
 
 	default:
 		return fmt.Errorf("unknown quota type: %s", quotaType)
@@ -87,13 +81,6 @@ func (s *UnifiedService) GetAllQuotaStatus(ctx context.Context, userID int) (int
 		return nil, fmt.Errorf("failed to get job search quota status: %w", err)
 	}
 	status.JobSearch = searchResult.Status
-
-	// Get search runs quota (daily)
-	searchRunsResult, err := s.searchQuota.GetSearchRunStatus(ctx, userID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get search runs quota status: %w", err)
-	}
-	status.SearchRuns = searchRunsResult.Status
 
 	return status, nil
 }

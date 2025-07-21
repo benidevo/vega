@@ -46,12 +46,12 @@ func (m *MockJobRepository) GetBySourceURL(ctx context.Context, userID int, sour
 	return args.Get(0).(*models.Job), args.Error(1)
 }
 
-func (m *MockJobRepository) GetOrCreate(ctx context.Context, userID int, job *models.Job) (*models.Job, error) {
+func (m *MockJobRepository) GetOrCreate(ctx context.Context, userID int, job *models.Job) (*models.Job, bool, error) {
 	args := m.Called(ctx, userID, job)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, args.Bool(1), args.Error(2)
 	}
-	return args.Get(0).(*models.Job), args.Error(1)
+	return args.Get(0).(*models.Job), args.Bool(1), args.Error(2)
 }
 
 func (m *MockJobRepository) GetByID(ctx context.Context, userID int, id int) (*models.Job, error) {
@@ -208,12 +208,13 @@ func TestJobService(t *testing.T) {
 
 	t.Run("should create job successfully", func(t *testing.T) {
 		mockRepo := new(MockJobRepository)
-		mockRepo.On("GetOrCreate", ctx, testUserID, mock.AnythingOfType("*models.Job")).Return(job, nil)
+		mockRepo.On("GetOrCreate", ctx, testUserID, mock.AnythingOfType("*models.Job")).Return(job, true, nil)
 
 		service := NewJobService(mockRepo, nil, nil, nil, cfg)
-		createdJob, err := service.CreateJob(ctx, testUserID, job.Title, job.Description, company.Name)
+		createdJob, isNew, err := service.CreateJob(ctx, testUserID, job.Title, job.Description, company.Name)
 
 		require.NoError(t, err)
+		assert.True(t, isNew)
 		assert.Equal(t, job.ID, createdJob.ID)
 		assert.Equal(t, job.Title, createdJob.Title)
 		mockRepo.AssertExpectations(t)

@@ -6,7 +6,6 @@ import (
 	"github.com/benidevo/vega/internal/ai"
 	authapi "github.com/benidevo/vega/internal/api/auth"
 	jobapi "github.com/benidevo/vega/internal/api/job"
-	preferencesapi "github.com/benidevo/vega/internal/api/preferences"
 	"github.com/benidevo/vega/internal/auth"
 	"github.com/benidevo/vega/internal/common/middleware"
 	"github.com/benidevo/vega/internal/common/render"
@@ -52,9 +51,9 @@ func SetupRoutes(a *App) {
 	quotaAdapter := quota.NewJobRepositoryAdapter(jobRepo)
 	unifiedQuotaService := quota.NewUnifiedService(a.db, quotaAdapter, a.config.IsCloudMode)
 
-	settingsHandler, settingsService := settings.SetupWithService(&a.config, a.db, aiService, unifiedQuotaService, authService)
+	settingsHandler, _ := settings.SetupWithService(&a.config, a.db, aiService, unifiedQuotaService, authService)
 	authAPIHandler := authapi.Setup(a.db, &a.config)
-	jobAPIHandler := jobapi.Setup(a.db, &a.config, a.cache)
+	jobAPIHandler := jobapi.Setup(a.db, &a.config, a.cache, unifiedQuotaService)
 
 	homeHandler := home.Setup(a.db, &a.config, a.cache, jobService)
 
@@ -102,10 +101,6 @@ func SetupRoutes(a *App) {
 	jobAPIGroup := a.router.Group("/api/jobs")
 	jobAPIGroup.Use(authHandler.APIAuthMiddleware())
 	jobapi.RegisterRoutes(jobAPIGroup, jobAPIHandler)
-
-	preferencesAPIGroup := a.router.Group("/api")
-	preferencesAPIGroup.Use(authHandler.APIAuthMiddleware())
-	preferencesapi.Setup(preferencesAPIGroup, settingsService, unifiedQuotaService)
 
 	a.router.NoRoute(func(c *gin.Context) {
 		a.renderer.Error(c, http.StatusNotFound, "Page Not Found")

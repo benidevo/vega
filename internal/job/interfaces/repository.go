@@ -28,7 +28,7 @@ type JobRepository interface {
 	UpdateMatchScore(ctx context.Context, userID int, jobID int, matchScore *int) error
 	GetStats(ctx context.Context, userID int) (*models.JobStats, error)
 	GetBySourceURL(ctx context.Context, userID int, sourceURL string) (*models.Job, error)
-	GetOrCreate(ctx context.Context, userID int, job *models.Job) (*models.Job, error)
+	GetOrCreate(ctx context.Context, userID int, job *models.Job) (*models.Job, bool, error)
 
 	CreateMatchResult(ctx context.Context, userID int, matchResult *models.MatchResult) error
 	GetJobMatchHistory(ctx context.Context, userID int, jobID int) ([]*models.MatchResult, error)
