@@ -245,8 +245,7 @@
           <div id="status-response"></div>
 
           {{if .isCloudMode}}
-          {{if gt .quotaCheck.Status.Limit 0}}
-          {{if and (not .isReanalysis) (not .quotaCheck.Allowed)}}
+          {{if and (ne .quotaCheck.Status.Limit -1) (not .isReanalysis) (not .quotaCheck.Allowed)}}
           <!-- Quota exceeded message -->
           <div class="w-full mb-3 p-3 bg-red-900 bg-opacity-30 border border-red-800 rounded-lg">
             <p class="text-red-400 text-sm font-medium">Monthly Limit Reached</p>
@@ -254,10 +253,9 @@
           </div>
           {{end}}
           {{end}}
-          {{end}}
           
-          <button id="analyze-button" class="w-full mb-3 py-2.5 px-4 {{if and .isCloudMode (not .isReanalysis) (not .quotaCheck.Allowed)}}bg-gray-600 cursor-not-allowed{{else}}bg-primary hover:bg-primary-dark{{end}} text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
-                  {{if and .isCloudMode (not .isReanalysis) (not .quotaCheck.Allowed)}}disabled{{else}}
+          <button id="analyze-button" class="w-full mb-3 py-2.5 px-4 {{if and .isCloudMode (ne .quotaCheck.Status.Limit -1) (not .isReanalysis) (not .quotaCheck.Allowed)}}bg-gray-600 cursor-not-allowed{{else}}bg-primary hover:bg-primary-dark{{end}} text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+                  {{if and .isCloudMode (ne .quotaCheck.Status.Limit -1) (not .isReanalysis) (not .quotaCheck.Allowed)}}disabled{{else}}
                   hx-post="/jobs/{{.jobID}}/analyze"
                   hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
                   hx-target="#ai-analysis"
@@ -281,7 +279,9 @@
               {{if .isReanalysis}}
                 Re-analyze Job (Free)
               {{else if .isCloudMode}}
-                {{if .quotaCheck.Allowed}}
+                {{if eq .quotaCheck.Status.Limit -1}}
+                  Analyze Match (Unlimited)
+                {{else if .quotaCheck.Allowed}}
                   Analyze Match ({{.quotaRemaining}} left)
                 {{else}}
                   Monthly Limit Reached
@@ -293,7 +293,7 @@
           </button>
           
           {{if .isCloudMode}}
-          {{if gt .quotaCheck.Status.Limit 0}}
+          {{if ne .quotaCheck.Status.Limit -1}}
           <!-- Quota usage indicator -->
           <div class="w-full mb-3">
             <div class="flex justify-between text-xs text-gray-400 mb-1">
@@ -302,6 +302,13 @@
             </div>
             <div class="w-full bg-gray-700 rounded-full h-2">
               <div class="bg-primary rounded-full h-2 transition-all duration-300" style="width: {{.quotaPercentage}}%"></div>
+            </div>
+          </div>
+          {{else}}
+          <!-- Admin unlimited indicator -->
+          <div class="w-full mb-3">
+            <div class="text-xs text-gray-400">
+              <span>Admin access: Unlimited analyses</span>
             </div>
           </div>
           {{end}}

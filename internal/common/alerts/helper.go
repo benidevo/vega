@@ -42,16 +42,25 @@ type AlertData struct {
 }
 
 // RenderError renders an error alert with the appropriate context
+// For HTMX requests, it triggers a toast notification
 // For 500 errors on non-HTMX requests, it renders a full error page
 func RenderError(c *gin.Context, statusCode int, message string, context AlertContext) {
 	RenderErrorWithConfig(c, statusCode, message, context, nil)
 }
 
 // RenderErrorWithConfig renders an error alert with the appropriate context and optional config
+// For HTMX requests, it triggers a toast notification
 // For 500 errors on non-HTMX requests, it renders a full error page
 func RenderErrorWithConfig(c *gin.Context, statusCode int, message string, context AlertContext, cfg *config.Settings) {
-	// For 500 errors on non-HTMX requests, always show full error page
-	if statusCode >= 500 && c.GetHeader("HX-Request") != "true" {
+	// Check if this is an HTMX request
+	if c.GetHeader("HX-Request") == "true" {
+		TriggerToast(c, message, TypeError)
+		c.Status(statusCode)
+		return
+	}
+
+	// For 500 errors on non-HTMX requests, show full error page
+	if statusCode >= 500 {
 		templateData := gin.H{
 			"title":       "Something Went Wrong",
 			"page":        "500",
@@ -65,20 +74,19 @@ func RenderErrorWithConfig(c *gin.Context, statusCode int, message string, conte
 		return
 	}
 
-	// For all other cases (HTMX requests or non-500 errors), return a partial alert
-	c.HTML(statusCode, "partials/alert.html", gin.H{
-		"type":    string(TypeError),
-		"context": string(context),
-		"message": message,
-	})
+	c.Status(statusCode)
 }
 
 // RenderSuccess renders a success alert with the appropriate context
+// For HTMX requests, it triggers a toast notification
 func RenderSuccess(c *gin.Context, message string, context AlertContext, actions ...AlertAction) {
-	c.HTML(http.StatusOK, "partials/alert.html", gin.H{
-		"type":    string(TypeSuccess),
-		"context": string(context),
-		"message": message,
-		"actions": actions,
-	})
+	// Check if this is an HTMX request
+	if c.GetHeader("HX-Request") == "true" {
+		// For HTMX requests, trigger a toast notification
+		TriggerToast(c, message, TypeSuccess)
+		c.Status(http.StatusOK)
+		return
+	}
+
+	c.Status(http.StatusOK)
 }

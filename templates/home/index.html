@@ -16,6 +16,36 @@
     <p class="text-gray-400 text-sm sm:text-base">Track applications, monitor progress, and manage your job search</p>
   </div>
 
+  <!-- Quick Actions -->
+  <section class="mb-6 sm:mb-8" aria-labelledby="quick-actions-heading">
+    <h2 id="quick-actions-heading" class="text-lg sm:text-xl font-semibold text-white mb-4 font-heading">Quick Actions</h2>
+    <nav class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4" aria-label="Quick action navigation">
+      <a href="/jobs/new" class="bg-slate-800 hover:bg-slate-700 rounded-lg p-4 sm:p-5 border border-slate-700 hover:border-primary group min-h-[90px] sm:min-h-[100px] flex items-center">
+        <div class="flex items-center w-full">
+          <svg class="h-7 w-7 sm:h-8 sm:w-8 text-primary mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          <div class="min-w-0">
+            <h3 class="text-sm sm:text-base font-semibold text-white group-hover:text-primary">Create New Job</h3>
+            <p class="text-xs text-gray-300 mt-1">Start tracking a new opportunity</p>
+          </div>
+        </div>
+      </a>
+
+      <a href="/jobs" class="bg-slate-800 hover:bg-slate-700 rounded-lg p-4 sm:p-5 border border-slate-700 hover:border-primary group min-h-[90px] sm:min-h-[100px] flex items-center">
+        <div class="flex items-center w-full">
+          <svg class="h-7 w-7 sm:h-8 sm:w-8 text-primary mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          <div class="min-w-0">
+            <h3 class="text-sm sm:text-base font-semibold text-white group-hover:text-primary">View All Jobs</h3>
+            <p class="text-xs text-gray-300 mt-1">Manage your application pipeline</p>
+          </div>
+        </div>
+      </a>
+    </nav>
+  </section>
+
   <!-- Quick Stats -->
   <section class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-12" aria-label="Dashboard statistics">
     <div class="bg-slate-800 rounded-lg p-3 sm:p-4 lg:p-6 border border-slate-700">
@@ -68,7 +98,6 @@
   </section>
 
   {{if .quotaStatus}}
-  {{if gt .quotaStatus.Limit 0}}
   <!-- Quota Usage Widget -->
   <section class="mb-8 sm:mb-12" aria-labelledby="quota-heading">
     <h2 id="quota-heading" class="text-lg sm:text-xl font-semibold text-white mb-4 font-heading">AI Analysis Quota</h2>
@@ -76,14 +105,24 @@
       <div class="flex items-center justify-between mb-4">
         <div>
           <h3 class="text-base font-medium text-white">Monthly Job Analyses</h3>
-          <p class="text-sm text-gray-400 mt-1">{{.quotaStatus.Used}} of {{.quotaStatus.Limit}} used</p>
+          {{if eq .quotaStatus.Limit -1}}
+            <p class="text-sm text-gray-400 mt-1">{{.quotaStatus.Used}} analyzed (Unlimited)</p>
+          {{else}}
+            <p class="text-sm text-gray-400 mt-1">{{.quotaStatus.Used}} of {{.quotaStatus.Limit}} used</p>
+          {{end}}
         </div>
         <div class="text-right">
-          <p class="text-2xl font-bold {{if eq .quotaStatus.Remaining 0}}text-red-400{{else}}text-primary{{end}}">{{.quotaStatus.Remaining}}</p>
-          <p class="text-xs text-gray-400">remaining</p>
+          {{if eq .quotaStatus.Limit -1}}
+            <p class="text-2xl font-bold text-primary">∞</p>
+            <p class="text-xs text-gray-400">unlimited</p>
+          {{else}}
+            <p class="text-2xl font-bold {{if eq .quotaStatus.Remaining 0}}text-red-400{{else}}text-primary{{end}}">{{.quotaStatus.Remaining}}</p>
+            <p class="text-xs text-gray-400">remaining</p>
+          {{end}}
         </div>
       </div>
       
+      {{if ne .quotaStatus.Limit -1}}
       <!-- Progress bar -->
       <div class="w-full bg-gray-700 rounded-full h-3 mb-3">
         <div class="{{if eq .quotaStatus.Remaining 0}}bg-red-500{{else if le .quotaStatus.Remaining 1}}bg-yellow-500{{else}}bg-primary{{end}} rounded-full h-3 transition-all duration-300" style="width: {{.quotaStatus.Percentage}}%;"></div>
@@ -93,41 +132,14 @@
         <span>Resets on {{.quotaStatus.ResetDate.Format "Jan 2"}}</span>
         <span class="text-gray-300">Re-analysis of existing jobs is always free</span>
       </div>
+      {{else}}
+      <div class="text-xs text-gray-400">
+        <span class="text-gray-300">Admin users have unlimited access to all features</span>
+      </div>
+      {{end}}
     </div>
   </section>
   {{end}}
-  {{end}}
-
-  <!-- Quick Actions -->
-  <section class="mb-6 sm:mb-8" aria-labelledby="quick-actions-heading">
-    <h2 id="quick-actions-heading" class="text-lg sm:text-xl font-semibold text-white mb-4 font-heading">Quick Actions</h2>
-    <nav class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4" aria-label="Quick action navigation">
-      <a href="/jobs/new" class="bg-slate-800 hover:bg-slate-700 rounded-lg p-4 sm:p-5 border border-slate-700 hover:border-primary group min-h-[90px] sm:min-h-[100px] flex items-center">
-        <div class="flex items-center w-full">
-          <svg class="h-7 w-7 sm:h-8 sm:w-8 text-primary mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          <div class="min-w-0">
-            <h3 class="text-sm sm:text-base font-semibold text-white group-hover:text-primary">Create New Job</h3>
-            <p class="text-xs text-gray-300 mt-1">Start tracking a new opportunity</p>
-          </div>
-        </div>
-      </a>
-
-      <a href="/jobs" class="bg-slate-800 hover:bg-slate-700 rounded-lg p-4 sm:p-5 border border-slate-700 hover:border-primary group min-h-[90px] sm:min-h-[100px] flex items-center">
-        <div class="flex items-center w-full">
-          <svg class="h-7 w-7 sm:h-8 sm:w-8 text-primary mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
-          <div class="min-w-0">
-            <h3 class="text-sm sm:text-base font-semibold text-white group-hover:text-primary">View All Jobs</h3>
-            <p class="text-xs text-gray-300 mt-1">Manage your application pipeline</p>
-          </div>
-        </div>
-      </a>
-    </nav>
-  </section>
-
 
   <!-- Recent Activity -->
   <section aria-labelledby="recent-activity-heading">
@@ -180,10 +192,6 @@
             </div>
           </a>
           {{end}}
-        </div>
-
-        <div class="mt-4 text-center">
-          <a href="/jobs" class="text-primary hover:text-primary-dark text-sm font-medium">View All Jobs</a>
         </div>
       </div>
       {{end}}

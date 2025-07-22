@@ -389,27 +389,6 @@
 
   <!-- Global scripts -->
   <script>
-    // Global function to auto-dismiss alerts
-    function setupAutoDismissAlerts() {
-      // Find all alerts with the auto-dismiss-alert class
-      const alerts = document.querySelectorAll('.auto-dismiss-alert');
-
-      // For each alert, set a timeout to remove it
-      alerts.forEach(alert => {
-        setTimeout(() => {
-          // Add fade-out animation
-          alert.style.transition = 'opacity 0.5s ease-out';
-          alert.style.opacity = '0';
-
-          // After animation completes, remove the element
-          setTimeout(() => {
-            if (alert.parentNode) {
-              alert.parentNode.removeChild(alert);
-            }
-          }, 500); // 500ms matches the transition duration
-        }, 3000); // 3 second delay before starting fade-out
-      });
-    }
 
     // Toast notification system
     window.showToast = function(message, type = 'success', duration = 3000) {
@@ -568,50 +547,20 @@
     // Run the auto-dismiss setup whenever the DOM content changes
     // This handles both initial page load and HTMX swaps
     document.addEventListener('DOMContentLoaded', function() {
-      setupAutoDismissAlerts();
       formatUTCDates();
       trackFormChanges();
       setupUnsavedChangesWarning();
       
-      // Convert server alerts to toast notifications on page load
-      setTimeout(() => {
-        const serverAlerts = document.querySelectorAll('.server-alert');
-        serverAlerts.forEach(alert => {
-          const type = alert.getAttribute('data-alert-type') || 'info';
-          const message = alert.getAttribute('data-alert-message');
-          
-          if (message) {
-            // Show toast notification
-            showToast(message, type);
-            
-            // Remove the server alert element
-            alert.remove();
-          }
-        });
-      }, 100); // Small delay to ensure all content is loaded
+      // HTMX toast notification handler
+      document.body.addEventListener('showToast', function(evt) {
+        if (evt.detail && evt.detail.message) {
+          window.showToast(evt.detail.message, evt.detail.type || 'info', evt.detail.duration || 3000);
+        }
+      });
     });
     document.body.addEventListener('htmx:afterSwap', function(event) {
-      setupAutoDismissAlerts();
       formatUTCDates();
       trackFormChanges();
-      
-      // Convert server alerts to toast notifications
-      // Check for alerts in the swapped content
-      setTimeout(() => {
-        const serverAlerts = document.querySelectorAll('.server-alert');
-        serverAlerts.forEach(alert => {
-          const type = alert.getAttribute('data-alert-type') || 'info';
-          const message = alert.getAttribute('data-alert-message');
-          
-          if (message) {
-            // Show toast notification
-            showToast(message, type);
-            
-            // Remove the server alert element
-            alert.remove();
-          }
-        });
-      }, 50); // Small delay to ensure DOM is updated
     });
 
     // Setup page functionality

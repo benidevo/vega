@@ -234,12 +234,9 @@ func (h *BaseSettingsHandler) HandleUpdate(c *gin.Context) {
 		return
 	}
 
-	// Show success message on the edit page
-	c.HTML(http.StatusOK, "partials/alert.html", gin.H{
-		"type":    "success",
-		"context": "general",
-		"message": fmt.Sprintf("%s updated successfully", h.metadata.Name),
-	})
+	// Show success message
+	alerts.TriggerToast(c, fmt.Sprintf("%s updated successfully", h.metadata.Name), alerts.TypeSuccess)
+	c.Status(http.StatusOK)
 }
 
 // getErrorDetails determines the appropriate status code and message for an error

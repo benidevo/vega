@@ -180,10 +180,7 @@ func (h *SettingsHandler) GetProfileSettingsPage(c *gin.Context) {
 func (h *SettingsHandler) HandleCreateProfile(c *gin.Context) {
 	userIDValue, exists := c.Get("userID")
 	if !exists {
-		h.renderer.HTML(c, http.StatusUnauthorized, "partials/alerts/alert.html", gin.H{
-			"message": "Unauthorized",
-			"type":    "error",
-		})
+		alerts.RenderError(c, http.StatusUnauthorized, "Unauthorized", alerts.ContextDashboard)
 		return
 	}
 	userID := userIDValue.(int)
@@ -239,11 +236,8 @@ func (h *SettingsHandler) HandleCreateProfile(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "partials/alert.html", gin.H{
-		"type":    "success",
-		"context": "dashboard",
-		"message": "Personal information updated successfully",
-	})
+	alerts.TriggerToast(c, "Personal information updated successfully", alerts.TypeSuccess)
+	c.Status(http.StatusOK)
 }
 
 // HandleUpdateOnlineProfile handles the HTTP request to update a user's online profile links
@@ -270,11 +264,8 @@ func (h *SettingsHandler) HandleUpdateOnlineProfile(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "partials/alert.html", gin.H{
-		"type":    "success",
-		"context": "dashboard",
-		"message": "Online profiles updated successfully",
-	})
+	alerts.TriggerToast(c, "Online profiles updated successfully", alerts.TypeSuccess)
+	c.Status(http.StatusOK)
 }
 
 // HandleUpdateContext handles the HTTP request to update a user's personal context
@@ -298,19 +289,13 @@ func (h *SettingsHandler) HandleUpdateContext(c *gin.Context) {
 
 	err = h.service.UpdateProfile(c.Request.Context(), profile)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
-			"type":    "error",
-			"context": "dashboard",
-			"message": "Failed to update personal context: ",
-		})
+		alerts.TriggerToast(c, "Failed to update personal context", alerts.TypeError)
+		c.Status(http.StatusBadRequest)
 		return
 	}
 
-	c.HTML(http.StatusOK, "partials/alert.html", gin.H{
-		"type":    "success",
-		"context": "dashboard",
-		"message": "Personal context updated successfully",
-	})
+	alerts.TriggerToast(c, "Personal context updated successfully", alerts.TypeSuccess)
+	c.Status(http.StatusOK)
 }
 
 // HandleCVUpload handles the HTTP request to parse and save CV data
@@ -667,21 +652,15 @@ func (h *SettingsHandler) GetQuotasPage(c *gin.Context) {
 func (h *SettingsHandler) HandleUpdateSecurityAccount(c *gin.Context) {
 	// This endpoint is only for self-hosted mode
 	if h.service.cfg.IsCloudMode {
-		c.HTML(http.StatusForbidden, "partials/alert.html", gin.H{
-			"type":    "error",
-			"context": "dashboard",
-			"message": "Account management is not available in cloud mode",
-		})
+		alerts.TriggerToast(c, "Account management is not available in cloud mode", alerts.TypeError)
+		c.Status(http.StatusForbidden)
 		return
 	}
 
 	userIDValue, exists := c.Get("userID")
 	if !exists {
-		c.HTML(http.StatusUnauthorized, "partials/alert.html", gin.H{
-			"type":    "error",
-			"context": "dashboard",
-			"message": "Unauthorized",
-		})
+		alerts.TriggerToast(c, "Unauthorized", alerts.TypeError)
+		c.Status(http.StatusUnauthorized)
 		return
 	}
 	userID := userIDValue.(int)
@@ -694,32 +673,23 @@ func (h *SettingsHandler) HandleUpdateSecurityAccount(c *gin.Context) {
 
 	// Validate current password is provided
 	if currentPassword == "" {
-		c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
-			"type":    "error",
-			"context": "dashboard",
-			"message": "Current password is required",
-		})
+		alerts.TriggerToast(c, "Current password is required", alerts.TypeError)
+		c.Status(http.StatusBadRequest)
 		return
 	}
 
 	// Get current user
 	user, err := h.service.userRepo.FindByID(c.Request.Context(), userID)
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "partials/alert.html", gin.H{
-			"type":    "error",
-			"context": "dashboard",
-			"message": "Failed to retrieve user information",
-		})
+		alerts.TriggerToast(c, "Failed to retrieve user information", alerts.TypeError)
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 
 	// Verify current password
 	if !h.service.authService.VerifyPassword(user.Password, currentPassword) {
-		c.HTML(http.StatusUnauthorized, "partials/alert.html", gin.H{
-			"type":    "error",
-			"context": "dashboard",
-			"message": "Current password is incorrect",
-		})
+		alerts.TriggerToast(c, "Current password is incorrect", alerts.TypeError)
+		c.Status(http.StatusUnauthorized)
 		return
 	}
 
@@ -730,22 +700,16 @@ func (h *SettingsHandler) HandleUpdateSecurityAccount(c *gin.Context) {
 	// Update username if provided and different
 	if newUsername != "" && newUsername != user.Username {
 		if err := authmodels.ValidateUsername(newUsername); err != nil {
-			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
-				"type":    "error",
-				"context": "dashboard",
-				"message": err.Error(),
-			})
+			alerts.TriggerToast(c, err.Error(), alerts.TypeError)
+			c.Status(http.StatusBadRequest)
 			return
 		}
 
 		// Check if new username already exists
 		existingUser, _ := h.service.userRepo.FindByUsername(c.Request.Context(), newUsername)
 		if existingUser != nil {
-			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
-				"type":    "error",
-				"context": "dashboard",
-				"message": "Username already exists",
-			})
+			alerts.TriggerToast(c, "Username already exists", alerts.TypeError)
+			c.Status(http.StatusBadRequest)
 			return
 		}
 		user.Username = newUsername
@@ -756,31 +720,22 @@ func (h *SettingsHandler) HandleUpdateSecurityAccount(c *gin.Context) {
 	if newPassword != "" {
 		// Validate passwords match
 		if newPassword != confirmPassword {
-			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
-				"type":    "error",
-				"context": "dashboard",
-				"message": "New passwords do not match",
-			})
+			alerts.TriggerToast(c, "New passwords do not match", alerts.TypeError)
+			c.Status(http.StatusBadRequest)
 			return
 		}
 
 		// Validate password strength (minimum 8 characters)
 		if len(newPassword) < 8 {
-			c.HTML(http.StatusBadRequest, "partials/alert.html", gin.H{
-				"type":    "error",
-				"context": "dashboard",
-				"message": "Password must be at least 8 characters long",
-			})
+			alerts.TriggerToast(c, "Password must be at least 8 characters long", alerts.TypeError)
+			c.Status(http.StatusBadRequest)
 			return
 		}
 
 		err = h.service.authService.ChangePassword(c.Request.Context(), user.ID, newPassword)
 		if err != nil {
-			c.HTML(http.StatusInternalServerError, "partials/alert.html", gin.H{
-				"type":    "error",
-				"context": "dashboard",
-				"message": "Failed to update password",
-			})
+			alerts.TriggerToast(c, "Failed to update password", alerts.TypeError)
+			c.Status(http.StatusInternalServerError)
 			return
 		}
 		passwordUpdated = true
@@ -789,26 +744,17 @@ func (h *SettingsHandler) HandleUpdateSecurityAccount(c *gin.Context) {
 	if usernameUpdated {
 		_, err = h.service.userRepo.UpdateUser(c.Request.Context(), user)
 		if err != nil {
-			c.HTML(http.StatusInternalServerError, "partials/alert.html", gin.H{
-				"type":    "error",
-				"context": "dashboard",
-				"message": "Failed to update username",
-			})
+			alerts.TriggerToast(c, "Failed to update username", alerts.TypeError)
+			c.Status(http.StatusInternalServerError)
 			return
 		}
 	}
 
 	if usernameUpdated || passwordUpdated {
-		c.HTML(http.StatusOK, "partials/alert.html", gin.H{
-			"type":    "success",
-			"context": "dashboard",
-			"message": "Account updated successfully",
-		})
+		alerts.TriggerToast(c, "Account updated successfully", alerts.TypeSuccess)
+		c.Status(http.StatusOK)
 	} else {
-		c.HTML(http.StatusOK, "partials/alert.html", gin.H{
-			"type":    "info",
-			"context": "dashboard",
-			"message": "No changes were made",
-		})
+		alerts.TriggerToast(c, "No changes were made", alerts.TypeInfo)
+		c.Status(http.StatusOK)
 	}
 }

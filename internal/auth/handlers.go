@@ -7,6 +7,7 @@ import (
 
 	"github.com/benidevo/vega/internal/auth/models"
 	"github.com/benidevo/vega/internal/auth/services"
+	"github.com/benidevo/vega/internal/common/alerts"
 	"github.com/benidevo/vega/internal/common/render"
 	"github.com/benidevo/vega/internal/config"
 	"github.com/gin-gonic/gin"
@@ -45,18 +46,16 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	var req models.LoginRequest
 	if err := c.ShouldBind(&req); err != nil {
 		h.service.LogError(err)
-		c.HTML(http.StatusUnauthorized, "partials/form-error.html", gin.H{
-			"message": models.ErrInvalidCredentials.Error(),
-		})
+		alerts.TriggerToast(c, models.ErrInvalidCredentials.Error(), alerts.TypeError)
+		c.Status(http.StatusUnauthorized)
 		return
 	}
 
 	accessToken, refreshToken, loginErr := h.service.Login(c.Request.Context(), req.Username, req.Password)
 	if loginErr != nil {
 		h.service.LogError(loginErr)
-		c.HTML(http.StatusUnauthorized, "partials/form-error.html", gin.H{
-			"message": loginErr.Error(),
-		})
+		alerts.TriggerToast(c, loginErr.Error(), alerts.TypeError)
+		c.Status(http.StatusUnauthorized)
 
 		return
 	}

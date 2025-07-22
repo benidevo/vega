@@ -286,7 +286,7 @@ func (h *JobHandler) ListJobsPage(c *gin.Context) {
 	// Check if this is an HTMX request
 	if c.GetHeader("HX-Request") == "true" {
 		// Return only the jobs container fragment
-		c.HTML(http.StatusOK, "partials/jobs-container", templateData)
+		h.renderer.HTML(c, http.StatusOK, "partials/jobs-container", templateData)
 		return
 	}
 
