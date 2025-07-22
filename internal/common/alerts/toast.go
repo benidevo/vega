@@ -24,7 +24,7 @@ func TriggerToast(c *gin.Context, message string, toastType AlertType) {
 			Type:    string(toastType),
 		},
 	}
-	
+
 	if data, err := json.Marshal(event); err == nil {
 		c.Header("HX-Trigger", string(data))
 	}
@@ -38,7 +38,7 @@ func TriggerToastAfterSwap(c *gin.Context, message string, toastType AlertType) 
 			Type:    string(toastType),
 		},
 	}
-	
+
 	if data, err := json.Marshal(event); err == nil {
 		c.Header("HX-Trigger-After-Swap", string(data))
 	}
@@ -52,7 +52,7 @@ func TriggerToastAfterSettle(c *gin.Context, message string, toastType AlertType
 			Type:    string(toastType),
 		},
 	}
-	
+
 	if data, err := json.Marshal(event); err == nil {
 		c.Header("HX-Trigger-After-Settle", string(data))
 	}
