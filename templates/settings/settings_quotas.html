@@ -33,17 +33,17 @@
             </svg>
           </div>
           <p class="text-xl md:text-2xl font-bold text-white mb-2">
-            {{if eq .quotaStatus.JobSearch.Limit -1}}{{.quotaStatus.JobSearch.Used}}{{else}}{{.quotaStatus.JobSearch.Used}} / {{.quotaStatus.JobSearch.Limit}}{{end}}
+            {{if eq .quotaStatus.JobSearch.Limit -1}}{{.quotaStatus.JobSearch.Used}}{{else}}{{cappedQuota .quotaStatus.JobSearch.Used .quotaStatus.JobSearch.Limit}} / {{.quotaStatus.JobSearch.Limit}}{{end}}
           </p>
           {{if ne .quotaStatus.JobSearch.Limit -1}}
           <div class="w-full bg-slate-600 rounded-full h-2 mb-2">
             <div class="bg-primary h-2 rounded-full transition-all duration-300" data-used="{{.quotaStatus.JobSearch.Used}}" data-limit="{{.quotaStatus.JobSearch.Limit}}"></div>
           </div>
           <p class="text-xs text-gray-400">
-            {{if eq .quotaStatus.JobSearch.Used .quotaStatus.JobSearch.Limit}}
+            {{if ge .quotaStatus.JobSearch.Used .quotaStatus.JobSearch.Limit}}
               Limit reached
             {{else}}
-              {{sub .quotaStatus.JobSearch.Limit .quotaStatus.JobSearch.Used}} remaining
+              {{max 0 (sub .quotaStatus.JobSearch.Limit .quotaStatus.JobSearch.Used)}} remaining
             {{end}}
           </p>
           {{else}}
@@ -66,17 +66,17 @@
             </svg>
           </div>
           <p class="text-xl md:text-2xl font-bold text-white mb-2">
-            {{if eq .quotaStatus.AIAnalysis.Limit -1}}{{.quotaStatus.AIAnalysis.Used}}{{else}}{{.quotaStatus.AIAnalysis.Used}} / {{.quotaStatus.AIAnalysis.Limit}}{{end}}
+            {{if eq .quotaStatus.AIAnalysis.Limit -1}}{{.quotaStatus.AIAnalysis.Used}}{{else}}{{cappedQuota .quotaStatus.AIAnalysis.Used .quotaStatus.AIAnalysis.Limit}} / {{.quotaStatus.AIAnalysis.Limit}}{{end}}
           </p>
           {{if ne .quotaStatus.AIAnalysis.Limit -1}}
           <div class="w-full bg-slate-600 rounded-full h-2 mb-2">
             <div class="bg-primary h-2 rounded-full transition-all duration-300" data-used="{{.quotaStatus.AIAnalysis.Used}}" data-limit="{{.quotaStatus.AIAnalysis.Limit}}"></div>
           </div>
           <p class="text-xs text-gray-400">
-            {{if eq .quotaStatus.AIAnalysis.Used .quotaStatus.AIAnalysis.Limit}}
+            {{if ge .quotaStatus.AIAnalysis.Used .quotaStatus.AIAnalysis.Limit}}
               Limit reached
             {{else}}
-              {{sub .quotaStatus.AIAnalysis.Limit .quotaStatus.AIAnalysis.Used}} remaining
+              {{max 0 (sub .quotaStatus.AIAnalysis.Limit .quotaStatus.AIAnalysis.Used)}} remaining
             {{end}}
           </p>
           {{else}}

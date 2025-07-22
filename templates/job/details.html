@@ -298,10 +298,10 @@
           <div class="w-full mb-3">
             <div class="flex justify-between text-xs text-gray-400 mb-1">
               <span>Monthly quota</span>
-              <span>{{.quotaCheck.Status.Used}}/{{.quotaCheck.Status.Limit}} used</span>
+              <span>{{cappedQuota .quotaCheck.Status.Used .quotaCheck.Status.Limit}}/{{.quotaCheck.Status.Limit}} used</span>
             </div>
             <div class="w-full bg-gray-700 rounded-full h-2">
-              <div class="bg-primary rounded-full h-2 transition-all duration-300" style="width: {{.quotaPercentage}}%;"></div>
+              <div class="{{if ge .quotaPercentage 100}}bg-red-500{{else if ge .quotaPercentage 90}}bg-yellow-500{{else}}bg-primary{{end}} rounded-full h-2 transition-all duration-300" style="width: {{if gt .quotaPercentage 100}}100{{else}}{{.quotaPercentage}}{{end}}%;"></div>
             </div>
           </div>
           {{else}}

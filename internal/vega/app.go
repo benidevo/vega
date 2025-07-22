@@ -316,5 +316,16 @@ func templateFuncMap() template.FuncMap {
 				return "bg-red-600 bg-opacity-20 text-red-400"
 			}
 		},
+		"cappedQuota": func(used, limit int) int {
+			// If limit is -1 (unlimited), return the actual usage
+			if limit == -1 {
+				return used
+			}
+			// Otherwise, cap the usage at the limit
+			if used > limit {
+				return limit
+			}
+			return used
+		},
 	}
 }

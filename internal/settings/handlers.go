@@ -10,6 +10,7 @@ import (
 	aimodels "github.com/benidevo/vega/internal/ai/models"
 	authmodels "github.com/benidevo/vega/internal/auth/models"
 	"github.com/benidevo/vega/internal/common/alerts"
+	ctxutil "github.com/benidevo/vega/internal/common/context"
 	"github.com/benidevo/vega/internal/common/render"
 	"github.com/benidevo/vega/internal/settings/models"
 	"github.com/gin-gonic/gin"
@@ -630,7 +631,14 @@ func (h *SettingsHandler) GetQuotasPage(c *gin.Context) {
 	var quotaStatus interface{}
 	var hasQuotaData bool
 	if h.quotaService != nil {
-		quotaStatus, _ = h.quotaService.GetAllQuotaStatus(c.Request.Context(), userID)
+		// Create context with role for quota checking
+		ctx := c.Request.Context()
+		if roleValue, exists := c.Get("role"); exists {
+			if role, ok := roleValue.(string); ok {
+				ctx = ctxutil.WithRole(ctx, role)
+			}
+		}
+		quotaStatus, _ = h.quotaService.GetAllQuotaStatus(ctx, userID)
 		hasQuotaData = quotaStatus != nil
 	}
 

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	apimodels "github.com/benidevo/vega/internal/api/job/models"
+	ctxutil "github.com/benidevo/vega/internal/common/context"
 	"github.com/benidevo/vega/internal/job"
 	"github.com/benidevo/vega/internal/job/models"
 	"github.com/benidevo/vega/internal/quota"
@@ -56,8 +57,16 @@ func (h *JobAPIHandler) CreateJob(c *gin.Context) {
 		models.WithStatus(models.INTERESTED),
 	}
 
+	// Get context with role information
+	ctx := c.Request.Context()
+	if roleValue, exists := c.Get("role"); exists {
+		if role, ok := roleValue.(string); ok {
+			ctx = ctxutil.WithRole(ctx, role)
+		}
+	}
+
 	createdJob, isNew, err := h.jobService.CreateJob(
-		c.Request.Context(),
+		ctx,
 		userID,
 		req.Title,
 		req.Description,
@@ -92,7 +101,15 @@ func (h *JobAPIHandler) CreateJob(c *gin.Context) {
 	// Record job creation in the job search quota only if it's a new job
 	// This tracks jobs captured via the extension
 	if h.quotaService != nil && isNew {
-		err = h.quotaService.RecordUsage(c.Request.Context(), userID, quota.QuotaTypeJobSearch, map[string]interface{}{
+		// Get context with role information
+		ctx := c.Request.Context()
+		if roleValue, exists := c.Get("role"); exists {
+			if role, ok := roleValue.(string); ok {
+				ctx = ctxutil.WithRole(ctx, role)
+			}
+		}
+
+		err = h.quotaService.RecordUsage(ctx, userID, quota.QuotaTypeJobSearch, map[string]interface{}{
 			"count": 1,
 		})
 		if err != nil {
@@ -118,7 +135,15 @@ func (h *JobAPIHandler) GetQuotaStatus(c *gin.Context) {
 	}
 	userID := userIDValue.(int)
 
-	quotaStatus, err := h.jobService.GetQuotaStatus(c.Request.Context(), userID)
+	// Get context with role information
+	ctx := c.Request.Context()
+	if roleValue, exists := c.Get("role"); exists {
+		if role, ok := roleValue.(string); ok {
+			ctx = ctxutil.WithRole(ctx, role)
+		}
+	}
+
+	quotaStatus, err := h.jobService.GetQuotaStatus(ctx, userID)
 	if err != nil {
 		h.jobService.LogError(err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -134,7 +159,11 @@ func (h *JobAPIHandler) GetQuotaStatus(c *gin.Context) {
 			if quotaStatus.Limit < 0 {
 				return -1 // Unlimited
 			}
-			return quotaStatus.Limit - quotaStatus.Used
+			remaining := quotaStatus.Limit - quotaStatus.Used
+			if remaining < 0 {
+				return 0
+			}
+			return remaining
 		}(),
 		"reset_date": quotaStatus.ResetDate.Format("2006-01-02"),
 	})

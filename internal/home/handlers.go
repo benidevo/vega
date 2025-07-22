@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/benidevo/vega/internal/common/alerts"
+	ctxutil "github.com/benidevo/vega/internal/common/context"
 	"github.com/benidevo/vega/internal/common/render"
 	"github.com/benidevo/vega/internal/config"
 	"github.com/gin-gonic/gin"
@@ -65,7 +66,15 @@ func (h *Handler) GetHomePage(c *gin.Context) {
 		}
 	}
 
-	homeData, err := h.service.GetHomePageData(c.Request.Context(), userID, usernameStr)
+	// Create context with role for quota checking
+	ctx := c.Request.Context()
+	if roleValue, exists := c.Get("role"); exists {
+		if role, ok := roleValue.(string); ok {
+			ctx = ctxutil.WithRole(ctx, role)
+		}
+	}
+
+	homeData, err := h.service.GetHomePageData(ctx, userID, usernameStr)
 	if err != nil {
 		alerts.RenderError(c, http.StatusInternalServerError, "Failed to load homepage data", alerts.ContextGeneral)
 		return

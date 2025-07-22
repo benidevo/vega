@@ -63,14 +63,25 @@ func (s *Service) GetHomePageData(ctx context.Context, userID int, username stri
 	if s.jobService != nil {
 		quotaStatus, err := s.jobService.GetQuotaStatus(ctx, userID)
 		if err == nil && quotaStatus != nil {
-			remaining := quotaStatus.Limit - quotaStatus.Used
-			if quotaStatus.Limit < 0 {
-				remaining = -1 // Unlimited
-			}
-
+			remaining := 0
 			percentage := 0
-			if quotaStatus.Limit > 0 {
+
+			if quotaStatus.Limit < 0 {
+				// Unlimited quota
+				remaining = -1
+				percentage = 0
+			} else if quotaStatus.Limit > 0 {
+				// Calculate remaining, ensuring it's never negative
+				remaining = quotaStatus.Limit - quotaStatus.Used
+				if remaining < 0 {
+					remaining = 0
+				}
+
+				// Calculate percentage, capping at 100%
 				percentage = (quotaStatus.Used * 100) / quotaStatus.Limit
+				if percentage > 100 {
+					percentage = 100
+				}
 			}
 
 			homeData.QuotaStatus = &QuotaStatus{

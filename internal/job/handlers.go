@@ -421,7 +421,14 @@ func (h *JobHandler) GetJobDetails(c *gin.Context) {
 	}
 
 	// Check quota status for this job
-	quotaCheckResult, err := h.service.CheckJobQuota(c.Request.Context(), userID, jobID)
+	ctx := c.Request.Context()
+	if roleValue, exists := c.Get("role"); exists {
+		if role, ok := roleValue.(string); ok {
+			ctx = ctxutil.WithRole(ctx, role)
+		}
+	}
+
+	quotaCheckResult, err := h.service.CheckJobQuota(ctx, userID, jobID)
 	if err != nil {
 		// Log error but don't fail the page load
 		h.service.LogError(err)
@@ -450,14 +457,27 @@ func (h *JobHandler) GetJobDetails(c *gin.Context) {
 			}
 			return models.GetSentinelError(profileValidationError).Error()
 		}(),
-		"quotaCheck":     quotaCheckResult,
-		"isReanalysis":   job.FirstAnalyzedAt != nil,
-		"quotaRemaining": quotaCheckResult.Status.Limit - quotaCheckResult.Status.Used,
+		"quotaCheck":   quotaCheckResult,
+		"isReanalysis": job.FirstAnalyzedAt != nil,
+		"quotaRemaining": func() int {
+			if quotaCheckResult.Status.Limit < 0 {
+				return -1 // Unlimited
+			}
+			remaining := quotaCheckResult.Status.Limit - quotaCheckResult.Status.Used
+			if remaining < 0 {
+				return 0
+			}
+			return remaining
+		}(),
 		"quotaPercentage": func() int {
 			if quotaCheckResult.Status.Limit <= 0 {
 				return 0
 			}
-			return (quotaCheckResult.Status.Used * 100) / quotaCheckResult.Status.Limit
+			percentage := (quotaCheckResult.Status.Used * 100) / quotaCheckResult.Status.Limit
+			if percentage > 100 {
+				return 100
+			}
+			return percentage
 		}(),
 		"isCloudMode": h.cfg.IsCloudMode,
 	})
