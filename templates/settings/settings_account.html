@@ -1,4 +1,4 @@
-{{define "settings-security-content"}}
+{{define "settings-account-content"}}
 <div class="max-w-6xl mx-auto relative">
 
   <!-- Alert container for form responses -->
@@ -60,7 +60,7 @@
     <div class="mb-6 pb-6 border-b border-slate-700 border-opacity-50">
       <h3 class="text-lg md:text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Account Management</h3>
 
-      <form id="security-account-form" action="/settings/security/account" method="POST" hx-post="/settings/security/account" hx-target="#form-alert-container" hx-swap="innerHTML" hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}' hx-on::after-request="if(event.detail.successful && event.detail.xhr.responseText.includes('successfully')) { document.getElementById('current_password').value = ''; document.getElementById('new_password').value = ''; document.getElementById('confirm_password').value = ''; }" class="space-y-6">
+      <form id="account-update-form" action="/settings/account/update" method="POST" hx-post="/settings/account/update" hx-target="#form-alert-container" hx-swap="innerHTML" hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}' hx-on::after-request="if(event.detail.successful && event.detail.xhr.responseText.includes('successfully')) { document.getElementById('current_password').value = ''; document.getElementById('new_password').value = ''; document.getElementById('confirm_password').value = ''; }" class="space-y-6">
         <input type="hidden" name="csrf_token" value="{{.csrfToken}}">
         <!-- Current Password (Required for any changes) -->
         <div class="bg-slate-700 bg-opacity-40 rounded-lg p-4 md:p-6">
@@ -220,7 +220,92 @@
         </div>
       </div>
     </div>
+
+    <!-- Account Deletion Section -->
+    <div class="mt-6 pt-6 border-t border-slate-700 border-opacity-50">
+      <h3 class="text-xl font-semibold mb-4 text-white">Danger Zone</h3>
+      <div class="bg-red-900 bg-opacity-30 border border-red-700 rounded-lg p-6">
+        <h4 class="text-lg font-medium text-red-300 mb-2">Delete Account</h4>
+        <p class="text-sm text-gray-300 mb-4">
+          Once you delete your account, there is no going back. All your data including jobs, profile information, and settings will be permanently removed.
+        </p>
+        <button onclick="showDeleteModal()" 
+                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-md transition-colors duration-200">
+          Delete My Account
+        </button>
+      </div>
+    </div>
   </div>
 </div>
+
+<!-- Delete Account Modal -->
+<div id="deleteAccountModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div class="bg-slate-800 rounded-lg p-6 max-w-md w-full">
+    <h3 class="text-xl font-semibold text-white mb-4">Confirm Account Deletion</h3>
+    
+    <div class="mb-4">
+      <p class="text-gray-300 mb-2">This action cannot be undone. All your data will be permanently deleted.</p>
+      <p class="text-gray-300 font-medium">Type <span class="text-red-400 font-mono">DELETE</span> to confirm:</p>
+    </div>
+    
+    <form id="deleteAccountForm" hx-delete="/settings/account/delete" 
+          hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
+          class="space-y-4">
+      <input type="hidden" name="csrf_token" value="{{.csrfToken}}">
+      
+      <div>
+        <label for="delete_confirmation" class="block text-sm font-medium text-gray-300 mb-1">
+          Confirmation <span class="text-red-500">*</span>
+        </label>
+        <input type="text"
+               id="delete_confirmation"
+               name="confirmation"
+               required
+               placeholder="Type DELETE to confirm"
+               autocomplete="off"
+               class="w-full px-3 py-2 rounded-md bg-slate-700 border border-slate-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+               pattern="DELETE"
+               title="Please type DELETE to confirm">
+      </div>
+      
+      <div class="flex gap-3 justify-end">
+        <button type="button" onclick="hideDeleteModal()" 
+                class="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-md transition-colors">
+          Cancel
+        </button>
+        <button type="submit"
+                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-md transition-colors">
+          Delete My Account
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function showDeleteModal() {
+  document.getElementById('deleteAccountModal').classList.remove('hidden');
+  document.getElementById('delete_confirmation').focus();
+}
+
+function hideDeleteModal() {
+  document.getElementById('deleteAccountModal').classList.add('hidden');
+  document.getElementById('delete_confirmation').value = '';
+}
+
+// Close modal on escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    hideDeleteModal();
+  }
+});
+
+// Close modal on background click
+document.getElementById('deleteAccountModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    hideDeleteModal();
+  }
+});
+</script>
 
 {{end}}

@@ -502,15 +502,12 @@ func (h *SettingsHandler) parseAIDate(dateStr string) time.Time {
 	return time.Now().AddDate(-4, 0, 0)
 }
 
-// GetSecuritySettings handles the request to display the security settings page
-func (h *SettingsHandler) GetSecuritySettingsPage(c *gin.Context) {
-	// Security page is always enabled, no need to check
-
+// GetAccountSettingsPage handles the request to display the account settings page
+func (h *SettingsHandler) GetAccountSettingsPage(c *gin.Context) {
 	username, _ := c.Get("username")
 	userIDValue, _ := c.Get("userID")
 	userID := userIDValue.(int)
 
-	// Get user information
 	user, err := h.service.userRepo.FindByID(c.Request.Context(), userID)
 	if err != nil {
 		h.renderer.HTML(c, http.StatusInternalServerError, "layouts/base.html", gin.H{
@@ -522,10 +519,10 @@ func (h *SettingsHandler) GetSecuritySettingsPage(c *gin.Context) {
 
 	data := gin.H{
 		"title":          "Security",
-		"page":           "settings-security",
-		"activeNav":      "security",
-		"activeSettings": "security",
-		"pageTitle":      "Security",
+		"page":           "settings-account",
+		"activeNav":      "account",
+		"activeSettings": "account",
+		"pageTitle":      "Account",
 		"user":           user,
 		"isCloudMode":    h.service.cfg.IsCloudMode,
 	}
@@ -656,9 +653,8 @@ func (h *SettingsHandler) GetQuotasPage(c *gin.Context) {
 	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", data)
 }
 
-// HandleUpdateSecurityAccount handles updating username and/or password for self-hosted users
-func (h *SettingsHandler) HandleUpdateSecurityAccount(c *gin.Context) {
-	// This endpoint is only for self-hosted mode
+// HandleUpdateAccount handles updating username and/or password for self-hosted users
+func (h *SettingsHandler) HandleUpdateAccount(c *gin.Context) {
 	if h.service.cfg.IsCloudMode {
 		alerts.TriggerToast(c, "Account management is not available in cloud mode", alerts.TypeError)
 		c.Status(http.StatusForbidden)
@@ -686,7 +682,6 @@ func (h *SettingsHandler) HandleUpdateSecurityAccount(c *gin.Context) {
 		return
 	}
 
-	// Get current user
 	user, err := h.service.userRepo.FindByID(c.Request.Context(), userID)
 	if err != nil {
 		alerts.TriggerToast(c, "Failed to retrieve user information", alerts.TypeError)
@@ -694,18 +689,15 @@ func (h *SettingsHandler) HandleUpdateSecurityAccount(c *gin.Context) {
 		return
 	}
 
-	// Verify current password
 	if !h.service.authService.VerifyPassword(user.Password, currentPassword) {
 		alerts.TriggerToast(c, "Current password is incorrect", alerts.TypeError)
 		c.Status(http.StatusUnauthorized)
 		return
 	}
 
-	// Track what was updated
 	usernameUpdated := false
 	passwordUpdated := false
 
-	// Update username if provided and different
 	if newUsername != "" && newUsername != user.Username {
 		if err := authmodels.ValidateUsername(newUsername); err != nil {
 			alerts.TriggerToast(c, err.Error(), alerts.TypeError)
@@ -726,7 +718,6 @@ func (h *SettingsHandler) HandleUpdateSecurityAccount(c *gin.Context) {
 
 	// Update password if provided
 	if newPassword != "" {
-		// Validate passwords match
 		if newPassword != confirmPassword {
 			alerts.TriggerToast(c, "New passwords do not match", alerts.TypeError)
 			c.Status(http.StatusBadRequest)
@@ -765,4 +756,48 @@ func (h *SettingsHandler) HandleUpdateSecurityAccount(c *gin.Context) {
 		alerts.TriggerToast(c, "No changes were made", alerts.TypeInfo)
 		c.Status(http.StatusOK)
 	}
+}
+
+// DeleteAccount handles the account deletion request
+func (h *SettingsHandler) DeleteAccount(c *gin.Context) {
+	userIDValue, _ := c.Get("userID")
+	userID := userIDValue.(int)
+
+	// Get confirmation from request
+	var req struct {
+		Confirmation string `json:"confirmation" form:"confirmation" binding:"required"`
+	}
+	if err := c.ShouldBind(&req); err != nil {
+		alerts.TriggerToast(c, "Please type DELETE to confirm", alerts.TypeError)
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	// Verify user typed DELETE
+	if req.Confirmation != "DELETE" {
+		alerts.TriggerToast(c, "Please type DELETE to confirm account deletion", alerts.TypeError)
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	// Call auth service to delete account
+	if err := h.service.authService.DeleteAccount(c.Request.Context(), userID); err != nil {
+		alerts.TriggerToast(c, "Failed to delete account", alerts.TypeError)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	// Clear auth cookies
+	h.clearAuthCookies(c)
+
+	// HTMX will handle the redirect - just send it
+	c.Header("HX-Redirect", "/")
+	c.Status(http.StatusOK)
+}
+
+// clearAuthCookies removes authentication cookies
+func (h *SettingsHandler) clearAuthCookies(c *gin.Context) {
+	// Set cookies with MaxAge -1 to delete them
+	c.SetCookie("token", "", -1, "/", h.service.cfg.CookieDomain, h.service.cfg.CookieSecure, true)
+	c.SetCookie("refresh_token", "", -1, "/", h.service.cfg.CookieDomain, h.service.cfg.CookieSecure, true)
 }

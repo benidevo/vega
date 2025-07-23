@@ -27,6 +27,7 @@ type SettingsService struct {
 type AuthServiceInterface interface {
 	ChangePassword(ctx context.Context, userID int, newPassword string) error
 	VerifyPassword(hashedPassword, password string) bool
+	DeleteAccount(ctx context.Context, userID int) error
 }
 
 // NewSettingsService creates a new SettingsService instance
