@@ -1,0 +1,223 @@
+{{define "pages/privacy.html"}}
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy • Vega AI</title>
+  <meta name="description" content="Privacy policy for Vega AI - How we handle your information">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/static/landing/assets/css/styles.css">
+  
+  <!-- Configure Tailwind -->
+  <script>
+    tailwind.config = {
+      theme: {
+        fontFamily: {
+          'sans': ['DM Sans', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          'heading': ['Space Grotesk', 'DM Sans', 'ui-sans-serif', 'system-ui', 'sans-serif']
+        },
+        extend: {
+          colors: {
+            primary: '#0D9488',
+            'primary-dark': '#0B7A70',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-900 text-gray-100 font-sans page-fade-in overflow-x-hidden">
+
+  <!-- Navigation -->
+  <nav class="fixed top-0 w-full z-50 border-b border-slate-700/50 transition-all duration-300 bg-slate-900/95 backdrop-blur-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-14 sm:h-16">
+        <!-- Logo -->
+        <div class="flex items-center">
+          <a href="/" class="flex items-center group">
+            <div class="relative">
+              <div class="absolute inset-0 bg-primary/20 blur-xl group-hover:bg-primary/30 transition-all duration-300 rounded-full"></div>
+              <svg class="h-6 w-6 sm:h-7 sm:w-7 text-primary relative z-10 transform group-hover:scale-110 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <span class="ml-2 text-base sm:text-lg font-bold font-heading tracking-tight">Vega AI</span>
+          </a>
+        </div>
+
+        <!-- CTA -->
+        <div class="flex items-center">
+          <a href="/" class="inline-flex bg-primary hover:bg-primary-dark text-white px-4 sm:px-5 py-2 rounded-lg font-medium text-sm transition-all duration-200 transform hover:scale-105 btn-primary items-center">
+            <span class="relative z-10">Back to Home</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Privacy Policy Content -->
+  <main role="main" class="pt-20">
+    <div class="max-w-4xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+      <div class="bg-slate-800 shadow-lg rounded-lg p-8">
+        <h1 class="text-3xl font-heading font-bold text-gray-100 mb-4">Privacy Policy</h1>
+        
+        <p class="text-sm text-gray-400 mb-8">
+          <strong>Last updated:</strong> July 23, 2025
+        </p>
+
+        <div class="prose prose-lg prose-invert max-w-none">
+          <p class="text-gray-300 leading-relaxed mb-6">
+            This policy explains how Vega AI handles your information. I built Vega AI to help you track job applications and organize your job search, and I want to be clear about what data gets collected and how it's used.
+          </p>
+
+          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">What Vega AI does</h2>
+          
+          <p class="text-gray-300 mb-4">There are two main tools:</p>
+          
+          <p class="text-gray-300 mb-4">
+            <strong class="text-gray-100">Web application</strong> (vega.benidevo.com): Where you track job applications, manage your profile, and get recommendations. You can also run this on your own server if you prefer.
+          </p>
+          
+          <p class="text-gray-300 mb-6">
+            <strong class="text-gray-100">Browser extension</strong>: Captures job postings from LinkedIn with one click and sends them to your Vega AI account.
+          </p>
+
+          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Information that gets collected</h2>
+
+          <h3 class="text-xl font-heading font-semibold text-gray-100 mt-6 mb-3">When you use the browser extension</h3>
+          
+          <p class="text-gray-300 mb-4">The extension only collects job information when you click the capture button on a LinkedIn job page. It grabs:</p>
+          
+          <ul class="list-disc pl-6 space-y-2 text-gray-300 mb-4">
+            <li>Job title and company name</li>
+            <li>Job description and requirements</li>
+            <li>Location and job type (full-time, part-time, etc.)</li>
+            <li>The original job posting URL</li>
+            <li>Any notes you add before saving</li>
+          </ul>
+          
+          <p class="text-gray-300 mb-6">The extension also stores your login information locally in your browser so you don't have to sign in repeatedly.</p>
+
+          <h3 class="text-xl font-heading font-semibold text-gray-100 mt-6 mb-3">When you use the web application</h3>
+          
+          <p class="text-gray-300 mb-4">Your job information gets stored (either through the extension or by adding jobs manually), along with:</p>
+          
+          <ul class="list-disc pl-6 space-y-2 text-gray-300 mb-6">
+            <li>Your account details (username, email if you use Google sign-in)</li>
+            <li>Your profile information (skills, experience, education)</li>
+            <li>Application tracking data (which jobs you've applied to, interview dates, etc.)</li>
+            <li>Notes and status updates you add to jobs</li>
+          </ul>
+
+          <h3 class="text-xl font-heading font-semibold text-gray-100 mt-6 mb-3">Technical stuff</h3>
+          
+          <p class="text-gray-300 mb-6">
+            The system uses Google's Gemini AI to analyze how well jobs match your profile and to help generate cover letter drafts. This means job descriptions and your profile information get sent to Google for processing, but only when you use these features.
+          </p>
+
+          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">How your information gets used</h2>
+          
+          <p class="text-gray-300 mb-3"><strong class="text-gray-100">Job tracking</strong>: Your job data gets stored so you can organize and track your applications.</p>
+          
+          <p class="text-gray-300 mb-3"><strong class="text-gray-100">Smart recommendations</strong>: Job requirements get compared with your profile to suggest which opportunities might be the best fit.</p>
+          
+          <p class="text-gray-300 mb-3"><strong class="text-gray-100">Document help</strong>: Cover letter drafts can be generated based on the job requirements and your background.</p>
+          
+          <p class="text-gray-300 mb-6"><strong class="text-gray-100">Keeping you signed in</strong>: Your login gets remembered so the extension and web app work smoothly together.</p>
+
+          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">What doesn't happen</h2>
+          
+          <p class="text-gray-300 mb-6">
+            Your information doesn't get sold to anyone. Your job data doesn't get shared with other companies (except Google's AI service when you use the recommendation features). Your browsing doesn't get tracked and you won't see ads.
+          </p>
+
+          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Your choices</h2>
+          
+          <p class="text-gray-300 mb-3">
+            <strong class="text-gray-100">Self-hosting</strong>: You can run the entire system on your own server, which means your data never touches my servers. Instructions are on GitHub.
+          </p>
+          
+          <p class="text-gray-300 mb-3">
+            <strong class="text-gray-100">Data control</strong>: You can export your job data, delete specific jobs, or delete your entire account anytime.
+          </p>
+          
+          <p class="text-gray-300 mb-6">
+            <strong class="text-gray-100">Extension settings</strong>: You can configure the extension to work with either our cloud service or your own self-hosted setup.
+          </p>
+
+          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Security</h2>
+          
+          <p class="text-gray-300 mb-6">
+            Data gets encrypted when transmitted between the extension and servers. Authentication tokens are stored securely in your browser. If you self-host, you control all the security measures.
+          </p>
+
+          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Data location</h2>
+          
+          <p class="text-gray-300 mb-3"><strong class="text-gray-100">Cloud version</strong>: Your data gets stored on Hetzner servers in Germany and may be processed in different locations for the AI features.</p>
+          
+          <p class="text-gray-300 mb-6"><strong class="text-gray-100">Self-hosted</strong>: Your data stays wherever you decide to run the system.</p>
+
+          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Open source</h2>
+          
+          <p class="text-gray-300 mb-6">
+            Both the browser extension and web application are open source under the AGPL-3.0 license. You can inspect the code, contribute improvements, or modify it for your own use. The source code is available on GitHub.
+          </p>
+
+          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Third-party services</h2>
+          
+          <p class="text-gray-300 mb-3"><strong class="text-gray-100">Google Fonts</strong>: The extension loads fonts from Google for consistent appearance.</p>
+          
+          <p class="text-gray-300 mb-3"><strong class="text-gray-100">Google OAuth</strong>: If you choose to sign in with Google (optional).</p>
+          
+          <p class="text-gray-300 mb-6"><strong class="text-gray-100">Google Gemini</strong>: When you use AI features like job matching or cover letter generation, job data gets sent to Google's AI service.</p>
+
+          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Kids</h2>
+          
+          <p class="text-gray-300 mb-6">This service is intended for job seekers and isn't designed for anyone under 13.</p>
+
+          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Changes</h2>
+          
+          <p class="text-gray-300 mb-6">
+            This policy will be updated if needed and changes will be posted here. For major changes, I'll try to give you a heads up through the application.
+          </p>
+
+          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Questions</h2>
+          
+          <p class="text-gray-300 mb-6">
+            If you have questions about privacy or how your data gets handled, email
+            <a href="mailto:benjaminidewor@gmail.com" class="text-teal-400 hover:text-teal-300 underline">
+              benjaminidewor@gmail.com
+            </a>
+            or check out the code on GitHub.
+          </p>
+
+          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Legal stuff</h2>
+          
+          <p class="text-gray-300">
+            For EU users: Your data gets processed based on your consent (when you sign up and use the services) and legitimate interest (providing the job tracking functionality you requested). You can withdraw consent, request data deletion, or get copies of your data by contacting me.
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  {{template "landing/partials/footer.html" .}}
+
+  <script>
+    // Set current year in footer
+    const currentYearEl = document.getElementById('current-year');
+    if (currentYearEl) currentYearEl.textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
+{{end}}
