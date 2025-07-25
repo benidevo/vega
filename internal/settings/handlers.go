@@ -518,7 +518,7 @@ func (h *SettingsHandler) GetAccountSettingsPage(c *gin.Context) {
 	}
 
 	data := gin.H{
-		"title":          "Security",
+		"title":          "Account",
 		"page":           "settings-account",
 		"activeNav":      "account",
 		"activeSettings": "account",
