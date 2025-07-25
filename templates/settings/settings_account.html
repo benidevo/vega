@@ -186,6 +186,7 @@
     </div>
     {{end}}
 
+
     <!-- Account Activity Section (All Modes) -->
     <div>
       <h3 class="text-xl font-semibold mb-4 text-white border-b border-slate-700 pb-2">Account Activity</h3>
@@ -248,24 +249,30 @@
       <p class="text-gray-300 font-medium">Type <span class="text-red-400 font-mono">DELETE</span> to confirm:</p>
     </div>
     
-    <form id="deleteAccountForm" hx-delete="/settings/account/delete" 
-          hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
-          class="space-y-4">
-      <input type="hidden" name="csrf_token" value="{{.csrfToken}}">
-      
+    <div class="space-y-4">
       <div>
         <label for="delete_confirmation" class="block text-sm font-medium text-gray-300 mb-1">
           Confirmation <span class="text-red-500">*</span>
         </label>
         <input type="text"
                id="delete_confirmation"
-               name="confirmation"
-               required
                placeholder="Type DELETE to confirm"
                autocomplete="off"
                class="w-full px-3 py-2 rounded-md bg-slate-700 border border-slate-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-               pattern="DELETE"
-               title="Please type DELETE to confirm">
+               _="on input 
+                  if my.value == 'DELETE' then 
+                    add .border-green-500 to me 
+                    remove @disabled from #delete-btn
+                    add .bg-red-600 to #delete-btn
+                    remove .bg-gray-500 from #delete-btn
+                    add .hover:bg-red-700 to #delete-btn
+                  else 
+                    add .border-slate-600 to me 
+                    add @disabled to #delete-btn
+                    remove .bg-red-600 from #delete-btn
+                    add .bg-gray-500 to #delete-btn
+                    remove .hover:bg-red-700 from #delete-btn
+                  end">
       </div>
       
       <div class="flex gap-3 justify-end">
@@ -273,12 +280,15 @@
                 class="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-md transition-colors">
           Cancel
         </button>
-        <button type="submit"
-                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-md transition-colors">
+        <button id="delete-btn"
+                disabled
+                hx-delete="/settings/account/delete" 
+                hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
+                class="px-4 py-2 bg-gray-500 text-white font-medium rounded-md transition-colors cursor-not-allowed">
           Delete My Account
         </button>
       </div>
-    </form>
+    </div>
   </div>
 </div>
 

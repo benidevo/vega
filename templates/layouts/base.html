@@ -644,6 +644,16 @@
   <!-- Page-specific scripts -->
   {{if eq .page "login"}}
   <script src="/static/js/auth-validation.js"></script>
+  {{if .error}}
+  <script>
+    // Trigger toast notification for server-side errors
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.showToast) {
+        window.showToast('{{.error}}', 'error');
+      }
+    });
+  </script>
+  {{end}}
   {{end}}
   {{if eq .page "settings-profile"}}
   <script src="/static/js/skills-management.js"></script>

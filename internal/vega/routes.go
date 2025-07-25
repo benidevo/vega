@@ -27,7 +27,7 @@ func SetupRoutes(a *App) {
 	}
 
 	if a.config.EnableCSRF {
-		a.router.Use(middleware.CSRF())
+		a.router.Use(middleware.CSRF(&a.config))
 	}
 
 	a.router.Static("/static", "./static")

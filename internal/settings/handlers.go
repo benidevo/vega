@@ -763,23 +763,6 @@ func (h *SettingsHandler) DeleteAccount(c *gin.Context) {
 	userIDValue, _ := c.Get("userID")
 	userID := userIDValue.(int)
 
-	// Get confirmation from request
-	var req struct {
-		Confirmation string `json:"confirmation" form:"confirmation" binding:"required"`
-	}
-	if err := c.ShouldBind(&req); err != nil {
-		alerts.TriggerToast(c, "Please type DELETE to confirm", alerts.TypeError)
-		c.Status(http.StatusBadRequest)
-		return
-	}
-
-	// Verify user typed DELETE
-	if req.Confirmation != "DELETE" {
-		alerts.TriggerToast(c, "Please type DELETE to confirm account deletion", alerts.TypeError)
-		c.Status(http.StatusBadRequest)
-		return
-	}
-
 	// Call auth service to delete account
 	if err := h.service.authService.DeleteAccount(c.Request.Context(), userID); err != nil {
 		alerts.TriggerToast(c, "Failed to delete account", alerts.TypeError)
