@@ -91,17 +91,20 @@ document.addEventListener('DOMContentLoaded', function() {
   const mobileMenuButton = document.getElementById('mobile-menu-button');
   const mobileMenuClose = document.getElementById('mobile-menu-close');
   const mobileMenu = document.getElementById('mobile-menu');
-  const mobileMenuLinks = mobileMenu.querySelectorAll('a[href^="#"]');
+  
+  if (mobileMenuButton && mobileMenuClose && mobileMenu) {
+    const mobileMenuLinks = mobileMenu.querySelectorAll('a[href^="#"]');
+    
+    mobileMenuButton.addEventListener('click', toggleMobileMenu);
+    mobileMenuClose.addEventListener('click', toggleMobileMenu);
 
-  mobileMenuButton.addEventListener('click', toggleMobileMenu);
-  mobileMenuClose.addEventListener('click', toggleMobileMenu);
-
-  // Close mobile menu when clicking on links
-  mobileMenuLinks.forEach(link => {
-    link.addEventListener('click', () => {
-      toggleMobileMenu();
+    // Close mobile menu when clicking on links
+    mobileMenuLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        toggleMobileMenu();
+      });
     });
-  });
+  }
 
   // Smooth scroll for navigation links
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -121,24 +124,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Enhanced scroll effects with navigation state
   const nav = document.querySelector('nav');
-  let lastScroll = 0;
+  if (nav) {
+    let lastScroll = 0;
 
-  function handleScroll() {
-    const currentScroll = window.pageYOffset;
+    function handleScroll() {
+      const currentScroll = window.pageYOffset;
 
-    // Add scrolled class for enhanced styling
-    nav.classList.toggle('scrolled', currentScroll > 50);
+      // Add scrolled class for enhanced styling
+      nav.classList.toggle('scrolled', currentScroll > 50);
 
-    // Hide/show nav on scroll (mobile) with smoother animation
-    if (window.innerWidth < 768) {
-      const isScrollingDown = currentScroll > lastScroll && currentScroll > 100;
-      nav.style.transform = isScrollingDown ? 'translateY(-100%)' : 'translateY(0)';
+      // Hide/show nav on scroll (mobile) with smoother animation
+      if (window.innerWidth < 768) {
+        const isScrollingDown = currentScroll > lastScroll && currentScroll > 100;
+        nav.style.transform = isScrollingDown ? 'translateY(-100%)' : 'translateY(0)';
+      }
+
+      lastScroll = currentScroll;
     }
 
-    lastScroll = currentScroll;
+    window.addEventListener('scroll', handleScroll, { passive: true });
   }
-
-  window.addEventListener('scroll', handleScroll, { passive: true });
 
   // Intersection Observer for fade-in animations
   const observerOptions = {
@@ -188,5 +193,51 @@ document.addEventListener('DOMContentLoaded', function() {
   // Set current year in footer
   const currentYearEl = document.getElementById('current-year');
   if (currentYearEl) currentYearEl.textContent = new Date().getFullYear();
+
+  // Handle footer navigation links
+  const footerLinks = document.querySelectorAll('.footer-nav-link');
+  
+  footerLinks.forEach(link => {
+    link.addEventListener('click', function(e) {
+      const section = this.getAttribute('data-section');
+      
+      if (section && window.location.pathname !== '/') {
+        e.preventDefault();
+        // Store the section to scroll to in sessionStorage
+        sessionStorage.setItem('scrollToSection', section);
+        window.location.href = '/';
+      } else if (section && window.location.pathname === '/') {
+        e.preventDefault();
+        const element = document.getElementById(section);
+        if (element) {
+          const offset = 80; // Account for fixed nav
+          const targetPosition = element.getBoundingClientRect().top + window.pageYOffset - offset;
+          window.scrollTo({
+            top: targetPosition,
+            behavior: 'smooth'
+          });
+        }
+      }
+    });
+  });
+
+  // Check if we need to scroll to a section after navigation from another page
+  const storedSection = sessionStorage.getItem('scrollToSection');
+  
+  if (storedSection) {
+    sessionStorage.removeItem('scrollToSection');
+    setTimeout(() => {
+      const element = document.getElementById(storedSection);
+      
+      if (element) {
+        const offset = 80; // Account for fixed nav
+        const targetPosition = element.getBoundingClientRect().top + window.pageYOffset - offset;
+        window.scrollTo({
+          top: targetPosition,
+          behavior: 'smooth'
+        });
+      }
+    }, 100); // Small delay to ensure page is fully loaded
+  }
 
 });

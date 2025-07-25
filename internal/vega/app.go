@@ -252,6 +252,26 @@ func (a *App) runMigrations() error {
 // templateFuncMap returns a map of custom template functions
 func templateFuncMap() template.FuncMap {
 	return template.FuncMap{
+		"dict": func(values ...interface{}) (map[string]interface{}, error) {
+			if len(values)%2 != 0 {
+				return nil, nil
+			}
+			dict := make(map[string]interface{}, len(values)/2)
+			for i := 0; i < len(values); i += 2 {
+				key, ok := values[i].(string)
+				if !ok {
+					return nil, nil
+				}
+				dict[key] = values[i+1]
+			}
+			return dict, nil
+		},
+		"default": func(def interface{}, val interface{}) interface{} {
+			if val == nil || val == "" {
+				return def
+			}
+			return val
+		},
 		"add": func(a, b int) int {
 			return a + b
 		},
@@ -326,6 +346,14 @@ func templateFuncMap() template.FuncMap {
 				return limit
 			}
 			return used
+		},
+		"quotaProgressClass": func(remaining int) string {
+			if remaining <= 0 {
+				return "bg-red-500"
+			} else if remaining <= 1 {
+				return "bg-yellow-500"
+			}
+			return "bg-primary"
 		},
 	}
 }

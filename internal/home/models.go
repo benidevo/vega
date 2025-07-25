@@ -35,6 +35,7 @@ type JobStatsSummary struct {
 	Interviewing  int `json:"interviewing"`
 	ActiveJobs    int `json:"active_jobs"`
 	OfferReceived int `json:"offer_received"`
+	Interested    int `json:"interested"`
 }
 
 // JobSummary provides essential job info for homepage listings
@@ -82,6 +83,7 @@ func NewHomePageData(userID int, username string) *HomePageData {
 			Interviewing:  0,
 			ActiveJobs:    0,
 			OfferReceived: 0,
+			Interested:    0,
 		},
 		RecentJobs: make([]JobSummary, 0),
 	}

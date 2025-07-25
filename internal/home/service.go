@@ -49,6 +49,7 @@ func (s *Service) GetHomePageData(ctx context.Context, userID int, username stri
 		Interviewing:  statusCounts[models.INTERVIEWING],
 		ActiveJobs:    calculateActiveJobs(statusCounts),
 		OfferReceived: statusCounts[models.OFFER_RECEIVED],
+		Interested:    statusCounts[models.INTERESTED],
 	}
 
 	homeData.RecentJobs = make([]JobSummary, 0, len(recentJobs))
