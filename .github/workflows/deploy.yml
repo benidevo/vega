@@ -85,9 +85,9 @@ jobs:
           port: ${{ secrets.HETZNER_SSH_PORT }}
           script: |
             cd /opt/vega-ai
-            export IMAGE_TAG=${{ needs.build-and-push.outputs.tag }}
+            export IMAGE_TAG=cloud-${{ needs.build-and-push.outputs.tag }}
             docker compose pull -q
-            docker compose down --remove-orphans 2>/dev/null
-            docker compose up -d --quiet-pull 2>/dev/null
-            docker image prune -f -q
+            docker compose down --remove-orphans
+            docker compose up -d --quiet-pull
+            docker image prune -f
             echo "✅ Deployment completed"
