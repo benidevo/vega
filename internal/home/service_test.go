@@ -44,6 +44,7 @@ func (ts *testService) GetHomePageData(ctx context.Context, userID int, username
 		Interviewing:  ts.statusCountsResponse[models.INTERVIEWING],
 		ActiveJobs:    calculateActiveJobs(ts.statusCountsResponse),
 		OfferReceived: ts.statusCountsResponse[models.OFFER_RECEIVED],
+		Interested:    ts.statusCountsResponse[models.INTERESTED],
 	}
 
 	homeData.RecentJobs = make([]JobSummary, 0, len(ts.recentJobsResponse))
@@ -115,6 +116,7 @@ func TestService_GetHomePageData(t *testing.T) {
 					Interviewing:  1,
 					ActiveJobs:    5, // 1+2+1+1 = 5 (all non-terminal statuses)
 					OfferReceived: 1,
+					Interested:    1,
 				},
 				RecentJobs: []JobSummary{
 					{
@@ -165,6 +167,7 @@ func TestService_GetHomePageData(t *testing.T) {
 					Interviewing:  0,
 					ActiveJobs:    0,
 					OfferReceived: 0,
+					Interested:    0,
 				},
 				RecentJobs:     []JobSummary{},
 				HasJobs:        false,

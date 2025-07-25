@@ -78,3 +78,49 @@ func TestAppLifecycle(t *testing.T) {
 		}
 	})
 }
+
+func TestQuotaProgressClass(t *testing.T) {
+	tests := []struct {
+		name      string
+		remaining int
+		want      string
+	}{
+		{
+			name:      "zero remaining",
+			remaining: 0,
+			want:      "bg-red-500",
+		},
+		{
+			name:      "negative remaining",
+			remaining: -1,
+			want:      "bg-red-500",
+		},
+		{
+			name:      "one remaining",
+			remaining: 1,
+			want:      "bg-yellow-500",
+		},
+		{
+			name:      "multiple remaining",
+			remaining: 5,
+			want:      "bg-primary",
+		},
+		{
+			name:      "many remaining",
+			remaining: 100,
+			want:      "bg-primary",
+		},
+	}
+
+	funcMap := templateFuncMap()
+	quotaProgressClass := funcMap["quotaProgressClass"].(func(int) string)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := quotaProgressClass(tt.remaining)
+			if got != tt.want {
+				t.Errorf("quotaProgressClass(%d) = %v, want %v", tt.remaining, got, tt.want)
+			}
+		})
+	}
+}

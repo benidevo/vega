@@ -7,42 +7,33 @@
 
 > Navigate your career journey with AI-powered precision
 
-Just as ancient navigators used the star Vega to find their way, Vega AI helps you navigate your career journey with intelligent job search tools. Track applications, generate tailored documents using AI, get smart job matching based on your profile, and capture opportunities from LinkedIn with our browser extension. It can be self-hosted for complete data privacy.
+Just as ancient navigators used the star Vega to find their way, Vega AI helps you navigate your career journey with intelligent job search tools. Track applications, generate tailored documents using AI, get smart job matching based on your profile, and capture opportunities from LinkedIn with the browser extension.
 
-## 🚀 Quick Setup Guide
+**🚀 Try it now:** Visit [vega.benidevo.com](https://vega.benidevo.com) for the cloud version, or self-host for complete data privacy.
 
-### 1. Create Configuration
+## 🚀 Self-Hosted Quick Start
 
-Get your [free Gemini API key](https://aistudio.google.com/app/apikey), then follow these steps:
+Self-hosting Vega AI gives you complete control over your data. You only need a Gemini API key to get started.
 
-**Step 1: Create a vega-ai folder**
+### 1. Get Your API Key
 
-```bash
-mkdir vega-ai
-```
+Get your [free Gemini API key](https://aistudio.google.com/app/apikey) from Google AI Studio.
 
-**Step 2: Create a config file with your settings**
-
-Create a file called `config` in the vega-ai folder with this content (replace your-gemini-api-key with your actual key):
+### 2. Create Configuration
 
 ```bash
-GEMINI_API_KEY=your-gemini-api-key
+# Create a directory for Vega AI
+mkdir vega-ai && cd vega-ai
+
+# Create a config file with your Gemini API key
+echo "GEMINI_API_KEY=your-gemini-api-key" > config
 ```
 
-**For Self-Hosted Deployments:**
+That's it! No complex setup required.
 
-If you're running Vega AI on your own server (not using cloud mode), you can create an admin user by adding these lines:
+### 3. Run with Docker
 
-```bash
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=your-secure-password
-```
-
-See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for advanced configuration options
-
-### 2. Run with Docker
-
-Navigate to your vega-ai folder and start Vega with persistent data storage:
+Start Vega AI with a single command:
 
 ```bash
 docker run --pull always -d \
@@ -53,9 +44,13 @@ docker run --pull always -d \
   ghcr.io/benidevo/vega-ai:latest
 ```
 
-### 3. Access & Configure
+### 4. Access Vega AI
 
-Visit <http://localhost:8765> and log in with your admin credentials.
+1. Visit <http://localhost:8765>
+2. Log in with default credentials:
+   - Username: `admin`
+   - Password: `VegaAdmin`
+3. **Important:** Change your password after first login via Settings → Account
 
 ## ✨ Features
 
@@ -68,6 +63,44 @@ Visit <http://localhost:8765> and log in with your admin credentials.
 ## 🔗 Browser Extension
 
 For one-click job capture from LinkedIn, checkout the [**Browser Extension**](https://github.com/benidevo/vega-ai-extension).
+
+## 🐳 Docker Options
+
+### ARM64 Support (Apple Silicon)
+
+The Docker images support both AMD64 and ARM64 architectures:
+
+```bash
+# Works on both Intel/AMD and ARM processors
+docker pull ghcr.io/benidevo/vega-ai:latest
+```
+
+### Docker Compose
+
+For easier management, use Docker Compose:
+
+```yaml
+# docker-compose.yml
+services:
+  vega-ai:
+    image: ghcr.io/benidevo/vega-ai:latest
+    ports:
+      - "8765:8765"
+    volumes:
+      - vega-data:/app/data
+    env_file:
+      - config
+    restart: unless-stopped
+
+volumes:
+  vega-data:
+```
+
+Then run: `docker compose up -d`
+
+### Advanced Configuration
+
+For advanced settings (custom ports, SSL, external databases), see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## 🛠️ Development
 
