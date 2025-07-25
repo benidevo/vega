@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/benidevo/vega/internal/config"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,7 +25,7 @@ func generateCSRFToken() (string, error) {
 	return base64.URLEncoding.EncodeToString(bytes), nil
 }
 
-func CSRF() gin.HandlerFunc {
+func CSRF(cfg *config.Settings) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Skip CSRF for API routes (they use Bearer tokens)
 		if strings.HasPrefix(c.Request.URL.Path, "/api/") {
@@ -81,7 +82,14 @@ func CSRF() gin.HandlerFunc {
 			}
 
 			if headerToken != token {
-				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Invalid CSRF Token"})
+				// Render error page for both regular and HTMX requests
+				c.HTML(http.StatusForbidden, "layouts/base.html", gin.H{
+					"title":     "Security Error",
+					"page":      "500",
+					"cfg":       cfg,
+					"csrfToken": token, // Pass the token to the error page too
+				})
+				c.Abort()
 				return
 			}
 		}

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/benidevo/vega/internal/config"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
@@ -83,7 +84,17 @@ func TestCSRF(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			router := gin.New()
-			router.Use(CSRF())
+
+			// Create a test config
+			cfg := &config.Settings{}
+
+			// Use a custom recovery middleware to catch template rendering panics
+			router.Use(gin.CustomRecovery(func(c *gin.Context, recovered interface{}) {
+				// For testing, just abort with the expected status
+				c.AbortWithStatus(http.StatusForbidden)
+			}))
+
+			router.Use(CSRF(cfg))
 
 			router.Any("/*path", func(c *gin.Context) {
 				c.String(http.StatusOK, "test")

@@ -43,6 +43,7 @@
     {{template "error_alert" .}}
 
     <form action="/settings/profile/experience" method="post" class="space-y-6">
+      <input type="hidden" name="csrf_token" value="{{.csrfToken}}">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label for="title" class="block text-sm font-medium text-gray-300 mb-2">Job Title *</label>

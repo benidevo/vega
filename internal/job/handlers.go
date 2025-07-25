@@ -370,7 +370,7 @@ func (h *JobHandler) CreateJob(c *gin.Context) {
 		return
 	}
 
-	alerts.RenderSuccess(c, "Job created successfully!", alerts.ContextGeneral)
+	c.Header("HX-Redirect", "/jobs")
 }
 
 // GetJobDetails handles the HTTP request to retrieve and display details for a specific job.

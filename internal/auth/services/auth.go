@@ -283,6 +283,29 @@ func (s *AuthService) VerifyPassword(hashedPassword, password string) bool {
 	return verifyPassword(hashedPassword, password)
 }
 
+// DeleteAccount deletes a user's account and all associated data
+func (s *AuthService) DeleteAccount(ctx context.Context, userID int) error {
+	s.log.Info().
+		Str("event", "account_deletion_requested").
+		Str("user_ref", fmt.Sprintf("user_%d", userID)).
+		Msg("Account deletion requested")
+
+	if err := s.repo.DeleteUser(ctx, userID); err != nil {
+		s.log.Error().Err(err).
+			Str("event", "account_deletion_failed").
+			Str("user_ref", fmt.Sprintf("user_%d", userID)).
+			Msg("Failed to delete user account")
+		return models.ErrUserDeletionFailed
+	}
+
+	s.log.Info().
+		Str("event", "account_deleted").
+		Str("user_ref", fmt.Sprintf("user_%d", userID)).
+		Msg("User account deleted successfully")
+
+	return nil
+}
+
 // TokenType defines the type of JWT token
 type TokenType string
 

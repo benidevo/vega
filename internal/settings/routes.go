@@ -16,9 +16,10 @@ func RegisterRoutes(settingsGroup *gin.RouterGroup, handler *SettingsHandler) {
 	settingsGroup.POST("/profile/context", handler.HandleUpdateContext)
 	settingsGroup.POST("/profile/parse-cv", handler.HandleCVUpload)
 
-	// Security settings
-	settingsGroup.GET("/security", handler.GetSecuritySettingsPage)
-	settingsGroup.POST("/security/account", handler.HandleUpdateSecurityAccount)
+	// Account settings
+	settingsGroup.GET("/account", handler.GetAccountSettingsPage)
+	settingsGroup.POST("/account/update", handler.HandleUpdateAccount)
+	settingsGroup.DELETE("/account/delete", handler.DeleteAccount)
 
 	// Experience routes
 	settingsGroup.GET("/profile/experience/new", handler.GetAddExperiencePage)

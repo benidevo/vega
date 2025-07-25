@@ -31,12 +31,14 @@ func NewAuthHandler(service *services.AuthService, cfg *config.Settings) *AuthHa
 
 // GetLoginPage renders the login page template.
 func (h *AuthHandler) GetLoginPage(c *gin.Context) {
-	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", gin.H{
+	data := gin.H{
 		"title":              "Login",
 		"page":               "login",
 		"googleOAuthEnabled": h.cfg.GoogleOAuthEnabled,
 		"isCloudMode":        h.cfg.IsCloudMode,
-	})
+	}
+
+	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", data)
 }
 
 // Login handles user authentication by validating credentials from the request.

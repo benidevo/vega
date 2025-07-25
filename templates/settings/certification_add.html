@@ -43,6 +43,7 @@
     {{template "error_alert" .}}
 
     <form action="/settings/profile/certification" method="post" class="space-y-6">
+      <input type="hidden" name="csrf_token" value="{{.csrfToken}}">
       <div>
         <label for="name" class="block text-sm font-medium text-gray-300 mb-2">Certification Name *</label>
         <input type="text" id="name" name="name" required value="{{if .certification}}{{.certification.Name | html}}{{end}}"
