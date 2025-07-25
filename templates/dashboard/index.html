@@ -31,9 +31,9 @@
         <option value="interested" {{if eq .statusFilter "interested"}}selected{{end}}>Interested</option>
         <option value="applied" {{if eq .statusFilter "applied"}}selected{{end}}>Applied</option>
         <option value="interviewing" {{if eq .statusFilter "interviewing"}}selected{{end}}>Interviewing</option>
-        <option value="offer received" {{if eq .statusFilter "offer received"}}selected{{end}}>Offer Received</option>
+        <option value="offer_received" {{if eq .statusFilter "offer_received"}}selected{{end}}>Offer Received</option>
         <option value="rejected" {{if eq .statusFilter "rejected"}}selected{{end}}>Rejected</option>
-        <option value="not interested" {{if eq .statusFilter "not interested"}}selected{{end}}>Not Interested</option>
+        <option value="not_interested" {{if eq .statusFilter "not_interested"}}selected{{end}}>Not Interested</option>
       </select>
       <button
         class="bg-primary text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-primary-dark transition-colors w-full sm:w-auto"
@@ -46,7 +46,7 @@
   </div>
 
   <!-- Flexible Job Cards Container -->
-  <div id="jobs-container" class="flex-1 flex flex-col relative" hx-get="/jobs" hx-trigger="load" hx-swap="innerHTML">
+  <div id="jobs-container" class="flex-1 flex flex-col relative" hx-get="/jobs{{if .statusFilter}}?status={{.statusFilter}}{{end}}" hx-trigger="load" hx-swap="innerHTML">
     <div class="px-4 md:px-0">
       <div class="animate-pulse">
         <div class="bg-slate-700 h-24 rounded-lg mb-4"></div>

@@ -439,8 +439,12 @@ func (r *SQLiteJobRepository) Update(ctx context.Context, userID int, job *model
 
 	job.Company = *company
 
-	// Invalidate job cache after update
-	_ = r.cache.Delete(ctx, fmt.Sprintf("job:u%d:id%d", userID, job.ID))
+	// Invalidate caches after update
+	_ = r.cache.Delete(ctx,
+		fmt.Sprintf("job:u%d:id%d", userID, job.ID),
+		fmt.Sprintf("stats:u%d:summary", userID),
+		fmt.Sprintf("stats:u%d:by-status", userID),
+	)
 
 	return nil
 }
