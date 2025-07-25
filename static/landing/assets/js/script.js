@@ -106,8 +106,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Smooth scroll for navigation links
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  // Smooth scroll for navigation links (excluding footer links which have special handling)
+  document.querySelectorAll('a[href^="#"]:not(.footer-nav-link)').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
       e.preventDefault();
       const target = document.querySelector(this.getAttribute('href'));
@@ -201,13 +201,19 @@ document.addEventListener('DOMContentLoaded', function() {
     link.addEventListener('click', function(e) {
       const section = this.getAttribute('data-section');
       
-      if (section && window.location.pathname !== '/') {
-        e.preventDefault();
+      // Only process links with data-section attribute
+      if (!section) return;
+      
+      e.preventDefault();
+      e.stopPropagation(); // Prevent other handlers from interfering
+      
+      // If we're not on the home page, navigate there first
+      if (window.location.pathname !== '/') {
         // Store the section to scroll to in sessionStorage
         sessionStorage.setItem('scrollToSection', section);
         window.location.href = '/';
-      } else if (section && window.location.pathname === '/') {
-        e.preventDefault();
+      } else {
+        // We're already on the home page, just scroll
         const element = document.getElementById(section);
         if (element) {
           const offset = 80; // Account for fixed nav
@@ -226,7 +232,8 @@ document.addEventListener('DOMContentLoaded', function() {
   
   if (storedSection) {
     sessionStorage.removeItem('scrollToSection');
-    setTimeout(() => {
+    // Wait for page to be fully loaded and rendered
+    const scrollToStoredSection = () => {
       const element = document.getElementById(storedSection);
       
       if (element) {
@@ -237,7 +244,12 @@ document.addEventListener('DOMContentLoaded', function() {
           behavior: 'smooth'
         });
       }
-    }, 100); // Small delay to ensure page is fully loaded
+    };
+    
+    // Try multiple times to ensure element is rendered
+    setTimeout(scrollToStoredSection, 100);
+    // Also try after images/fonts might have loaded
+    window.addEventListener('load', scrollToStoredSection);
   }
 
 });
