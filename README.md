@@ -62,7 +62,9 @@ docker run --pull always -d \
 
 ## 🔗 Browser Extension
 
-For one-click job capture from LinkedIn, checkout the [**Browser Extension**](https://github.com/benidevo/vega-ai-extension).
+Install the [**Vega AI Job Capture**](https://chromewebstore.google.com/detail/vega-ai-job-capture/oboedhpojbjemdmojfchifppbgbfehol) extension from the Chrome Web Store for one-click job capture from LinkedIn.
+
+For manual installation or development, visit the [extension repository](https://github.com/benidevo/vega-ai-extension).
 
 ## 🐳 Docker Options
 
