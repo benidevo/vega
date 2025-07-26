@@ -100,6 +100,21 @@ volumes:
 
 Then run: `docker compose up -d`
 
+### Docker Swarm
+
+Docker Stack Deploy doesn't read `.env` files ([known limitation](https://github.com/moby/moby/issues/29133)). Use one of these approaches:
+
+```bash
+# Option 1: Process env file first
+docker-compose config | docker stack deploy -c - vega-stack
+
+# Option 2: Export variables manually
+export $(cat config | xargs)
+docker stack deploy -c docker-compose.yml vega-stack
+```
+
+See [docs/DOCKER_SWARM.md](docs/DOCKER_SWARM.md) for detailed instructions.
+
 ### Advanced Configuration
 
 For advanced settings (custom ports, SSL, external databases), see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
