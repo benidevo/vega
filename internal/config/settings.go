@@ -197,7 +197,20 @@ func NewTestSettingsWithTempDB() (Settings, string) {
 	return settings, tempFile
 }
 
+// getEnv reads environment variable with _FILE suffix support
+// If KEY_FILE is set, it reads the content from that file
+// Otherwise falls back to KEY, then to defaultValue
 func getEnv(key string, defaultValue string) (value string) {
+	if filePath := os.Getenv(key + "_FILE"); filePath != "" {
+		content, err := os.ReadFile(filePath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Failed to read %s_FILE from %s: %v\n",
+				key, filePath, err)
+		} else {
+			return strings.TrimSpace(string(content))
+		}
+	}
+
 	value = os.Getenv(key)
 	if value == "" {
 		value = defaultValue
