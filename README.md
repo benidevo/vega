@@ -9,7 +9,7 @@
 
 Just as ancient navigators used the star Vega to find their way, Vega AI helps you navigate your career journey with intelligent job search tools. Track applications, generate tailored documents using AI, get smart job matching based on your profile, and capture opportunities from LinkedIn with the browser extension.
 
-**🚀 Try it now:** Visit [vega.benidevo.com](https://vega.benidevo.com) for the cloud version, or self-host for complete data privacy.
+**🚀 Try it now:** Visit [vega.benidevo.com](https://vega.benidevo.com) for the cloud mode, or self-host for complete data privacy.
 
 ## 🚀 Self-Hosted Quick Start
 
@@ -54,11 +54,14 @@ docker run --pull always -d \
 
 ## ✨ Features
 
-- **🤖 AI Document Generation**: Automatically create tailored application documents
-- **📊 Smart Job Matching**: AI analyzes job requirements vs your profile
-- **🗺️ Application Tracking**: Visualize your pipeline from "Interested" to "Offer"
-- **🔗 Browser Extension**: One-click job capture from LinkedIn
-- **⚡ Self-Hosted**: Your data stays with you
+- **🤖 AI Document Generation**: Generate tailored cover letters and CVs based on your profile
+- **📊 Smart Job Matching**: Get AI-powered match scores and detailed analysis for job compatibility
+- **📝 CV Parsing**: Upload your existing CV to automatically populate your profile
+- **💼 Job Management**: Track job applications with customizable statuses
+- **🔗 Browser Extension**: One-click job capture from LinkedIn and other job boards
+- **👤 Profile Management**: Comprehensive professional profile with experience, education, and skills
+- **🔒 Privacy-First**: Self-hosted option with complete data control
+- **📊 Usage Quotas**: Fair usage limits for AI features (cloud mode)
 
 ## 🔗 Browser Extension
 
