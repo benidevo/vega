@@ -3,8 +3,8 @@
   <section id="get-started" class="py-12 sm:py-16 relative w-full overflow-hidden">
     <!-- Background Pattern -->
     <div class="absolute inset-0 z-0">
-      <img src="/static/landing/images/tech-pattern.jpg" 
-           alt="Technology pattern" 
+      <img src="/static/landing/images/tech-pattern.jpg"
+           alt="Technology pattern"
            class="absolute inset-0 w-full h-full object-cover opacity-10">
     </div>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -13,13 +13,13 @@
           Choose how to use Vega AI
         </h2>
         <p class="text-base sm:text-lg text-gray-400 max-w-2xl mx-auto">
-          Get started with our cloud version or run it privately on your own computer
+          Get started with our cloud mode or run it privately on your own computer
         </p>
       </div>
 
       <!-- Two Options Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 max-w-5xl mx-auto">
-        <!-- Cloud Version Card -->
+        <!-- Cloud Mode Card -->
         <div class="bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-700 hover:border-primary transition-all duration-300">
           <div class="text-center mb-4">
             <div class="bg-primary/20 rounded-full p-3 w-12 h-12 flex items-center justify-center mx-auto mb-3">
@@ -27,10 +27,10 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
               </svg>
             </div>
-            <h3 class="text-xl font-bold mb-2">Cloud Version</h3>
+            <h3 class="text-xl font-bold mb-2">Cloud Mode</h3>
             <p class="text-gray-400 text-sm">Ready to use, no setup required</p>
           </div>
-          
+
           <ul class="space-y-2 mb-4">
             <li class="flex items-start">
               <svg class="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -42,13 +42,13 @@
               <svg class="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
-              <span class="text-gray-300 text-sm">5 AI analyses per month (free)</span>
+              <span class="text-gray-300 text-sm">10 AI analyses per month</span>
             </li>
             <li class="flex items-start">
               <svg class="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
-              <span class="text-gray-300 text-sm">100 job searches per day</span>
+              <span class="text-gray-300 text-sm">Unlimited job captures</span>
             </li>
             <li class="flex items-start">
               <svg class="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -69,13 +69,13 @@
               <span class="text-gray-300 text-sm">Data secured in the cloud</span>
             </li>
           </ul>
-          
+
           <a href="/auth/login" class="block w-full bg-primary hover:bg-primary-dark text-white px-4 py-2.5 rounded-lg font-medium text-center transition-all">
-            Start Using Cloud Version
+            Login to Get Started
           </a>
         </div>
 
-        <!-- Self-Hosted Card -->
+        <!-- Local Mode Card -->
         <div class="bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-700 hover:border-primary transition-all duration-300">
           <div class="text-center mb-4">
             <div class="bg-primary/20 rounded-full p-3 w-12 h-12 flex items-center justify-center mx-auto mb-3">
@@ -83,10 +83,10 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </div>
-            <h3 class="text-xl font-bold mb-2">Self-Hosted</h3>
+            <h3 class="text-xl font-bold mb-2">Local Mode</h3>
             <p class="text-gray-400 text-sm">Run on your own computer</p>
           </div>
-          
+
           <ul class="space-y-2 mb-4">
             <li class="flex items-start">
               <svg class="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -110,125 +110,142 @@
               <svg class="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
-              <span class="text-gray-300 text-sm">Requires Docker & API key</span>
+              <span class="text-gray-300 text-sm">Requires Docker & Gemini API key</span>
             </li>
           </ul>
-          
+
           <button onclick="showSelfHostedInstructions()" class="block w-full bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-lg font-medium text-center transition-all">
             View Setup Instructions
           </button>
         </div>
       </div>
 
-      <!-- Self-Hosted Instructions (Hidden by default) -->
-      <div id="self-hosted-instructions" class="hidden">
-        <div class="bg-slate-800/50 rounded-xl p-6 mb-8">
-          <h3 class="text-xl font-bold mb-4 text-center">Self-Hosted Setup Instructions</h3>
-          <p class="text-gray-400 text-center mb-6">Follow these simple steps to run Vega AI on your computer</p>
+      <!-- Local Mode Instructions (Hidden by default) -->
+      <div id="local-mode-instructions" class="hidden">
+        <div class="bg-slate-800/50 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+          <h3 class="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-center">Local Mode Setup Instructions</h3>
+          <p class="text-gray-400 text-sm sm:text-base text-center mb-4 sm:mb-6">Follow these simple steps to run Vega AI on your computer</p>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-        <!-- Setup Instructions with better mobile layout -->
-        <div class="fade-in-up">
-          <h3 class="text-2xl font-semibold mb-6 font-heading">Quick Setup Guide</h3>
+        <!-- Quick Setup Guide -->
+        <div class="max-w-4xl mx-auto">
+          <h3 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 font-heading px-4 sm:px-0">Quick Setup Guide</h3>
 
-          <div class="space-y-6">
+          <div class="space-y-4 px-4 sm:px-0">
             <!-- Step 1 -->
-            <div class="flex">
-              <div class="bg-primary rounded-full p-2 w-10 h-10 flex items-center justify-center text-white font-bold mr-4 flex-shrink-0">
-                1
+            <div class="bg-slate-800/50 rounded-lg p-4 sm:p-6 border border-slate-700">
+              <div class="flex items-start mb-3">
+                <div class="bg-primary rounded-full p-2 w-10 h-10 flex items-center justify-center text-white font-bold mr-3 flex-shrink-0">
+                  1
+                </div>
+                <h4 class="font-semibold text-white">Create a config file</h4>
               </div>
-              <div class="flex-1 min-w-0">
-                <h4 class="font-semibold mb-2 text-white">Create a config file</h4>
-                <p class="text-gray-400 text-xs mb-2">First, get your <a href="https://aistudio.google.com/app/apikey" class="text-primary hover:text-primary-dark" target="_blank" rel="noopener">free Gemini API key</a>. Then create a file named <code class="bg-slate-700 text-primary px-1 py-0.5 rounded text-xs font-mono">config</code> with:</p>
-                <div class="bg-slate-800 rounded-lg p-3 font-mono text-xs overflow-x-auto relative group">
-                  <code class="text-gray-300 block">GEMINI_API_KEY=your-api-key-here</code>
+              <div class="pl-0 sm:pl-13">
+                <p class="text-gray-400 text-sm mb-3">First, get your <a href="https://aistudio.google.com/app/apikey" class="text-primary hover:text-primary-dark" target="_blank" rel="noopener">free Gemini API key</a>. Then create a file named <code class="bg-slate-700 text-primary px-1 py-0.5 rounded text-xs font-mono">config</code> with:</p>
+                <div class="bg-slate-900 rounded-lg p-3 overflow-x-auto relative group mb-2">
+                  <code class="text-gray-300 block text-xs font-mono">GEMINI_API_KEY=your-api-key-here</code>
                   <button onclick="copyToClipboard(this)" data-text="GEMINI_API_KEY=your-api-key-here" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-xs text-gray-300">
                     Copy
                   </button>
                 </div>
-                <p class="text-xs text-gray-400 mt-2">Replace <code class="font-mono">your-api-key-here</code> with your actual key.</p>
+                <p class="text-xs text-gray-500">Replace <code class="font-mono text-xs">your-api-key-here</code> with your actual key.</p>
               </div>
             </div>
 
             <!-- Step 2 -->
-            <div class="flex">
-              <div class="bg-primary rounded-full p-2 w-10 h-10 flex items-center justify-center text-white font-bold mr-4 flex-shrink-0">
-                2
+            <div class="bg-slate-800/50 rounded-lg p-4 sm:p-6 border border-slate-700">
+              <div class="flex items-start mb-3">
+                <div class="bg-primary rounded-full p-2 w-10 h-10 flex items-center justify-center text-white font-bold mr-3 flex-shrink-0">
+                  2
+                </div>
+                <h4 class="font-semibold text-white">Run Vega</h4>
               </div>
-              <div class="flex-1 min-w-0">
-                <h4 class="font-semibold mb-2 text-white">Run Vega</h4>
-                <p class="text-gray-400 text-xs mb-2">Run this command in the same folder as your config file:</p>
-                <div class="bg-slate-800 rounded-lg p-3 font-mono text-xs overflow-x-auto relative group">
-                  <code class="text-primary block">docker run -d --name vega-ai -p 8765:8765 --env-file config ghcr.io/benidevo/vega-ai:latest</code>
+              <div class="pl-0 sm:pl-13">
+                <p class="text-gray-400 text-sm mb-3">Run this command in the same folder as your config file:</p>
+                <div class="bg-slate-900 rounded-lg p-3 relative group mb-2">
+                  <code class="text-primary block text-xs font-mono break-all">docker run -d --name vega-ai -p 8765:8765 --env-file config ghcr.io/benidevo/vega-ai:latest</code>
                   <button onclick="copyToClipboard(this)" data-text="docker run -d --name vega-ai -p 8765:8765 --env-file config ghcr.io/benidevo/vega-ai:latest" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-xs text-gray-300">
                     Copy
                   </button>
                 </div>
-                <p class="text-xs text-gray-400 mt-2">This starts Vega with your API key configured.</p>
+                <p class="text-xs text-gray-500">This starts Vega with your API key configured.</p>
               </div>
             </div>
 
             <!-- Step 3 -->
-            <div class="flex">
-              <div class="bg-primary rounded-full p-2 w-10 h-10 flex items-center justify-center text-white font-bold mr-4 flex-shrink-0">
-                3
+            <div class="bg-slate-800/50 rounded-lg p-4 sm:p-6 border border-slate-700">
+              <div class="flex items-start mb-3">
+                <div class="bg-primary rounded-full p-2 w-10 h-10 flex items-center justify-center text-white font-bold mr-3 flex-shrink-0">
+                  3
+                </div>
+                <h4 class="font-semibold text-white">Start Using Vega</h4>
               </div>
-              <div class="flex-1 min-w-0">
-                <h4 class="font-semibold mb-2 text-white">Start Using Vega</h4>
-                <p class="text-gray-400 text-sm">Visit <a href="http://localhost:8765" class="text-primary hover:text-primary-dark transition-colors" target="_blank" rel="noopener">http://localhost:8765</a> and log in with:</p>
-                <div class="bg-slate-800 rounded-lg p-2 mt-2 text-xs">
-                  <p class="text-gray-300">Username: <code class="text-primary">admin</code></p>
-                  <p class="text-gray-300">Password: <code class="text-primary">VegaAdmin</code></p>
-                  <p class="text-gray-400 mt-1 text-xs">Remember to change your password in Settings > Security</p>
+              <div class="pl-0 sm:pl-13">
+                <p class="text-gray-400 text-sm mb-3">Visit <a href="http://localhost:8765" class="text-primary hover:text-primary-dark transition-colors" target="_blank" rel="noopener">http://localhost:8765</a> and log in with:</p>
+                <div class="bg-slate-900 rounded-lg p-3 mb-3">
+                  <p class="text-gray-300 text-sm">Username: <code class="text-primary text-xs">admin</code></p>
+                  <p class="text-gray-300 text-sm">Password: <code class="text-primary text-xs">VegaAdmin</code></p>
+                </div>
+                <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                  <p class="text-amber-400 text-sm font-semibold flex items-start">
+                    <svg class="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span>Security Notice: Change your password immediately after first login</span>
+                  </p>
+                  <p class="text-gray-400 text-xs mt-2 ml-7">
+                    Go to <a href="http://localhost:8765/settings/profile" class="text-amber-400 underline hover:text-amber-300 break-all">http://localhost:8765/settings/profile</a> to update your credentials
+                  </p>
                 </div>
               </div>
             </div>
 
             <!-- Step 4 (Optional) -->
-            <div class="flex">
-              <div class="bg-gray-600 rounded-full p-2 w-10 h-10 flex items-center justify-center text-white font-bold mr-4 flex-shrink-0">
-                4
+            <div class="bg-slate-800/50 rounded-lg p-4 sm:p-6 border border-slate-700">
+              <div class="flex items-start mb-3">
+                <div class="bg-gray-600 rounded-full p-2 w-10 h-10 flex items-center justify-center text-white font-bold mr-3 flex-shrink-0">
+                  4
+                </div>
+                <h4 class="font-semibold text-white">Browser Extension <span class="text-primary text-sm font-normal">(Recommended)</span></h4>
               </div>
-              <div class="flex-1 min-w-0">
-                <h4 class="font-semibold mb-2 text-white">Browser Extension <span class="text-gray-400 text-sm font-normal">(Optional)</span></h4>
+              <div class="pl-0 sm:pl-13">
                 <p class="text-gray-400 text-sm mb-3">Add the browser extension for one-click job capture from LinkedIn:</p>
                 <div class="space-y-3">
                   <div>
-                    <p class="text-sm text-gray-300 mb-2"><strong>Easy Installation:</strong></p>
-                    <a href="https://chromewebstore.google.com/detail/vega-ai-job-capture/oboedhpojbjemdmojfchifppbgbfehol" class="inline-flex items-center bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" target="_blank" rel="noopener">
-                      <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm-1.19 5.116c1.486-.865 3.403-.348 4.267 1.139l-5.407 3.122V5.116zm-1.787 1.035v6.244l-5.407-3.122c.865-1.487 2.78-2.004 4.267-1.139l1.14-.983zM3.89 13.193l5.407-3.122v6.244c-1.486.865-3.402.348-4.267-1.139l-1.14-.983zm7.297 4.656V11.605l5.407 3.122c-.865 1.487-2.781 2.004-4.267 1.139l-1.14.983zm7.923-4.656l-5.407 3.122V9.571c1.486-.865 3.402-.348 4.267 1.139l1.14.983zm-7.11-2.588L7.11 7.888 12 5.171l4.89 2.717L12 10.605z"/>
-                      </svg>
-                      Install from Chrome Web Store
+                    <p class="text-sm text-gray-300 mb-2 font-semibold">Easy Installation:</p>
+                    <a href="https://chromewebstore.google.com/detail/vega-ai-job-capture/oboedhpojbjemdmojfchifppbgbfehol" class="inline-block bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors text-center" target="_blank" rel="noopener">
+                      Get Extension
                     </a>
                   </div>
                   <div>
-                    <p class="text-sm text-gray-300 mb-2"><strong>Manual Installation:</strong></p>
-                    <ol class="space-y-2 text-sm text-gray-300">
+                    <p class="text-sm text-gray-300 mb-2 font-semibold">Manual Installation:</p>
+                    <ol class="space-y-1 text-xs sm:text-sm text-gray-400">
                       <li class="flex items-start">
                         <span class="text-primary font-medium mr-2 flex-shrink-0">a.</span>
                         <span><a href="https://github.com/benidevo/vega-ai-extension/releases/latest" class="text-primary hover:text-primary-dark transition-colors" target="_blank" rel="noopener">Download the latest extension</a> (.zip file)</span>
                       </li>
-                  <li class="flex items-start">
-                    <span class="text-primary font-medium mr-2 flex-shrink-0">b.</span>
-                    <span>Unzip and go to <code class="bg-slate-700 px-1 py-0.5 rounded text-xs">chrome://extensions/</code> (Chrome) or <code class="bg-slate-700 px-1 py-0.5 rounded text-xs">edge://extensions/</code> (Edge)</span>
-                  </li>
-                  <li class="flex items-start">
-                    <span class="text-primary font-medium mr-2 flex-shrink-0">c.</span>
-                    <span>Turn on "Developer mode" > "Load unpacked" > select folder</span>
-                  </li>
-                </ol>
+                      <li class="flex items-start">
+                        <span class="text-primary font-medium mr-2 flex-shrink-0">b.</span>
+                        <span>Unzip and go to <code class="bg-slate-700 px-1 py-0.5 rounded text-xs">chrome://extensions/</code> (Chrome) or <code class="bg-slate-700 px-1 py-0.5 rounded text-xs">edge://extensions/</code> (Edge)</span>
+                      </li>
+                      <li class="flex items-start">
+                        <span class="text-primary font-medium mr-2 flex-shrink-0">c.</span>
+                        <span>Turn on "Developer mode" > "Load unpacked" > select folder</span>
+                      </li>
+                    </ol>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Requirements & Links -->
-        <div class="fade-in-up delay-100">
-          <h3 class="text-2xl font-semibold mb-6 font-heading">Requirements & Resources</h3>
+          <!-- Requirements & Resources Section -->
+          <h3 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 font-heading px-4 sm:px-0 mt-8">Requirements & Resources</h3>
 
-          <div class="bg-gradient-to-br from-slate-800 to-slate-800/50 rounded-xl p-6 border border-slate-700 mb-6 backdrop-blur">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 sm:px-0">
+
+            <!-- System Requirements Card -->
+            <div class="bg-slate-800/50 rounded-xl p-4 sm:p-6 border border-slate-700">
             <h4 class="font-semibold mb-4 text-white flex items-center">
               <svg class="h-5 w-5 text-primary mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
@@ -257,7 +274,8 @@
             </ul>
           </div>
 
-          <div class="bg-gradient-to-br from-slate-800 to-slate-800/50 rounded-xl p-6 border border-slate-700 backdrop-blur">
+            <!-- Helpful Links Card -->
+            <div class="bg-slate-800/50 rounded-xl p-4 sm:p-6 border border-slate-700">
             <h4 class="font-semibold mb-4 text-white flex items-center">
               <svg class="h-5 w-5 text-primary mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
@@ -294,9 +312,8 @@
               </a>
             </div>
           </div>
+          </div>
         </div>
-      </div>
-      </div>
     </div>
   </section>
 {{end}}

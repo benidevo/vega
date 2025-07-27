@@ -33,6 +33,7 @@ type CVParsingResult struct {
 	PersonalInfo   PersonalInfo     `json:"personalInfo,omitempty"`
 	WorkExperience []WorkExperience `json:"workExperience,omitempty"`
 	Education      []Education      `json:"education,omitempty"`
+	Certifications []Certification  `json:"certifications,omitempty"`
 	Skills         []string         `json:"skills,omitempty"`
 }
 
@@ -65,6 +66,16 @@ type Education struct {
 	FieldOfStudy string `json:"fieldOfStudy,omitempty"`
 	StartDate    string `json:"startDate"`         // Format: "YYYY-MM" or "YYYY"
 	EndDate      string `json:"endDate,omitempty"` // Format: "YYYY-MM" or "YYYY"
+}
+
+// Certification represents a certification entry from a CV
+type Certification struct {
+	Name          string `json:"name"`
+	IssuingOrg    string `json:"issuingOrg"`
+	IssueDate     string `json:"issueDate"`            // Format: "YYYY-MM" or "YYYY"
+	ExpiryDate    string `json:"expiryDate,omitempty"` // Format: "YYYY-MM" or "YYYY"
+	CredentialID  string `json:"credentialId,omitempty"`
+	CredentialURL string `json:"credentialUrl,omitempty"`
 }
 
 // GeneratedCV represents a CV generated for a specific job application

@@ -3,12 +3,12 @@
 <html lang="en" dir="ltr">
 {{template "landing/partials/head.html" (dict
   "PageTitle" "Smart Job Search Assistant • Track Applications & Match Jobs"
-  "PageDescription" "Vega AI is a free job search assistant with smart job matching. Track applications, get instant match scores, and generate tailored resumes. Available as cloud or self-hosted."
+  "PageDescription" "Vega AI is a free job search assistant with smart job matching. Track applications, get instant match scores, and generate tailored resumes. Available as cloud or local mode."
   "CanonicalURL" "https://vega.benidevo.com/"
   "OGTitle" "Smart Job Search Assistant"
-  "OGDescription" "Track applications, get instant match scores, and generate tailored resumes. Free forever with cloud and self-hosted options."
+  "OGDescription" "Track applications, get instant match scores, and generate tailored resumes. Free with cloud and local mode options."
   "TwitterTitle" "Smart Job Search Assistant"
-  "TwitterDescription" "Track applications, get instant match scores, and generate tailored resumes. Free forever with cloud and self-hosted options."
+  "TwitterDescription" "Track applications, get instant match scores, and generate tailored resumes. Free with cloud and local mode options."
   "StructuredData" `{
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -27,8 +27,8 @@
       "Resume generation",
       "Cover letter generation",
       "Browser extension",
-      "Cloud and self-hosted options",
-      "Free forever"
+      "Cloud and local mode options",
+      "Free"
     ],
     "softwareVersion": "1.0",
     "aggregateRating": {
@@ -50,16 +50,15 @@
 
   {{template "landing/partials/features.html" .}}
 
-
-
-  {{template "landing/partials/pricing.html" .}}
-
   {{template "landing/partials/get-started.html" .}}
 
   {{template "landing/partials/faq.html" .}}
 
 
   {{template "landing/partials/footer.html" .}}
+
+  <!-- ARIA live region for copy notifications -->
+  <div id="copy-notification" class="sr-only" aria-live="polite"></div>
 
   <!-- Custom JavaScript -->
   <script src="/static/landing/assets/js/script.js"></script>
@@ -71,18 +70,26 @@
         const originalText = button.textContent;
         button.textContent = 'Copied!';
         button.classList.add('bg-primary');
+        
+        // Announce to screen readers
+        document.getElementById('copy-notification').textContent = 'Copied to clipboard';
+        
         setTimeout(() => {
           button.textContent = originalText;
           button.classList.remove('bg-primary');
+          // Clear the announcement
+          document.getElementById('copy-notification').textContent = '';
         }, 2000);
       }).catch(err => {
         console.error('Failed to copy: ', err);
+        // Also announce failures
+        document.getElementById('copy-notification').textContent = 'Failed to copy to clipboard';
       });
     }
 
-    // Show/hide self-hosted instructions
+    // Show/hide local mode instructions
     function showSelfHostedInstructions() {
-      const instructions = document.getElementById('self-hosted-instructions');
+      const instructions = document.getElementById('local-mode-instructions');
       instructions.classList.remove('hidden');
       instructions.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }

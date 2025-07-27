@@ -151,6 +151,11 @@ func (m *MockProfileRepository) DeleteAllEducation(ctx context.Context, profileI
 	return args.Error(0)
 }
 
+func (m *MockProfileRepository) DeleteAllCertifications(ctx context.Context, profileID int) error {
+	args := m.Called(ctx, profileID)
+	return args.Error(0)
+}
+
 // MockUserRepository mocks the user repository
 type MockUserRepository struct {
 	mock.Mock

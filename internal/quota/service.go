@@ -55,12 +55,12 @@ func (s *Service) CanAnalyzeJob(ctx context.Context, userID int, jobID int) (*Qu
 		return nil, fmt.Errorf("failed to get monthly usage: %w", err)
 	}
 
-	// Check if user is admin (admins have unlimited quota in cloud mode)
+	// Check if user is admin (unlimited AI analysis quota in cloud mode)
 	if s.isCloudMode && s.isUserAdmin(ctx) {
 		status := QuotaStatus{
 			Used:      usage.JobsAnalyzed,
-			Limit:     -1,          // -1 indicates unlimited
-			ResetDate: time.Time{}, // No reset date for unlimited
+			Limit:     -1,
+			ResetDate: time.Time{},
 		}
 
 		// If job was previously analyzed, note it as re-analysis
@@ -80,8 +80,8 @@ func (s *Service) CanAnalyzeJob(ctx context.Context, userID int, jobID int) (*Qu
 	if !s.isCloudMode {
 		status := QuotaStatus{
 			Used:      usage.JobsAnalyzed,
-			Limit:     -1,          // -1 indicates unlimited
-			ResetDate: time.Time{}, // No reset date for unlimited
+			Limit:     -1,
+			ResetDate: time.Time{},
 		}
 
 		// If job was previously analyzed, note it as re-analysis
@@ -177,12 +177,12 @@ func (s *Service) GetQuotaStatus(ctx context.Context, userID int) (*QuotaStatus,
 		return nil, err
 	}
 
-	// Check if user is admin (admins have unlimited quota in cloud mode)
+	// Check if user is admin (unlimited AI analysis quota in cloud mode)
 	if s.isCloudMode && s.isUserAdmin(ctx) {
 		return &QuotaStatus{
 			Used:      usage.JobsAnalyzed,
-			Limit:     -1,          // -1 indicates unlimited
-			ResetDate: time.Time{}, // No reset date for unlimited
+			Limit:     -1,
+			ResetDate: time.Time{},
 		}, nil
 	}
 
@@ -190,8 +190,8 @@ func (s *Service) GetQuotaStatus(ctx context.Context, userID int) (*QuotaStatus,
 		// In self-hosted mode, return actual usage but unlimited limit
 		return &QuotaStatus{
 			Used:      usage.JobsAnalyzed,
-			Limit:     -1,          // -1 indicates unlimited
-			ResetDate: time.Time{}, // No reset date for unlimited
+			Limit:     -1,
+			ResetDate: time.Time{},
 		}, nil
 	}
 

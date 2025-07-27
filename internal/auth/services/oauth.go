@@ -15,7 +15,6 @@ import (
 	"github.com/benidevo/vega/internal/config"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"google.golang.org/api/drive/v3"
 )
 
 // GoogleAuthUserInfo represents the user information returned by Google's authentication API.
@@ -240,7 +239,6 @@ func getGoogleCredentials(clientID, clientSecret, redirectURL, userInfoScope str
 		ClientSecret: clientSecret,
 		RedirectURL:  redirectURL,
 		Scopes: []string{
-			drive.DriveFileScope,
 			userInfoScope,
 		},
 		Endpoint: google.Endpoint,

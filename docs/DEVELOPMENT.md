@@ -20,9 +20,20 @@ This guide covers development setup, testing, and contributing to Vega AI.
 
 2. **Set up environment:**
 
+   Create a `.env` file with your configuration:
+
    ```bash
-   cp .env.example .env
-   # Edit .env with your API keys and configuration
+   # Create .env file
+   cat > .env << EOF
+   # Required
+   GEMINI_API_KEY=your-gemini-api-key
+   TOKEN_SECRET=your-jwt-secret
+
+   # Optional - for cloud mode
+   CLOUD_MODE=false
+   GOOGLE_CLIENT_ID=your-client-id
+   GOOGLE_CLIENT_SECRET=your-client-secret
+   EOF
    ```
 
 3. **Start development environment:**
@@ -43,23 +54,17 @@ This guide covers development setup, testing, and contributing to Vega AI.
 | `make test` | Run test suite |
 | `make restart` | Rebuild and restart containers |
 | `make logs` | View container logs |
-| `make clean` | Stop and remove containers |
+| `make stop` | Stop containers |
 
 ## Frontend Development
 
-### CSS Build Process
+### CSS Framework
 
-The project uses Tailwind CSS with a local build process for offline functionality:
+The project uses Tailwind CSS via CDN for styling. No build process is required for CSS.
 
-```bash
-# Rebuild CSS after template changes
-./tailwindcss -i ./src/input.css -o ./static/css/tailwind.min.css --minify
-
-# Watch for changes (development)
-./tailwindcss -i ./src/input.css -o ./static/css/tailwind.min.css --watch
-```
-
-**Note:** The `tailwindcss` binary is downloaded automatically during setup and should not be committed to the repository.
+- Tailwind CSS is loaded from CDN in `templates/layouts/base.html`
+- Custom Tailwind configuration is defined inline in the base template
+- No local CSS compilation or watching needed
 
 ### Template Structure
 
@@ -108,7 +113,7 @@ go test -cover ./...
 
 ## Project Structure
 
-```
+```plaintext
 ├── cmd/vega/           # Application entry point
 ├── internal/           # Private application code
 │   ├── auth/          # Authentication & authorization
@@ -268,7 +273,6 @@ Enable cloud mode with environment variables:
 ```bash
 # Required for cloud mode
 CLOUD_MODE=true
-GOOGLE_OAUTH_ENABLED=true
 GOOGLE_CLIENT_ID=your-client-id
 GOOGLE_CLIENT_SECRET=your-client-secret
 GOOGLE_CLIENT_REDIRECT_URL=https://yourdomain.com/auth/google/callback
@@ -294,10 +298,12 @@ git push origin v1.0.0-cloud
 docker run -d \
   -p 8765:8765 \
   -v vega-data:/app/data \
-  -e GOOGLE_OAUTH_ENABLED=true \
+  -e CLOUD_MODE=true \
   -e GOOGLE_CLIENT_ID=your-client-id \
   -e GOOGLE_CLIENT_SECRET=your-client-secret \
-  ghcr.io/benidevo/vega-cloud:latest
+  -e GEMINI_API_KEY=your-gemini-key \
+  -e TOKEN_SECRET=your-jwt-secret \
+  ghcr.io/benidevo/vega-ai:latest
 ```
 
 ### Development Testing
@@ -305,9 +311,10 @@ docker run -d \
 ```bash
 # Using docker-compose
 CLOUD_MODE=true \
-GOOGLE_OAUTH_ENABLED=true \
 GOOGLE_CLIENT_ID=your-dev-client-id \
 GOOGLE_CLIENT_SECRET=your-dev-secret \
+GEMINI_API_KEY=your-gemini-key \
+TOKEN_SECRET=your-jwt-secret \
 docker compose up
 
 # Run tests with cloud mode
@@ -320,9 +327,8 @@ CLOUD_MODE=true go test ./...
 
 Vega AI implements a quota system to manage resource usage in cloud deployments:
 
-- **AI Analysis**: 5 analyses per month (per user)
-- **Job Search Results**: 100 jobs per day
-- **Search Runs**: 20 searches per day
+- **AI Analysis**: 10 analyses per month (per user)
+- **Job Search**: Unlimited (tracking only, no limits enforced)
 
 #### Configuration
 
@@ -349,9 +355,7 @@ UPDATE users SET role = 'admin' WHERE username = 'user@example.com';
 
 | Quota Type | Period | Default Limit | Description |
 |------------|--------|---------------|-------------|
-| `ai_analysis_monthly` | Monthly | 5 | AI job analysis quota |
-| `job_search_daily` | Daily | 100 | Job search results limit |
-| `search_runs_daily` | Daily | 20 | Number of searches allowed |
+| `ai_analysis_monthly` | Monthly | 10 | AI job analysis quota |
 
 #### Self-Hosted Mode
 

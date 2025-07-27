@@ -296,6 +296,16 @@ func (s *SettingsService) DeleteAllEducation(ctx context.Context, profileID int)
 	return nil
 }
 
+// DeleteAllCertifications deletes all certification entries for a profile
+func (s *SettingsService) DeleteAllCertifications(ctx context.Context, profileID int) error {
+	if err := s.settingsRepo.DeleteAllCertifications(ctx, profileID); err != nil {
+		s.log.Error().Err(err).Int("profile_id", profileID).Msg("Failed to delete all certifications")
+		return err
+	}
+	s.log.Info().Int("profile_id", profileID).Msg("Successfully deleted all certifications")
+	return nil
+}
+
 // validateEntity validates an entity based on its type
 func (s *SettingsService) validateEntity(entity CRUDEntity) error {
 	switch e := entity.(type) {

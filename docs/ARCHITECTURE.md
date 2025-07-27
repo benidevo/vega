@@ -17,13 +17,26 @@ graph TB
     end
 
     subgraph "Application Layer"
-        WA[Web Application<br/>Go + HTMX + Tailwind]
-        API[REST API<br/>Job & Auth Endpoints]
-        MW[Auth Middleware<br/>User ID Injection]
+        WA[Web Application<br/>Go + HTMX + Tailwind CDN]
+        API[REST API<br/>Jobs & Auth Endpoints]
+        MW[Auth Middleware<br/>JWT + User ID Injection]
     end
 
-    subgraph "Service Layer"
-        AI[AI Matching Engine<br/>Gemini Integration]
+    subgraph "Domain Services"
+        JOB[Job Service<br/>CRUD & Status Management]
+        SETTINGS[Settings Service<br/>Profile & Account Management]
+        HOME[Home Service<br/>Dashboard & Statistics]
+        AUTH[Auth Service<br/>Login & OAuth]
+    end
+
+    subgraph "AI Services"
+        AIMATCH[Job Matcher<br/>Compatibility Analysis]
+        AIGEN[Document Generator<br/>CV & Cover Letters]
+        AIPARSE[CV Parser<br/>Profile Extraction]
+    end
+
+    subgraph "Infrastructure Services"
+        QUOTA[Quota Service<br/>Usage Limits & Tracking]
         CACHE[Cache Layer<br/>User-scoped Keys]
     end
 
@@ -44,46 +57,72 @@ graph TB
     BE --> API
     WB --> WA
 
-    %% Application flow
-    WA --> API
-    API --> MW
-    MW --> AI
-    MW --> CACHE
+    %% Web App to Services
+    WA --> JOB
+    WA --> SETTINGS
+    WA --> HOME
+    WA --> AUTH
 
-    %% Service layer
-    AI --> GEMINI
-    AI --> CACHE
+    %% API to Services
+    API --> MW
+    MW --> JOB
+    MW --> QUOTA
+
+    %% Auth flows
+    AUTH --> OAUTH
+    AUTH --> DB
+
+    %% Domain to AI Services
+    JOB --> AIMATCH
+    JOB --> AIGEN
+    SETTINGS --> AIPARSE
+
+    %% AI to External
+    AIMATCH --> GEMINI
+    AIGEN --> GEMINI
+    AIPARSE --> GEMINI
+
+    %% Infrastructure
+    JOB --> QUOTA
+    QUOTA --> DB
+    JOB --> CACHE
+    SETTINGS --> CACHE
     CACHE --> DB
 
     %% Data layer
+    JOB --> DB
+    SETTINGS --> DB
+    HOME --> DB
     DB --> USR
     DB --> REF
-
-    %% Auth flow
-    WA --> OAUTH
-    API --> OAUTH
 
     %% Styling
     classDef client fill:#e3f2fd,stroke:#1976d2
     classDef app fill:#f3e5f5,stroke:#7b1fa2
-    classDef service fill:#e8f5e9,stroke:#388e3c
+    classDef domain fill:#e8f5e9,stroke:#388e3c
+    classDef ai fill:#fce4ec,stroke:#c2185b
+    classDef infra fill:#f3e5f5,stroke:#7b1fa2
     classDef data fill:#fff3e0,stroke:#f57c00
     classDef external fill:#ffe0b2,stroke:#e65100
 
     class BE,WB client
     class WA,API,MW app
-    class AI,CACHE service
+    class JOB,SETTINGS,HOME,AUTH domain
+    class AIMATCH,AIGEN,AIPARSE ai
+    class QUOTA,CACHE infra
     class DB,USR,REF data
     class OAUTH,GEMINI external
 ```
 
 **Tech Stack:**
 
-- **Backend:** Go with layered architecture
-- **Database:** SQLite with WAL mode
-- **Authentication:** JWT + Google OAuth
-- **Frontend:** Go templates + HTMX + Tailwind CSS
-- **AI:** Google Gemini API integration
+- **Backend:** Go with domain-driven layered architecture
+- **Database:** SQLite with WAL mode and multi-tenant support
+- **Authentication:** JWT sessions with username/password + Google OAuth
+- **Frontend:** Go templates + HTMX + Hyperscript + Tailwind CSS (CDN)
+- **AI:** Google Gemini API for analysis, generation, and parsing
+- **Caching:** Badger embedded database with user-scoped keys
+- **Infrastructure:** Docker, GitHub Actions CI/CD
 
 ## Architecture Patterns
 
@@ -198,47 +237,90 @@ redacted := logger.RedactEmail(email) // j***e@example.com
 
 ### RESTful Endpoints
 
-#### Jobs
+#### Jobs API
 
 ```plaintext
-POST   /api/jobs           # Create job
-GET    /api/jobs           # List jobs (filtered by user)
-GET    /api/jobs/{id}      # Get job details
-PATCH  /api/jobs/{id}      # Update job
-DELETE /api/jobs/{id}      # Delete job
+POST   /api/jobs           # Create job (used by browser extension)
+GET    /api/jobs/quota     # Get quota status
 ```
 
-#### Authentication
+#### Authentication API
 
 ```plaintext
-POST   /api/auth/login     # Username/password (if enabled)
-POST   /api/auth/refresh   # Refresh token
-POST   /api/auth/logout    # Logout
-GET    /auth/google        # OAuth initiate
+POST   /api/auth/login     # Username/password login
+POST   /api/auth/google    # Exchange Google token for JWT
+POST   /api/auth/refresh   # Refresh access token
+```
+
+#### Web Routes
+
+```plaintext
+# Authentication
+GET    /auth/login         # Login page
+POST   /auth/login         # Login form submission
+POST   /auth/logout        # Logout
+GET    /auth/google/login  # OAuth initiate
 GET    /auth/google/callback # OAuth callback
+
+# Jobs
+GET    /jobs               # List jobs page
+GET    /jobs/new           # New job form
+POST   /jobs/new           # Create job
+GET    /jobs/:id/details   # Job details page
 ```
 
 #### System
 
 ```plaintext
 GET    /health             # Health check
-GET    /health/ready       # Readiness probe
 ```
 
 ## AI Integration
 
 ### Service Architecture
 
-- **JobMatcherService:** Calculates job-profile compatibility
-- **CoverLetterGeneratorService:** Personalized letters
-- **LLM Interface:** Pluggable providers (Gemini)
+- **JobMatcherService:** Analyzes job-profile compatibility using AI
+- **LetterGeneratorService:** Creates personalized cover letters
+- **CVGeneratorService:** Generates professional CVs from profiles
+- **CVParserService:** Extracts profile data from uploaded CVs
+- **LLM Interface:** Pluggable design with Gemini implementation
 
 ### AI Flow
 
-1. User profile analyzed
-2. Job requirements extracted
-3. Gemini API generates analysis
-4. Results cached per user
+1. User profile and job data retrieved
+2. Structured prompts generated using templates
+3. Gemini API processes the request
+4. Results validated and sanitized
+5. Match results stored in database for history
+
+## Quota System
+
+### Overview
+
+The quota system manages usage limits for AI-powered features in cloud mode:
+
+- **AI Analysis Quota:** Monthly limit for new job analyses (10/month)
+- **Job Search Tracking:** Tracks job searches but no limits enforced
+- **Unlimited Re-analysis:** Existing jobs can be re-analyzed without quota impact
+
+### Implementation
+
+```go
+// Quota check before AI analysis
+result, err := quotaService.CanAnalyzeJob(ctx, userID, jobID)
+if !result.Allowed {
+    // Handle quota exceeded
+}
+
+// Record usage after successful analysis
+err = quotaService.RecordJobAnalysis(ctx, userID, jobID)
+```
+
+### Quota Types
+
+1. **Monthly AI Analysis:** 10 analyses/month (cloud mode only)
+2. **Job Search:** Unlimited for all users
+3. **Self-hosted Mode:** No quotas enforced
 
 ## Configuration
 
@@ -264,16 +346,16 @@ CLOUD_MODE=true           # Enable multi-tenant mode
 
 ### Test Levels
 
-1. **Unit Tests:** Mock dependencies
-2. **Integration Tests:** Real database
-3. **Privacy Tests:** GDPR compliance
+1. **Unit Tests:** Mock dependencies for isolated testing
+2. **Integration Tests:** Real database interactions
+3. **API Tests:** HTTP endpoint validation
 
 ### Running Tests
 
 ```bash
-make test                  # All tests
-go test ./internal/auth/...  # Package tests
-go test -cover ./...       # Coverage
+make test                  # Run all tests with coverage
+make test-verbose          # Run tests with detailed coverage report
+go test ./internal/auth/...  # Package-specific tests
 ```
 
 ## Performance Considerations
@@ -310,7 +392,10 @@ docker run -p 8765:8765 -v ./data:/app/data vega
 docker run -p 8765:8765 \
   -e CLOUD_MODE=true \
   -e GOOGLE_CLIENT_ID=xxx \
-  ghcr.io/benidevo/vega-cloud:latest
+  -e GOOGLE_CLIENT_SECRET=xxx \
+  -e TOKEN_SECRET=xxx \
+  -e GEMINI_API_KEY=xxx \
+  ghcr.io/benidevo/vega-ai:cloud-latest
 ```
 
 ## Code Organization Best Practices

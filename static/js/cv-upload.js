@@ -120,13 +120,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (!errorElement) {
             errorElement = document.createElement('div');
             errorElement.id = 'cv-error-message';
-            errorElement.className = 'mt-2 text-sm text-red-400';
+            errorElement.className = 'mt-2 text-sm text-red-400 bg-red-400/10 p-3 rounded-md whitespace-pre-wrap';
             errorElement.setAttribute('aria-live', 'polite');
             uploadStatus.parentNode.appendChild(errorElement);
         }
 
         errorElement.textContent = message;
-        setTimeout(() => errorElement?.remove(), 8000);
+        setTimeout(() => errorElement?.remove(), 10000);
     }
 
     function clearError() {

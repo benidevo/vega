@@ -443,6 +443,7 @@ PARSING INSTRUCTIONS (only if document is valid):
 - Extract personal information (name, contact details, location, professional title)
 - Parse work experience entries with company, title, dates, and descriptions
 - Parse education entries with institution, degree, field of study, and dates
+- Parse certifications with name, issuing organization, issue/expiry dates, and credential details
 - Extract skills as a list
 - For dates, use formats: "YYYY-MM" for month precision, "YYYY" for year precision, "Present" for current positions
 - Be precise and don't make up information that's not clearly stated
@@ -456,7 +457,7 @@ Please return the information in the exact JSON schema format specified.`, cvTex
 }
 
 func (g *Gemini) buildCVParsingSystemInstruction() *genai.Content {
-	instruction := `You are a precise CV/Resume parsing and validation system. Your primary task is to first validate that the document is actually a CV/Resume, then extract structured information if valid. Always include an "isValid" field in your response. Reject any documents that are not career-related (police reports, medical records, etc.). For valid CVs, focus on accuracy and completeness. When dates are unclear, prefer broader ranges (year-only) over specific months. Do not hallucinate or guess information that is not explicitly stated.`
+	instruction := `You are a precise CV/Resume parsing and validation system. Your primary task is to first validate that the document is actually a CV/Resume, then extract structured information if valid. Always include an "isValid" field in your response. Reject any documents that are not career-related (police reports, medical records, etc.). For valid CVs, focus on accuracy and completeness. Extract all certifications with their issuing organizations and dates. When dates are unclear, prefer broader ranges (year-only) over specific months. Do not hallucinate or guess information that is not explicitly stated.`
 
 	contents := genai.Text(instruction)
 	if len(contents) > 0 {
@@ -566,6 +567,21 @@ func (g *Gemini) getCVParsingSchema() *genai.Schema {
 					Required: []string{"institution", "degree", "startDate"},
 				},
 			},
+			"certifications": {
+				Type: genai.TypeArray,
+				Items: &genai.Schema{
+					Type: genai.TypeObject,
+					Properties: map[string]*genai.Schema{
+						"name":          {Type: genai.TypeString, Description: "Certification name"},
+						"issuingOrg":    {Type: genai.TypeString, Description: "Issuing organization"},
+						"issueDate":     {Type: genai.TypeString, Description: "Issue date (YYYY-MM or YYYY format)"},
+						"expiryDate":    {Type: genai.TypeString, Description: "Expiry date (YYYY-MM or YYYY format)"},
+						"credentialId":  {Type: genai.TypeString, Description: "Credential ID or certificate number"},
+						"credentialUrl": {Type: genai.TypeString, Description: "URL to verify credential"},
+					},
+					Required: []string{"name", "issuingOrg", "issueDate"},
+				},
+			},
 			"skills": {
 				Type: genai.TypeArray,
 				Items: &genai.Schema{
@@ -574,7 +590,7 @@ func (g *Gemini) getCVParsingSchema() *genai.Schema {
 				Description: "List of skills and technologies",
 			},
 		},
-		PropertyOrdering: []string{"isValid", "reason", "personalInfo", "workExperience", "education", "skills"},
+		PropertyOrdering: []string{"isValid", "reason", "personalInfo", "workExperience", "education", "certifications", "skills"},
 		Required:         []string{"isValid"},
 	}
 }

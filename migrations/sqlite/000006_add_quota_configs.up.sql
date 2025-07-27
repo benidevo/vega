@@ -9,6 +9,4 @@ CREATE TABLE quota_configs (
 
 -- Seed with default quota values
 INSERT INTO quota_configs (quota_type, free_limit, description) VALUES
-('ai_analysis_monthly', 5, 'AI job analysis per month'),
-('job_search_daily', 100, 'Job search results per day'),
-('search_runs_daily', 20, 'Search runs per day');
+('ai_analysis_monthly', 10, 'AI job analysis per month');

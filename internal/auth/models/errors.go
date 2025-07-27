@@ -31,7 +31,6 @@ var (
 	ErrGoogleUserInfoFailed          = commonerrors.New("failed to retrieve Google user info")
 	ErrGoogleAuthTokenCreationFailed = commonerrors.New("failed to create auth token for Google user")
 	ErrGoogleUserCreationFailed      = commonerrors.New("failed to create user from Google account")
-	ErrGoogleDriveServiceFailed      = commonerrors.New("failed to create Google Drive service")
 )
 
 // WrapError is a convenience function that calls the common errors package
