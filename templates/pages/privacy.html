@@ -3,7 +3,7 @@
 <html lang="en" dir="ltr">
 {{template "landing/partials/head.html" (dict
   "PageTitle" "Privacy Policy"
-  "PageDescription" "Privacy policy for Vega AI - How we handle your information"
+  "PageDescription" "Privacy policy for Vega AI. How we handle your information"
   "CanonicalURL" "https://vega.benidevo.com/privacy"
   "OGURL" "https://vega.benidevo.com/privacy"
 )}}
@@ -43,7 +43,7 @@
         <h1 class="text-3xl font-heading font-bold text-gray-100 mb-4">Privacy Policy</h1>
         
         <p class="text-sm text-gray-400 mb-8">
-          <strong>Last updated:</strong> July 23, 2025
+          <strong>Last updated:</strong> July 27, 2025
         </p>
 
         <div class="prose prose-lg prose-invert max-w-none">
@@ -51,16 +51,14 @@
             This policy explains how Vega AI handles your information. I built Vega AI to help you track job applications and organize your job search, and I want to be clear about what data gets collected and how it's used.
           </p>
 
-          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">What Vega AI does</h2>
-          
-          <p class="text-gray-300 mb-4">There are two main tools:</p>
+          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Two Ways to Use Vega AI</h2>
           
           <p class="text-gray-300 mb-4">
-            <strong class="text-gray-100">Web application</strong> (vega.benidevo.com): Where you track job applications, manage your profile, and get recommendations. You can also run this on your own server if you prefer.
+            <strong class="text-gray-100">Cloud Mode:</strong> Use our hosted service at vega.benidevo.com for instant access with Google sign-in
           </p>
           
           <p class="text-gray-300 mb-6">
-            <strong class="text-gray-100">Browser extension</strong>: Captures job postings from LinkedIn with one click and sends them to your Vega AI account.
+            <strong class="text-gray-100">Local Mode:</strong> Run everything on your own computer for complete privacy. Your data never leaves your machine
           </p>
 
           <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Information that gets collected</h2>
@@ -93,50 +91,47 @@
           <h3 class="text-xl font-heading font-semibold text-gray-100 mt-6 mb-3">Technical stuff</h3>
           
           <p class="text-gray-300 mb-6">
-            The system uses Google's Gemini AI to analyze how well jobs match your profile and to help generate cover letter drafts. This means job descriptions and your profile information get sent to Google for processing, but only when you use these features.
+            When you use AI features (job matching, cover letters), we send job descriptions and your profile to Google's Gemini AI for processing. This only happens when you explicitly use these features.
           </p>
 
-          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">How your information gets used</h2>
+          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">How we use your information</h2>
           
-          <p class="text-gray-300 mb-3"><strong class="text-gray-100">Job tracking</strong>: Your job data gets stored so you can organize and track your applications.</p>
-          
-          <p class="text-gray-300 mb-3"><strong class="text-gray-100">Smart recommendations</strong>: Job requirements get compared with your profile to suggest which opportunities might be the best fit.</p>
-          
-          <p class="text-gray-300 mb-3"><strong class="text-gray-100">Document help</strong>: Cover letter drafts can be generated based on the job requirements and your background.</p>
-          
-          <p class="text-gray-300 mb-6"><strong class="text-gray-100">Keeping you signed in</strong>: Your login gets remembered so the extension and web app work smoothly together.</p>
+          <ul class="list-disc pl-6 space-y-2 text-gray-300 mb-6">
+            <li><strong class="text-gray-100">Job tracking:</strong> Store and organize your job applications</li>
+            <li><strong class="text-gray-100">AI matching:</strong> Calculate how well jobs match your profile (10 free analyses/month)</li>
+            <li><strong class="text-gray-100">Document generation:</strong> Create tailored cover letters and resumes</li>
+            <li><strong class="text-gray-100">Authentication:</strong> Keep you signed in across the extension and web app</li>
+          </ul>
 
-          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">What doesn't happen</h2>
+          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">What we DON'T do</h2>
           
-          <p class="text-gray-300 mb-6">
-            Your information doesn't get sold to anyone. Your job data doesn't get shared with other companies (except Google's AI service when you use the recommendation features). Your browsing doesn't get tracked and you won't see ads.
-          </p>
+          <ul class="list-disc pl-6 space-y-2 text-gray-300 mb-6">
+            <li>Sell your data to anyone</li>
+            <li>Share your job data with recruiters or companies</li>
+            <li>Track your browsing activity</li>
+            <li>Show you ads</li>
+            <li>Access your data without your explicit action</li>
+          </ul>
 
-          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Your choices</h2>
+          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Your control</h2>
           
-          <p class="text-gray-300 mb-3">
-            <strong class="text-gray-100">Self-hosting</strong>: You can run the entire system on your own server, which means your data never touches my servers. Instructions are on GitHub.
-          </p>
-          
-          <p class="text-gray-300 mb-3">
-            <strong class="text-gray-100">Data control</strong>: You can export your job data, delete specific jobs, or delete your entire account anytime.
-          </p>
-          
-          <p class="text-gray-300 mb-6">
-            <strong class="text-gray-100">Extension settings</strong>: You can configure the extension to work with either our cloud service or your own self-hosted setup.
-          </p>
+          <ul class="list-disc pl-6 space-y-2 text-gray-300 mb-6">
+            <li><strong class="text-gray-100">Choose local mode:</strong> Keep all data on your own computer</li>
+            <li><strong class="text-gray-100">Delete anytime:</strong> Remove specific jobs or your entire account</li>
+            <li><strong class="text-gray-100">Control AI usage:</strong> Use AI features only when needed (or not at all)</li>
+          </ul>
 
           <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Security</h2>
           
           <p class="text-gray-300 mb-6">
-            Data gets encrypted when transmitted between the extension and servers. Authentication tokens are stored securely in your browser. If you self-host, you control all the security measures.
+            Data gets encrypted when transmitted between the extension and servers. Authentication tokens are stored securely in your browser. In local mode, you control all the security measures.
           </p>
 
           <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Data location</h2>
           
-          <p class="text-gray-300 mb-3"><strong class="text-gray-100">Cloud version</strong>: Your data gets stored on Hetzner servers in Germany and may be processed in different locations for the AI features.</p>
+          <p class="text-gray-300 mb-3"><strong class="text-gray-100">Cloud mode</strong>: Your data gets stored on Hetzner servers in Germany and may be processed in different locations for the AI features.</p>
           
-          <p class="text-gray-300 mb-6"><strong class="text-gray-100">Self-hosted</strong>: Your data stays wherever you decide to run the system.</p>
+          <p class="text-gray-300 mb-6"><strong class="text-gray-100">Local mode</strong>: Your data stays on your own computer. We never see it.</p>
 
           <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Open source</h2>
           
@@ -146,15 +141,15 @@
 
           <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Third-party services</h2>
           
-          <p class="text-gray-300 mb-3"><strong class="text-gray-100">Google Fonts</strong>: The extension loads fonts from Google for consistent appearance.</p>
-          
-          <p class="text-gray-300 mb-3"><strong class="text-gray-100">Google OAuth</strong>: If you choose to sign in with Google (optional).</p>
-          
-          <p class="text-gray-300 mb-6"><strong class="text-gray-100">Google Gemini</strong>: When you use AI features like job matching or cover letter generation, job data gets sent to Google's AI service.</p>
+          <ul class="list-disc pl-6 space-y-2 text-gray-300 mb-6">
+            <li><strong class="text-gray-100">Google OAuth:</strong> For sign-in (cloud mode only)</li>
+            <li><strong class="text-gray-100">Google Gemini AI:</strong> For job matching and document generation (when you use these features)</li>
+            <li><strong class="text-gray-100">Hetzner:</strong> Cloud infrastructure (Germany-based servers)</li>
+          </ul>
 
-          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Kids</h2>
+          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Age requirement</h2>
           
-          <p class="text-gray-300 mb-6">This service is intended for job seekers and isn't designed for anyone under 13.</p>
+          <p class="text-gray-300 mb-6">Vega AI is for job seekers and professionals. Users must be at least 16 years old.</p>
 
           <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Changes</h2>
           
@@ -169,13 +164,16 @@
             <a href="mailto:benjaminidewor@gmail.com" class="text-teal-400 hover:text-teal-300 underline">
               benjaminidewor@gmail.com
             </a>
-            or check out the code on GitHub.
+            or check out the code on 
+            <a href="https://github.com/benidevo/vega" class="text-teal-400 hover:text-teal-300 underline" target="_blank" rel="noopener">
+              GitHub
+            </a>.
           </p>
 
-          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Legal stuff</h2>
+          <h2 class="text-2xl font-heading font-semibold text-gray-100 mt-8 mb-4">Your rights</h2>
           
           <p class="text-gray-300">
-            For EU users: Your data gets processed based on your consent (when you sign up and use the services) and legitimate interest (providing the job tracking functionality you requested). You can withdraw consent, request data deletion, or get copies of your data by contacting me.
+            You can view and delete your data anytime. You can delete individual jobs or your entire account through the application settings.
           </p>
         </div>
       </div>

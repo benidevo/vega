@@ -24,38 +24,19 @@
       <h3 class="text-lg md:text-xl font-semibold mb-4 text-white">Current Usage</h3>
       
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 lg:gap-6">
-        <!-- Jobs Captured Today -->
+        <!-- Jobs Found Today -->
         <div class="bg-slate-700 bg-opacity-50 rounded-lg p-4 md:p-5 lg:p-6 hover:bg-opacity-70 transition-all duration-200">
           <div class="flex items-center justify-between mb-2 md:mb-3">
-            <h4 class="text-sm md:text-base font-medium text-white">Jobs Captured Today</h4>
+            <h4 class="text-sm md:text-base font-medium text-white">Jobs Found Today</h4>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 md:h-6 w-5 md:w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
           <p class="text-xl md:text-2xl font-bold text-white mb-2">
-            {{if eq .quotaStatus.JobSearch.Limit -1}}{{.quotaStatus.JobSearch.Used}}{{else}}{{cappedQuota .quotaStatus.JobSearch.Used .quotaStatus.JobSearch.Limit}} / {{.quotaStatus.JobSearch.Limit}}{{end}}
+            {{.quotaStatus.JobSearch.Used}}
           </p>
-          {{if ne .quotaStatus.JobSearch.Limit -1}}
-          <div class="w-full bg-slate-600 rounded-full h-2 mb-2">
-            <div class="bg-primary h-2 rounded-full transition-all duration-300" data-used="{{.quotaStatus.JobSearch.Used}}" data-limit="{{.quotaStatus.JobSearch.Limit}}"></div>
-          </div>
-          <p class="text-xs text-gray-400">
-            {{if ge .quotaStatus.JobSearch.Used .quotaStatus.JobSearch.Limit}}
-              Limit reached
-            {{else}}
-              {{max 0 (sub .quotaStatus.JobSearch.Limit .quotaStatus.JobSearch.Used)}} remaining
-            {{end}}
-          </p>
-          {{else}}
           <p class="text-xs text-gray-400">Unlimited</p>
-          {{end}}
-          {{if and (ne .quotaStatus.JobSearch.Limit -1) (not .quotaStatus.JobSearch.ResetDate.IsZero)}}
-          <p class="text-xs text-gray-500 mt-2">
-            Resets {{.quotaStatus.JobSearch.ResetDate.Format "Jan 2, 3:04 PM"}}
-          </p>
-          {{end}}
         </div>
-
 
         <!-- AI Analyses This Month -->
         <div class="bg-slate-700 bg-opacity-50 rounded-lg p-4 md:p-5 lg:p-6 hover:bg-opacity-70 transition-all duration-200">
@@ -110,15 +91,13 @@
             <tr class="border-b border-slate-600 hover:bg-slate-600 hover:bg-opacity-30 transition-colors">
               <td class="px-4 py-3 text-sm text-gray-300">Jobs Captured via Extension</td>
               <td class="text-center px-4 py-3 text-sm text-gray-400">Daily</td>
-              <td class="text-center px-4 py-3 text-sm text-gray-400">100</td>
-              <td class="text-center px-4 py-3 text-sm font-medium text-white">
-                {{if eq .quotaStatus.JobSearch.Limit -1}}Unlimited{{else}}{{.quotaStatus.JobSearch.Limit}}{{end}}
-              </td>
+              <td class="text-center px-4 py-3 text-sm text-gray-400">Unlimited</td>
+              <td class="text-center px-4 py-3 text-sm font-medium text-white">Unlimited</td>
             </tr>
             <tr class="hover:bg-slate-600 hover:bg-opacity-30 transition-colors">
               <td class="px-4 py-3 text-sm text-gray-300">AI Job Analysis</td>
               <td class="text-center px-4 py-3 text-sm text-gray-400">Monthly</td>
-              <td class="text-center px-4 py-3 text-sm text-gray-400">5</td>
+              <td class="text-center px-4 py-3 text-sm text-gray-400">10</td>
               <td class="text-center px-4 py-3 text-sm font-medium text-white">
                 {{if eq .quotaStatus.AIAnalysis.Limit -1}}Unlimited{{else}}{{.quotaStatus.AIAnalysis.Limit}}{{end}}
               </td>
@@ -139,17 +118,14 @@
             </div>
             <div>
               <span class="text-gray-400">Free:</span>
-              <span class="ml-2 text-gray-300">100</span>
+              <span class="ml-2 text-gray-300">Unlimited</span>
             </div>
             <div class="col-span-2">
               <span class="text-gray-400">Your Limit:</span>
-              <span class="ml-2 font-medium text-white">
-                {{if eq .quotaStatus.JobSearch.Limit -1}}Unlimited{{else}}{{.quotaStatus.JobSearch.Limit}}{{end}}
-              </span>
+              <span class="ml-2 font-medium text-white">Unlimited</span>
             </div>
           </div>
         </div>
-
 
         <!-- AI Job Analysis Card -->
         <div class="bg-slate-700 bg-opacity-50 rounded-lg p-4">
@@ -161,7 +137,7 @@
             </div>
             <div>
               <span class="text-gray-400">Free:</span>
-              <span class="ml-2 text-gray-300">5</span>
+              <span class="ml-2 text-gray-300">10</span>
             </div>
             <div class="col-span-2">
               <span class="text-gray-400">Your Limit:</span>

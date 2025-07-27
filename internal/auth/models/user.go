@@ -19,19 +19,28 @@ func ValidateUsername(username string) error {
 	return nil
 }
 
-// Role represents the role of a user in the system.
-// It is an enumerated type with predefined constants for different roles.
+// Role represents the user's quota tier in the system.
+// It is an enumerated type that determines AI analysis limits.
 //
 // The available roles are:
-//   - ADMIN: Represents an administrative user with elevated privileges.
-//   - STANDARD: Represents a standard user with regular privileges.
+//   - ADMIN: Users with unlimited AI analysis quota (no monthly limits).
+//     Note: Despite the name, this does NOT grant system administration privileges.
+//     It only removes the monthly quota limit for AI job analyses.
+//   - STANDARD: Users with standard quotas (10 AI analyses per month in cloud mode).
+//
+// In self-hosted mode, all users have unlimited quotas regardless of role.
+// The role distinction only affects cloud mode users.
 //
 // Role can be converted to and from its string representation using the
 // RoleFromString and String methods, respectively.
 type Role int
 
 const (
+	// ADMIN grants unlimited AI analysis quota (cloud mode only).
+	// Does NOT provide system administration capabilities.
 	ADMIN Role = iota
+
+	// STANDARD provides 10 AI analyses per month (cloud mode only).
 	STANDARD
 )
 
@@ -73,7 +82,7 @@ type User struct {
 	LastLogin time.Time `json:"last_login" db:"last_login"`
 }
 
-// IsAdmin returns true if the user has admin role
+// IsAdmin returns true if the user has the ADMIN role.
 func (u *User) IsAdmin() bool {
 	return u.Role == ADMIN
 }
