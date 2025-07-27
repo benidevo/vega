@@ -212,24 +212,31 @@ func getEnv(key string, defaultValue string) (value string) {
 		} else if strings.Contains(filePath, "..") {
 			fmt.Fprintf(os.Stderr, "Warning: %s_FILE path contains '..', refusing to read %s\n", key, filePath)
 		} else {
-			file, err := os.Open(filePath)
+			fileInfo, err := os.Lstat(filePath)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: Failed to open %s_FILE at %s: %v\n", key, filePath, err)
+				fmt.Fprintf(os.Stderr, "Warning: Failed to check %s_FILE at %s: %v\n", key, filePath, err)
+			} else if fileInfo.Mode()&os.ModeSymlink != 0 {
+				fmt.Fprintf(os.Stderr, "Warning: %s_FILE at %s is a symlink, refusing to read for security\n", key, filePath)
 			} else {
-				defer file.Close()
-
-				stat, err := file.Stat()
+				file, err := os.Open(filePath)
 				if err != nil {
-					fmt.Fprintf(os.Stderr, "Warning: Failed to stat %s_FILE at %s: %v\n", key, filePath, err)
-				} else if stat.Size() > maxSecretFileSize {
-					fmt.Fprintf(os.Stderr, "Warning: %s_FILE at %s is too large (%d bytes, max %d)\n", key, filePath, stat.Size(), maxSecretFileSize)
+					fmt.Fprintf(os.Stderr, "Warning: Failed to open %s_FILE at %s: %v\n", key, filePath, err)
 				} else {
-					content := make([]byte, stat.Size())
-					_, err = io.ReadFull(file, content)
+					defer file.Close()
+
+					stat, err := file.Stat()
 					if err != nil {
-						fmt.Fprintf(os.Stderr, "Warning: Failed to read %s_FILE from %s: %v\n", key, filePath, err)
+						fmt.Fprintf(os.Stderr, "Warning: Failed to stat %s_FILE at %s: %v\n", key, filePath, err)
+					} else if stat.Size() > maxSecretFileSize {
+						fmt.Fprintf(os.Stderr, "Warning: %s_FILE at %s is too large (%d bytes, max %d)\n", key, filePath, stat.Size(), maxSecretFileSize)
 					} else {
-						return strings.TrimSpace(string(content))
+						content := make([]byte, stat.Size())
+						_, err = io.ReadFull(file, content)
+						if err != nil {
+							fmt.Fprintf(os.Stderr, "Warning: Failed to read %s_FILE from %s: %v\n", key, filePath, err)
+						} else {
+							return strings.TrimSpace(string(content))
+						}
 					}
 				}
 			}

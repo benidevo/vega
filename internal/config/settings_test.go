@@ -297,3 +297,35 @@ func TestGetEnvFileSizeLimit(t *testing.T) {
 		t.Errorf("Expected default value for large file, got %q", result)
 	}
 }
+
+func TestGetEnvSymlinkSecurity(t *testing.T) {
+	os.Unsetenv("TEST_VAR")
+	os.Unsetenv("TEST_VAR_FILE")
+
+	tempDir := t.TempDir()
+
+	// Create a target file with sensitive content
+	targetFile := filepath.Join(tempDir, "sensitive-data")
+	err := os.WriteFile(targetFile, []byte("secret-content"), 0644)
+	if err != nil {
+		t.Fatalf("Failed to create target file: %v", err)
+	}
+
+	// Create a symlink pointing to the target file
+	symlinkFile := filepath.Join(tempDir, "symlink-to-sensitive")
+	err = os.Symlink(targetFile, symlinkFile)
+	if err != nil {
+		t.Fatalf("Failed to create symlink: %v", err)
+	}
+
+	// Set the _FILE env var to point to the symlink
+	os.Setenv("TEST_VAR_FILE", symlinkFile)
+	defer os.Unsetenv("TEST_VAR_FILE")
+
+	// The function should refuse to read the symlink and return the default
+	result := getEnv("TEST_VAR", "default")
+
+	if result != "default" {
+		t.Errorf("Expected default value when symlink is detected, got %q", result)
+	}
+}
