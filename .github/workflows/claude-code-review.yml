@@ -1,0 +1,48 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      id-token: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code Review
+        id: claude-review
+        uses: anthropics/claude-code-action@beta
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          
+          direct_prompt: |
+            Act as an expert code reviewer. Start with a brief summary of what this PR accomplishes.
+            
+            ONLY comment on critical issues that could cause:
+            - 🔴 Production failures, crashes, or data loss
+            - 🟡 Significant performance degradation or reliability issues  
+            - 🟠 Security vulnerabilities or major architectural flaws
+            
+            For each issue:
+            - Cite the specific file:line
+            - Show the problematic code
+            - Explain the real-world impact
+            - Provide a concrete fix
+            
+            Ignore all style issues, minor optimizations, and nice-to-haves.
+            If no critical issues exist, simply state "No critical issues found."
+
+          use_sticky_comment: true
+          
+          allowed_tools: "Bash(git diff),Bash(git log),Bash(grep)"
+
