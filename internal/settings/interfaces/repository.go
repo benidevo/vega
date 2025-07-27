@@ -30,4 +30,5 @@ type SettingsRepository interface {
 	AddCertification(ctx context.Context, certification *models.Certification) error
 	UpdateCertification(ctx context.Context, certification *models.Certification) (*models.Certification, error)
 	DeleteCertification(ctx context.Context, id int, profileID int) error
+	DeleteAllCertifications(ctx context.Context, profileID int) error
 }

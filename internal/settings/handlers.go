@@ -340,7 +340,7 @@ func (h *SettingsHandler) HandleCVUpload(c *gin.Context) {
 		if strings.Contains(err.Error(), "invalid document:") {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"success": false,
-				"message": err.Error(),
+				"message": "Invalid document format",
 			})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -385,7 +385,6 @@ func (h *SettingsHandler) HandleCVUpload(c *gin.Context) {
 		return
 	}
 
-	// Replace work experience only if CV contains experience data
 	if len(cvResult.WorkExperience) > 0 {
 		if err := h.service.DeleteAllWorkExperience(c.Request.Context(), profile.ID); err != nil {
 			h.service.log.Error().Err(err).Msg("Failed to clear existing work experience")
@@ -408,7 +407,6 @@ func (h *SettingsHandler) HandleCVUpload(c *gin.Context) {
 		}
 	}
 
-	// Replace education only if CV contains education data
 	if len(cvResult.Education) > 0 {
 		if err := h.service.DeleteAllEducation(c.Request.Context(), profile.ID); err != nil {
 			h.service.log.Error().Err(err).Msg("Failed to clear existing education")
@@ -427,6 +425,28 @@ func (h *SettingsHandler) HandleCVUpload(c *gin.Context) {
 					Str("institution", edu.Institution).
 					Str("degree", edu.Degree).
 					Msg("Successfully saved education from AI-parsed CV")
+			}
+		}
+	}
+
+	if len(cvResult.Certifications) > 0 {
+		if err := h.service.DeleteAllCertifications(c.Request.Context(), profile.ID); err != nil {
+			h.service.log.Error().Err(err).Msg("Failed to clear existing certifications")
+		}
+
+		for i, aiCert := range cvResult.Certifications {
+			cert := h.convertAICertificationToModel(aiCert, profile.ID)
+			if err := h.service.CreateEntity(c, &cert); err != nil {
+				h.service.log.Error().Err(err).
+					Int("certification_index", i).
+					Str("name", cert.Name).
+					Str("issuing_org", cert.IssuingOrg).
+					Msg("Failed to save certification from AI-parsed CV")
+			} else {
+				h.service.log.Info().
+					Str("name", cert.Name).
+					Str("issuing_org", cert.IssuingOrg).
+					Msg("Successfully saved certification from AI-parsed CV")
 			}
 		}
 	}
@@ -479,6 +499,27 @@ func (h *SettingsHandler) convertAIEducationToModel(aiEdu aimodels.Education, pr
 		FieldOfStudy: aiEdu.FieldOfStudy,
 		StartDate:    startDate,
 		EndDate:      endDate,
+	}
+}
+
+// convertAICertificationToModel converts AI-parsed certification to database model
+func (h *SettingsHandler) convertAICertificationToModel(aiCert aimodels.Certification, profileID int) models.Certification {
+	issueDate := h.parseAIDate(aiCert.IssueDate)
+
+	var expiryDate *time.Time
+	if aiCert.ExpiryDate != "" {
+		expiryDateTime := h.parseAIDate(aiCert.ExpiryDate)
+		expiryDate = &expiryDateTime
+	}
+
+	return models.Certification{
+		ProfileID:     profileID,
+		Name:          aiCert.Name,
+		IssuingOrg:    aiCert.IssuingOrg,
+		IssueDate:     issueDate,
+		ExpiryDate:    expiryDate,
+		CredentialID:  aiCert.CredentialID,
+		CredentialURL: aiCert.CredentialURL,
 	}
 }
 

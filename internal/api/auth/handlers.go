@@ -1,10 +1,10 @@
 package auth
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/benidevo/vega/internal/auth/services"
+	"github.com/benidevo/vega/internal/common/logger"
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,6 +12,7 @@ import (
 type AuthAPIHandler struct {
 	oauthService *services.GoogleAuthService
 	authService  *services.AuthService
+	log          *logger.PrivacyLogger
 }
 
 // NewAuthAPIHandler creates and returns a new AuthAPIHandler with the provided GoogleAuthService and Authentication service.
@@ -19,6 +20,7 @@ func NewAuthAPIHandler(oathService *services.GoogleAuthService, authService *ser
 	return &AuthAPIHandler{
 		oauthService: oathService,
 		authService:  authService,
+		log:          logger.GetPrivacyLogger("api_auth"),
 	}
 }
 
@@ -32,15 +34,18 @@ func (h *AuthAPIHandler) ExchangeTokenForJWT(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		h.oauthService.LogError(fmt.Errorf("failed to bind request body: %v", err))
+		h.log.Error().Err(err).Msg("Failed to bind OAuth token exchange request body")
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		return
 	}
 
-	h.oauthService.LogError(fmt.Errorf("received token: %s : %s", request.Code, request.RedirectURI))
+	h.log.Debug().
+		Str("redirect_uri", request.RedirectURI).
+		Msg("OAuth token exchange request received")
 
 	accessToken, refreshToken, err := h.oauthService.Authenticate(ctx.Request.Context(), request.Code, request.RedirectURI)
 	if err != nil {
+		h.log.Error().Err(err).Msg("Failed to exchange OAuth code for JWT")
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "failed to exchange code for JWT"})
 		return
 	}
@@ -56,14 +61,14 @@ func (h *AuthAPIHandler) RefreshToken(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		h.oauthService.LogError(fmt.Errorf("failed to bind request body: %v", err))
+		h.log.Error().Err(err).Msg("Failed to bind refresh token request body")
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		return
 	}
 
 	accessToken, err := h.authService.RefreshAccessToken(ctx.Request.Context(), request.RefreshToken)
 	if err != nil {
-		h.oauthService.LogError(fmt.Errorf("failed to refresh access token: %v", err))
+		h.log.Debug().Err(err).Msg("Failed to refresh access token")
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "failed to refresh access token"})
 		return
 	}
@@ -81,14 +86,17 @@ func (h *AuthAPIHandler) Login(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		h.oauthService.LogError(fmt.Errorf("failed to bind request body: %v", err))
+		h.log.Error().Err(err).Msg("Failed to bind login request body")
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		return
 	}
 
 	accessToken, refreshToken, err := h.authService.Login(ctx.Request.Context(), request.Username, request.Password)
 	if err != nil {
-		h.oauthService.LogError(fmt.Errorf("failed to login: %v", err))
+		h.log.Debug().
+			Err(err).
+			Str("username", request.Username).
+			Msg("Login attempt failed")
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid username or password"})
 		return
 	}
