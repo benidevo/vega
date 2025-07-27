@@ -71,6 +71,38 @@ Deploy with:
 docker stack deploy -c docker-compose.yml vega-stack
 ```
 
+### Method 3: Using Docker Secrets (Recommended for Production)
+
+Docker Secrets provide a secure way to manage sensitive data. Vega AI now supports reading environment variables from files using the `_FILE` pattern.
+
+1. Initialize Docker Swarm (if not already done):
+
+```bash
+docker swarm init
+```
+
+2. Create secrets:
+
+```bash
+echo "your-gemini-api-key" | docker secret create gemini_api_key -
+echo "your-secure-token" | docker secret create token_secret -
+echo "your-admin-password" | docker secret create admin_password -
+```
+
+3. Deploy using the secrets-enabled compose file:
+
+```bash
+docker stack deploy -c docker-compose.secrets.yml vega-stack
+```
+
+This method offers several advantages:
+- Secrets are encrypted at rest and in transit
+- Secrets are only accessible to authorized services
+- No sensitive data in environment variables or config files
+- Secrets can be rotated without redeploying
+- Path validation prevents directory traversal attacks
+- File size limits (1MB) prevent memory exhaustion
+
 ## Troubleshooting
 
 ### Environment Variables Not Loading

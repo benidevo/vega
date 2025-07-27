@@ -120,7 +120,8 @@ See [docs/DOCKER_SWARM.md](docs/DOCKER_SWARM.md) for detailed instructions.
 
 ### Advanced Configuration
 
-For advanced settings (custom ports, SSL, external databases), see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+- **Docker Secrets**: Use `_FILE` environment variables for secure configuration. See [Docker Swarm deployment](docs/DOCKER_SWARM.md#method-3-using-docker-secrets-recommended-for-production).
+- **Development Setup**: Custom ports, SSL, external databases. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## 🛠️ Development
 
