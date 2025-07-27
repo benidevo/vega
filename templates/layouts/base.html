@@ -415,7 +415,10 @@
 
       toast.className = `${baseClasses} ${typeClasses[type] || typeClasses.info}`;
 
-      toast.innerHTML = `<span class="text-sm font-medium block text-center">${message}</span>`;
+      const span = document.createElement('span');
+      span.className = 'text-sm font-medium block text-center';
+      span.textContent = message;
+      toast.appendChild(span);
 
       container.appendChild(toast);
 
