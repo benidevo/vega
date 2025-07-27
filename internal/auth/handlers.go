@@ -58,13 +58,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		h.service.LogError(loginErr)
 		alerts.TriggerToast(c, loginErr.Error(), alerts.TypeError)
 		c.Status(http.StatusUnauthorized)
-
 		return
 	}
 
 	sameSite := parseSameSiteMode(h.cfg.CookieSameSite)
 
-	// Set access token cookie (shorter-lived)
 	c.SetSameSite(sameSite)
 	c.SetCookie(
 		"token",
@@ -76,7 +74,6 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		true,
 	)
 
-	// Set refresh token cookie (longer-lived)
 	c.SetCookie(
 		"refresh_token",
 		refreshToken,
@@ -116,7 +113,6 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 
 	sameSite := parseSameSiteMode(h.cfg.CookieSameSite)
 
-	// Set the new access token
 	c.SetSameSite(sameSite)
 	c.SetCookie(
 		"token",

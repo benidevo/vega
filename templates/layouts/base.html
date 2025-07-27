@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="csrf-token" content="{{.csrfToken}}">
   <title>Vega AI • {{.title}}</title>
-  <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/static/images/favicon-16x16.png">
@@ -18,13 +17,11 @@
   <script src="https://unpkg.com/htmx.org@1.9.4"></script>
   <script src="https://unpkg.com/htmx.org/dist/ext/response-targets.js"></script>
   <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
-  <!-- HTMX response-targets extension is enabled globally -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       htmx.config.responseTargetUnsetsError = true;
     });
   </script>
-  <!-- Configure Tailwind with color theme and fonts -->
   <script>
     tailwind.config = {
       theme: {
@@ -253,9 +250,7 @@
   </style>
 </head>
 <body class="bg-slate-900 text-gray-100 font-sans">
-  <!-- Use template switching based on page variable -->
   {{if eq .page "dashboard"}}
-    <!-- Dashboard layout -->
     <div class="min-h-screen bg-slate-900 flex flex-col">
       <div class="flex-1">
         {{template "dashboard-content" .}}
@@ -263,7 +258,6 @@
       {{template "footer" .}}
     </div>
   {{else if eq .page "job-new"}}
-    <!-- Job form layout -->
     <div class="min-h-screen bg-slate-900 flex flex-col">
       <div class="flex-1">
         {{template "job-new-content" .}}
@@ -271,7 +265,6 @@
       {{template "footer" .}}
     </div>
   {{else if eq .page "job-details"}}
-    <!-- Job details page -->
     <div class="min-h-screen bg-slate-900 flex flex-col">
       <div class="flex-1">
         {{template "job-details-content" .}}
@@ -279,7 +272,6 @@
       {{template "footer" .}}
     </div>
   {{else if eq .page "match-history"}}
-    <!-- Match history page -->
     <div class="min-h-screen bg-slate-900 flex flex-col">
       <div class="flex-1">
         {{template "match-history-content" .}}
@@ -287,13 +279,10 @@
       {{template "footer" .}}
     </div>
   {{else if eq .page "404"}}
-    <!-- 404 Not Found page -->
     {{template "404-content" .}}
   {{else if eq .page "500"}}
-    <!-- 500 Server Error page -->
     {{template "500-content" .}}
   {{else if eq .page "settings-home" }}
-    <!-- Settings home page -->
     <div class="min-h-screen bg-slate-900 flex flex-col">
       <div class="flex-1">
         {{template "settings-layout" .}}
@@ -301,7 +290,6 @@
       {{template "footer" .}}
     </div>
   {{else if eq .page "settings-profile" }}
-    <!-- Settings profile page -->
     <div class="min-h-screen bg-slate-900 flex flex-col">
       <div class="flex-1">
         {{template "settings-layout" .}}
@@ -309,7 +297,6 @@
       {{template "footer" .}}
     </div>
   {{else if eq .page "settings-account" }}
-    <!-- Settings account page -->
     <div class="min-h-screen bg-slate-900 flex flex-col">
       <div class="flex-1">
         {{template "settings-layout" .}}
@@ -317,7 +304,6 @@
       {{template "footer" .}}
     </div>
   {{else if eq .page "settings-search-preferences" }}
-    <!-- Settings search preferences page -->
     <div class="min-h-screen bg-slate-900 flex flex-col">
       <div class="flex-1">
         {{template "settings-layout" .}}
@@ -325,7 +311,6 @@
       {{template "footer" .}}
     </div>
   {{else if eq .page "settings-quotas" }}
-    <!-- Settings quotas page -->
     <div class="min-h-screen bg-slate-900 flex flex-col">
       <div class="flex-1">
         {{template "settings-layout" .}}
@@ -333,10 +318,8 @@
       {{template "footer" .}}
     </div>
   {{else}}
-    <!-- Modern layout with enhanced backgrounds for home and login pages -->
     <div class="{{if eq .page "login"}}h-screen overflow-hidden{{else}}min-h-screen{{end}} flex {{if eq .page "home"}}flex-col{{end}} items-center justify-center relative overflow-hidden">
 
-      <!-- Simple gradient background -->
       <div class="absolute inset-0 z-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"></div>
 
       <!-- Content area with backdrop blur -->
@@ -387,27 +370,41 @@
   {{template "delete-modal" .}}
 
 
-  <!-- Global scripts -->
   <script>
 
-    // Toast notification system
-    window.showToast = function(message, type = 'success', duration = 3000) {
+    window.showToast = function(message, type = 'success', duration = 3000, id = null) {
       const container = document.getElementById('notification-container');
       if (!container) {
         console.error('Notification container not found');
         return;
       }
       
-      // Remove any existing notifications
-      const existingToasts = container.querySelectorAll('.toast-notification');
-      existingToasts.forEach(toast => {
-        toast.remove();
-      });
+      const toastId = id || `${type}-${message.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+      
+      const existingToast = container.querySelector(`[data-toast-id="${toastId}"]`);
+      if (existingToast) {
+          const existingTimer = existingToast.toastTimer;
+        if (existingTimer) {
+          clearTimeout(existingTimer);
+        }
+        existingToast.remove();
+      }
+      
+      const maxToasts = 5;
+      const currentToasts = container.querySelectorAll('.toast-notification');
+      if (currentToasts.length >= maxToasts) {
+        const oldestToast = currentToasts[currentToasts.length - 1];
+        if (oldestToast.toastTimer) {
+          clearTimeout(oldestToast.toastTimer);
+        }
+        oldestToast.remove();
+      }
       
       const toast = document.createElement('div');
       toast.classList.add('toast-notification');
+      toast.setAttribute('data-toast-type', type);
+      toast.setAttribute('data-toast-id', toastId);
 
-      // Style to match app's design system with slate theme
       const baseClasses = 'px-3 sm:px-4 py-2 sm:py-3 rounded-lg shadow-2xl border pointer-events-auto animate-slide-in-right backdrop-blur-sm w-full sm:w-auto';
       const typeClasses = {
         success: 'bg-emerald-900/80 border-emerald-700 text-emerald-100',
@@ -422,7 +419,7 @@
 
       container.appendChild(toast);
 
-      setTimeout(() => {
+      toast.toastTimer = setTimeout(() => {
         toast.classList.remove('animate-slide-in-right');
         toast.classList.add('animate-slide-out-right');
         setTimeout(() => {
@@ -433,7 +430,6 @@
       }, duration);
     }
 
-    // Unsaved changes detection
     let hasUnsavedChanges = false;
 
     function trackFormChanges() {
@@ -442,12 +438,10 @@
         const formData = new FormData(form);
         const originalData = new Map();
 
-        // Store original values
         for (let [key, value] of formData.entries()) {
           originalData.set(key, value);
         }
 
-        // Track changes
         const inputs = form.querySelectorAll('input, textarea, select');
         inputs.forEach(input => {
           input.addEventListener('input', () => {
@@ -477,12 +471,10 @@
         }
       });
 
-      // Clear unsaved changes flag when forms are submitted
       document.addEventListener('submit', () => {
         hasUnsavedChanges = false;
       });
 
-      // Clear unsaved changes flag on successful HTMX requests
       document.body.addEventListener('htmx:afterRequest', (event) => {
         if (event.detail.xhr.status >= 200 && event.detail.xhr.status < 300) {
           hasUnsavedChanges = false;
@@ -551,7 +543,6 @@
       trackFormChanges();
       setupUnsavedChangesWarning();
       
-      // HTMX toast notification handler
       document.body.addEventListener('showToast', function(evt) {
         if (evt.detail && evt.detail.message) {
           window.showToast(evt.detail.message, evt.detail.type || 'info', evt.detail.duration || 3000);
@@ -563,11 +554,8 @@
       trackFormChanges();
     });
 
-    // Setup page functionality
     document.addEventListener('DOMContentLoaded', function() {
-      // Handle HTMX events for any page using HTMX
       if (typeof htmx !== 'undefined') {
-        // Handle different response statuses
         document.body.addEventListener('htmx:beforeSwap', function(event) {
           if (event.detail.xhr.status === 404) {
             // For 404 errors, check if it's a full page response
@@ -601,14 +589,12 @@
           }
         });
 
-        // Hide spinner on any error
         document.body.addEventListener('htmx:responseError', function(event) {
           const spinner = document.getElementById('spinner');
           if (spinner) {
             spinner.classList.add('htmx-hide');
           }
           
-          // Handle specific HTTP errors
           if (event.detail.xhr.status === 403) {
             // Try to parse JSON error response
             try {
