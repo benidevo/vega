@@ -100,6 +100,8 @@ This method offers several advantages:
 - Secrets are only accessible to authorized services
 - No sensitive data in environment variables or config files
 - Secrets can be rotated without redeploying
+- Path validation prevents directory traversal attacks
+- File size limits (1MB) prevent memory exhaustion
 
 ## Troubleshooting
 

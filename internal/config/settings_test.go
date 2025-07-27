@@ -216,3 +216,84 @@ func TestGetEnvSecurityScenarios(t *testing.T) {
 		})
 	}
 }
+
+func TestGetEnvSecurityChecks(t *testing.T) {
+	tests := []struct {
+		name          string
+		key           string
+		defaultValue  string
+		fileEnvVar    string
+		expectedValue string
+		expectWarning bool
+	}{
+		{
+			name:          "rejects relative file paths",
+			key:           "TEST_VAR",
+			defaultValue:  "default",
+			fileEnvVar:    "relative/path/to/secret",
+			expectedValue: "default",
+			expectWarning: true,
+		},
+		{
+			name:          "rejects paths with parent directory traversal",
+			key:           "TEST_VAR",
+			defaultValue:  "default",
+			fileEnvVar:    "/etc/../etc/passwd",
+			expectedValue: "default",
+			expectWarning: true,
+		},
+		{
+			name:          "rejects paths with multiple parent directory traversals",
+			key:           "TEST_VAR",
+			defaultValue:  "default",
+			fileEnvVar:    "/run/secrets/../../etc/passwd",
+			expectedValue: "default",
+			expectWarning: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			os.Unsetenv(tt.key)
+			os.Unsetenv(tt.key + "_FILE")
+
+			if tt.fileEnvVar != "" {
+				os.Setenv(tt.key+"_FILE", tt.fileEnvVar)
+				defer os.Unsetenv(tt.key + "_FILE")
+			}
+
+			result := getEnv(tt.key, tt.defaultValue)
+
+			if result != tt.expectedValue {
+				t.Errorf("Expected %q, got %q", tt.expectedValue, result)
+			}
+		})
+	}
+}
+
+func TestGetEnvFileSizeLimit(t *testing.T) {
+	os.Unsetenv("TEST_VAR")
+	os.Unsetenv("TEST_VAR_FILE")
+
+	tempDir := t.TempDir()
+	tempFile := filepath.Join(tempDir, "large-secret")
+
+	largeContent := make([]byte, 2*maxSecretFileSize)
+	for i := range largeContent {
+		largeContent[i] = 'a'
+	}
+
+	err := os.WriteFile(tempFile, largeContent, 0600)
+	if err != nil {
+		t.Fatalf("Failed to create large file: %v", err)
+	}
+
+	os.Setenv("TEST_VAR_FILE", tempFile)
+	defer os.Unsetenv("TEST_VAR_FILE")
+
+	result := getEnv("TEST_VAR", "default")
+
+	if result != "default" {
+		t.Errorf("Expected default value for large file, got %q", result)
+	}
+}

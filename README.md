@@ -120,7 +120,7 @@ See [docs/DOCKER_SWARM.md](docs/DOCKER_SWARM.md) for detailed instructions.
 
 ### Advanced Configuration
 
-- **Secure Configuration**: Use Docker/Kubernetes secrets with `_FILE` environment variables. See [docs/SECURE_CONFIGURATION.md](docs/SECURE_CONFIGURATION.md).
+- **Docker Secrets**: Use `_FILE` environment variables for secure configuration. See [Docker Swarm deployment](docs/DOCKER_SWARM.md#method-3-using-docker-secrets-recommended-for-production).
 - **Development Setup**: Custom ports, SSL, external databases. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## 🛠️ Development
