@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -75,8 +76,8 @@ func NewSettings() Settings {
 	isCloudMode := getEnv("CLOUD_MODE", "false") == "true"
 
 	// Production-optimized defaults
-	accessTokenExpiry := 60 * time.Minute // 1 hour
-	refreshTokenExpiry := 168 * time.Hour // 7 days
+	accessTokenExpiry := 60 * time.Minute
+	refreshTokenExpiry := 168 * time.Hour
 	dbMaxOpenConns := 25
 	dbMaxIdleConns := 5
 	dbConnMaxLifetime := 5 * time.Minute
@@ -93,7 +94,6 @@ func NewSettings() Settings {
 		}
 	}
 
-	// Database connection string with sensible production default
 	dbConnectionString := "/app/data/vega.db?_journal_mode=WAL&_busy_timeout=5000&_foreign_keys=ON&_cache_size=10000&_synchronous=NORMAL"
 	if envDB := getEnv("DB_CONNECTION_STRING", ""); envDB != "" {
 		dbConnectionString = envDB
@@ -212,17 +212,25 @@ func getEnv(key string, defaultValue string) (value string) {
 		} else if strings.Contains(filePath, "..") {
 			fmt.Fprintf(os.Stderr, "Warning: %s_FILE path contains '..', refusing to read %s\n", key, filePath)
 		} else {
-			if stat, err := os.Stat(filePath); err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: Failed to stat %s_FILE at %s: %v\n", key, filePath, err)
-			} else if stat.Size() > maxSecretFileSize {
-				fmt.Fprintf(os.Stderr, "Warning: %s_FILE at %s is too large (%d bytes, max %d)\n", key, filePath, stat.Size(), maxSecretFileSize)
+			file, err := os.Open(filePath)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: Failed to open %s_FILE at %s: %v\n", key, filePath, err)
 			} else {
-				content, err := os.ReadFile(filePath)
+				defer file.Close()
+
+				stat, err := file.Stat()
 				if err != nil {
-					fmt.Fprintf(os.Stderr, "Warning: Failed to read %s_FILE from %s: %v\n",
-						key, filePath, err)
+					fmt.Fprintf(os.Stderr, "Warning: Failed to stat %s_FILE at %s: %v\n", key, filePath, err)
+				} else if stat.Size() > maxSecretFileSize {
+					fmt.Fprintf(os.Stderr, "Warning: %s_FILE at %s is too large (%d bytes, max %d)\n", key, filePath, stat.Size(), maxSecretFileSize)
 				} else {
-					return strings.TrimSpace(string(content))
+					content := make([]byte, stat.Size())
+					_, err = io.ReadFull(file, content)
+					if err != nil {
+						fmt.Fprintf(os.Stderr, "Warning: Failed to read %s_FILE from %s: %v\n", key, filePath, err)
+					} else {
+						return strings.TrimSpace(string(content))
+					}
 				}
 			}
 		}
