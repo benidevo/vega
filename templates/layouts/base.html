@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="/static/css/output.css" rel="stylesheet">
   <script src="https://unpkg.com/htmx.org@1.9.4"></script>
   <script src="https://unpkg.com/htmx.org/dist/ext/response-targets.js"></script>
   <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
@@ -21,35 +21,6 @@
     document.addEventListener('DOMContentLoaded', function() {
       htmx.config.responseTargetUnsetsError = true;
     });
-  </script>
-  <script>
-    tailwind.config = {
-      theme: {
-        fontFamily: {
-          'sans': ['DM Sans', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-          'heading': ['Space Grotesk', 'DM Sans', 'ui-sans-serif', 'system-ui', 'sans-serif']
-        },
-        extend: {
-          colors: {
-            primary: '#0D9488',
-            'primary-dark': '#0B7A70',
-            secondary: '#F59E0B',
-          },
-          fontSize: {
-            'xs': ['0.75rem', { lineHeight: '1rem' }],
-            'sm': ['0.875rem', { lineHeight: '1.25rem' }],
-            'base': ['1rem', { lineHeight: '1.5rem' }],
-            'lg': ['1.125rem', { lineHeight: '1.75rem' }],
-            'xl': ['1.25rem', { lineHeight: '1.75rem' }],
-            '2xl': ['1.5rem', { lineHeight: '2rem' }],
-            '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
-            '4xl': ['2.25rem', { lineHeight: '2.5rem' }],
-            '5xl': ['3rem', { lineHeight: '1' }],
-            '6xl': ['3.75rem', { lineHeight: '1' }],
-          }
-        }
-      }
-    }
   </script>
   <style>
     /* Base font styling */

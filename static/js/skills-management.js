@@ -146,8 +146,9 @@ function showSkillSuggestions(query) {
             currentCategory = category;
         }
 
+        const escapedSkill = skill.replace(/'/g, "\\'").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         html += `<div class="skill-suggestion px-3 py-2 text-sm text-gray-200 hover:bg-slate-600 cursor-pointer"
-                      onclick="selectSkill('${skill.replace(/'/g, "\\'")}')">${skill}</div>`;
+                      onclick="selectSkill('${escapedSkill}')">${escapedSkill}</div>`;
     });
 
     if (currentCategory) html += '</div>';
