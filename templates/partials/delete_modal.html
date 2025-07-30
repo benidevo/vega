@@ -21,23 +21,44 @@
         class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md"
         aria-label="Confirm deletion"
         _="on click
-           if window.itemToDelete
-             add .hidden to #delete-modal-shared
-             js
-               // Check if this is a client-side only deletion (no URL)
-               if (!window.itemToDelete.url) {
-                 // Trigger a custom event for client-side handling
-                 const event = new CustomEvent('client-delete', { detail: window.itemToDelete });
+           js
+             const itemToDelete = window.getDeleteItem ? window.getDeleteItem() : null;
+             if (itemToDelete) {
+               document.getElementById('delete-modal-shared').classList.add('hidden');
+               
+               if (!itemToDelete.url) {
+                 const event = new CustomEvent('client-delete', { detail: itemToDelete });
                  document.dispatchEvent(event);
-                 window.itemToDelete = null;
+                 window.clearDeleteItem();
                  return;
                }
                
-               // Otherwise, proceed with server-side deletion
+               let url;
+               try {
+                 url = new URL(itemToDelete.url, window.location.origin);
+                 if (url.origin !== window.location.origin) {
+                   console.error('Invalid URL: Cross-origin request not allowed');
+                   window.clearDeleteItem();
+                   return;
+                 }
+               } catch (e) {
+                 console.error('Invalid URL:', e);
+                 window.clearDeleteItem();
+                 return;
+               }
+               
+               const allowedMethods = ['DELETE', 'POST', 'PUT'];
+               const method = itemToDelete.method || 'DELETE';
+               if (!allowedMethods.includes(method.toUpperCase())) {
+                 console.error('Invalid HTTP method');
+                 window.clearDeleteItem();
+                 return;
+               }
+               
                const metaTag = document.querySelector('meta[name=csrf-token]');
                const csrfToken = metaTag ? metaTag.getAttribute('content') : '';
-               fetch(window.itemToDelete.url, {
-                 method: window.itemToDelete.method || 'DELETE',
+               fetch(url.href, {
+                 method: method,
                  headers: {
                    'HX-Request': 'true',
                    'X-CSRF-Token': csrfToken
@@ -45,10 +66,18 @@
                })
                .then(response => {
                  if (response.ok) {
-                   // Check for HX-Redirect header
                    const redirectUrl = response.headers.get('HX-Redirect');
                    if (redirectUrl) {
-                     window.location.href = redirectUrl;
+                     try {
+                       const redirectUrlObj = new URL(redirectUrl, window.location.origin);
+                       if (redirectUrlObj.origin === window.location.origin) {
+                         window.location.href = redirectUrlObj.href;
+                       } else {
+                         window.location.reload();
+                       }
+                     } catch (e) {
+                       window.location.reload();
+                     }
                    } else {
                      window.location.reload();
                    }
@@ -56,8 +85,11 @@
                })
                .catch(error => {
                  console.error('Delete failed:', error);
+               })
+               .finally(() => {
+                 window.clearDeleteItem();
                });
-             end
+             }
            end">
         Delete
       </button>

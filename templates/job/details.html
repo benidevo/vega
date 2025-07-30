@@ -7,7 +7,6 @@
 {{end}}
 
 {{define "job-details"}}
-<div class="sr-only" role="status" aria-live="polite" aria-atomic="true" id="sr-announcements"></div>
 <div class="mx-0 md:max-w-6xl md:mx-auto">
   <div class="bg-slate-800 rounded-none md:rounded-xl shadow-lg overflow-hidden mb-6">
     <div class="px-4 py-4 sm:px-5 md:px-6 sm:py-5 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
@@ -395,7 +394,7 @@
             class="w-full py-3 sm:py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-h-[48px] sm:min-h-0"
             aria-label="Delete this job listing"
             _="on click
-               put {url: '/jobs/{{.jobID}}', method: 'DELETE', type: 'job'} into window.itemToDelete
+               js window.setDeleteItem({url: '/jobs/{{.jobID}}', method: 'DELETE', type: 'job'}) end
                remove .hidden from #delete-modal-shared"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">

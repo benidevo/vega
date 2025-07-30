@@ -3,7 +3,14 @@
  * Provides focus trap functionality for modals and keyboard navigation helpers
  */
 
-class FocusTrap {
+(function() {
+  'use strict';
+  
+  const deleteModalData = {
+    itemToDelete: null
+  };
+  
+  class FocusTrap {
   constructor(element, options = {}) {
     this.element = element;
     this.options = {
@@ -118,6 +125,11 @@ class FocusTrap {
   }
   
   createAnnouncer() {
+    const existingAnnouncer = document.getElementById('sr-announcements');
+    if (existingAnnouncer) {
+      return existingAnnouncer;
+    }
+    
     const announcer = document.createElement('div');
     announcer.id = 'sr-announcements';
     announcer.className = 'sr-only';
@@ -129,7 +141,7 @@ class FocusTrap {
   }
 }
 
-window.FocusManager = {
+  const FocusManager = {
   activeTrap: null,
   trapFocus(element, options = {}) {
     if (this.activeTrap) {
@@ -242,6 +254,11 @@ window.FocusManager = {
   },
   
   createAnnouncer() {
+    const existingAnnouncer = document.getElementById('sr-announcements');
+    if (existingAnnouncer) {
+      return existingAnnouncer;
+    }
+    
     const announcer = document.createElement('div');
     announcer.id = 'sr-announcements';
     announcer.className = 'sr-only';
@@ -253,7 +270,35 @@ window.FocusManager = {
   }
 };
 
-document.addEventListener('DOMContentLoaded', function() {
+  window.FocusManager = {
+    trapFocus: FocusManager.trapFocus.bind(FocusManager),
+    releaseFocus: FocusManager.releaseFocus.bind(FocusManager),
+    manageDropdown: FocusManager.manageDropdown.bind(FocusManager),
+    closeDropdown: FocusManager.closeDropdown.bind(FocusManager),
+    announce: FocusManager.announce.bind(FocusManager)
+  };
+  
+  window.setDeleteItem = function(item) {
+    if (item && typeof item === 'object') {
+      deleteModalData.itemToDelete = Object.freeze({
+        url: item.url || null,
+        method: item.method || 'DELETE',
+        data: item.data || null
+      });
+    } else {
+      deleteModalData.itemToDelete = null;
+    }
+  };
+  
+  window.getDeleteItem = function() {
+    return deleteModalData.itemToDelete;
+  };
+  
+  window.clearDeleteItem = function() {
+    deleteModalData.itemToDelete = null;
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
   const deleteModal = document.getElementById('delete-modal-shared');
   if (deleteModal) {
     const observer = new MutationObserver((mutations) => {
@@ -277,6 +322,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     observer.observe(deleteModal, { attributes: true });
+    
+    window.addEventListener('beforeunload', () => {
+      observer.disconnect();
+    });
   }
   document.body.addEventListener('htmx:afterSwap', function(event) {
     if (event.detail.xhr.status >= 200 && event.detail.xhr.status < 300) {
@@ -303,3 +352,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 });
+
+})();
