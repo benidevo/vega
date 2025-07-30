@@ -5,7 +5,7 @@
   <button
     {{if .type}}type="{{.type}}"{{else}}type="button"{{end}}
     {{if .id}}id="{{.id}}"{{end}}
-    class="bg-primary hover:bg-primary-dark text-white focus:ring-primary {{if eq .size "sm"}}px-3 py-1 text-sm{{else if eq .size "lg"}}px-6 py-3 text-lg{{else}}px-4 py-2 text-sm{{end}} font-medium rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center gap-2{{if .class}} {{.class}}{{end}}{{if .disabled}} opacity-50 cursor-not-allowed{{end}}"
+    class="bg-primary hover:bg-primary-dark text-white focus:ring-primary {{if eq .size "sm"}}px-3 py-2 sm:py-1 text-sm min-h-[44px] sm:min-h-0{{else if eq .size "lg"}}px-6 py-3 text-lg min-h-[48px]{{else}}px-4 py-2.5 sm:py-2 text-sm min-h-[44px] sm:min-h-0{{end}} font-medium rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center gap-2{{if .class}} {{.class}}{{end}}{{if .disabled}} opacity-50 cursor-not-allowed{{end}}"
     {{if .disabled}}disabled{{end}}
     {{if .ariaLabel}}aria-label="{{.ariaLabel}}"{{end}}
     {{if .ariaDescribedby}}aria-describedby="{{.ariaDescribedby}}"{{end}}
@@ -41,7 +41,7 @@
   <button
     {{if .type}}type="{{.type}}"{{else}}type="button"{{end}}
     {{if .id}}id="{{.id}}"{{end}}
-    class="bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 {{if eq .size "sm"}}px-3 py-1 text-sm{{else if eq .size "lg"}}px-6 py-3 text-lg{{else}}px-4 py-2 text-sm{{end}} font-medium rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center gap-2{{if .class}} {{.class}}{{end}}{{if .disabled}} opacity-50 cursor-not-allowed{{end}}"
+    class="bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 {{if eq .size "sm"}}px-3 py-2 sm:py-1 text-sm min-h-[44px] sm:min-h-0{{else if eq .size "lg"}}px-6 py-3 text-lg min-h-[48px]{{else}}px-4 py-2.5 sm:py-2 text-sm min-h-[44px] sm:min-h-0{{end}} font-medium rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center gap-2{{if .class}} {{.class}}{{end}}{{if .disabled}} opacity-50 cursor-not-allowed{{end}}"
     {{if .disabled}}disabled{{end}}
     {{if .ariaLabel}}aria-label="{{.ariaLabel}}"{{end}}
     {{if .ariaDescribedby}}aria-describedby="{{.ariaDescribedby}}"{{end}}
@@ -78,7 +78,7 @@
   <button
     {{if .type}}type="{{.type}}"{{else}}type="button"{{end}}
     {{if .id}}id="{{.id}}"{{end}}
-    class="bg-slate-600 hover:bg-slate-700 text-white focus:ring-slate-500 {{if eq .size "sm"}}px-3 py-1 text-sm{{else if eq .size "lg"}}px-6 py-3 text-lg{{else}}px-4 py-2 text-sm{{end}} font-medium rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center gap-2{{if .class}} {{.class}}{{end}}{{if .disabled}} opacity-50 cursor-not-allowed{{end}}"
+    class="bg-slate-600 hover:bg-slate-700 text-white focus:ring-slate-500 {{if eq .size "sm"}}px-3 py-2 sm:py-1 text-sm min-h-[44px] sm:min-h-0{{else if eq .size "lg"}}px-6 py-3 text-lg min-h-[48px]{{else}}px-4 py-2.5 sm:py-2 text-sm min-h-[44px] sm:min-h-0{{end}} font-medium rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center gap-2{{if .class}} {{.class}}{{end}}{{if .disabled}} opacity-50 cursor-not-allowed{{end}}"
     {{if .disabled}}disabled{{end}}
     {{if .ariaLabel}}aria-label="{{.ariaLabel}}"{{end}}
     {{if .ariaDescribedby}}aria-describedby="{{.ariaDescribedby}}"{{end}}

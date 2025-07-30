@@ -10,13 +10,13 @@
 <div class="sr-only" role="status" aria-live="polite" aria-atomic="true" id="sr-announcements"></div>
 <div class="mx-0 md:max-w-6xl md:mx-auto">
   <div class="bg-slate-800 rounded-none md:rounded-xl shadow-lg overflow-hidden mb-6">
-    <div class="px-4 md:px-6 py-4 md:py-5 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div class="px-4 py-4 sm:px-5 md:px-6 sm:py-5 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
       <div>
         <div id="job-header-display">
           <div class="flex items-center">
             <h2 class="text-xl md:text-2xl font-semibold text-white mr-2">{{.job.Title | html}}</h2>
             <button _="on click toggle .hidden on #job-header-display then toggle .hidden on #job-header-edit"
-                    class="text-gray-400 hover:text-white flex items-center justify-center p-2 min-w-[44px] min-h-[44px]"
+                    class="text-gray-400 hover:text-white flex items-center justify-center p-2.5 sm:p-2 min-w-[44px] min-h-[44px] -m-2.5 sm:-m-2"
                     aria-label="Edit job title and details">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -61,7 +61,7 @@
           </div>
           <div class="flex gap-2">
             <button
-              class="px-3 py-1 bg-primary hover:bg-primary-dark text-white text-sm rounded-md"
+              class="px-4 py-2.5 sm:px-3 sm:py-1.5 bg-primary hover:bg-primary-dark text-white text-sm rounded-md"
               hx-put="/jobs/{{.jobID}}/basic"
               hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
               hx-include="#job-title-input, #job-company-input, #job-location-input"
@@ -71,7 +71,7 @@
               Save Changes
             </button>
             <button
-              class="px-3 py-1 bg-slate-600 hover:bg-slate-700 text-white text-sm rounded-md"
+              class="px-4 py-2.5 sm:px-3 sm:py-1.5 bg-slate-600 hover:bg-slate-700 text-white text-sm rounded-md"
               _="on click toggle .hidden on #job-header-display then toggle .hidden on #job-header-edit"
               aria-label="Cancel editing job details">
               Cancel
@@ -85,8 +85,8 @@
       </div>
     </div>
 
-    <div class="p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-      <div class="lg:col-span-2 space-y-4 md:space-y-6">
+    <div class="p-4 sm:p-5 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+      <div class="lg:col-span-2 space-y-4 sm:space-y-5 md:space-y-6">
         <div>
           <h3 class="text-lg font-medium text-primary mb-3">Job Description</h3>
           <div class="text-gray-300 space-y-4">
@@ -98,7 +98,7 @@
           <div class="flex justify-between items-center mb-3">
             <h3 class="text-lg font-medium text-primary">Skills</h3>
             <button id="edit-skills-btn"
-              class="px-3 py-1 bg-primary hover:bg-primary-dark text-white text-sm rounded-md flex items-center gap-2"
+              class="px-4 py-2 sm:px-3 sm:py-1.5 bg-primary hover:bg-primary-dark text-white text-sm rounded-md flex items-center gap-2 min-h-[44px] sm:min-h-0"
               aria-label="Edit job skills"
               aria-expanded="false"
               aria-controls="skills-edit"
@@ -139,7 +139,7 @@
             </div>
             <div class="flex gap-2">
               <button
-                class="px-3 py-1 bg-primary hover:bg-primary-dark text-white text-sm rounded-md"
+                class="px-4 py-2.5 sm:px-3 sm:py-1.5 bg-primary hover:bg-primary-dark text-white text-sm rounded-md"
                 hx-put="/jobs/{{.jobID}}/skills"
                 hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
                 hx-include="#skills-input"
@@ -174,7 +174,7 @@
                 Save
               </button>
               <button
-                class="px-3 py-1 bg-slate-600 hover:bg-slate-700 text-white text-sm rounded-md"
+                class="px-4 py-2.5 sm:px-3 sm:py-1.5 bg-slate-600 hover:bg-slate-700 text-white text-sm rounded-md"
                 _="on click trigger click on #edit-skills-btn">
                 Cancel
               </button>
@@ -189,7 +189,7 @@
           <div class="flex justify-between items-center mb-3">
             <h3 class="text-lg font-medium text-primary">Your Notes</h3>
             <button id="save-notes-btn"
-              class="px-3 py-1 bg-primary hover:bg-primary-dark text-white text-sm rounded-md hidden"
+              class="px-4 py-2 sm:px-3 sm:py-1.5 bg-primary hover:bg-primary-dark text-white text-sm rounded-md hidden min-h-[44px] sm:min-h-0"
               aria-label="Save your notes about this job"
               hx-put="/jobs/{{.jobID}}/notes"
               hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
@@ -212,8 +212,8 @@
         </div>
       </div>
 
-      <div class="space-y-4 md:space-y-6">
-        <div class="bg-slate-700 bg-opacity-60 rounded-lg p-4 md:p-5 space-y-4">
+      <div class="space-y-4 sm:space-y-5 md:space-y-6">
+        <div class="bg-slate-700 bg-opacity-60 rounded-lg p-4 sm:p-5 space-y-3 sm:space-y-4">
           <h3 class="text-lg font-medium text-white">Job Details</h3>
 
           <div>
@@ -228,7 +228,7 @@
 
         </div>
 
-        <div id="ai-actions-section" class="bg-slate-700 bg-opacity-60 rounded-none md:rounded-lg p-4 md:p-5">
+        <div id="ai-actions-section" class="bg-slate-700 bg-opacity-60 rounded-lg p-4 sm:p-5">
           <h3 class="text-lg font-medium text-white mb-3">Application Status</h3>
           <select
             class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors mb-4"
@@ -257,7 +257,7 @@
           {{end}}
           {{end}}
           
-          <button id="analyze-button" class="w-full mb-3 py-2.5 px-4 {{if and .isCloudMode (ne .quotaCheck.Status.Limit -1) (not .isReanalysis) (not .quotaCheck.Allowed)}}bg-gray-600 cursor-not-allowed{{else}}bg-primary hover:bg-primary-dark{{end}} text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+          <button id="analyze-button" class="w-full mb-3 py-3 sm:py-2.5 px-4 {{if and .isCloudMode (ne .quotaCheck.Status.Limit -1) (not .isReanalysis) (not .quotaCheck.Allowed)}}bg-gray-600 cursor-not-allowed{{else}}bg-primary hover:bg-primary-dark{{end}} text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 whitespace-nowrap min-h-[48px] sm:min-h-0"
                   aria-label="Analyze job match with your profile"
                   {{if and .isCloudMode (ne .quotaCheck.Status.Limit -1) (not .isReanalysis) (not .quotaCheck.Allowed)}}disabled{{else}}
                   hx-post="/jobs/{{.jobID}}/analyze"
@@ -321,7 +321,7 @@
           {{end}}
 
 
-          <button id="cover-letter-button" class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
+          <button id="cover-letter-button" class="w-full mb-3 py-3 sm:py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-h-[48px] sm:min-h-0"
                   aria-label="Generate cover letter for this job"
                   hx-post="/jobs/{{.jobID}}/cover-letter"
                   hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
@@ -343,7 +343,7 @@
           </button>
 
 
-          <button id="cv-button" class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
+          <button id="cv-button" class="w-full mb-3 py-3 sm:py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-h-[48px] sm:min-h-0"
                   aria-label="Generate tailored resume for this job"
                   hx-post="/jobs/{{.jobID}}/cv"
                   hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
@@ -365,7 +365,7 @@
           </button>
 
 
-          <a href="/jobs/{{.jobID}}/match-history" class="w-full mb-3 py-2.5 px-4 bg-slate-600 hover:bg-slate-500 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2">
+          <a href="/jobs/{{.jobID}}/match-history" class="w-full mb-3 py-3 sm:py-2.5 px-4 bg-slate-600 hover:bg-slate-500 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-h-[48px] sm:min-h-0">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -373,7 +373,7 @@
           </a>
 
           {{if .job.SourceURL}}
-          <a href="{{.job.SourceURL}}" target="_blank" class="w-full mb-3 py-2.5 px-4 bg-slate-600 hover:bg-slate-500 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2">
+          <a href="{{.job.SourceURL}}" target="_blank" class="w-full mb-3 py-3 sm:py-2.5 px-4 bg-slate-600 hover:bg-slate-500 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-h-[48px] sm:min-h-0">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
@@ -382,7 +382,7 @@
           {{end}}
 
           {{if .job.ApplicationURL}}
-          <a href="{{.job.ApplicationURL}}" target="_blank" class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2">
+          <a href="{{.job.ApplicationURL}}" target="_blank" class="w-full mb-3 py-3 sm:py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-h-[48px] sm:min-h-0">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
@@ -392,7 +392,7 @@
 
           <button
             id="delete-job-btn"
-            class="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
+            class="w-full py-3 sm:py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 min-h-[48px] sm:min-h-0"
             aria-label="Delete this job listing"
             _="on click
                put {url: '/jobs/{{.jobID}}', method: 'DELETE', type: 'job'} into window.itemToDelete
@@ -417,7 +417,6 @@
 </div>
 
 <style>
-/* HTMX indicators are hidden by default and shown during requests */
 .htmx-indicator {
   display: none;
 }
@@ -441,7 +440,6 @@
 
 <script>
 document.addEventListener('htmx:afterRequest', function(evt) {
-  // Check if this is a successful AI content generation request
   const isAIContent = (
     evt.detail.target.id === 'ai-analysis' || 
     evt.detail.target.id === 'cover-letter-section' || 
@@ -449,14 +447,12 @@ document.addEventListener('htmx:afterRequest', function(evt) {
   ) && evt.detail.xhr.status === 200;
 
   if (isAIContent) {
-    // Clear any error containers
     const errorContainers = ['analyze-error', 'cover-letter-error', 'cv-error'];
     errorContainers.forEach(id => {
       const element = document.getElementById(id);
       if (element) element.innerHTML = '';
     });
 
-    // Clear other content sections (keep only the one that was just loaded)
     const contentSections = ['ai-analysis', 'cover-letter-section', 'cv-section'];
     contentSections.forEach(id => {
       if (id !== evt.detail.target.id) {
@@ -465,7 +461,6 @@ document.addEventListener('htmx:afterRequest', function(evt) {
       }
     });
 
-    // Scroll to bottom of page after content is rendered
     setTimeout(() => {
       window.scrollTo({
         top: document.documentElement.scrollHeight,
@@ -475,11 +470,9 @@ document.addEventListener('htmx:afterRequest', function(evt) {
   }
 });
 
-// Check if we should scroll to AI actions section on page load
 document.addEventListener('DOMContentLoaded', function() {
   if (sessionStorage.getItem('scrollToAIActions') === 'true') {
     sessionStorage.removeItem('scrollToAIActions');
-    // Scroll to AI actions section
     setTimeout(() => {
       const aiActionsSection = document.getElementById('ai-actions-section');
       if (aiActionsSection) {
@@ -489,13 +482,10 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// Event delegation for dynamically loaded content
 document.addEventListener('click', function(evt) {
-  // Check if the clicked element or its parent has a data-action
   let target = evt.target;
   let action = target.getAttribute('data-action');
 
-  // If no action on the target, check parent elements (in case of nested elements)
   while (!action && target.parentElement) {
     target = target.parentElement;
     action = target.getAttribute('data-action');
