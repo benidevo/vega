@@ -7,6 +7,10 @@
     {{if .id}}id="{{.id}}"{{end}}
     class="bg-primary hover:bg-primary-dark text-white focus:ring-primary {{if eq .size "sm"}}px-3 py-1 text-sm{{else if eq .size "lg"}}px-6 py-3 text-lg{{else}}px-4 py-2 text-sm{{end}} font-medium rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center gap-2{{if .class}} {{.class}}{{end}}{{if .disabled}} opacity-50 cursor-not-allowed{{end}}"
     {{if .disabled}}disabled{{end}}
+    {{if .ariaLabel}}aria-label="{{.ariaLabel}}"{{end}}
+    {{if .ariaDescribedby}}aria-describedby="{{.ariaDescribedby}}"{{end}}
+    {{if .ariaExpanded}}aria-expanded="{{.ariaExpanded}}"{{end}}
+    {{if .ariaControls}}aria-controls="{{.ariaControls}}"{{end}}
     {{if .onclick}}onclick="{{.onclick}}"{{end}}
     {{if .hxGet}}hx-get="{{.hxGet}}"{{end}}
     {{if .hxPost}}hx-post="{{.hxPost}}"{{end}}
@@ -26,11 +30,11 @@
       <span>{{if .loadingText}}{{.loadingText}}{{else}}Loading...{{end}}</span>
     {{else}}
       {{if .icon}}
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
           {{.icon}}
         </svg>
       {{end}}
-      <span>{{.text}}</span>
+      <span{{if and .icon (not .text)}} class="sr-only"{{end}}>{{if .text}}{{.text}}{{else if .ariaLabel}}{{.ariaLabel}}{{end}}</span>
     {{end}}
   </button>
 {{else if eq .variant "danger"}}
@@ -39,6 +43,10 @@
     {{if .id}}id="{{.id}}"{{end}}
     class="bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 {{if eq .size "sm"}}px-3 py-1 text-sm{{else if eq .size "lg"}}px-6 py-3 text-lg{{else}}px-4 py-2 text-sm{{end}} font-medium rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center gap-2{{if .class}} {{.class}}{{end}}{{if .disabled}} opacity-50 cursor-not-allowed{{end}}"
     {{if .disabled}}disabled{{end}}
+    {{if .ariaLabel}}aria-label="{{.ariaLabel}}"{{end}}
+    {{if .ariaDescribedby}}aria-describedby="{{.ariaDescribedby}}"{{end}}
+    {{if .ariaExpanded}}aria-expanded="{{.ariaExpanded}}"{{end}}
+    {{if .ariaControls}}aria-controls="{{.ariaControls}}"{{end}}
     {{if .onclick}}onclick="{{.onclick}}"{{end}}
     {{if .hxGet}}hx-get="{{.hxGet}}"{{end}}
     {{if .hxPost}}hx-post="{{.hxPost}}"{{end}}
@@ -58,11 +66,11 @@
       <span>{{if .loadingText}}{{.loadingText}}{{else}}Loading...{{end}}</span>
     {{else}}
       {{if .icon}}
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
           {{.icon}}
         </svg>
       {{end}}
-      <span>{{.text}}</span>
+      <span{{if and .icon (not .text)}} class="sr-only"{{end}}>{{if .text}}{{.text}}{{else if .ariaLabel}}{{.ariaLabel}}{{end}}</span>
     {{end}}
   </button>
 {{else}}
@@ -72,6 +80,10 @@
     {{if .id}}id="{{.id}}"{{end}}
     class="bg-slate-600 hover:bg-slate-700 text-white focus:ring-slate-500 {{if eq .size "sm"}}px-3 py-1 text-sm{{else if eq .size "lg"}}px-6 py-3 text-lg{{else}}px-4 py-2 text-sm{{end}} font-medium rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center gap-2{{if .class}} {{.class}}{{end}}{{if .disabled}} opacity-50 cursor-not-allowed{{end}}"
     {{if .disabled}}disabled{{end}}
+    {{if .ariaLabel}}aria-label="{{.ariaLabel}}"{{end}}
+    {{if .ariaDescribedby}}aria-describedby="{{.ariaDescribedby}}"{{end}}
+    {{if .ariaExpanded}}aria-expanded="{{.ariaExpanded}}"{{end}}
+    {{if .ariaControls}}aria-controls="{{.ariaControls}}"{{end}}
     {{if .onclick}}onclick="{{.onclick}}"{{end}}
     {{if .hxGet}}hx-get="{{.hxGet}}"{{end}}
     {{if .hxPost}}hx-post="{{.hxPost}}"{{end}}
@@ -91,11 +103,11 @@
       <span>{{if .loadingText}}{{.loadingText}}{{else}}Loading...{{end}}</span>
     {{else}}
       {{if .icon}}
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
           {{.icon}}
         </svg>
       {{end}}
-      <span>{{.text}}</span>
+      <span{{if and .icon (not .text)}} class="sr-only"{{end}}>{{if .text}}{{.text}}{{else if .ariaLabel}}{{.ariaLabel}}{{end}}</span>
     {{end}}
   </button>
 {{end}}

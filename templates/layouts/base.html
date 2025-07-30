@@ -293,7 +293,6 @@
 
       <div class="absolute inset-0 z-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"></div>
 
-      <!-- Content area with backdrop blur -->
       <div class="relative z-10 w-full {{if eq .page "home"}}flex flex-col{{else}}h-full{{end}}">
         {{if eq .page "home"}}
           <div class="min-h-screen flex flex-col items-center justify-center flex-1">
@@ -302,17 +301,13 @@
           {{template "footer" .}}
         {{else if eq .page "login"}}
           <div class="w-full h-full flex relative">
-            <!-- Background image spans full width -->
             <div class="absolute inset-0 hidden lg:block">
               <img src="/static/images/login/team-meeting.jpg" 
                    alt="Diverse team in meeting" 
                    class="w-full h-full object-cover">
             </div>
-            
-            <!-- Left side - Content overlay -->
             <div class="hidden lg:block lg:w-1/2 relative">
               <div class="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/75 to-slate-900/70"></div>
-              <!-- Better text placement -->
               <div class="absolute inset-0 flex items-center justify-center">
                 <div class="text-center px-8">
                   <h2 class="text-5xl font-bold text-white mb-4">Land Your Dream Job</h2>
@@ -320,8 +315,6 @@
                 </div>
               </div>
             </div>
-            
-            <!-- Right side - Login form with darker background -->
             <div class="w-full lg:w-1/2 flex items-center justify-center py-0 sm:py-8 px-0 sm:px-4 relative">
               <div class="absolute inset-0 bg-slate-900 sm:bg-slate-900/95 backdrop-blur-sm"></div>
               <div class="w-full h-full sm:h-auto relative z-10">
@@ -337,7 +330,6 @@
   {{end}}
 
 
-  <!-- Shared Delete Modal -->
   {{template "delete-modal" .}}
 
 
@@ -435,7 +427,6 @@
       });
     }
 
-    // Warn before leaving page with unsaved changes
     function setupUnsavedChangesWarning() {
       window.addEventListener('beforeunload', (e) => {
         if (hasUnsavedChanges) {
@@ -456,7 +447,6 @@
       });
     }
 
-    // Format UTC dates to local browser timezone
     function formatUTCDates() {
       const timeElements = document.querySelectorAll('.utc-time');
 
@@ -467,14 +457,11 @@
         if (utcDate) {
           const date = new Date(utcDate);
 
-          // Skip invalid dates
           if (isNaN(date)) return;
 
           let formattedDate = '';
 
-          // Format based on the format attribute
           if (format === 'full') {
-            // Format parts separately to ensure consistent output
             const datePart = date.toLocaleDateString(undefined, {
               year: 'numeric',
               month: 'long',
@@ -487,17 +474,14 @@
               hour12: true
             });
 
-            // Combine with "at" between date and time
             formattedDate = `${datePart} at ${timePart}`;
           } else if (format === 'date') {
-            // Date only: January 2, 2023
             formattedDate = date.toLocaleDateString(undefined, {
               year: 'numeric',
               month: 'long',
               day: 'numeric'
             });
           } else if (format === 'time') {
-            // Time only: 3:04 PM
             formattedDate = date.toLocaleTimeString(undefined, {
               hour: 'numeric',
               minute: '2-digit',
@@ -510,8 +494,6 @@
       });
     }
 
-    // Run the auto-dismiss setup whenever the DOM content changes
-    // This handles both initial page load and HTMX swaps
     document.addEventListener('DOMContentLoaded', function() {
       formatUTCDates();
       trackFormChanges();
@@ -532,22 +514,17 @@
       if (typeof htmx !== 'undefined') {
         document.body.addEventListener('htmx:beforeSwap', function(event) {
           if (event.detail.xhr.status === 404) {
-            // For 404 errors, check if it's a full page response
             const contentType = event.detail.xhr.getResponseHeader('content-type');
             if (contentType && contentType.includes('text/html') && event.detail.xhr.responseText.includes('404-content')) {
-              // This is a full 404 page, redirect to show it properly
               window.location.href = event.detail.pathInfo.requestPath;
               event.detail.shouldSwap = false;
               return;
             }
           } else if (event.detail.xhr.status === 401 || event.detail.xhr.status === 400 || event.detail.xhr.status === 403) {
-            // Allow 400/401/403 responses to be swapped as they contain user-friendly error messages
             event.detail.shouldSwap = true;
             event.detail.isError = false;
           } else if (event.detail.xhr.status >= 500) {
-            // Prevent 500+ errors from being swapped into content areas
             event.detail.shouldSwap = false;
-            // Show a user-friendly error message instead
             if (event.detail.target) {
               event.detail.target.innerHTML = `
                 <div class="bg-red-900 bg-opacity-50 border border-red-700 text-red-200 p-3 rounded-md mb-3 text-sm" _="on load wait 5s then transition opacity to 0 over 0.5s then remove me">
@@ -570,7 +547,6 @@
           }
           
           if (event.detail.xhr.status === 403) {
-            // Try to parse JSON error response
             try {
               const response = JSON.parse(event.detail.xhr.responseText);
               if (response.error) {
@@ -579,7 +555,6 @@
                 showToast('Access denied. Please check your credentials or try again.', 'error');
               }
             } catch (e) {
-              // If not JSON, show generic error
               showToast('Access denied. Please check your credentials or try again.', 'error');
             }
           } else if (event.detail.xhr.status === 404) {
@@ -593,20 +568,17 @@
       }
     });
 
-  // Notification modal system - redirected to toast system
   window.showNotification = function(message, type = 'info', title = null) {
-    // Redirect to the toast system instead of using modal
     showToast(message, type);
   };
 
   </script>
 
-  <!-- Page-specific scripts -->
+  <script src="/static/js/focus-management.js"></script>
   {{if eq .page "login"}}
   <script src="/static/js/auth-validation.js"></script>
   {{if .error}}
   <script>
-    // Trigger toast notification for server-side errors
     document.addEventListener('DOMContentLoaded', function() {
       if (window.showToast) {
         window.showToast('{{.error}}', 'error');
@@ -623,10 +595,7 @@
   {{if eq .page "settings-search-preferences"}}
   <script src="/static/js/skills-management.js"></script>
   {{end}}
-  
-  <!-- Unified notification container -->
   <div id="notification-container" class="fixed right-2 sm:right-4 bottom-4 left-2 sm:left-auto z-50 flex flex-col-reverse gap-2 pointer-events-none sm:max-w-sm">
-    <!-- Notifications stack here -->
   </div>
 </body>
 </html>

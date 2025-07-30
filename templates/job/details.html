@@ -7,8 +7,8 @@
 {{end}}
 
 {{define "job-details"}}
+<div class="sr-only" role="status" aria-live="polite" aria-atomic="true" id="sr-announcements"></div>
 <div class="mx-0 md:max-w-6xl md:mx-auto">
-  <!-- Job details container -->
   <div class="bg-slate-800 rounded-none md:rounded-xl shadow-lg overflow-hidden mb-6">
     <div class="px-4 md:px-6 py-4 md:py-5 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
@@ -16,8 +16,9 @@
           <div class="flex items-center">
             <h2 class="text-xl md:text-2xl font-semibold text-white mr-2">{{.job.Title | html}}</h2>
             <button _="on click toggle .hidden on #job-header-display then toggle .hidden on #job-header-edit"
-                    class="text-gray-400 hover:text-white flex items-center justify-center p-2 min-w-[44px] min-h-[44px]">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    class="text-gray-400 hover:text-white flex items-center justify-center p-2 min-w-[44px] min-h-[44px]"
+                    aria-label="Edit job title and details">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
               </svg>
             </button>
@@ -25,29 +26,31 @@
           <p class="text-gray-400 text-sm md:text-base">{{.job.Company.Name | html}}{{if .job.Location}} · {{.job.Location | html}}{{end}}</p>
         </div>
 
-        <div id="job-header-edit" class="hidden space-y-2">
+        <div id="job-header-edit" class="hidden space-y-2" role="form" aria-label="Edit job details form">
           <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Job Title</label>
+            <label for="job-title-input" class="block text-sm font-medium text-gray-300 mb-1">Job Title</label>
             <input
               type="text"
               id="job-title-input"
               name="title"
               class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
               value="{{.job.Title | html}}"
+              aria-required="true"
             >
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Company</label>
+            <label for="job-company-input" class="block text-sm font-medium text-gray-300 mb-1">Company</label>
             <input
               type="text"
               id="job-company-input"
               name="company_name"
               class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
               value="{{.job.Company.Name | html}}"
+              aria-required="true"
             >
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Location</label>
+            <label for="job-location-input" class="block text-sm font-medium text-gray-300 mb-1">Location</label>
             <input
               type="text"
               id="job-location-input"
@@ -65,15 +68,16 @@
               hx-target="#header-response"
               hx-swap="innerHTML"
               _="on htmx:afterRequest if event.detail.successful toggle .hidden on #job-header-display then toggle .hidden on #job-header-edit then wait 100ms then call window.location.reload()">
-              Save
+              Save Changes
             </button>
             <button
               class="px-3 py-1 bg-slate-600 hover:bg-slate-700 text-white text-sm rounded-md"
-              _="on click toggle .hidden on #job-header-display then toggle .hidden on #job-header-edit">
+              _="on click toggle .hidden on #job-header-display then toggle .hidden on #job-header-edit"
+              aria-label="Cancel editing job details">
               Cancel
             </button>
           </div>
-          <div id="header-response"></div>
+          <div id="header-response" role="status" aria-live="polite" aria-atomic="true"></div>
         </div>
       </div>
       <div id="match-score-badge" class="px-3 md:px-4 py-1.5 {{matchColors .job.MatchScore}} rounded-full text-xs md:text-sm font-medium whitespace-nowrap">
@@ -81,11 +85,8 @@
       </div>
     </div>
 
-    <!-- Main content with two columns on larger screens -->
     <div class="p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-      <!-- Left column (2/3 width) - Job description -->
       <div class="lg:col-span-2 space-y-4 md:space-y-6">
-        <!-- Job description -->
         <div>
           <h3 class="text-lg font-medium text-primary mb-3">Job Description</h3>
           <div class="text-gray-300 space-y-4">
@@ -93,33 +94,35 @@
           </div>
         </div>
 
-        <!-- Skills section -->
         <div>
           <div class="flex justify-between items-center mb-3">
             <h3 class="text-lg font-medium text-primary">Skills</h3>
             <button id="edit-skills-btn"
               class="px-3 py-1 bg-primary hover:bg-primary-dark text-white text-sm rounded-md flex items-center gap-2"
+              aria-label="Edit job skills"
+              aria-expanded="false"
+              aria-controls="skills-edit"
               _="on click
                  toggle .hidden on #skills-display
                  then toggle .hidden on #skills-edit
                  then if #skills-display matches .hidden
                       put 'Cancel' into me.lastChild
+                      set @aria-expanded to 'true'
                  else
-                      put 'Edit Skills' into me.lastChild">
+                      put 'Edit Skills' into me.lastChild
+                      set @aria-expanded to 'false' end">
               <span>Edit Skills</span>
             </button>
           </div>
 
-          <!-- Skills display (default view) -->
-          <div id="skills-display" class="flex flex-wrap gap-2">
+          <div id="skills-display" class="flex flex-wrap gap-2" role="list" aria-label="Required skills">
             {{range .job.RequiredSkills}}
-            <span class="px-3 py-1.5 bg-slate-700 rounded-md text-sm text-primary">{{. | html}}</span>
+            <span class="px-3 py-1.5 bg-slate-700 rounded-md text-sm text-primary" role="listitem">{{. | html}}</span>
             {{else}}
             <span class="text-gray-400">No skills listed</span>
             {{end}}
           </div>
 
-          <!-- Skills edit form (hidden by default) -->
           <div id="skills-edit" class="hidden">
             <div class="mb-2">
               <input
@@ -129,8 +132,10 @@
                 class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                 placeholder="Enter skills separated by commas"
                 value="{{range $i, $skill := .job.RequiredSkills}}{{if $i}}, {{end}}{{$skill | html}}{{end}}"
+                aria-label="Skills list"
+                aria-describedby="skills-help-text"
               >
-              <p class="text-xs text-gray-400 mt-1">Enter skills separated by commas (e.g., "Go, Docker, SQL")</p>
+              <p id="skills-help-text" class="text-xs text-gray-400 mt-1">Enter skills separated by commas (e.g., "Go, Docker, SQL")</p>
             </div>
             <div class="flex gap-2">
               <button
@@ -176,16 +181,16 @@
             </div>
           </div>
 
-          <div id="skills-response" class="mt-2"></div>
+          <div id="skills-response" class="mt-2" role="status" aria-live="polite" aria-atomic="true"></div>
         </div>
 
 
-        <!-- Notes section -->
         <div>
           <div class="flex justify-between items-center mb-3">
             <h3 class="text-lg font-medium text-primary">Your Notes</h3>
             <button id="save-notes-btn"
               class="px-3 py-1 bg-primary hover:bg-primary-dark text-white text-sm rounded-md hidden"
+              aria-label="Save your notes about this job"
               hx-put="/jobs/{{.jobID}}/notes"
               hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
               hx-include="#job-notes"
@@ -201,14 +206,13 @@
             rows="4"
             placeholder="Add your personal notes about this job..."
             _="on input remove .hidden from #save-notes-btn"
+            aria-label="Your notes about this job"
           >{{.job.Notes | html}}</textarea>
-          <div id="notes-response" class="mt-2"></div>
+          <div id="notes-response" class="mt-2" role="status" aria-live="polite" aria-atomic="true"></div>
         </div>
       </div>
 
-      <!-- Right column (1/3 width) - Status and actions -->
       <div class="space-y-4 md:space-y-6">
-        <!-- Job details -->
         <div class="bg-slate-700 bg-opacity-60 rounded-lg p-4 md:p-5 space-y-4">
           <h3 class="text-lg font-medium text-white">Job Details</h3>
 
@@ -224,11 +228,11 @@
 
         </div>
 
-        <!-- Status -->
         <div id="ai-actions-section" class="bg-slate-700 bg-opacity-60 rounded-none md:rounded-lg p-4 md:p-5">
           <h3 class="text-lg font-medium text-white mb-3">Application Status</h3>
           <select
             class="w-full px-3 py-2 rounded-md bg-slate-700 bg-opacity-70 border border-slate-600 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors mb-4"
+            aria-label="Application status"
             hx-put="/jobs/{{.jobID}}/status"
             hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
             hx-target="#status-response"
@@ -242,11 +246,10 @@
             <option value="rejected" {{if eq .job.Status 4}}selected{{end}}>Rejected</option>
             <option value="not_interested" {{if eq .job.Status 5}}selected{{end}}>Not Interested</option>
           </select>
-          <div id="status-response"></div>
+          <div id="status-response" role="status" aria-live="polite" aria-atomic="true"></div>
 
           {{if .isCloudMode}}
           {{if and (ne .quotaCheck.Status.Limit -1) (not .isReanalysis) (not .quotaCheck.Allowed)}}
-          <!-- Quota exceeded message -->
           <div class="w-full mb-3 p-3 bg-red-900 bg-opacity-30 border border-red-800 rounded-lg">
             <p class="text-red-400 text-sm font-medium">Monthly Limit Reached</p>
             <p class="text-gray-400 text-xs mt-1">You've used all {{.quotaCheck.Status.Limit}} job analyses this month. Limit resets on {{.quotaCheck.Status.ResetDate.Format "Jan 2"}}.</p>
@@ -255,6 +258,7 @@
           {{end}}
           
           <button id="analyze-button" class="w-full mb-3 py-2.5 px-4 {{if and .isCloudMode (ne .quotaCheck.Status.Limit -1) (not .isReanalysis) (not .quotaCheck.Allowed)}}bg-gray-600 cursor-not-allowed{{else}}bg-primary hover:bg-primary-dark{{end}} text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+                  aria-label="Analyze job match with your profile"
                   {{if and .isCloudMode (ne .quotaCheck.Status.Limit -1) (not .isReanalysis) (not .quotaCheck.Allowed)}}disabled{{else}}
                   hx-post="/jobs/{{.jobID}}/analyze"
                   hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
@@ -298,7 +302,6 @@
           
           {{if .isCloudMode}}
           {{if ne .quotaCheck.Status.Limit -1}}
-          <!-- Quota usage indicator -->
           <div class="w-full mb-3">
             <div class="flex justify-between text-xs text-gray-400 mb-1">
               <span>Monthly quota</span>
@@ -309,7 +312,6 @@
             </div>
           </div>
           {{else}}
-          <!-- Admin unlimited indicator -->
           <div class="w-full mb-3">
             <div class="text-xs text-gray-400">
               <span>Admin access: Unlimited analyses</span>
@@ -320,6 +322,7 @@
 
 
           <button id="cover-letter-button" class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  aria-label="Generate cover letter for this job"
                   hx-post="/jobs/{{.jobID}}/cover-letter"
                   hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
                   hx-target="#cover-letter-section"
@@ -341,6 +344,7 @@
 
 
           <button id="cv-button" class="w-full mb-3 py-2.5 px-4 bg-primary hover:bg-primary-dark text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  aria-label="Generate tailored resume for this job"
                   hx-post="/jobs/{{.jobID}}/cv"
                   hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
                   hx-target="#cv-section"
@@ -361,7 +365,6 @@
           </button>
 
 
-          <!-- Match History Button -->
           <a href="/jobs/{{.jobID}}/match-history" class="w-full mb-3 py-2.5 px-4 bg-slate-600 hover:bg-slate-500 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -390,6 +393,7 @@
           <button
             id="delete-job-btn"
             class="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
+            aria-label="Delete this job listing"
             _="on click
                put {url: '/jobs/{{.jobID}}', method: 'DELETE', type: 'job'} into window.itemToDelete
                remove .hidden from #delete-modal-shared"
@@ -404,14 +408,11 @@
     </div>
   </div>
 
-  <!-- AI Analysis section - will be populated by HTMX -->
-  <div id="ai-analysis"></div>
+  <div id="ai-analysis" role="region" aria-label="AI job match analysis"></div>
 
-  <!-- Cover Letter section - will be populated by HTMX -->
-  <div id="cover-letter-section"></div>
+  <div id="cover-letter-section" role="region" aria-label="Generated cover letter"></div>
 
-  <!-- CV section - will be populated by HTMX -->
-  <div id="cv-section"></div>
+  <div id="cv-section" role="region" aria-label="Generated resume"></div>
 
 </div>
 
@@ -432,13 +433,10 @@
 }
 </style>
 
-<!-- Include shared AI helpers for CV and Cover Letter generation -->
 <script src="/static/js/ai-helpers.js"></script>
 
-<!-- Include AI operations loading state management -->
 <script src="/static/js/ai-operations.js"></script>
 
-<!-- Preload jsPDF library for PDF generation -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
