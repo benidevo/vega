@@ -252,7 +252,6 @@ type JobFilter struct {
 	CompanyID *int
 	Status    *JobStatus
 	JobType   *JobType
-	Search    string
 	Matched   *bool
 	Limit     int
 	Offset    int

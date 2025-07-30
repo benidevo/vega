@@ -35,7 +35,7 @@
       </select>
       <button
         class="bg-primary text-white px-4 py-3 sm:py-2 rounded-md text-sm font-medium hover:bg-primary-dark transition-colors w-full sm:w-auto min-h-[48px] sm:min-h-0"
-        hx-get="/jobs"
+        hx-get="/jobs{{if .statusFilter}}?status={{.statusFilter}}{{end}}"
         hx-target="#jobs-container"
       >
         Refresh
@@ -53,4 +53,5 @@
     </div>
   </div>
 </div>
+
 {{end}}

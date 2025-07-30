@@ -294,18 +294,10 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     switch(e.key) {
-      case '/':
-        e.preventDefault();
-        const searchInput = document.querySelector('[name="search"], [type="search"]');
-        if (searchInput) {
-          searchInput.focus();
-        }
-        break;
-        
       case '?':
         if (e.shiftKey) {
           e.preventDefault();
-          window.FocusManager.announce('Keyboard shortcuts: Press / to search, Escape to close dialogs');
+          window.FocusManager.announce('Keyboard shortcuts: Escape to close dialogs');
         }
         break;
     }
