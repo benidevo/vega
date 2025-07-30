@@ -3,6 +3,7 @@ module.exports = {
   content: [
     "./templates/**/*.{html,js}",
     "./static/js/**/*.js",
+    "./static/css/**/*.css",
   ],
   theme: {
     fontFamily: {

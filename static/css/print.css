@@ -1,0 +1,83 @@
+/* ==========================================================================
+   Print Styles for Vega AI
+   ========================================================================== */
+
+/* ==========================================================================
+   Resume/CV Print Styles
+   ========================================================================== */
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  #resume-content {
+    padding: 0.5in !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    font-size: 11pt !important;
+    line-height: 1.3 !important;
+  }
+
+  .resume-section {
+    margin-bottom: 0.5em !important;
+    page-break-inside: auto;
+    break-inside: auto;
+  }
+
+  h2 {
+    font-size: 18pt !important;
+    margin-bottom: 2pt !important;
+  }
+
+  h3 {
+    font-size: 12pt !important;
+    margin-bottom: 4pt !important;
+  }
+
+  h4 {
+    font-size: 11pt !important;
+    margin-bottom: 2pt !important;
+  }
+
+  p, div, span {
+    font-size: 10pt !important;
+  }
+
+  .text-xs {
+    font-size: 10pt !important;
+  }
+
+  .mb-2 {
+    margin-bottom: 0.4em !important;
+  }
+
+  .mb-1\.5 {
+    margin-bottom: 0.3em !important;
+  }
+
+  .mb-1 {
+    margin-bottom: 0.2em !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  div[data-section="experience"] .mb-1\.5 {
+    margin-bottom: 0.4em !important;
+  }
+
+  .whitespace-pre-wrap {
+    line-height: 1.2 !important;
+  }
+}
+
+/* ==========================================================================
+   Resume Screen Styles
+   ========================================================================== */
+@media screen {
+  #resume-content {
+    overflow-y: visible;
+  }
+}
