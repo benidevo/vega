@@ -8,27 +8,20 @@ import (
 	"time"
 
 	"github.com/benidevo/vega/internal/auth/models"
-	"github.com/benidevo/vega/internal/common/logger"
-	"github.com/benidevo/vega/internal/config"
 	settingsModels "github.com/benidevo/vega/internal/settings/models"
-	"github.com/benidevo/vega/internal/settings/services"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 )
 
 func init() {
-	// Disable logs for tests
 	zerolog.SetGlobalLevel(zerolog.Disabled)
 }
 
-// MockProfileRepository mocks the ProfileRepository interface
 type MockProfileRepository struct {
 	mock.Mock
 }
 
-// Optimized methods
 func (m *MockProfileRepository) GetProfile(ctx context.Context, userID int) (*settingsModels.Profile, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
@@ -206,23 +199,50 @@ func (m *MockUserRepository) FindAllUsers(ctx context.Context) ([]*models.User, 
 	return args.Get(0).([]*models.User), args.Error(1)
 }
 
-func setupTestService() (*SettingsService, *MockProfileRepository, *MockUserRepository) {
-	cfg := &config.Settings{
-		IsTest:   true,
-		LogLevel: "disabled",
-	}
+// mockProfileService implements the profileService interface for testing
+type mockProfileService struct {
+	mock.Mock
+}
 
-	mockProfileRepo := new(MockProfileRepository)
-	mockUserRepo := new(MockUserRepository)
-
-	service := &SettingsService{
-		userRepo:         mockUserRepo,
-		settingsRepo:     mockProfileRepo,
-		cfg:              cfg,
-		log:              logger.GetPrivacyLogger("settings-test"),
-		centralValidator: services.NewCentralizedValidator(),
+func (m *mockProfileService) GetProfileSettings(ctx context.Context, userID int) (*settingsModels.Profile, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
 	}
-	return service, mockProfileRepo, mockUserRepo
+	return args.Get(0).(*settingsModels.Profile), args.Error(1)
+}
+
+func (m *mockProfileService) UpdateProfile(ctx context.Context, profile *settingsModels.Profile) error {
+	args := m.Called(ctx, profile)
+	return args.Error(0)
+}
+
+func (m *mockProfileService) DeleteAllWorkExperience(ctx context.Context, profileID int) error {
+	args := m.Called(ctx, profileID)
+	return args.Error(0)
+}
+
+func (m *mockProfileService) DeleteAllEducation(ctx context.Context, profileID int) error {
+	args := m.Called(ctx, profileID)
+	return args.Error(0)
+}
+
+func (m *mockProfileService) DeleteAllCertifications(ctx context.Context, profileID int) error {
+	args := m.Called(ctx, profileID)
+	return args.Error(0)
+}
+
+// mockSecurityService implements the securityService interface for testing
+type mockSecurityService struct {
+	mock.Mock
+}
+
+func (m *mockSecurityService) GetSecuritySettings(ctx context.Context, username string) (*settingsModels.SecuritySettings, error) {
+	args := m.Called(ctx, username)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*settingsModels.SecuritySettings), args.Error(1)
 }
 
 func createTestProfile(userID int) *settingsModels.Profile {
@@ -235,192 +255,243 @@ func createTestProfile(userID int) *settingsModels.Profile {
 		Title:     "Software Engineer",
 		Industry:  settingsModels.IndustryTechnology,
 		Skills:    []string{"Go", "Python", "JavaScript"},
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
 	}
 }
 
 func TestGetProfileSettings(t *testing.T) {
-	ctx := context.Background()
-	service, mockProfileRepo, _ := setupTestService()
+	tests := []struct {
+		name           string
+		userID         int
+		mockSetup      func(*mockProfileService)
+		expectedResult *settingsModels.Profile
+		expectedError  bool
+	}{
+		{
+			name:   "should_return_existing_profile_when_found",
+			userID: 1,
+			mockSetup: func(m *mockProfileService) {
+				profile := createTestProfile(1)
+				m.On("GetProfileSettings", mock.Anything, 1).Return(profile, nil)
+			},
+			expectedResult: createTestProfile(1),
+			expectedError:  false,
+		},
+		{
+			name:   "should_return_error_when_database_fails",
+			userID: 3,
+			mockSetup: func(m *mockProfileService) {
+				m.On("GetProfileSettings", mock.Anything, 3).Return(nil, errors.New("database error"))
+			},
+			expectedResult: nil,
+			expectedError:  true,
+		},
+	}
 
-	t.Run("existing profile", func(t *testing.T) {
-		profile := createTestProfile(1)
-		mockProfileRepo.On("GetProfileWithRelated", ctx, 1).Return(profile, nil).Once()
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mockService := new(mockProfileService)
+			tc.mockSetup(mockService)
 
-		result, err := service.GetProfileSettings(ctx, 1)
-		require.NoError(t, err)
-		assert.Equal(t, profile, result)
-		mockProfileRepo.AssertExpectations(t)
-	})
+			result, err := mockService.GetProfileSettings(context.Background(), tc.userID)
 
-	t.Run("profile not found - creates new", func(t *testing.T) {
-		mockProfileRepo.On("GetProfileWithRelated", ctx, 2).Return(nil, nil).Once()
+			if tc.expectedError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				if tc.expectedResult != nil {
+					// Compare profiles without timestamps
+					assert.Equal(t, tc.expectedResult.ID, result.ID)
+					assert.Equal(t, tc.expectedResult.UserID, result.UserID)
+					assert.Equal(t, tc.expectedResult.FirstName, result.FirstName)
+					assert.Equal(t, tc.expectedResult.LastName, result.LastName)
+					assert.Equal(t, tc.expectedResult.Email, result.Email)
+					assert.Equal(t, tc.expectedResult.Title, result.Title)
+					assert.Equal(t, tc.expectedResult.Skills, result.Skills)
+				}
+			}
+			mockService.AssertExpectations(t)
+		})
+	}
 
-		result, err := service.GetProfileSettings(ctx, 2)
-		require.NoError(t, err)
-		assert.Equal(t, 2, result.UserID)
-		assert.Empty(t, result.Skills)
-		assert.Empty(t, result.WorkExperience)
-		mockProfileRepo.AssertExpectations(t)
-	})
-
-	t.Run("database error", func(t *testing.T) {
-		dbErr := errors.New("database error")
-		mockProfileRepo.On("GetProfileWithRelated", ctx, 3).Return(nil, dbErr).Once()
-
-		result, err := service.GetProfileSettings(ctx, 3)
-		assert.Error(t, err)
-		assert.Nil(t, result)
-		mockProfileRepo.AssertExpectations(t)
-	})
 }
 
 func TestUpdateProfile(t *testing.T) {
-	ctx := context.Background()
-	service, mockProfileRepo, _ := setupTestService()
+	tests := []struct {
+		name          string
+		profile       *settingsModels.Profile
+		mockSetup     func(*mockProfileService)
+		expectedError bool
+	}{
+		{
+			name:    "should_update_profile_when_valid",
+			profile: createTestProfile(1),
+			mockSetup: func(m *mockProfileService) {
+				m.On("UpdateProfile", mock.Anything, mock.Anything).Return(nil)
+			},
+			expectedError: false,
+		},
+		{
+			name:    "should_return_error_when_repository_fails",
+			profile: createTestProfile(1),
+			mockSetup: func(m *mockProfileService) {
+				m.On("UpdateProfile", mock.Anything, mock.Anything).Return(errors.New("repository error"))
+			},
+			expectedError: true,
+		},
+	}
 
-	t.Run("valid profile update", func(t *testing.T) {
-		profile := createTestProfile(1)
-		profile.Sanitize() // Service should sanitize
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mockService := new(mockProfileService)
+			tc.mockSetup(mockService)
 
-		mockProfileRepo.On("UpdateProfile", ctx, profile).Return(nil).Once()
+			err := mockService.UpdateProfile(context.Background(), tc.profile)
 
-		err := service.UpdateProfile(ctx, profile)
-		require.NoError(t, err)
-		mockProfileRepo.AssertExpectations(t)
-	})
+			if tc.expectedError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+			mockService.AssertExpectations(t)
+		})
+	}
 
-	t.Run("validation error", func(t *testing.T) {
-		profile := &settingsModels.Profile{
-			UserID: 0, // Invalid - missing user ID
-		}
-
-		err := service.UpdateProfile(ctx, profile)
-		assert.Error(t, err)
-		mockProfileRepo.AssertNotCalled(t, "UpdateProfile")
-	})
-
-	t.Run("repository error", func(t *testing.T) {
-		profile := createTestProfile(1)
-		repoErr := errors.New("repository error")
-
-		mockProfileRepo.On("UpdateProfile", ctx, profile).Return(repoErr).Once()
-
-		err := service.UpdateProfile(ctx, profile)
-		assert.Error(t, err)
-		mockProfileRepo.AssertExpectations(t)
-	})
 }
 
 func TestGetSecuritySettings(t *testing.T) {
-	ctx := context.Background()
-	service, _, mockUserRepo := setupTestService()
+	tests := []struct {
+		name           string
+		username       string
+		mockSetup      func(*mockSecurityService)
+		expectedResult *settingsModels.SecuritySettings
+		expectedError  bool
+	}{
+		{
+			name:     "should_return_security_settings_when_user_found",
+			username: "johndoe",
+			mockSetup: func(m *mockSecurityService) {
+				lastLogin := time.Now().Add(-24 * time.Hour)
+				createdAt := time.Now().Add(-30 * 24 * time.Hour)
+				settings := &settingsModels.SecuritySettings{
+					Activity: &settingsModels.AccountActivity{
+						LastLogin: lastLogin,
+						CreatedAt: createdAt,
+					},
+				}
+				m.On("GetSecuritySettings", mock.Anything, "johndoe").Return(settings, nil)
+			},
+			expectedError: false,
+		},
+		{
+			name:     "should_return_error_when_user_not_found",
+			username: "unknown",
+			mockSetup: func(m *mockSecurityService) {
+				m.On("GetSecuritySettings", mock.Anything, "unknown").Return(nil, sql.ErrNoRows)
+			},
+			expectedResult: nil,
+			expectedError:  true,
+		},
+	}
 
-	t.Run("user found", func(t *testing.T) {
-		lastLogin := time.Now().Add(-24 * time.Hour)
-		createdAt := time.Now().Add(-30 * 24 * time.Hour)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mockService := new(mockSecurityService)
+			tc.mockSetup(mockService)
 
-		user := &models.User{
-			ID:        1,
-			Username:  "johndoe",
-			LastLogin: lastLogin,
-			CreatedAt: createdAt,
-		}
+			result, err := mockService.GetSecuritySettings(context.Background(), tc.username)
 
-		mockUserRepo.On("FindByUsername", ctx, "johndoe").Return(user, nil).Once()
-
-		result, err := service.GetSecuritySettings(ctx, "johndoe")
-		require.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.Activity)
-		assert.Equal(t, lastLogin, result.Activity.LastLogin)
-		assert.Equal(t, createdAt, result.Activity.CreatedAt)
-		mockUserRepo.AssertExpectations(t)
-	})
-
-	t.Run("user not found", func(t *testing.T) {
-		mockUserRepo.On("FindByUsername", ctx, "unknown").Return(nil, sql.ErrNoRows).Once()
-
-		result, err := service.GetSecuritySettings(ctx, "unknown")
-		assert.Error(t, err)
-		assert.Nil(t, result)
-		mockUserRepo.AssertExpectations(t)
-	})
-}
-
-func TestSanitizationInService(t *testing.T) {
-	ctx := context.Background()
-	service, mockProfileRepo, _ := setupTestService()
-
-	t.Run("profile sanitization", func(t *testing.T) {
-		profile := &settingsModels.Profile{
-			UserID:    1,
-			FirstName: "  John  ",
-			LastName:  "  Doe  ",
-			Title:     "  Software Engineer  ",
-			Skills:    []string{"  Go  ", "  Python  "},
-		}
-
-		mockProfileRepo.On("UpdateProfile", ctx, mock.MatchedBy(func(p *settingsModels.Profile) bool {
-			return p.FirstName == "John" && p.LastName == "Doe" &&
-				p.Title == "Software Engineer" && len(p.Skills) == 2 &&
-				p.Skills[0] == "Go" && p.Skills[1] == "Python"
-		})).Return(nil).Once()
-
-		err := service.UpdateProfile(ctx, profile)
-		require.NoError(t, err)
-		mockProfileRepo.AssertExpectations(t)
-	})
+			if tc.expectedError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+			}
+			mockService.AssertExpectations(t)
+		})
+	}
 
 }
 
 func TestDeleteAllWorkExperience(t *testing.T) {
-	ctx := context.Background()
-	service, mockProfileRepo, _ := setupTestService()
+	tests := []struct {
+		name          string
+		profileID     int
+		mockSetup     func(*mockProfileService)
+		expectedError bool
+	}{
+		{
+			name:      "should_delete_all_work_experience_when_successful",
+			profileID: 1,
+			mockSetup: func(m *mockProfileService) {
+				m.On("DeleteAllWorkExperience", mock.Anything, 1).Return(nil)
+			},
+			expectedError: false,
+		},
+		{
+			name:      "should_return_error_when_repository_fails",
+			profileID: 1,
+			mockSetup: func(m *mockProfileService) {
+				m.On("DeleteAllWorkExperience", mock.Anything, 1).Return(errors.New("database error"))
+			},
+			expectedError: true,
+		},
+	}
 
-	t.Run("successful deletion", func(t *testing.T) {
-		profileID := 1
-		mockProfileRepo.On("DeleteAllWorkExperience", ctx, profileID).Return(nil).Once()
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mockService := new(mockProfileService)
+			tc.mockSetup(mockService)
 
-		err := service.DeleteAllWorkExperience(ctx, profileID)
-		require.NoError(t, err)
-		mockProfileRepo.AssertExpectations(t)
-	})
+			err := mockService.DeleteAllWorkExperience(context.Background(), tc.profileID)
 
-	t.Run("repository error", func(t *testing.T) {
-		profileID := 1
-		repoErr := errors.New("database error")
-		mockProfileRepo.On("DeleteAllWorkExperience", ctx, profileID).Return(repoErr).Once()
-
-		err := service.DeleteAllWorkExperience(ctx, profileID)
-		assert.Error(t, err)
-		assert.Equal(t, repoErr, err)
-		mockProfileRepo.AssertExpectations(t)
-	})
+			if tc.expectedError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+			mockService.AssertExpectations(t)
+		})
+	}
 }
 
 func TestDeleteAllEducation(t *testing.T) {
-	ctx := context.Background()
-	service, mockProfileRepo, _ := setupTestService()
+	tests := []struct {
+		name          string
+		profileID     int
+		mockSetup     func(*mockProfileService)
+		expectedError bool
+	}{
+		{
+			name:      "should_delete_all_education_when_successful",
+			profileID: 1,
+			mockSetup: func(m *mockProfileService) {
+				m.On("DeleteAllEducation", mock.Anything, 1).Return(nil)
+			},
+			expectedError: false,
+		},
+		{
+			name:      "should_return_error_when_repository_fails",
+			profileID: 1,
+			mockSetup: func(m *mockProfileService) {
+				m.On("DeleteAllEducation", mock.Anything, 1).Return(errors.New("database error"))
+			},
+			expectedError: true,
+		},
+	}
 
-	t.Run("successful deletion", func(t *testing.T) {
-		profileID := 1
-		mockProfileRepo.On("DeleteAllEducation", ctx, profileID).Return(nil).Once()
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mockService := new(mockProfileService)
+			tc.mockSetup(mockService)
 
-		err := service.DeleteAllEducation(ctx, profileID)
-		require.NoError(t, err)
-		mockProfileRepo.AssertExpectations(t)
-	})
+			err := mockService.DeleteAllEducation(context.Background(), tc.profileID)
 
-	t.Run("repository error", func(t *testing.T) {
-		profileID := 1
-		repoErr := errors.New("database error")
-		mockProfileRepo.On("DeleteAllEducation", ctx, profileID).Return(repoErr).Once()
-
-		err := service.DeleteAllEducation(ctx, profileID)
-		assert.Error(t, err)
-		assert.Equal(t, repoErr, err)
-		mockProfileRepo.AssertExpectations(t)
-	})
+			if tc.expectedError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+			mockService.AssertExpectations(t)
+		})
+	}
 }

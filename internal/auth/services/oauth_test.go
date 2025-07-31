@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"net/http"
 	"testing"
 
 	"github.com/benidevo/vega/internal/auth/models"
@@ -154,5 +155,161 @@ func TestGenerateRandomState(t *testing.T) {
 
 		anotherState := generateRandomState(length)
 		require.NotEqual(t, state, anotherState, "Two generated states should differ")
+	}
+}
+
+func TestNewGoogleAuthService(t *testing.T) {
+	t.Run("should_create_service_successfully_with_valid_config", func(t *testing.T) {
+		cfg := &config.Settings{
+			GoogleClientID:          "test-client-id",
+			GoogleClientSecret:      "test-client-secret",
+			GoogleClientRedirectURL: "http://localhost/auth/google/callback",
+			GoogleAuthUserInfoURL:   "https://www.googleapis.com/oauth2/v1/userinfo",
+			GoogleAuthUserInfoScope: "https://www.googleapis.com/auth/userinfo.email",
+		}
+		mockRepo := new(MockUserRepository)
+
+		service, err := NewGoogleAuthService(cfg, mockRepo)
+
+		require.NoError(t, err)
+		require.NotNil(t, service)
+		require.Equal(t, cfg, service.cfg)
+		require.NotNil(t, service.oauthCfg)
+		require.NotNil(t, service.log)
+		require.Equal(t, mockRepo, service.repo)
+	})
+
+	t.Run("should_return_error_when_credentials_missing", func(t *testing.T) {
+		cfg := &config.Settings{
+			GoogleClientID:          "", // Missing client ID
+			GoogleClientSecret:      "test-client-secret",
+			GoogleClientRedirectURL: "http://localhost/auth/google/callback",
+			GoogleAuthUserInfoURL:   "https://www.googleapis.com/oauth2/v1/userinfo",
+			GoogleAuthUserInfoScope: "https://www.googleapis.com/auth/userinfo.email",
+		}
+		mockRepo := new(MockUserRepository)
+
+		service, err := NewGoogleAuthService(cfg, mockRepo)
+
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "failed to read Google credentials file")
+		require.Nil(t, service)
+	})
+}
+
+// Mock HTTP client for testing
+type mockHTTPClient struct {
+	response *http.Response
+	err      error
+}
+
+func (m *mockHTTPClient) Do(req *http.Request) (*http.Response, error) {
+	return m.response, m.err
+}
+
+func TestAuthenticate(t *testing.T) {
+	t.Run("should_authenticate_successfully_with_valid_code", func(t *testing.T) {
+		// Testing Authenticate method requires mocking external OAuth2 and HTTP dependencies
+		// which is complex due to the external nature of Google OAuth
+		// The core logic is tested through unit tests of getOrCreateUser and other methods
+		t.Skip("Skipping due to external OAuth2 dependencies")
+	})
+}
+
+func TestGetGoogleCredentials(t *testing.T) {
+	t.Run("should_return_oauth_config_with_valid_credentials", func(t *testing.T) {
+		clientID := "test-client-id"
+		clientSecret := "test-client-secret"
+		redirectURL := "http://localhost/auth/google/callback"
+		scope := "https://www.googleapis.com/auth/userinfo.email"
+
+		oauthCfg, err := getGoogleCredentials(clientID, clientSecret, redirectURL, scope)
+
+		require.NoError(t, err)
+		require.NotNil(t, oauthCfg)
+		require.Equal(t, clientID, oauthCfg.ClientID)
+		require.Equal(t, clientSecret, oauthCfg.ClientSecret)
+		require.Equal(t, redirectURL, oauthCfg.RedirectURL)
+		require.Contains(t, oauthCfg.Scopes, scope)
+		require.Equal(t, "https://accounts.google.com/o/oauth2/auth", oauthCfg.Endpoint.AuthURL)
+		require.Equal(t, "https://oauth2.googleapis.com/token", oauthCfg.Endpoint.TokenURL)
+	})
+
+	t.Run("should_return_error_when_client_id_missing", func(t *testing.T) {
+		clientID := ""
+		clientSecret := "test-client-secret"
+		redirectURL := "http://localhost/auth/google/callback"
+		scope := "https://www.googleapis.com/auth/userinfo.email"
+
+		oauthCfg, err := getGoogleCredentials(clientID, clientSecret, redirectURL, scope)
+
+		require.Error(t, err)
+		require.Nil(t, oauthCfg)
+		require.Equal(t, models.ErrGoogleCredentialsInvalid, err)
+	})
+
+	t.Run("should_return_error_when_client_secret_missing", func(t *testing.T) {
+		clientID := "test-client-id"
+		clientSecret := ""
+		redirectURL := "http://localhost/auth/google/callback"
+		scope := "https://www.googleapis.com/auth/userinfo.email"
+
+		oauthCfg, err := getGoogleCredentials(clientID, clientSecret, redirectURL, scope)
+
+		require.Error(t, err)
+		require.Nil(t, oauthCfg)
+		require.Equal(t, models.ErrGoogleCredentialsInvalid, err)
+	})
+
+	t.Run("should_allow_empty_redirect_url", func(t *testing.T) {
+		clientID := "test-client-id"
+		clientSecret := "test-client-secret"
+		redirectURL := ""
+		scope := "https://www.googleapis.com/auth/userinfo.email"
+
+		oauthCfg, err := getGoogleCredentials(clientID, clientSecret, redirectURL, scope)
+
+		require.NoError(t, err)
+		require.NotNil(t, oauthCfg)
+		require.Equal(t, "", oauthCfg.RedirectURL)
+	})
+}
+
+func TestOAuthLogError(t *testing.T) {
+	cfg := &config.Settings{
+		GoogleClientID:          "test-client-id",
+		GoogleClientSecret:      "test-client-secret",
+		GoogleClientRedirectURL: "http://localhost/auth/google/callback",
+		GoogleAuthUserInfoURL:   "https://www.googleapis.com/oauth2/v1/userinfo",
+		GoogleAuthUserInfoScope: "https://www.googleapis.com/auth/userinfo.email",
+	}
+	mockRepo := new(MockUserRepository)
+
+	service, err := NewGoogleAuthService(cfg, mockRepo)
+	require.NoError(t, err)
+
+	// Test LogError method - just ensure it doesn't panic
+	service.LogError(errors.New("test oauth error"))
+	service.LogError(nil)
+}
+
+func TestGenerateRandomStateFallback(t *testing.T) {
+	// Test the fallback behavior in generateRandomState
+	// This would require simulating a crypto/rand failure, which is difficult
+	// We can at least ensure the function works with different lengths
+	lengths := []int{1, 10, 100}
+
+	for _, length := range lengths {
+		state := generateRandomState(length)
+		require.Len(t, state, length)
+
+		// Verify all characters are alphanumeric
+		for _, char := range state {
+			require.True(t,
+				(char >= 'a' && char <= 'z') ||
+					(char >= 'A' && char <= 'Z') ||
+					(char >= '0' && char <= '9'),
+				"Character '%c' is not alphanumeric", char)
+		}
 	}
 }

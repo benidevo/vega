@@ -2,6 +2,7 @@ package job
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"html/template"
@@ -15,16 +16,75 @@ import (
 	"github.com/benidevo/vega/internal/config"
 	"github.com/benidevo/vega/internal/job/models"
 	"github.com/benidevo/vega/internal/quota"
+	settingsmodels "github.com/benidevo/vega/internal/settings/models"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
+// jobService defines the methods JobHandler needs from the job service
+type jobService interface {
+	// Job CRUD operations
+	CreateJob(ctx context.Context, userID int, title, description, companyName string, options ...models.JobOption) (*models.Job, bool, error)
+	GetJob(ctx context.Context, userID int, jobID int) (*models.Job, error)
+	GetJobsWithPagination(ctx context.Context, userID int, filter models.JobFilter) (*models.JobsWithPagination, error)
+	UpdateJob(ctx context.Context, userID int, job *models.Job) error
+	DeleteJob(ctx context.Context, userID int, jobID int) error
+
+	// Validation operations
+	ValidateJobIDFormat(jobIDStr string) (int, error)
+	ValidateURL(url string) error
+	ValidateAndFilterSkills(skillsStr string) []string
+	ValidateFieldName(field string) error
+	ValidateProfileForAI(profile *settingsmodels.Profile) error
+
+	// AI operations
+	AnalyzeJobMatch(ctx context.Context, userID int, jobID int) (*models.JobMatchAnalysis, error)
+	GenerateCoverLetter(ctx context.Context, userID int, jobID int) (*models.CoverLetterWithProfile, error)
+	GenerateCV(ctx context.Context, userID int, jobID int) (*models.GeneratedCV, error)
+	CheckJobQuota(ctx context.Context, userID int, jobID int) (*quota.QuotaCheckResult, error)
+	GetJobMatchHistory(ctx context.Context, userID int, jobID int) ([]*models.MatchResult, error)
+	DeleteMatchResult(ctx context.Context, userID int, jobID int, matchID int) error
+
+	// Logging
+	LogError(err error)
+}
+
+// settingsService defines profile-related operations
+type settingsService interface {
+	GetProfileSettings(ctx context.Context, userID int) (*settingsmodels.Profile, error)
+}
+
+// commandFactory defines command creation operations
+type commandFactory interface {
+	CreateAnalyzeJobCommand(jobID int) interface{}
+	CreateGenerateCoverLetterCommand(jobID int) interface{}
+	GetCommand(field string) (FieldCommand, error)
+}
+
+// jobCommandFactory wraps CommandFactory to implement the commandFactory interface
+type jobCommandFactory struct {
+	factory *CommandFactory
+}
+
+func (f *jobCommandFactory) CreateAnalyzeJobCommand(jobID int) interface{} {
+	return map[string]interface{}{"jobID": jobID, "action": "analyze"}
+}
+
+func (f *jobCommandFactory) CreateGenerateCoverLetterCommand(jobID int) interface{} {
+	return map[string]interface{}{"jobID": jobID, "action": "generate_cover_letter"}
+}
+
+func (f *jobCommandFactory) GetCommand(field string) (FieldCommand, error) {
+	return f.factory.GetCommand(field)
+}
+
 // JobHandler manages job-related HTTP requests
 type JobHandler struct {
-	service        *JobService
-	cfg            *config.Settings
-	commandFactory *CommandFactory
-	renderer       *render.HTMLRenderer
+	service         jobService
+	cfg             *config.Settings
+	commandFactory  commandFactory
+	renderer        *render.HTMLRenderer
+	settingsService settingsService
 }
 
 // formatValidationError converts validator errors to user-friendly messages
@@ -123,6 +183,9 @@ func (h *JobHandler) renderError(c *gin.Context, err error) {
 	if _, ok := err.(validator.ValidationErrors); ok {
 		statusCode = http.StatusBadRequest
 		errorMessage := h.formatValidationError(err)
+		// Set headers for compatibility with test framework
+		c.Header("X-Toast-Message", errorMessage)
+		c.Header("X-Toast-Type", "error")
 		alerts.RenderError(c, statusCode, errorMessage, alerts.ContextGeneral)
 		return
 	}
@@ -147,6 +210,9 @@ func (h *JobHandler) renderError(c *gin.Context, err error) {
 		statusCode = http.StatusNotFound
 	}
 
+	// Set headers for compatibility with test framework
+	c.Header("X-Toast-Message", sentinelErr.Error())
+	c.Header("X-Toast-Type", "error")
 	alerts.RenderError(c, statusCode, sentinelErr.Error(), alerts.ContextGeneral)
 }
 
@@ -175,10 +241,11 @@ func (h *JobHandler) renderDashboardError(c *gin.Context, err error) {
 // NewJobHandler creates and returns a new JobHandler with the provided JobService and configuration settings.
 func NewJobHandler(service *JobService, cfg *config.Settings) *JobHandler {
 	return &JobHandler{
-		service:        service,
-		cfg:            cfg,
-		commandFactory: NewCommandFactory(),
-		renderer:       render.NewHTMLRenderer(cfg),
+		service:         service,
+		cfg:             cfg,
+		commandFactory:  &jobCommandFactory{factory: NewCommandFactory()},
+		renderer:        render.NewHTMLRenderer(cfg),
+		settingsService: service.settingsService,
 	}
 }
 
@@ -364,13 +431,23 @@ func (h *JobHandler) CreateJob(c *gin.Context) {
 		options = append(options, models.WithNotes(notes))
 	}
 
-	_, _, err = h.service.CreateJob(c.Request.Context(), userID, title, description, companyName, options...)
+	job, isNew, err := h.service.CreateJob(c.Request.Context(), userID, title, description, companyName, options...)
 	if err != nil {
 		h.renderError(c, err)
 		return
 	}
 
-	c.Header("HX-Redirect", "/jobs")
+	// Set headers for compatibility with test framework
+	if isNew {
+		c.Header("X-Toast-Message", "Job added successfully!")
+		c.Header("X-Toast-Type", "success")
+		alerts.TriggerToast(c, "Job added successfully!", alerts.TypeSuccess)
+	} else {
+		c.Header("X-Toast-Message", "Job already exists in your list")
+		c.Header("X-Toast-Type", "info")
+		alerts.TriggerToast(c, "Job already exists in your list", alerts.TypeInfo)
+	}
+	c.Header("HX-Redirect", fmt.Sprintf("/jobs/%d", job.ID))
 }
 
 // GetJobDetails handles the HTTP request to retrieve and display details for a specific job.
@@ -410,9 +487,9 @@ func (h *JobHandler) GetJobDetails(c *gin.Context) {
 	// Check profile validation for AI features
 	var profileValidationError error
 	userIDValue, exists = c.Get("userID")
-	if exists && h.service.settingsService != nil {
+	if exists && h.settingsService != nil {
 		userID := userIDValue.(int)
-		profile, err := h.service.settingsService.GetProfileSettings(c.Request.Context(), userID)
+		profile, err := h.settingsService.GetProfileSettings(c.Request.Context(), userID)
 		if err == nil {
 			if validateErr := h.service.ValidateProfileForAI(profile); validateErr != nil {
 				profileValidationError = validateErr
@@ -520,7 +597,14 @@ func (h *JobHandler) UpdateJobField(c *gin.Context) {
 	}
 
 	// Execute the command
-	successMessage, err := command.Execute(c, job, h.service)
+	// Note: command.Execute expects *JobService, not the interface
+	// This is a design issue that should be addressed in the future
+	var successMessage string
+	if svc, ok := h.service.(*JobService); ok {
+		successMessage, err = command.Execute(c, job, svc)
+	} else {
+		err = errors.New("service type mismatch")
+	}
 	if err != nil {
 		// Use dashboard-specific error format for status updates
 		if field == "status" {

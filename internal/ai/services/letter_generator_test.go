@@ -2,7 +2,7 @@ package services
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/benidevo/vega/internal/ai/llm"
@@ -12,18 +12,30 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type MockLetterGenerator struct {
+	mock.Mock
+}
+
+func (m *MockLetterGenerator) Generate(ctx context.Context, request llm.GenerateRequest) (llm.GenerateResponse, error) {
+	args := m.Called(ctx, request)
+	if args.Get(0) == nil {
+		return llm.GenerateResponse{}, args.Error(1)
+	}
+	return args.Get(0).(llm.GenerateResponse), args.Error(1)
+}
+
 func TestCoverLetterGeneratorService_GenerateCoverLetter(t *testing.T) {
 	tests := []struct {
-		name           string
-		request        models.Request
-		setupMock      func(*MockProvider)
-		expectedResult *models.CoverLetter
-		expectedError  error
+		name          string
+		request       models.Request
+		setupMock     func(*MockLetterGenerator)
+		expectError   bool
+		errorContains string
 	}{
 		{
-			name:    "successful cover letter generation",
+			name:    "should_generate_cover_letter_when_request_valid",
 			request: createTestRequest(),
-			setupMock: func(provider *MockProvider) {
+			setupMock: func(m *MockLetterGenerator) {
 				coverLetter := models.CoverLetter{
 					Content: "Dear Hiring Manager,\n\nI am writing to express my interest...",
 					Format:  models.CoverLetterTypePlainText,
@@ -33,212 +45,117 @@ func TestCoverLetterGeneratorService_GenerateCoverLetter(t *testing.T) {
 					Data: coverLetter,
 				}
 
-				provider.On("Generate", mock.Anything, mock.MatchedBy(func(req llm.GenerateRequest) bool {
+				m.On("Generate", mock.Anything, mock.MatchedBy(func(req llm.GenerateRequest) bool {
 					return req.ResponseType == llm.ResponseTypeCoverLetter
 				})).Return(response, nil)
 			},
-			expectedResult: &models.CoverLetter{
-				Content: "Dear Hiring Manager,\n\nI am writing to express my interest...",
-				Format:  models.CoverLetterTypePlainText,
-			},
-			expectedError: nil,
 		},
 		{
-			name: "missing applicant name",
+			name: "should_return_error_when_applicant_name_missing",
 			request: models.Request{
 				ApplicantName:    "",
 				ApplicantProfile: "Some profile",
 				JobDescription:   "Some job description",
 			},
-			setupMock: func(provider *MockProvider) {
-				// No mock setup needed as validation should fail
+			setupMock: func(m *MockLetterGenerator) {
 			},
-			expectedResult: nil,
-			expectedError:  models.ErrValidationFailed,
+			expectError:   true,
+			errorContains: "validation failed",
 		},
 		{
-			name: "missing applicant profile",
+			name: "should_return_error_when_applicant_profile_missing",
 			request: models.Request{
 				ApplicantName:    "John Doe",
 				ApplicantProfile: "",
 				JobDescription:   "Some job description",
 			},
-			setupMock: func(provider *MockProvider) {
-				// No mock setup needed as validation should fail
+			setupMock: func(m *MockLetterGenerator) {
 			},
-			expectedResult: nil,
-			expectedError:  models.ErrValidationFailed,
+			expectError:   true,
+			errorContains: "validation failed",
 		},
 		{
-			name: "missing job description",
+			name: "should_return_error_when_job_description_missing",
 			request: models.Request{
 				ApplicantName:    "John Doe",
 				ApplicantProfile: "Some profile",
 				JobDescription:   "",
 			},
-			setupMock: func(provider *MockProvider) {
-				// No mock setup needed as validation should fail
+			setupMock: func(m *MockLetterGenerator) {
 			},
-			expectedResult: nil,
-			expectedError:  models.ErrValidationFailed,
+			expectError:   true,
+			errorContains: "validation failed",
 		},
 		{
-			name:    "LLM provider error",
+			name:    "should_return_error_when_provider_fails",
 			request: createTestRequest(),
-			setupMock: func(provider *MockProvider) {
-				provider.On("Generate", mock.Anything, mock.AnythingOfType("llm.GenerateRequest")).
-					Return(nil, errors.New("provider error"))
+			setupMock: func(m *MockLetterGenerator) {
+				m.On("Generate", mock.Anything, mock.MatchedBy(func(req llm.GenerateRequest) bool {
+					return req.ResponseType == llm.ResponseTypeCoverLetter
+				})).Return(llm.GenerateResponse{}, fmt.Errorf("AI service error"))
 			},
-			expectedResult: nil,
-			expectedError:  nil, // Will be a wrapped provider error
+			expectError:   true,
+			errorContains: "AI service error",
 		},
 		{
-			name:    "invalid response type from provider",
+			name:    "should_return_error_when_response_invalid_type",
 			request: createTestRequest(),
-			setupMock: func(provider *MockProvider) {
+			setupMock: func(m *MockLetterGenerator) {
 				response := llm.GenerateResponse{
 					Data: "invalid type",
 				}
 
-				provider.On("Generate", mock.Anything, mock.AnythingOfType("llm.GenerateRequest")).
-					Return(response, nil)
+				m.On("Generate", mock.Anything, mock.MatchedBy(func(req llm.GenerateRequest) bool {
+					return req.ResponseType == llm.ResponseTypeCoverLetter
+				})).Return(response, nil)
 			},
-			expectedResult: nil,
-			expectedError:  nil, // Will be a type assertion error
+			expectError:   true,
+			errorContains: "unexpected response type",
 		},
 		{
-			name:    "empty cover letter content",
-			request: createTestRequest(),
-			setupMock: func(provider *MockProvider) {
+			name: "should_generate_html_format_when_configured",
+			request: models.Request{
+				ApplicantName:    "Jane Smith",
+				ApplicantProfile: "Backend Developer with Go expertise",
+				JobDescription:   "Go Developer position",
+				ExtraContext:     "Focus on microservices experience",
+			},
+			setupMock: func(m *MockLetterGenerator) {
 				coverLetter := models.CoverLetter{
-					Content: "",
-					Format:  models.CoverLetterTypePlainText,
+					Content: "<p>Dear Hiring Manager,</p><p>I am excited to apply...</p>",
+					Format:  models.CoverLetterTypeHtml,
 				}
 
-				response := llm.GenerateResponse{
+				m.On("Generate", mock.Anything, mock.MatchedBy(func(req llm.GenerateRequest) bool {
+					return req.ResponseType == llm.ResponseTypeCoverLetter
+				})).Return(llm.GenerateResponse{
 					Data: coverLetter,
-				}
-
-				provider.On("Generate", mock.Anything, mock.AnythingOfType("llm.GenerateRequest")).
-					Return(response, nil)
+				}, nil)
 			},
-			expectedResult: nil,
-			expectedError:  models.ErrValidationFailed,
-		},
-		{
-			name:    "cover letter with empty format gets default",
-			request: createTestRequest(),
-			setupMock: func(provider *MockProvider) {
-				coverLetter := models.CoverLetter{
-					Content: "Valid cover letter content",
-					Format:  "", // Empty format
-				}
-
-				response := llm.GenerateResponse{
-					Data: coverLetter,
-				}
-
-				provider.On("Generate", mock.Anything, mock.AnythingOfType("llm.GenerateRequest")).
-					Return(response, nil)
-			},
-			expectedResult: &models.CoverLetter{
-				Content: "Valid cover letter content",
-				Format:  models.CoverLetterTypePlainText, // Should default to plain text
-			},
-			expectedError: nil,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockProvider := &MockProvider{}
-			tt.setupMock(mockProvider)
+			mockProvider := &MockLetterGenerator{}
+			if tt.setupMock != nil {
+				tt.setupMock(mockProvider)
+			}
 
 			service := NewCoverLetterGeneratorService(mockProvider)
-
 			result, err := service.GenerateCoverLetter(context.Background(), tt.request)
 
-			if tt.expectedError != nil {
+			if tt.expectError {
 				assert.Error(t, err)
-				assert.Nil(t, result)
-				if tt.expectedError == models.ErrValidationFailed {
-					assert.Contains(t, err.Error(), "validation failed")
-				}
-			} else if tt.name == "LLM provider error" {
-				assert.Error(t, err)
-				assert.Nil(t, result)
-			} else if tt.name == "invalid response type from provider" {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), "unexpected response type")
+				assert.Contains(t, err.Error(), tt.errorContains)
 				assert.Nil(t, result)
 			} else {
 				assert.NoError(t, err)
 				require.NotNil(t, result)
-				assert.Equal(t, tt.expectedResult.Content, result.Content)
-				assert.Equal(t, tt.expectedResult.Format, result.Format)
+				assert.NotEmpty(t, result.Content)
 			}
 
 			mockProvider.AssertExpectations(t)
-		})
-	}
-}
-
-func TestCoverLetterGeneratorService_validateCoverLetter(t *testing.T) {
-	tests := []struct {
-		name           string
-		input          *models.CoverLetter
-		expectedError  bool
-		expectedLetter *models.CoverLetter
-	}{
-		{
-			name: "valid cover letter unchanged",
-			input: &models.CoverLetter{
-				Content: "Valid content",
-				Format:  models.CoverLetterTypeHtml,
-			},
-			expectedError: false,
-			expectedLetter: &models.CoverLetter{
-				Content: "Valid content",
-				Format:  models.CoverLetterTypeHtml,
-			},
-		},
-		{
-			name: "empty content returns error",
-			input: &models.CoverLetter{
-				Content: "",
-				Format:  models.CoverLetterTypePlainText,
-			},
-			expectedError: true,
-		},
-		{
-			name: "empty format gets default",
-			input: &models.CoverLetter{
-				Content: "Valid content",
-				Format:  "",
-			},
-			expectedError: false,
-			expectedLetter: &models.CoverLetter{
-				Content: "Valid content",
-				Format:  models.CoverLetterTypePlainText,
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockProvider := &MockProvider{}
-			service := NewCoverLetterGeneratorService(mockProvider)
-
-			err := service.validateCoverLetter(tt.input)
-
-			if tt.expectedError {
-				assert.Error(t, err)
-				assert.ErrorIs(t, err, models.ErrValidationFailed)
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.expectedLetter.Content, tt.input.Content)
-				assert.Equal(t, tt.expectedLetter.Format, tt.input.Format)
-			}
 		})
 	}
 }

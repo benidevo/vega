@@ -1,24 +1,35 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 
-	"github.com/benidevo/vega/internal/auth/services"
 	"github.com/benidevo/vega/internal/common/logger"
 	"github.com/gin-gonic/gin"
 )
 
+// oauthService defines OAuth operations needed by the API handler
+type oauthService interface {
+	Authenticate(ctx context.Context, code, redirectURI string) (accessToken, refreshToken string, err error)
+}
+
+// authService defines auth operations needed by the API handler
+type authService interface {
+	Login(ctx context.Context, username, password string) (string, string, error)
+	RefreshAccessToken(ctx context.Context, refreshToken string) (string, error)
+}
+
 // AuthAPIHandler handles authentication-related API requests using the provided OAuth service and authentication service.
 type AuthAPIHandler struct {
-	oauthService *services.GoogleAuthService
-	authService  *services.AuthService
+	oauthService oauthService
+	authService  authService
 	log          *logger.PrivacyLogger
 }
 
 // NewAuthAPIHandler creates and returns a new AuthAPIHandler with the provided GoogleAuthService and Authentication service.
-func NewAuthAPIHandler(oathService *services.GoogleAuthService, authService *services.AuthService) *AuthAPIHandler {
+func NewAuthAPIHandler(oauthService oauthService, authService authService) *AuthAPIHandler {
 	return &AuthAPIHandler{
-		oauthService: oathService,
+		oauthService: oauthService,
 		authService:  authService,
 		log:          logger.GetPrivacyLogger("api_auth"),
 	}

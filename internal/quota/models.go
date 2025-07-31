@@ -44,7 +44,7 @@ type DailyQuota struct {
 // UnifiedQuotaStatus combines all quota statuses
 type UnifiedQuotaStatus struct {
 	AIAnalysis QuotaStatus `json:"ai_analysis"`
-	JobSearch  QuotaStatus `json:"job_search"`
+	JobCapture QuotaStatus `json:"job_capture"`
 }
 
 // QuotaConfig represents quota configuration from database
@@ -59,7 +59,7 @@ type QuotaConfig struct {
 const (
 	// Quota types
 	QuotaTypeAIAnalysis = "ai_analysis"
-	QuotaTypeJobSearch  = "job_search"
+	QuotaTypeJobCapture = "job_capture"
 
 	// Period types
 	PeriodDaily   = "daily"
@@ -75,5 +75,5 @@ const (
 	QuotaReasonLimitReached = "quota limit reached"
 
 	// Daily quota keys
-	QuotaKeyJobsFound = "jobs_found"
+	QuotaKeyJobsCaptured = "jobs_captured"
 )

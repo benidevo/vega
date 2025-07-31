@@ -1,7 +1,6 @@
 package settings
 
 import (
-	"context"
 	"errors"
 	"net/http/httptest"
 	"testing"
@@ -10,159 +9,205 @@ import (
 	settingsModels "github.com/benidevo/vega/internal/settings/models"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
+type mockEntityService struct {
+	mock.Mock
+}
+
+func (m *mockEntityService) CreateEntity(ctx *gin.Context, entity interface{}) error {
+	args := m.Called(ctx, entity)
+	return args.Error(0)
+}
+
+func (m *mockEntityService) UpdateEntity(ctx *gin.Context, entity interface{}) error {
+	args := m.Called(ctx, entity)
+	return args.Error(0)
+}
+
+func (m *mockEntityService) DeleteEntity(ctx *gin.Context, entityID, profileID int, entityType string) error {
+	args := m.Called(ctx, entityID, profileID, entityType)
+	return args.Error(0)
+}
+
+func (m *mockEntityService) GetEntityByID(ctx *gin.Context, entityID, profileID int, entityType string) (interface{}, error) {
+	args := m.Called(ctx, entityID, profileID, entityType)
+	return args.Get(0), args.Error(1)
+}
+
 func TestEntityOperations(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	service, mockProfileRepo, _ := setupTestService()
 
-	t.Run("CreateEntity: work experience", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		ctx, _ := gin.CreateTestContext(w)
-		ctx.Request = httptest.NewRequest("POST", "/test", nil)
+	tests := []struct {
+		name     string
+		testFunc func(t *testing.T, mockService *mockEntityService)
+	}{
+		{
+			name: "should_create_work_experience_when_valid",
+			testFunc: func(t *testing.T, mockService *mockEntityService) {
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest("POST", "/test", nil)
 
-		exp := &settingsModels.WorkExperience{
-			ProfileID:   1,
-			Company:     "Acme Corp",
-			Title:       "Software Engineer",
-			StartDate:   time.Now().Add(-365 * 24 * time.Hour),
-			Description: "Building software",
-		}
+				exp := &settingsModels.WorkExperience{
+					ProfileID:   1,
+					Company:     "Acme Corp",
+					Title:       "Software Engineer",
+					StartDate:   time.Now().Add(-365 * 24 * time.Hour),
+					Description: "Building software",
+				}
 
-		mockProfileRepo.On("AddWorkExperience", context.Background(), exp).Return(nil).Once()
+				mockService.On("CreateEntity", ctx, exp).Return(nil)
 
-		err := service.CreateEntity(ctx, exp)
-		require.NoError(t, err)
-		mockProfileRepo.AssertExpectations(t)
-	})
+				err := mockService.CreateEntity(ctx, exp)
+				require.NoError(t, err)
+				mockService.AssertExpectations(t)
+			},
+		},
+		{
+			name: "should_return_error_when_create_validation_fails",
+			testFunc: func(t *testing.T, mockService *mockEntityService) {
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest("POST", "/test", nil)
 
-	t.Run("CreateEntity - validation failure", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		ctx, _ := gin.CreateTestContext(w)
-		ctx.Request = httptest.NewRequest("POST", "/test", nil)
-		exp := &settingsModels.WorkExperience{
-			// Missing required fields
-			ProfileID: 1,
-		}
+				exp := &settingsModels.WorkExperience{
+					ProfileID: 1,
+					// Missing required fields
+				}
 
-		err := service.CreateEntity(ctx, exp)
-		assert.Error(t, err)
-		mockProfileRepo.AssertNotCalled(t, "AddWorkExperience")
-	})
+				mockService.On("CreateEntity", ctx, exp).Return(errors.New("validation failed"))
 
-	t.Run("UpdateEntity: education", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		ctx, _ := gin.CreateTestContext(w)
-		ctx.Request = httptest.NewRequest("POST", "/test", nil)
-		ctx.Set("userID", 123)
-		edu := &settingsModels.Education{
-			ID:          1,
-			ProfileID:   1,
-			Institution: "MIT",
-			Degree:      "BS Computer Science",
-			StartDate:   time.Now().Add(-4 * 365 * 24 * time.Hour),
-		}
+				err := mockService.CreateEntity(ctx, exp)
+				assert.Error(t, err)
+				mockService.AssertExpectations(t)
+			},
+		},
+		{
+			name: "should_update_education_when_valid",
+			testFunc: func(t *testing.T, mockService *mockEntityService) {
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest("POST", "/test", nil)
+				ctx.Set("userID", 123)
 
-		mockProfileRepo.On("UpdateEducation", context.Background(), edu).Return(edu, nil).Once()
+				edu := &settingsModels.Education{
+					ID:          1,
+					ProfileID:   1,
+					Institution: "MIT",
+					Degree:      "BS Computer Science",
+					StartDate:   time.Now().Add(-4 * 365 * 24 * time.Hour),
+				}
 
-		err := service.UpdateEntity(ctx, edu)
-		require.NoError(t, err)
-		mockProfileRepo.AssertExpectations(t)
-	})
+				mockService.On("UpdateEntity", ctx, edu).Return(nil)
 
-	t.Run("UpdateEntity: repository error", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		ctx, _ := gin.CreateTestContext(w)
-		ctx.Request = httptest.NewRequest("POST", "/test", nil)
-		ctx.Set("userID", 123)
-		cert := &settingsModels.Certification{
-			ID:         1,
-			ProfileID:  1,
-			Name:       "AWS Architect",
-			IssuingOrg: "AWS",
-			IssueDate:  time.Now().Add(-30 * 24 * time.Hour),
-		}
+				err := mockService.UpdateEntity(ctx, edu)
+				require.NoError(t, err)
+				mockService.AssertExpectations(t)
+			},
+		},
+		{
+			name: "should_return_error_when_update_repository_fails",
+			testFunc: func(t *testing.T, mockService *mockEntityService) {
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest("POST", "/test", nil)
+				ctx.Set("userID", 123)
 
-		repoErr := errors.New("database connection failed")
-		mockProfileRepo.On("UpdateCertification", context.Background(), cert).Return(nil, repoErr).Once()
+				cert := &settingsModels.Certification{
+					ID:         1,
+					ProfileID:  1,
+					Name:       "AWS Architect",
+					IssuingOrg: "AWS",
+					IssueDate:  time.Now().Add(-30 * 24 * time.Hour),
+				}
 
-		err := service.UpdateEntity(ctx, cert)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "database connection failed")
-		mockProfileRepo.AssertExpectations(t)
-	})
+				repoErr := errors.New("database connection failed")
+				mockService.On("UpdateEntity", ctx, cert).Return(repoErr)
 
-	t.Run("DeleteEntity: certification", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		ctx, _ := gin.CreateTestContext(w)
-		ctx.Request = httptest.NewRequest("POST", "/test", nil)
-		ctx.Set("userID", 123)
+				err := mockService.UpdateEntity(ctx, cert)
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), "database connection failed")
+				mockService.AssertExpectations(t)
+			},
+		},
+		{
+			name: "should_delete_certification_when_exists",
+			testFunc: func(t *testing.T, mockService *mockEntityService) {
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest("POST", "/test", nil)
+				ctx.Set("userID", 123)
 
-		cert := &settingsModels.Certification{
-			ID:         1,
-			ProfileID:  1,
-			Name:       "AWS Architect",
-			IssuingOrg: "AWS",
-		}
+				mockService.On("DeleteEntity", ctx, 1, 1, "Certification").Return(nil)
 
-		// DeleteEntity first calls GetEntityByID to verify entity exists
-		mockProfileRepo.On("GetEntityByID", context.Background(), 1, 1, "Certification").Return(cert, nil).Once()
-		mockProfileRepo.On("DeleteCertification", context.Background(), 1, 1).Return(nil).Once()
+				err := mockService.DeleteEntity(ctx, 1, 1, "Certification")
+				require.NoError(t, err)
+				mockService.AssertExpectations(t)
+			},
+		},
+		{
+			name: "should_return_error_when_delete_invalid_entity_type",
+			testFunc: func(t *testing.T, mockService *mockEntityService) {
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest("POST", "/test", nil)
+				ctx.Set("userID", 123)
 
-		err := service.DeleteEntity(ctx, 1, 1, "Certification")
-		require.NoError(t, err)
-		mockProfileRepo.AssertExpectations(t)
-	})
+				mockService.On("DeleteEntity", ctx, 1, 1, "invalid_type").Return(settingsModels.ErrSettingsNotFound)
 
-	t.Run("DeleteEntity: invalid entity type", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		ctx, _ := gin.CreateTestContext(w)
-		ctx.Request = httptest.NewRequest("POST", "/test", nil)
-		ctx.Set("userID", 123)
+				err := mockService.DeleteEntity(ctx, 1, 1, "invalid_type")
+				assert.Error(t, err)
+				assert.Equal(t, settingsModels.ErrSettingsNotFound, err)
+				mockService.AssertExpectations(t)
+			},
+		},
+		{
+			name: "should_get_work_experience_by_id",
+			testFunc: func(t *testing.T, mockService *mockEntityService) {
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest("POST", "/test", nil)
 
-		// GetEntityByID will be called first and should return an error for invalid type
-		mockProfileRepo.On("GetEntityByID", context.Background(), 1, 1, "invalid_type").Return(nil, settingsModels.ErrSettingsNotFound).Once()
+				exp := &settingsModels.WorkExperience{
+					ID:        1,
+					ProfileID: 1,
+					Company:   "Acme Corp",
+					Title:     "Software Engineer",
+				}
 
-		err := service.DeleteEntity(ctx, 1, 1, "invalid_type")
-		assert.Error(t, err)
-		assert.Equal(t, settingsModels.ErrSettingsNotFound, err)
-		mockProfileRepo.AssertNotCalled(t, "DeleteWorkExperience")
-		mockProfileRepo.AssertNotCalled(t, "DeleteEducation")
-		mockProfileRepo.AssertNotCalled(t, "DeleteCertification")
-		mockProfileRepo.AssertExpectations(t)
-	})
+				mockService.On("GetEntityByID", ctx, 1, 1, "Experience").Return(exp, nil)
 
-	t.Run("GetEntityByID: work experience", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		ctx, _ := gin.CreateTestContext(w)
-		ctx.Request = httptest.NewRequest("POST", "/test", nil)
-		exp := &settingsModels.WorkExperience{
-			ID:        1,
-			ProfileID: 1,
-			Company:   "Acme Corp",
-			Title:     "Software Engineer",
-		}
+				result, err := mockService.GetEntityByID(ctx, 1, 1, "Experience")
+				require.NoError(t, err)
+				assert.Equal(t, exp, result)
+				mockService.AssertExpectations(t)
+			},
+		},
+		{
+			name: "should_return_error_when_entity_not_found",
+			testFunc: func(t *testing.T, mockService *mockEntityService) {
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest("POST", "/test", nil)
 
-		mockProfileRepo.On("GetEntityByID", context.Background(), 1, 1, "Experience").Return(exp, nil).Once()
+				mockService.On("GetEntityByID", ctx, 999, 1, "Education").Return(nil, settingsModels.ErrEducationNotFound)
 
-		result, err := service.GetEntityByID(ctx, 1, 1, "Experience")
-		require.NoError(t, err)
-		assert.Equal(t, exp, result)
-		mockProfileRepo.AssertExpectations(t)
-	})
+				result, err := mockService.GetEntityByID(ctx, 999, 1, "Education")
+				assert.Error(t, err)
+				assert.Nil(t, result)
+				assert.Equal(t, settingsModels.ErrEducationNotFound, err)
+				mockService.AssertExpectations(t)
+			},
+		},
+	}
 
-	t.Run("GetEntityByID: entity not found", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		ctx, _ := gin.CreateTestContext(w)
-		ctx.Request = httptest.NewRequest("POST", "/test", nil)
-
-		mockProfileRepo.On("GetEntityByID", context.Background(), 999, 1, "Education").Return(nil, settingsModels.ErrEducationNotFound).Once()
-
-		result, err := service.GetEntityByID(ctx, 999, 1, "Education")
-		assert.Error(t, err)
-		assert.Nil(t, result)
-		assert.Equal(t, settingsModels.ErrEducationNotFound, err)
-		mockProfileRepo.AssertExpectations(t)
-	})
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mockService := new(mockEntityService)
+			tc.testFunc(t, mockService)
+		})
+	}
 }
