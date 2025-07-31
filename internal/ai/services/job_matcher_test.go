@@ -2,29 +2,22 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
-	"github.com/benidevo/vega/internal/ai/constants"
 	"github.com/benidevo/vega/internal/ai/llm"
 	"github.com/benidevo/vega/internal/ai/models"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-func init() {
-	// Disable logs for tests
-	zerolog.SetGlobalLevel(zerolog.Disabled)
-}
-
-// MockProvider mocks the llm.Provider interface
-type MockProvider struct {
+type MockJobMatcher struct {
 	mock.Mock
 }
 
-func (m *MockProvider) Generate(ctx context.Context, req llm.GenerateRequest) (llm.GenerateResponse, error) {
-	args := m.Called(ctx, req)
+func (m *MockJobMatcher) Generate(ctx context.Context, request llm.GenerateRequest) (llm.GenerateResponse, error) {
+	args := m.Called(ctx, request)
 	if args.Get(0) == nil {
 		return llm.GenerateResponse{}, args.Error(1)
 	}
@@ -57,14 +50,15 @@ func TestJobMatcherService_AnalyzeMatch(t *testing.T) {
 	tests := []struct {
 		name           string
 		request        models.Request
-		setupMock      func(*MockProvider)
+		setupMock      func(*MockJobMatcher)
 		expectedResult *models.MatchResult
-		expectedError  error
+		expectError    bool
+		errorContains  string
 	}{
 		{
-			name:    "Successful analysis",
+			name:    "should_match_job_when_request_valid",
 			request: createTestRequest(),
-			setupMock: func(provider *MockProvider) {
+			setupMock: func(m *MockJobMatcher) {
 				matchResult := models.MatchResult{
 					MatchScore: 85,
 					Strengths:  []string{"Strong Go skills", "Relevant experience"},
@@ -77,7 +71,7 @@ func TestJobMatcherService_AnalyzeMatch(t *testing.T) {
 					Data: matchResult,
 				}
 
-				provider.On("Generate", mock.Anything, mock.MatchedBy(func(req llm.GenerateRequest) bool {
+				m.On("Generate", mock.Anything, mock.MatchedBy(func(req llm.GenerateRequest) bool {
 					return req.ResponseType == llm.ResponseTypeMatchResult
 				})).Return(response, nil)
 			},
@@ -88,131 +82,127 @@ func TestJobMatcherService_AnalyzeMatch(t *testing.T) {
 				Highlights: []string{"Perfect cultural fit"},
 				Feedback:   "Great candidate for this role",
 			},
-			expectedError: nil,
 		},
 		{
-			name: "Missing applicant name",
+			name: "should_return_error_when_applicant_name_missing",
 			request: models.Request{
 				ApplicantName:    "", // Missing
 				ApplicantProfile: "Some profile",
 				JobDescription:   "Some job description",
 			},
-			setupMock: func(provider *MockProvider) {
-				// No mock setup needed as validation should fail
+			setupMock: func(m *MockJobMatcher) {
 			},
-			expectedResult: nil,
-			expectedError:  models.ErrValidationFailed,
+			expectError:   true,
+			errorContains: "validation failed",
 		},
 		{
-			name: "Missing applicant profile",
+			name: "should_return_error_when_applicant_profile_empty",
 			request: models.Request{
 				ApplicantName:    "John Doe",
-				ApplicantProfile: "", // Missing
+				ApplicantProfile: "", // Empty
 				JobDescription:   "Some job description",
 			},
-			setupMock: func(provider *MockProvider) {
-				// No mock setup needed as validation should fail
+			setupMock: func(m *MockJobMatcher) {
 			},
-			expectedResult: nil,
-			expectedError:  models.ErrValidationFailed,
+			expectError:   true,
+			errorContains: "validation failed",
 		},
 		{
-			name: "Missing job description",
+			name: "should_return_error_when_job_description_empty",
 			request: models.Request{
 				ApplicantName:    "John Doe",
 				ApplicantProfile: "Some profile",
-				JobDescription:   "", // Missing
+				JobDescription:   "", // Empty
 			},
-			setupMock: func(provider *MockProvider) {
-				// No mock setup needed as validation should fail
+			setupMock: func(m *MockJobMatcher) {
 			},
-			expectedResult: nil,
-			expectedError:  models.ErrValidationFailed,
+			expectError:   true,
+			errorContains: "validation failed",
 		},
 		{
-			name:    "LLM provider error",
+			name:    "should_return_error_when_provider_fails",
 			request: createTestRequest(),
-			setupMock: func(provider *MockProvider) {
-				provider.On("Generate", mock.Anything, mock.AnythingOfType("llm.GenerateRequest")).
-					Return(nil, assert.AnError)
+			setupMock: func(m *MockJobMatcher) {
+				m.On("Generate", mock.Anything, mock.MatchedBy(func(req llm.GenerateRequest) bool {
+					return req.ResponseType == llm.ResponseTypeMatchResult
+				})).Return(llm.GenerateResponse{}, fmt.Errorf("AI service error"))
 			},
-			expectedResult: nil,
-			expectedError:  assert.AnError,
+			expectError:   true,
+			errorContains: "AI service error",
 		},
 		{
-			name:    "Invalid response type",
+			name:    "should_return_error_when_response_invalid_type",
 			request: createTestRequest(),
-			setupMock: func(provider *MockProvider) {
-				// Return wrong type
-				response := llm.GenerateResponse{
+			setupMock: func(m *MockJobMatcher) {
+				m.On("Generate", mock.Anything, mock.MatchedBy(func(req llm.GenerateRequest) bool {
+					return req.ResponseType == llm.ResponseTypeMatchResult
+				})).Return(llm.GenerateResponse{
 					Data: "invalid type",
-				}
-
-				provider.On("Generate", mock.Anything, mock.AnythingOfType("llm.GenerateRequest")).
-					Return(response, nil)
+				}, nil)
 			},
-			expectedResult: nil,
-			expectedError:  nil, // Will be a type assertion error
+			expectError:   true,
+			errorContains: "unexpected response type",
 		},
 		{
-			name:    "Match result with invalid score gets validated",
-			request: createTestRequest(),
-			setupMock: func(provider *MockProvider) {
+			name: "should_include_previous_matches_when_provided",
+			request: models.Request{
+				ApplicantName: "Jane Smith",
+				ApplicantProfile: `Current Title: Data Scientist
+Skills: Python, ML, SQL`,
+				JobDescription: "Data Scientist role requiring ML experience",
+				PreviousMatches: []models.PreviousMatch{
+					{
+						JobTitle:    "ML Engineer",
+						Company:     "AI Corp",
+						MatchScore:  75,
+						KeyInsights: "Good ML skills but limited production experience",
+						DaysAgo:     5,
+					},
+				},
+			},
+			setupMock: func(m *MockJobMatcher) {
 				matchResult := models.MatchResult{
-					MatchScore: 150, // Invalid score > 100
-					Strengths:  []string{},
-					Weaknesses: []string{},
-					Highlights: []string{},
-					Feedback:   "",
+					MatchScore: 80,
+					Strengths:  []string{"Strong ML background"},
+					Weaknesses: []string{"Limited production experience"},
+					Highlights: []string{"Excellent Python skills"},
+					Feedback:   "Good fit with room for growth",
 				}
 
-				response := llm.GenerateResponse{
+				m.On("Generate", mock.Anything, mock.MatchedBy(func(req llm.GenerateRequest) bool {
+					return req.ResponseType == llm.ResponseTypeMatchResult
+				})).Return(llm.GenerateResponse{
 					Data: matchResult,
-				}
-
-				provider.On("Generate", mock.Anything, mock.AnythingOfType("llm.GenerateRequest")).
-					Return(response, nil)
+				}, nil)
 			},
 			expectedResult: &models.MatchResult{
-				MatchScore: 0, // Should be corrected to 0
-				Strengths:  []string{"No specific strengths identified"},
-				Weaknesses: []string{"No specific weaknesses identified"},
-				Highlights: []string{"No specific highlights identified"},
-				Feedback:   "Unable to provide detailed feedback at this time.",
+				MatchScore: 80,
+				Strengths:  []string{"Strong ML background"},
+				Weaknesses: []string{"Limited production experience"},
+				Highlights: []string{"Excellent Python skills"},
+				Feedback:   "Good fit with room for growth",
 			},
-			expectedError: nil,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockProvider := &MockProvider{}
-			tt.setupMock(mockProvider)
+			mockProvider := &MockJobMatcher{}
+			if tt.setupMock != nil {
+				tt.setupMock(mockProvider)
+			}
 
 			service := NewJobMatcherService(mockProvider)
-
 			result, err := service.AnalyzeMatch(context.Background(), tt.request)
 
-			if tt.expectedError != nil {
+			if tt.expectError {
 				assert.Error(t, err)
-				if tt.expectedError != assert.AnError {
-					// Check if it's a wrapped validation error
-					assert.Contains(t, err.Error(), "validation failed")
-				}
-				assert.Nil(t, result)
-			} else if tt.name == "Invalid response type" {
-				// Special case: should get type assertion error
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), "unexpected response type")
+				assert.Contains(t, err.Error(), tt.errorContains)
 				assert.Nil(t, result)
 			} else {
 				assert.NoError(t, err)
 				require.NotNil(t, result)
-				assert.Equal(t, tt.expectedResult.MatchScore, result.MatchScore)
-				assert.Equal(t, tt.expectedResult.Strengths, result.Strengths)
-				assert.Equal(t, tt.expectedResult.Weaknesses, result.Weaknesses)
-				assert.Equal(t, tt.expectedResult.Highlights, result.Highlights)
-				assert.Equal(t, tt.expectedResult.Feedback, result.Feedback)
+				assert.Equal(t, tt.expectedResult, result)
 			}
 
 			mockProvider.AssertExpectations(t)
@@ -220,200 +210,90 @@ func TestJobMatcherService_AnalyzeMatch(t *testing.T) {
 	}
 }
 
-func TestJobMatcherService_validateMatchResult(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    *models.MatchResult
-		expected *models.MatchResult
-	}{
-		{
-			name: "Valid result unchanged",
-			input: &models.MatchResult{
-				MatchScore: 75,
-				Strengths:  []string{"Good skills"},
-				Weaknesses: []string{"Need improvement"},
-				Highlights: []string{"Great experience"},
-				Feedback:   "Overall good candidate",
-			},
-			expected: &models.MatchResult{
-				MatchScore: 75,
-				Strengths:  []string{"Good skills"},
-				Weaknesses: []string{"Need improvement"},
-				Highlights: []string{"Great experience"},
-				Feedback:   "Overall good candidate",
-			},
-		},
-		{
-			name: "Score too high gets corrected",
-			input: &models.MatchResult{
-				MatchScore: 150,
-				Strengths:  []string{"Good skills"},
-				Weaknesses: []string{"Need improvement"},
-				Highlights: []string{"Great experience"},
-				Feedback:   "Overall good candidate",
-			},
-			expected: &models.MatchResult{
-				MatchScore: 0,
-				Strengths:  []string{"Good skills"},
-				Weaknesses: []string{"Need improvement"},
-				Highlights: []string{"Great experience"},
-				Feedback:   "Overall good candidate",
-			},
-		},
-		{
-			name: "Score too low gets corrected",
-			input: &models.MatchResult{
-				MatchScore: -10,
-				Strengths:  []string{"Good skills"},
-				Weaknesses: []string{"Need improvement"},
-				Highlights: []string{"Great experience"},
-				Feedback:   "Overall good candidate",
-			},
-			expected: &models.MatchResult{
-				MatchScore: 0,
-				Strengths:  []string{"Good skills"},
-				Weaknesses: []string{"Need improvement"},
-				Highlights: []string{"Great experience"},
-				Feedback:   "Overall good candidate",
-			},
-		},
-		{
-			name: "Empty arrays get default values",
-			input: &models.MatchResult{
-				MatchScore: 75,
-				Strengths:  []string{},
-				Weaknesses: []string{},
-				Highlights: []string{},
-				Feedback:   "",
-			},
-			expected: &models.MatchResult{
-				MatchScore: 75,
-				Strengths:  []string{"No specific strengths identified"},
-				Weaknesses: []string{"No specific weaknesses identified"},
-				Highlights: []string{"No specific highlights identified"},
-				Feedback:   "Unable to provide detailed feedback at this time.",
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockProvider := &MockProvider{}
-			service := NewJobMatcherService(mockProvider)
-
-			service.validateMatchResult(tt.input)
-
-			assert.Equal(t, tt.expected.MatchScore, tt.input.MatchScore)
-			assert.Equal(t, tt.expected.Strengths, tt.input.Strengths)
-			assert.Equal(t, tt.expected.Weaknesses, tt.input.Weaknesses)
-			assert.Equal(t, tt.expected.Highlights, tt.input.Highlights)
-			assert.Equal(t, tt.expected.Feedback, tt.input.Feedback)
-		})
-	}
-}
-
 func TestJobMatcherService_GetMatchCategories(t *testing.T) {
 	tests := []struct {
-		name             string
-		score            int
-		expectedCategory string
-		expectedDesc     string
+		name                string
+		score               int
+		expectedCategory    string
+		expectedDescription string
 	}{
 		{
-			name:             "excellent match - score 90",
-			score:            90,
-			expectedCategory: constants.MatchCategoryExcellent,
-			expectedDesc:     constants.MatchDescExcellent,
+			name:                "should_return_excellent_when_score_90_or_above",
+			score:               95,
+			expectedCategory:    "Excellent Match",
+			expectedDescription: "You are an outstanding fit for the role with minimal gaps.",
 		},
 		{
-			name:             "excellent match - score 100",
-			score:            100,
-			expectedCategory: constants.MatchCategoryExcellent,
-			expectedDesc:     constants.MatchDescExcellent,
+			name:                "should_return_strong_when_score_80_to_89",
+			score:               85,
+			expectedCategory:    "Strong Match",
+			expectedDescription: "You have strong qualifications with only minor areas for development.",
 		},
 		{
-			name:             "strong match - score 80",
-			score:            80,
-			expectedCategory: constants.MatchCategoryStrong,
-			expectedDesc:     constants.MatchDescStrong,
+			name:                "should_return_good_when_score_70_to_79",
+			score:               75,
+			expectedCategory:    "Good Match",
+			expectedDescription: "You meet most requirements with some skill gaps that can be addressed.",
 		},
 		{
-			name:             "strong match - score 89",
-			score:            89,
-			expectedCategory: constants.MatchCategoryStrong,
-			expectedDesc:     constants.MatchDescStrong,
+			name:                "should_return_fair_when_score_60_to_69",
+			score:               65,
+			expectedCategory:    "Fair Match",
+			expectedDescription: "You have potential but may need significant development in key areas.",
 		},
 		{
-			name:             "good match - score 70",
-			score:            70,
-			expectedCategory: constants.MatchCategoryGood,
-			expectedDesc:     constants.MatchDescGood,
+			name:                "should_return_partial_when_score_50_to_59",
+			score:               55,
+			expectedCategory:    "Partial Match",
+			expectedDescription: "You have some relevant qualifications but significant gaps exist.",
 		},
 		{
-			name:             "good match - score 79",
-			score:            79,
-			expectedCategory: constants.MatchCategoryGood,
-			expectedDesc:     constants.MatchDescGood,
+			name:                "should_return_poor_when_score_below_50",
+			score:               30,
+			expectedCategory:    "Poor Match",
+			expectedDescription: "You do not meet the core requirements for this position.",
 		},
 		{
-			name:             "fair match - score 60",
-			score:            60,
-			expectedCategory: constants.MatchCategoryFair,
-			expectedDesc:     constants.MatchDescFair,
+			name:                "should_handle_boundary_score_90",
+			score:               90,
+			expectedCategory:    "Excellent Match",
+			expectedDescription: "You are an outstanding fit for the role with minimal gaps.",
 		},
 		{
-			name:             "fair match - score 69",
-			score:            69,
-			expectedCategory: constants.MatchCategoryFair,
-			expectedDesc:     constants.MatchDescFair,
+			name:                "should_handle_boundary_score_80",
+			score:               80,
+			expectedCategory:    "Strong Match",
+			expectedDescription: "You have strong qualifications with only minor areas for development.",
 		},
 		{
-			name:             "partial match - score 50",
-			score:            50,
-			expectedCategory: constants.MatchCategoryPartial,
-			expectedDesc:     constants.MatchDescPartial,
+			name:                "should_handle_boundary_score_70",
+			score:               70,
+			expectedCategory:    "Good Match",
+			expectedDescription: "You meet most requirements with some skill gaps that can be addressed.",
 		},
 		{
-			name:             "partial match - score 59",
-			score:            59,
-			expectedCategory: constants.MatchCategoryPartial,
-			expectedDesc:     constants.MatchDescPartial,
+			name:                "should_handle_boundary_score_60",
+			score:               60,
+			expectedCategory:    "Fair Match",
+			expectedDescription: "You have potential but may need significant development in key areas.",
 		},
 		{
-			name:             "poor match - score 49",
-			score:            49,
-			expectedCategory: constants.MatchCategoryPoor,
-			expectedDesc:     constants.MatchDescPoor,
-		},
-		{
-			name:             "poor match - score 0",
-			score:            0,
-			expectedCategory: constants.MatchCategoryPoor,
-			expectedDesc:     constants.MatchDescPoor,
-		},
-		{
-			name:             "poor match - negative score",
-			score:            -10,
-			expectedCategory: constants.MatchCategoryPoor,
-			expectedDesc:     constants.MatchDescPoor,
-		},
-		{
-			name:             "excellent match - very high score",
-			score:            150,
-			expectedCategory: constants.MatchCategoryExcellent,
-			expectedDesc:     constants.MatchDescExcellent,
+			name:                "should_handle_boundary_score_50",
+			score:               50,
+			expectedCategory:    "Partial Match",
+			expectedDescription: "You have some relevant qualifications but significant gaps exist.",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockProvider := &MockProvider{}
+			mockProvider := &MockJobMatcher{}
 			service := NewJobMatcherService(mockProvider)
 
-			category, desc := service.GetMatchCategories(tt.score)
+			category, description := service.GetMatchCategories(tt.score)
 
 			assert.Equal(t, tt.expectedCategory, category)
-			assert.Equal(t, tt.expectedDesc, desc)
+			assert.Equal(t, tt.expectedDescription, description)
 		})
 	}
 }

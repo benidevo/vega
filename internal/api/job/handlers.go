@@ -108,7 +108,7 @@ func (h *JobAPIHandler) CreateJob(c *gin.Context) {
 			}
 		}
 
-		err = h.quotaService.RecordUsage(ctx, userID, quota.QuotaTypeJobSearch, map[string]interface{}{
+		err = h.quotaService.RecordUsage(ctx, userID, quota.QuotaTypeJobCapture, map[string]interface{}{
 			"count": 1,
 		})
 		if err != nil {

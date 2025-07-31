@@ -8,9 +8,9 @@ import (
 
 // UnifiedService provides a single interface for all quota operations
 type UnifiedService struct {
-	aiQuota     *Service
-	searchQuota *SearchQuotaService
-	repo        Repository
+	aiQuota    *Service
+	jobCapture *JobCaptureService
+	repo       Repository
 }
 
 // NewUnifiedService creates a new unified quota service
@@ -18,9 +18,9 @@ func NewUnifiedService(db *sql.DB, jobRepo JobRepository, isCloudMode bool) *Uni
 	repo := NewRepository(db)
 
 	return &UnifiedService{
-		aiQuota:     NewService(db, jobRepo, isCloudMode),
-		searchQuota: NewSearchQuotaService(repo, isCloudMode),
-		repo:        repo,
+		aiQuota:    NewService(db, jobRepo, isCloudMode),
+		jobCapture: NewJobCaptureService(repo, isCloudMode),
+		repo:       repo,
 	}
 }
 
@@ -34,8 +34,8 @@ func (s *UnifiedService) CheckQuota(ctx context.Context, userID int, quotaType s
 		}
 		return s.aiQuota.CanAnalyzeJob(ctx, userID, jobID)
 
-	case QuotaTypeJobSearch:
-		return s.searchQuota.CanSearchJobs(ctx, userID)
+	case QuotaTypeJobCapture:
+		return s.jobCapture.CanCaptureJobs(ctx, userID)
 
 	default:
 		return nil, fmt.Errorf("unknown quota type: %s", quotaType)
@@ -52,12 +52,12 @@ func (s *UnifiedService) RecordUsage(ctx context.Context, userID int, quotaType 
 		}
 		return s.aiQuota.RecordAnalysis(ctx, userID, jobID)
 
-	case QuotaTypeJobSearch:
+	case QuotaTypeJobCapture:
 		count, ok := metadata["count"].(int)
 		if !ok {
 			count = 1
 		}
-		return s.searchQuota.RecordJobsFound(ctx, userID, count)
+		return s.jobCapture.RecordJobsCaptured(ctx, userID, count)
 
 	default:
 		return fmt.Errorf("unknown quota type: %s", quotaType)
@@ -75,12 +75,12 @@ func (s *UnifiedService) GetAllQuotaStatus(ctx context.Context, userID int) (int
 	}
 	status.AIAnalysis = *aiStatus
 
-	// Get job search quota (daily)
-	searchResult, err := s.searchQuota.GetStatus(ctx, userID)
+	// Get job capture quota (daily)
+	captureResult, err := s.jobCapture.GetStatus(ctx, userID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get job search quota status: %w", err)
+		return nil, fmt.Errorf("failed to get job capture quota status: %w", err)
 	}
-	status.JobSearch = searchResult.Status
+	status.JobCapture = captureResult.Status
 
 	return status, nil
 }
@@ -90,6 +90,6 @@ func (s *UnifiedService) AIQuotaService() *Service {
 	return s.aiQuota
 }
 
-func (s *UnifiedService) SearchQuotaService() *SearchQuotaService {
-	return s.searchQuota
+func (s *UnifiedService) JobCaptureService() *JobCaptureService {
+	return s.jobCapture
 }

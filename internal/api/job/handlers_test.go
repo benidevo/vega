@@ -135,7 +135,7 @@ func TestJobAPIHandler_CreateJob(t *testing.T) {
 				// For CreateJob with options, we use AnythingOfType to match the variadic arguments
 				mockService.On("CreateJob", mock.Anything, 1, "Software Engineer", "Build awesome software", "Acme Corp", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(job, true, nil)
-				mockQuotaService.On("RecordUsage", mock.Anything, 1, "job_search", mock.Anything).
+				mockQuotaService.On("RecordUsage", mock.Anything, 1, "job_capture", mock.Anything).
 					Return(nil)
 			},
 			ExpectedStatus: http.StatusOK,

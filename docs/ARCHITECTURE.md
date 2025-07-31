@@ -405,3 +405,100 @@ docker run -p 8765:8765 \
 3. **Dependency Injection:** Services receive dependencies
 4. **Error Handling:** Wrapped errors with context
 5. **Privacy First:** No PII in logs or errors
+
+## Application Entry Points
+
+The Vega AI application follows a clean, modular architecture with well-defined entry points and initialization flow:
+
+### Main Entry Point
+
+- **Location**: `cmd/vega/main.go`
+- **Responsibilities**:
+  - Creates application configuration via `config.NewSettings()`
+  - Instantiates the main application struct
+  - Handles startup and graceful shutdown
+  - Minimal logic, delegating to the app package
+
+### Application Core (`internal/vega/app.go`)
+
+The `App` struct serves as the central application container:
+
+```go
+type App struct {
+    config   config.Settings
+    router   *gin.Engine
+    db       *sql.DB
+    cache    cache.Cache
+    server   *http.Server
+    done     chan os.Signal
+    renderer *render.HTMLRenderer
+}
+```
+
+### Initialization Flow
+
+1. **New()** - Creates app instance
+   - Initializes Gin router with default middleware
+   - Configures CORS settings
+   - Loads HTML templates (non-test environments)
+   - Sets up template functions for rendering
+
+2. **Setup()** - Prepares dependencies
+   - Initializes logging system
+   - Calls `setupDependencies()` for:
+     - Database connection and configuration
+     - Cache initialization (Badger or NoOp)
+     - Database migrations
+     - Admin user creation
+   - Configures all routes via `SetupRoutes()`
+
+3. **Run()** - Starts the server
+   - Creates HTTP server with configured port
+   - Registers OS signal handlers
+   - Launches server in goroutine
+   - Provides startup messages based on mode
+
+4. **WaitForShutdown()** - Handles termination
+   - Blocks on signal channel
+   - Initiates graceful shutdown with timeout
+   - Ensures proper cleanup
+
+### Route Configuration (`internal/vega/routes.go`)
+
+Central routing setup with clear separation:
+
+- **Middleware Stack**:
+  - Global error handler (panic recovery)
+  - Security headers (configurable)
+  - CSRF protection (configurable)
+
+- **Route Groups**:
+  - `/auth` - Authentication endpoints
+  - `/jobs` - Job management (authenticated)
+  - `/settings` - User settings (authenticated)
+  - `/api/auth` - Auth API endpoints
+  - `/api/jobs` - Jobs API (authenticated)
+  - `/` - Homepage with optional auth
+  - `/static` - Static file serving
+  - `/health` - Health check endpoint
+
+### Service Initialization
+
+Services are initialized in dependency order:
+
+1. AI Service (graceful degradation if unavailable)
+2. Authentication service and handlers
+3. Job service with cache integration
+4. Quota service with repository adapters
+5. Settings handlers with all dependencies
+6. API handlers for REST endpoints
+
+### Key Design Patterns
+
+- **Dependency Injection**: Services receive dependencies through constructors
+- **Graceful Degradation**: AI service failure doesn't crash the app
+- **Mode-Based Configuration**: Cloud vs self-hosted behavior differences
+- **Middleware Composition**: Flexible security and auth middleware
+- **Clean Shutdown**: Proper resource cleanup on termination
+
+This architecture provides clear separation of concerns, testability through dependency injection, and flexibility for different deployment modes.
