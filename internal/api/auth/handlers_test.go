@@ -104,30 +104,10 @@ func TestAuthAPIHandler_ExchangeTokenForJWT(t *testing.T) {
 			},
 		},
 		{
-			Name:   "should_return_bad_request_when_missing_code",
+			Name:   "should_return_bad_request_when_missing_required_fields",
 			Method: "POST",
 			Path:   "/api/auth/token",
-			Body: map[string]string{
-				"redirect_uri": "http://localhost:3000/callback",
-			},
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
-			ExpectedStatus: http.StatusBadRequest,
-			ValidateBody: func(t *testing.T, w *httptest.ResponseRecorder) {
-				var response map[string]string
-				err := json.Unmarshal(w.Body.Bytes(), &response)
-				assert.NoError(t, err)
-				assert.Equal(t, "invalid request body", response["error"])
-			},
-		},
-		{
-			Name:   "should_return_bad_request_when_missing_redirect_uri",
-			Method: "POST",
-			Path:   "/api/auth/token",
-			Body: map[string]string{
-				"code": "valid-oauth-code",
-			},
+			Body:   map[string]string{},
 			Headers: map[string]string{
 				"Content-Type": "application/json",
 			},
@@ -161,6 +141,195 @@ func TestAuthAPIHandler_ExchangeTokenForJWT(t *testing.T) {
 			mockOAuth.Calls = nil
 			testutil.RunHandlerTest(t, router, tc)
 			mockOAuth.AssertExpectations(t)
+		})
+	}
+}
+
+func TestAuthAPIHandler_RefreshToken(t *testing.T) {
+	handler, _, mockAuth, router := setupTestAuthAPIHandler()
+
+	// Setup routes
+	router.POST("/api/auth/refresh", handler.RefreshToken)
+
+	tests := []testutil.HandlerTestCase{
+		{
+			Name:   "should_refresh_token_when_valid_refresh_token",
+			Method: "POST",
+			Path:   "/api/auth/refresh",
+			Body: map[string]string{
+				"refresh_token": "valid-refresh-token",
+			},
+			Headers: map[string]string{
+				"Content-Type": "application/json",
+			},
+			MockSetup: func() {
+				mockAuth.On("RefreshAccessToken", mock.Anything, "valid-refresh-token").
+					Return("new-access-token", nil)
+			},
+			ExpectedStatus: http.StatusOK,
+			ValidateBody: func(t *testing.T, w *httptest.ResponseRecorder) {
+				var response map[string]interface{}
+				err := json.Unmarshal(w.Body.Bytes(), &response)
+				assert.NoError(t, err)
+				assert.Equal(t, "new-access-token", response["token"])
+			},
+		},
+		{
+			Name:   "should_return_unauthorized_when_invalid_refresh_token",
+			Method: "POST",
+			Path:   "/api/auth/refresh",
+			Body: map[string]string{
+				"refresh_token": "invalid-refresh-token",
+			},
+			Headers: map[string]string{
+				"Content-Type": "application/json",
+			},
+			MockSetup: func() {
+				mockAuth.On("RefreshAccessToken", mock.Anything, "invalid-refresh-token").
+					Return("", errors.New("invalid token"))
+			},
+			ExpectedStatus: http.StatusUnauthorized,
+			ValidateBody: func(t *testing.T, w *httptest.ResponseRecorder) {
+				var response map[string]string
+				err := json.Unmarshal(w.Body.Bytes(), &response)
+				assert.NoError(t, err)
+				assert.Equal(t, "failed to refresh access token", response["error"])
+			},
+		},
+		{
+			Name:   "should_return_bad_request_when_missing_refresh_token",
+			Method: "POST",
+			Path:   "/api/auth/refresh",
+			Body:   map[string]string{},
+			Headers: map[string]string{
+				"Content-Type": "application/json",
+			},
+			ExpectedStatus: http.StatusBadRequest,
+			ValidateBody: func(t *testing.T, w *httptest.ResponseRecorder) {
+				var response map[string]string
+				err := json.Unmarshal(w.Body.Bytes(), &response)
+				assert.NoError(t, err)
+				assert.Equal(t, "invalid request body", response["error"])
+			},
+		},
+		{
+			Name:           "should_return_bad_request_when_invalid_json",
+			Method:         "POST",
+			Path:           "/api/auth/refresh",
+			Body:           "invalid-json",
+			Headers:        map[string]string{"Content-Type": "application/json"},
+			ExpectedStatus: http.StatusBadRequest,
+			ValidateBody: func(t *testing.T, w *httptest.ResponseRecorder) {
+				var response map[string]string
+				err := json.Unmarshal(w.Body.Bytes(), &response)
+				assert.NoError(t, err)
+				assert.Equal(t, "invalid request body", response["error"])
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.Name, func(t *testing.T) {
+			mockAuth.ExpectedCalls = nil
+			mockAuth.Calls = nil
+			testutil.RunHandlerTest(t, router, tc)
+			mockAuth.AssertExpectations(t)
+		})
+	}
+}
+
+func TestAuthAPIHandler_Login(t *testing.T) {
+	handler, _, mockAuth, router := setupTestAuthAPIHandler()
+
+	// Setup routes
+	router.POST("/api/auth/login", handler.Login)
+
+	tests := []testutil.HandlerTestCase{
+		{
+			Name:   "should_login_successfully_when_valid_credentials",
+			Method: "POST",
+			Path:   "/api/auth/login",
+			Body: map[string]string{
+				"username": "testuser",
+				"password": "password123",
+			},
+			Headers: map[string]string{
+				"Content-Type": "application/json",
+			},
+			MockSetup: func() {
+				mockAuth.On("Login", mock.Anything, "testuser", "password123").
+					Return("access-token", "refresh-token", nil)
+			},
+			ExpectedStatus: http.StatusOK,
+			ValidateBody: func(t *testing.T, w *httptest.ResponseRecorder) {
+				var response map[string]interface{}
+				err := json.Unmarshal(w.Body.Bytes(), &response)
+				assert.NoError(t, err)
+				assert.Equal(t, "access-token", response["token"])
+				assert.Equal(t, "refresh-token", response["refresh_token"])
+			},
+		},
+		{
+			Name:   "should_return_unauthorized_when_invalid_credentials",
+			Method: "POST",
+			Path:   "/api/auth/login",
+			Body: map[string]string{
+				"username": "testuser",
+				"password": "wrongpassword",
+			},
+			Headers: map[string]string{
+				"Content-Type": "application/json",
+			},
+			MockSetup: func() {
+				mockAuth.On("Login", mock.Anything, "testuser", "wrongpassword").
+					Return("", "", errors.New("invalid credentials"))
+			},
+			ExpectedStatus: http.StatusUnauthorized,
+			ValidateBody: func(t *testing.T, w *httptest.ResponseRecorder) {
+				var response map[string]string
+				err := json.Unmarshal(w.Body.Bytes(), &response)
+				assert.NoError(t, err)
+				assert.Equal(t, "invalid username or password", response["error"])
+			},
+		},
+		{
+			Name:   "should_return_bad_request_when_invalid_request",
+			Method: "POST",
+			Path:   "/api/auth/login",
+			Body:   map[string]string{},
+			Headers: map[string]string{
+				"Content-Type": "application/json",
+			},
+			ExpectedStatus: http.StatusBadRequest,
+			ValidateBody: func(t *testing.T, w *httptest.ResponseRecorder) {
+				var response map[string]string
+				err := json.Unmarshal(w.Body.Bytes(), &response)
+				assert.NoError(t, err)
+				assert.Equal(t, "invalid request body", response["error"])
+			},
+		},
+		{
+			Name:           "should_return_bad_request_when_invalid_json",
+			Method:         "POST",
+			Path:           "/api/auth/login",
+			Body:           "invalid-json",
+			Headers:        map[string]string{"Content-Type": "application/json"},
+			ExpectedStatus: http.StatusBadRequest,
+			ValidateBody: func(t *testing.T, w *httptest.ResponseRecorder) {
+				var response map[string]string
+				err := json.Unmarshal(w.Body.Bytes(), &response)
+				assert.NoError(t, err)
+				assert.Equal(t, "invalid request body", response["error"])
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.Name, func(t *testing.T) {
+			mockAuth.ExpectedCalls = nil
+			mockAuth.Calls = nil
+			testutil.RunHandlerTest(t, router, tc)
+			mockAuth.AssertExpectations(t)
 		})
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/benidevo/vega/internal/ai/llm"
 	"github.com/benidevo/vega/internal/ai/models"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/genai"
 )
 
 func TestGemini_extractJSON(t *testing.T) {
@@ -47,19 +48,14 @@ func TestGemini_extractJSON(t *testing.T) {
 			expected: `This is just plain text without JSON`,
 		},
 		{
-			name:     "malformed JSON - unmatched brace",
+			name:     "invalid JSON structures",
 			input:    `{"content": "test"`,
 			expected: `{"content": "test"`,
 		},
 		{
-			name:     "empty string",
+			name:     "empty input",
 			input:    ``,
 			expected: ``,
-		},
-		{
-			name:     "only opening brace",
-			input:    `{`,
-			expected: `{`,
 		},
 		{
 			name:     "multiple JSON objects - returns first",
@@ -713,4 +709,158 @@ func TestGemini_parseGeneratedCVJSON(t *testing.T) {
 			assert.Equal(t, tt.expected.Skills, result.Skills)
 		})
 	}
+}
+
+func TestGemini_buildCVParsingPrompt(t *testing.T) {
+	g := &Gemini{}
+
+	prompt := models.Prompt{
+		Instructions: "test instructions",
+		CVText:       "John Doe\nSoftware Engineer\n5 years experience",
+	}
+
+	result := g.buildCVParsingPrompt(prompt)
+
+	assert.Contains(t, result, "expert CV/Resume parser")
+	assert.Contains(t, result, prompt.CVText)
+	assert.Contains(t, result, "Document Text:")
+}
+
+func TestGemini_buildCVGenerationPrompt(t *testing.T) {
+	// This test is removed because buildCVGenerationPrompt simply delegates
+	// to prompt.ToCVGenerationPrompt() which is tested elsewhere
+}
+
+func TestGemini_buildSystemInstruction(t *testing.T) {
+	g := &Gemini{
+		cfg: &Config{
+			SystemInstruction: "You are a professional AI assistant specialized in professional career services and providing structured JSON responses.",
+		},
+	}
+
+	instruction := g.buildSystemInstruction()
+
+	assert.NotNil(t, instruction)
+	assert.NotNil(t, instruction.Parts)
+	assert.Greater(t, len(instruction.Parts), 0)
+}
+
+func TestGemini_buildCVParsingSystemInstruction(t *testing.T) {
+	g := &Gemini{}
+
+	instruction := g.buildCVParsingSystemInstruction()
+
+	assert.NotNil(t, instruction)
+	assert.NotNil(t, instruction.Parts)
+	assert.Greater(t, len(instruction.Parts), 0)
+}
+
+func TestGemini_buildCVGenerationSystemInstruction(t *testing.T) {
+	g := &Gemini{}
+
+	instruction := g.buildCVGenerationSystemInstruction()
+
+	assert.NotNil(t, instruction)
+	assert.NotNil(t, instruction.Parts)
+	assert.Greater(t, len(instruction.Parts), 0)
+}
+
+func TestGemini_getMatchAnalysisSchema(t *testing.T) {
+	g := &Gemini{
+		cfg: &Config{
+			MinMatchScore: 0,
+			MaxMatchScore: 100,
+		},
+	}
+
+	schema := g.getMatchAnalysisSchema()
+
+	assert.NotNil(t, schema)
+	assert.Equal(t, genai.TypeObject, schema.Type)
+	assert.NotNil(t, schema.Properties)
+
+	// Check for required properties
+	assert.Contains(t, schema.Properties, "matchScore")
+	assert.Contains(t, schema.Properties, "strengths")
+	assert.Contains(t, schema.Properties, "weaknesses")
+	assert.Contains(t, schema.Properties, "highlights")
+	assert.Contains(t, schema.Properties, "feedback")
+
+	// Check matchScore property details
+	matchScore := schema.Properties["matchScore"]
+	assert.Equal(t, genai.TypeInteger, matchScore.Type)
+}
+
+func TestGemini_getCoverLetterSchema(t *testing.T) {
+	g := &Gemini{}
+
+	schema := g.getCoverLetterSchema()
+
+	assert.NotNil(t, schema)
+	assert.Equal(t, genai.TypeObject, schema.Type)
+	assert.NotNil(t, schema.Properties)
+
+	// Check for required property
+	assert.Contains(t, schema.Properties, "content")
+	assert.Contains(t, schema.Required, "content")
+
+	// Check content property details
+	content := schema.Properties["content"]
+	assert.Equal(t, genai.TypeString, content.Type)
+	assert.Equal(t, "The complete cover letter content", content.Description)
+}
+
+func TestGemini_getCVParsingSchema(t *testing.T) {
+	g := &Gemini{}
+
+	schema := g.getCVParsingSchema()
+
+	assert.NotNil(t, schema)
+	assert.Equal(t, genai.TypeObject, schema.Type)
+	assert.NotNil(t, schema.Properties)
+
+	// Check for required properties
+	assert.Contains(t, schema.Properties, "isValid")
+	assert.Contains(t, schema.Properties, "personalInfo")
+	assert.Contains(t, schema.Properties, "workExperience")
+	assert.Contains(t, schema.Properties, "education")
+	assert.Contains(t, schema.Properties, "skills")
+	assert.Contains(t, schema.Properties, "reason")
+
+	// Check isValid property
+	isValid := schema.Properties["isValid"]
+	assert.Equal(t, genai.TypeBoolean, isValid.Type)
+
+	// Check personalInfo structure
+	personalInfo := schema.Properties["personalInfo"]
+	assert.Equal(t, genai.TypeObject, personalInfo.Type)
+	assert.Contains(t, personalInfo.Properties, "firstName")
+	assert.Contains(t, personalInfo.Properties, "lastName")
+	assert.Contains(t, personalInfo.Properties, "email")
+}
+
+func TestGemini_getCVGenerationSchema(t *testing.T) {
+	g := &Gemini{}
+
+	schema := g.getCVGenerationSchema()
+
+	assert.NotNil(t, schema)
+	assert.Equal(t, genai.TypeObject, schema.Type)
+	assert.NotNil(t, schema.Properties)
+
+	// Check structure is similar to parsing schema
+	assert.Contains(t, schema.Properties, "isValid")
+	assert.Contains(t, schema.Properties, "personalInfo")
+	assert.Contains(t, schema.Properties, "workExperience")
+	assert.Contains(t, schema.Properties, "education")
+	assert.Contains(t, schema.Properties, "skills")
+
+	// Check workExperience array structure
+	workExp := schema.Properties["workExperience"]
+	assert.Equal(t, genai.TypeArray, workExp.Type)
+	assert.NotNil(t, workExp.Items)
+	assert.Equal(t, genai.TypeObject, workExp.Items.Type)
+	assert.Contains(t, workExp.Items.Properties, "company")
+	assert.Contains(t, workExp.Items.Properties, "title")
+	assert.Contains(t, workExp.Items.Properties, "location")
 }

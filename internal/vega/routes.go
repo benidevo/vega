@@ -1,6 +1,7 @@
 package vega
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/benidevo/vega/internal/ai"
@@ -121,8 +122,17 @@ func SetupRoutes(a *App) {
 func globalErrorHandler(renderer *render.HTMLRenderer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
-			if err := recover(); err != nil {
-				log.Error().Err(err.(error)).Msg("Recovered from panic")
+			if r := recover(); r != nil {
+				var err error
+				switch v := r.(type) {
+				case error:
+					err = v
+				case string:
+					err = fmt.Errorf("%s", v)
+				default:
+					err = fmt.Errorf("%v", v)
+				}
+				log.Error().Err(err).Msg("Recovered from panic")
 
 				renderer.Error(c, http.StatusInternalServerError, "Something Went Wrong")
 				c.Abort()

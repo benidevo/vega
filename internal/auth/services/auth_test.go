@@ -283,3 +283,456 @@ func TestChangePassword(t *testing.T) {
 
 	mockRepo.AssertExpectations(t)
 }
+
+func TestRefreshAccessToken(t *testing.T) {
+	t.Run("should_refresh_token_successfully_when_valid_refresh_token", func(t *testing.T) {
+		mockRepo := new(MockUserRepository)
+		cfg := setupTestConfig()
+		ctx := context.Background()
+
+		user := &models.User{
+			ID:       1,
+			Username: "testuser",
+			Role:     models.ADMIN,
+		}
+
+		refreshToken, err := GenerateRefreshToken(user, cfg)
+		require.NoError(t, err)
+
+		mockRepo.On("FindByID", ctx, 1).Return(user, nil)
+
+		authService := NewAuthService(mockRepo, cfg)
+
+		newAccessToken, err := authService.RefreshAccessToken(ctx, refreshToken)
+
+		require.NoError(t, err)
+		require.NotEmpty(t, newAccessToken)
+
+		// Verify the new access token
+		claims, err := authService.VerifyToken(newAccessToken)
+		require.NoError(t, err)
+		require.Equal(t, "access", claims.TokenType)
+		require.Equal(t, 1, claims.UserID)
+
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("should_return_error_when_refresh_token_invalid", func(t *testing.T) {
+		mockRepo := new(MockUserRepository)
+		cfg := setupTestConfig()
+		ctx := context.Background()
+
+		authService := NewAuthService(mockRepo, cfg)
+
+		newAccessToken, err := authService.RefreshAccessToken(ctx, "invalid.refresh.token")
+
+		require.Error(t, err)
+		require.Equal(t, models.ErrInvalidToken, err)
+		require.Empty(t, newAccessToken)
+	})
+
+	t.Run("should_return_error_when_access_token_provided_instead_of_refresh", func(t *testing.T) {
+		mockRepo := new(MockUserRepository)
+		cfg := setupTestConfig()
+		ctx := context.Background()
+
+		user := &models.User{
+			ID:       1,
+			Username: "testuser",
+			Role:     models.ADMIN,
+		}
+
+		accessToken, err := GenerateAccessToken(user, cfg)
+		require.NoError(t, err)
+
+		authService := NewAuthService(mockRepo, cfg)
+
+		newAccessToken, err := authService.RefreshAccessToken(ctx, accessToken)
+
+		require.Error(t, err)
+		require.Equal(t, models.ErrInvalidToken, err)
+		require.Empty(t, newAccessToken)
+	})
+
+	t.Run("should_return_error_when_user_not_found", func(t *testing.T) {
+		mockRepo := new(MockUserRepository)
+		cfg := setupTestConfig()
+		ctx := context.Background()
+
+		user := &models.User{
+			ID:       999,
+			Username: "deleteduser",
+			Role:     models.STANDARD,
+		}
+
+		refreshToken, err := GenerateRefreshToken(user, cfg)
+		require.NoError(t, err)
+
+		mockRepo.On("FindByID", ctx, 999).Return(nil, models.ErrUserNotFound)
+
+		authService := NewAuthService(mockRepo, cfg)
+
+		newAccessToken, err := authService.RefreshAccessToken(ctx, refreshToken)
+
+		require.Error(t, err)
+		require.Equal(t, models.ErrInvalidToken, err)
+		require.Empty(t, newAccessToken)
+
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("should_return_error_when_user_repository_returns_nil", func(t *testing.T) {
+		mockRepo := new(MockUserRepository)
+		cfg := setupTestConfig()
+		ctx := context.Background()
+
+		user := &models.User{
+			ID:       1,
+			Username: "testuser",
+			Role:     models.ADMIN,
+		}
+
+		refreshToken, err := GenerateRefreshToken(user, cfg)
+		require.NoError(t, err)
+
+		mockRepo.On("FindByID", ctx, 1).Return(nil, nil)
+
+		authService := NewAuthService(mockRepo, cfg)
+
+		newAccessToken, err := authService.RefreshAccessToken(ctx, refreshToken)
+
+		require.Error(t, err)
+		require.Equal(t, models.ErrInvalidToken, err)
+		require.Empty(t, newAccessToken)
+
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestVerifyPassword(t *testing.T) {
+	mockRepo := new(MockUserRepository)
+	cfg := setupTestConfig()
+	authService := NewAuthService(mockRepo, cfg)
+
+	t.Run("should_return_true_when_password_matches", func(t *testing.T) {
+		hashedPassword, err := hashPassword("correctpassword")
+		require.NoError(t, err)
+
+		result := authService.VerifyPassword(hashedPassword, "correctpassword")
+		require.True(t, result)
+	})
+
+	t.Run("should_return_false_when_password_does_not_match", func(t *testing.T) {
+		hashedPassword, err := hashPassword("correctpassword")
+		require.NoError(t, err)
+
+		result := authService.VerifyPassword(hashedPassword, "wrongpassword")
+		require.False(t, result)
+	})
+}
+
+func TestDeleteAccount(t *testing.T) {
+	t.Run("should_delete_account_successfully", func(t *testing.T) {
+		mockRepo := new(MockUserRepository)
+		cfg := setupTestConfig()
+		ctx := context.Background()
+
+		mockRepo.On("DeleteUser", ctx, 1).Return(nil)
+
+		authService := NewAuthService(mockRepo, cfg)
+
+		err := authService.DeleteAccount(ctx, 1)
+
+		require.NoError(t, err)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("should_return_error_when_deletion_fails", func(t *testing.T) {
+		mockRepo := new(MockUserRepository)
+		cfg := setupTestConfig()
+		ctx := context.Background()
+
+		mockRepo.On("DeleteUser", ctx, 1).Return(errors.New("deletion failed"))
+
+		authService := NewAuthService(mockRepo, cfg)
+
+		err := authService.DeleteAccount(ctx, 1)
+
+		require.Error(t, err)
+		require.Equal(t, models.ErrUserDeletionFailed, err)
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestRegisterPasswordResetScenarios(t *testing.T) {
+	t.Run("should_return_error_when_username_already_exists", func(t *testing.T) {
+		mockRepo := new(MockUserRepository)
+		cfg := setupTestConfig()
+		ctx := context.Background()
+
+		existingErr := commonerrors.WrapError(models.ErrUserAlreadyExists, errors.New("duplicate key"))
+		mockRepo.On("CreateUser", ctx, "existing@example.com", mock.AnythingOfType("string"), "Standard").Return(nil, existingErr)
+
+		authService := NewAuthService(mockRepo, cfg)
+
+		user, err := authService.Register(ctx, "existing@example.com", "password123", "Standard")
+
+		require.Error(t, err)
+		require.Equal(t, models.ErrUserAlreadyExists, err)
+		require.Nil(t, user)
+
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestLoginEdgeCases(t *testing.T) {
+	t.Run("should_return_error_when_oauth_account_tries_password_login", func(t *testing.T) {
+		mockRepo := new(MockUserRepository)
+		cfg := setupTestConfig()
+		ctx := context.Background()
+
+		// User created via OAuth has empty password
+		mockRepo.On("FindByUsername", ctx, "oauth@example.com").Return(&models.User{
+			ID:       1,
+			Username: "oauth@example.com",
+			Password: "", // Empty password for OAuth users
+			Role:     models.STANDARD,
+		}, nil)
+
+		authService := NewAuthService(mockRepo, cfg)
+
+		accessToken, refreshToken, err := authService.Login(ctx, "oauth@example.com", "anypassword")
+
+		require.Error(t, err)
+		require.Equal(t, models.ErrInvalidCredentials, err)
+		require.Empty(t, accessToken)
+		require.Empty(t, refreshToken)
+
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("should_handle_repository_error_during_login", func(t *testing.T) {
+		mockRepo := new(MockUserRepository)
+		cfg := setupTestConfig()
+		ctx := context.Background()
+
+		repoErr := commonerrors.WrapError(models.ErrUserRetrievalFailed, errors.New("database error"))
+		mockRepo.On("FindByUsername", ctx, "testuser").Return(nil, repoErr)
+
+		authService := NewAuthService(mockRepo, cfg)
+
+		accessToken, refreshToken, err := authService.Login(ctx, "testuser", "password123")
+
+		require.Error(t, err)
+		require.Equal(t, models.ErrInvalidCredentials, err)
+		require.Empty(t, accessToken)
+		require.Empty(t, refreshToken)
+
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestVerifyTokenEdgeCases(t *testing.T) {
+	mockRepo := new(MockUserRepository)
+	cfg := setupTestConfig()
+	authService := NewAuthService(mockRepo, cfg)
+
+	t.Run("should_reject_expired_token", func(t *testing.T) {
+		// Create a token with negative expiry (already expired)
+		user := &models.User{
+			ID:       1,
+			Username: "testuser",
+			Role:     models.ADMIN,
+		}
+
+		expiredToken, err := GenerateToken(user, cfg, AccessToken, -1*time.Hour)
+		require.NoError(t, err)
+
+		claims, err := authService.VerifyToken(expiredToken)
+
+		require.Error(t, err)
+		require.Equal(t, models.ErrInvalidToken, err)
+		require.Nil(t, claims)
+	})
+
+	t.Run("should_reject_token_with_wrong_signing_method", func(t *testing.T) {
+		// This will be tested by providing a malformed token
+		claims, err := authService.VerifyToken("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxfQ.invalid")
+
+		require.Error(t, err)
+		require.Equal(t, models.ErrInvalidToken, err)
+		require.Nil(t, claims)
+	})
+}
+
+func TestHashPasswordEdgeCases(t *testing.T) {
+	t.Run("should_handle_empty_password", func(t *testing.T) {
+		hashedPassword, err := hashPassword("")
+		require.NoError(t, err)
+		require.NotEmpty(t, hashedPassword)
+
+		// Verify empty password can be verified
+		result := verifyPassword(hashedPassword, "")
+		require.True(t, result)
+	})
+
+	t.Run("should_generate_different_hashes_for_same_password", func(t *testing.T) {
+		password := "samepassword"
+
+		hash1, err1 := hashPassword(password)
+		require.NoError(t, err1)
+
+		hash2, err2 := hashPassword(password)
+		require.NoError(t, err2)
+
+		// Hashes should be different due to salt
+		require.NotEqual(t, hash1, hash2)
+
+		// But both should verify correctly
+		require.True(t, verifyPassword(hash1, password))
+		require.True(t, verifyPassword(hash2, password))
+	})
+}
+
+func TestLogError(t *testing.T) {
+	mockRepo := new(MockUserRepository)
+	cfg := setupTestConfig()
+	authService := NewAuthService(mockRepo, cfg)
+
+	// Test LogError method - just ensure it doesn't panic
+	authService.LogError(errors.New("test error"))
+	authService.LogError(nil)
+}
+
+func TestRegisterWithLongPassword(t *testing.T) {
+	t.Run("should_handle_password_at_bcrypt_limit", func(t *testing.T) {
+		mockRepo := new(MockUserRepository)
+		cfg := setupTestConfig()
+		ctx := context.Background()
+
+		// Use a password exactly at bcrypt's 72 byte limit
+		password72Bytes := ""
+		for i := 0; i < 72; i++ {
+			password72Bytes += "a"
+		}
+
+		mockRepo.On("CreateUser", ctx, "testuser", mock.AnythingOfType("string"), "admin").Return(&models.User{
+			ID:       1,
+			Username: "testuser",
+			Role:     models.ADMIN,
+		}, nil)
+
+		authService := NewAuthService(mockRepo, cfg)
+
+		user, err := authService.Register(ctx, "testuser", password72Bytes, "admin")
+
+		require.NoError(t, err)
+		require.NotNil(t, user)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("should_fail_with_password_over_bcrypt_limit", func(t *testing.T) {
+		mockRepo := new(MockUserRepository)
+		cfg := setupTestConfig()
+		ctx := context.Background()
+
+		// Use a password over bcrypt's 72 byte limit
+		passwordTooLong := ""
+		for i := 0; i < 73; i++ {
+			passwordTooLong += "a"
+		}
+
+		authService := NewAuthService(mockRepo, cfg)
+
+		user, err := authService.Register(ctx, "testuser", passwordTooLong, "admin")
+
+		require.Error(t, err)
+		require.Equal(t, models.ErrUserCreationFailed, err)
+		require.Nil(t, user)
+	})
+}
+
+func TestGetUserByIDWithRepositoryError(t *testing.T) {
+	t.Run("should_return_retrieval_failed_error_for_unknown_errors", func(t *testing.T) {
+		mockRepo := new(MockUserRepository)
+		cfg := setupTestConfig()
+		ctx := context.Background()
+
+		dbErr := errors.New("database connection failed")
+		mockRepo.On("FindByID", ctx, 1).Return(nil, dbErr)
+
+		authService := NewAuthService(mockRepo, cfg)
+
+		user, err := authService.GetUserByID(ctx, 1)
+
+		require.Error(t, err)
+		require.Equal(t, models.ErrUserRetrievalFailed, err)
+		require.Nil(t, user)
+
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestRefreshAccessTokenErrorScenarios(t *testing.T) {
+	t.Run("should_handle_repository_error_during_user_lookup", func(t *testing.T) {
+		mockRepo := new(MockUserRepository)
+		cfg := setupTestConfig()
+		ctx := context.Background()
+
+		user := &models.User{
+			ID:       1,
+			Username: "testuser",
+			Role:     models.ADMIN,
+		}
+
+		refreshToken, err := GenerateRefreshToken(user, cfg)
+		require.NoError(t, err)
+
+		dbErr := errors.New("database connection failed")
+		mockRepo.On("FindByID", ctx, 1).Return(nil, dbErr)
+
+		authService := NewAuthService(mockRepo, cfg)
+
+		newAccessToken, err := authService.RefreshAccessToken(ctx, refreshToken)
+
+		require.Error(t, err)
+		require.Equal(t, models.ErrInvalidToken, err)
+		require.Empty(t, newAccessToken)
+
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestVerifyTokenWithInvalidSigningMethod(t *testing.T) {
+	mockRepo := new(MockUserRepository)
+	cfg := setupTestConfig()
+	authService := NewAuthService(mockRepo, cfg)
+
+	t.Run("should_reject_empty_token", func(t *testing.T) {
+		claims, err := authService.VerifyToken("")
+
+		require.Error(t, err)
+		require.Equal(t, models.ErrInvalidToken, err)
+		require.Nil(t, claims)
+	})
+}
+
+func TestChangePasswordErrorCases(t *testing.T) {
+	t.Run("should_handle_generic_repository_error", func(t *testing.T) {
+		mockRepo := new(MockUserRepository)
+		cfg := setupTestConfig()
+		ctx := context.Background()
+
+		dbErr := errors.New("database connection failed")
+		mockRepo.On("FindByID", ctx, 1).Return(nil, dbErr)
+
+		authService := NewAuthService(mockRepo, cfg)
+
+		err := authService.ChangePassword(ctx, 1, "newpassword")
+
+		require.Error(t, err)
+		require.Equal(t, models.ErrUserPasswordChangeFailed, err)
+
+		mockRepo.AssertExpectations(t)
+	})
+}
