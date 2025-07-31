@@ -247,23 +247,6 @@ func TestJobService(t *testing.T) {
 			createTestJob(2, "Product Manager", company),
 		}
 
-		t.Run("should filter by search term", func(t *testing.T) {
-			mockRepo := new(MockJobRepository)
-			searchFilter := models.JobFilter{
-				Search: "software",
-				Limit:  10,
-			}
-			mockRepo.On("GetAll", ctx, testUserID, searchFilter).Return(jobs[:1], nil)
-			mockRepo.On("GetCount", ctx, testUserID, searchFilter).Return(1, nil)
-
-			service := NewJobService(mockRepo, nil, nil, nil, cfg)
-			result, err := service.GetJobsWithPagination(ctx, testUserID, searchFilter)
-
-			require.NoError(t, err)
-			assert.Len(t, result.Jobs, 1)
-			mockRepo.AssertExpectations(t)
-		})
-
 		t.Run("should filter by status", func(t *testing.T) {
 			mockRepo := new(MockJobRepository)
 			status := models.APPLIED
@@ -323,7 +306,6 @@ func TestJobService(t *testing.T) {
 			status := models.APPLIED
 			jobType := models.FULL_TIME
 			complexFilter := models.JobFilter{
-				Search:  "engineer",
 				Status:  &status,
 				JobType: &jobType,
 				Limit:   5,

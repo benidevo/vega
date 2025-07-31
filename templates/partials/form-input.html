@@ -38,6 +38,7 @@
   {{if $label}}
     <label {{if $id}}for="{{$id}}"{{end}} class="block text-sm font-medium text-gray-300{{if $required}} after:content-['*'] after:ml-0.5 after:text-red-500{{end}}">
       {{$label}}
+      {{if $required}}<span class="sr-only">(required)</span>{{end}}
     </label>
   {{end}}
 
@@ -45,7 +46,7 @@
   {{if and $icon (ne $type "textarea") (ne $type "select")}}
     <div class="relative">
       <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
           {{$icon}}
         </svg>
       </div>
@@ -58,10 +59,13 @@
       {{if $name}}name="{{$name}}"{{end}}
       {{if $placeholder}}placeholder="{{$placeholder}}"{{end}}
       {{if $maxlength}}maxlength="{{$maxlength}}"{{end}}
-      {{if $required}}required{{end}}
+      {{if $required}}required aria-required="true"{{end}}
       {{if $disabled}}disabled{{end}}
       {{if $readonly}}readonly{{end}}
       {{if $autocomplete}}autocomplete="{{$autocomplete}}"{{end}}
+      {{if .ariaLabel}}aria-label="{{.ariaLabel}}"{{end}}
+      {{if .ariaDescribedby}}aria-describedby="{{.ariaDescribedby}}"{{else if $helpText}}aria-describedby="{{$id}}-help"{{end}}
+      {{if .ariaInvalid}}aria-invalid="{{.ariaInvalid}}"{{end}}
       rows="{{$rows}}"
       class="{{$inputClasses}}"
       {{if $htmx}}
@@ -72,8 +76,11 @@
     <select
       {{if $id}}id="{{$id}}"{{end}}
       {{if $name}}name="{{$name}}"{{end}}
-      {{if $required}}required{{end}}
+      {{if $required}}required aria-required="true"{{end}}
       {{if $disabled}}disabled{{end}}
+      {{if .ariaLabel}}aria-label="{{.ariaLabel}}"{{end}}
+      {{if .ariaDescribedby}}aria-describedby="{{.ariaDescribedby}}"{{else if $helpText}}aria-describedby="{{$id}}-help"{{end}}
+      {{if .ariaInvalid}}aria-invalid="{{.ariaInvalid}}"{{end}}
       class="{{$inputClasses}}"
       {{if $htmx}}
         {{range $key, $val := $htmx}}hx-{{$key}}="{{$val}}"{{end}}
@@ -94,10 +101,13 @@
       {{if $placeholder}}placeholder="{{$placeholder}}"{{end}}
       {{if $value}}value="{{$value}}"{{end}}
       {{if $maxlength}}maxlength="{{$maxlength}}"{{end}}
-      {{if $required}}required{{end}}
+      {{if $required}}required aria-required="true"{{end}}
       {{if $disabled}}disabled{{end}}
       {{if $readonly}}readonly{{end}}
       {{if $autocomplete}}autocomplete="{{$autocomplete}}"{{end}}
+      {{if .ariaLabel}}aria-label="{{.ariaLabel}}"{{end}}
+      {{if .ariaDescribedby}}aria-describedby="{{.ariaDescribedby}}"{{else if $helpText}}aria-describedby="{{$id}}-help"{{end}}
+      {{if .ariaInvalid}}aria-invalid="{{.ariaInvalid}}"{{end}}
       class="{{$inputClasses}}{{if $icon}} pl-10{{end}}"
       {{if $htmx}}
         {{range $key, $val := $htmx}}hx-{{$key}}="{{$val}}"{{end}}
@@ -112,7 +122,7 @@
 
   {{/* Help text */}}
   {{if $helpText}}
-    <p class="text-xs text-gray-400 mt-1">{{$helpText}}</p>
+    <p {{if $id}}id="{{$id}}-help"{{end}} class="text-xs text-gray-400 mt-1">{{$helpText}}</p>
   {{end}}
 </div>
 {{end}}

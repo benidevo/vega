@@ -318,12 +318,6 @@ func (r *SQLiteJobRepository) GetAll(ctx context.Context, userID int, filter mod
 		args = append(args, int(*filter.JobType))
 	}
 
-	if filter.Search != "" {
-		conditions = append(conditions, "(j.title LIKE ? OR j.description LIKE ? OR c.name LIKE ?)")
-		searchPattern := "%" + filter.Search + "%"
-		args = append(args, searchPattern, searchPattern, searchPattern)
-	}
-
 	if filter.Matched != nil {
 		if *filter.Matched {
 			conditions = append(conditions, "j.match_score >= 70")
@@ -577,12 +571,6 @@ func (r *SQLiteJobRepository) GetCount(ctx context.Context, userID int, filter m
 	if filter.JobType != nil {
 		conditions = append(conditions, "j.job_type = ?")
 		args = append(args, int(*filter.JobType))
-	}
-
-	if filter.Search != "" {
-		conditions = append(conditions, "(j.title LIKE ? OR j.description LIKE ? OR c.name LIKE ?)")
-		searchPattern := "%" + filter.Search + "%"
-		args = append(args, searchPattern, searchPattern, searchPattern)
 	}
 
 	if len(conditions) > 0 {

@@ -1,12 +1,10 @@
 {{define "settings-layout"}}
-<!-- Mobile responsive dashboard with sidebar that converts to top navbar on small screens -->
 <div class="min-h-screen bg-slate-900">
   {{template "mobile-nav" .}}
 
   <div class="flex md:flex-row">
     {{template "sidebar" .}}
 
-    <!-- Main Content Area -->
     <div class="flex-1 overflow-auto bg-slate-900 min-h-0 scroll-smooth overscroll-contain pt-14 md:pt-0">
     <!-- Header - Only show on desktop -->
     <header class="hidden md:block bg-slate-800 shadow-md sticky top-0 z-10">
@@ -35,79 +33,6 @@
 
 {{template "mobile-menu-script" .}}
 
-<!-- Enhanced Mobile Settings Styles -->
-<style>
-/* Smooth scrolling and touch optimization */
-html {
-  scroll-behavior: smooth;
-  -webkit-text-size-adjust: 100%;
-}
-
-/* Better touch targets for mobile */
-@media (max-width: 768px) {
-  /* Ensure all interactive elements meet minimum touch target size */
-  input, button, select, textarea, label, a {
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-  }
-
-  /* Better checkbox and radio button touch targets */
-  input[type="checkbox"], input[type="radio"] {
-    min-width: 20px;
-    min-height: 20px;
-    margin: 4px;
-  }
-
-  /* Improve form field focus for mobile */
-  input:focus, textarea:focus, select:focus {
-    transform: scale(1.02);
-    transition: transform 0.2s ease;
-  }
-
-  /* Better button press feedback */
-  button:active, .touch-manipulation:active {
-    transform: scale(0.98);
-    transition: transform 0.1s ease;
-  }
-
-  /* Prevent zoom on input focus for iOS */
-  input[type="text"],
-  input[type="email"],
-  input[type="tel"],
-  input[type="url"],
-  input[type="password"],
-  textarea,
-  select {
-    font-size: 16px;
-  }
-
-  /* Better scroll performance */
-  .scroll-container {
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-  }
-
-  /* Reduce motion for users who prefer it */
-  @media (prefers-reduced-motion: reduce) {
-    * {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
-}
-
-
-/* Smooth animations for form validation */
-.htmx-request {
-  opacity: 0.7;
-  transition: opacity 0.3s ease;
-}
-
-.htmx-request button {
-  pointer-events: none;
-}
-</style>
+<!-- Settings layout styles are now in /static/css/components.css -->
 
 {{end}}

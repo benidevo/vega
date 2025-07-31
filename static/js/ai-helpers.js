@@ -1,7 +1,6 @@
 window.AIHelpers = (function() {
     'use strict';
 
-    // Common content validation
     function validateContentElement(elementId, contentType = 'content') {
         const element = document.getElementById(elementId);
         if (!element) {
@@ -14,7 +13,6 @@ window.AIHelpers = (function() {
     }
 
 
-    // Copy to clipboard utility
     function copyToClipboard(text) {
         return navigator.clipboard.writeText(text).catch(err => {
             console.error('Failed to copy: ', err);
@@ -25,7 +23,6 @@ window.AIHelpers = (function() {
     }
 
 
-    // Section management (for CV sections)
     function deleteSection(buttonElement) {
         if (!buttonElement) return;
 
@@ -37,17 +34,17 @@ window.AIHelpers = (function() {
                 deleteMessage.textContent = `Are you sure you want to delete "${sectionTitle}"? This action cannot be undone.`;
             }
 
-            // Store the section reference for deletion
-            window.itemToDelete = {
-                element: section,
-                url: null
-            };
+            if (window.setDeleteItem) {
+                window.setDeleteItem({
+                    element: section,
+                    url: null
+                });
+            }
 
             showModal('delete-modal-shared');
         }
     }
 
-    // Modal utilities
     function showModal(modalId) {
         const modal = document.getElementById(modalId);
         if (modal) {
@@ -68,7 +65,6 @@ window.AIHelpers = (function() {
 
 
 
-    // Add event listener for client-side deletion
     document.addEventListener('client-delete', function(event) {
         if (event.detail && event.detail.element) {
             event.detail.element.remove();
@@ -76,14 +72,11 @@ window.AIHelpers = (function() {
     });
 
     return {
-        // Content utilities
         validateContentElement,
         copyToClipboard,
 
-        // Section management
         deleteSection,
 
-        // Modal utilities
         showModal,
         hideModal
     };

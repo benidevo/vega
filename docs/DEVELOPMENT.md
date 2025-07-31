@@ -58,13 +58,66 @@ This guide covers development setup, testing, and contributing to Vega AI.
 
 ## Frontend Development
 
-### CSS Framework
+### CSS Build Process
 
-The project uses Tailwind CSS via CDN for styling. No build process is required for CSS.
+The project uses Tailwind CSS with a build process to optimize CSS delivery. Instead of loading the entire Tailwind compiler (340KB) from CDN in production, we compile and purge unused styles to create a minimal CSS file (~46KB).
 
-- Tailwind CSS is loaded from CDN in `templates/layouts/base.html`
-- Custom Tailwind configuration is defined inline in the base template
-- No local CSS compilation or watching needed
+#### Prerequisites
+
+- Node.js and npm installed
+
+#### Setup
+
+1. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+2. Build CSS for production:
+
+   ```bash
+   npm run build
+   ```
+
+3. For development with auto-rebuild on changes:
+
+   ```bash
+   npm run dev
+   ```
+
+#### Deployment
+
+The CSS build should be run as part of your deployment process:
+
+```bash
+# Install dependencies and build CSS
+npm install
+npm run build
+
+# Then run your Go application
+go run main.go
+```
+
+#### Docker
+
+If using Docker, add these steps to your Dockerfile:
+
+```dockerfile
+# Install Node.js
+RUN apk add --no-cache nodejs npm
+
+# Copy package files
+COPY package*.json ./
+COPY tailwind.config.js ./
+COPY postcss.config.js ./
+
+# Install dependencies and build CSS
+RUN npm ci --only=production
+RUN npm run build
+```
+
+The generated `static/css/output.css` file is gitignored and should be built during deployment.
 
 ### Template Structure
 

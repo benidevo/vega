@@ -1,102 +1,100 @@
 {{define "partials/button.html"}}
-{{/* Simple button component for Go templates. No variable assignment */}}
+{{/* 
+  Button Component for Go Templates
+  
+  Parameters:
+  - variant: "primary", "danger", "secondary" (default: "secondary")
+  - size: "sm", "lg", or default medium
+  - type: button type attribute (default: "button")
+  - id: button ID
+  - class: additional CSS classes
+  - disabled: boolean to disable button
+  - loading: boolean to show loading state
+  - loadingText: text to show when loading (default: "Loading...")
+  - icon: SVG path content for icon
+  - text: button text content
+  - ariaLabel: ARIA label for accessibility
+  - ariaDescribedby: ARIA describedby attribute
+  - ariaExpanded: ARIA expanded state
+  - ariaControls: ARIA controls attribute
+  - onclick: onclick handler
+  - hxGet, hxPost, hxPut, hxDelete: HTMX HTTP methods
+  - hxTarget: HTMX target selector
+  - hxSwap: HTMX swap strategy
+  - hxInclude: HTMX include selector
+  - hxTrigger: HTMX trigger events
+  - hxIndicator: HTMX loading indicator
+  - hyperscript: Hyperscript attribute
+  
+  Usage Examples:
+  {{template "partials/button.html" (dict "variant" "primary" "text" "Save" "type" "submit")}}
+  {{template "partials/button.html" (dict "variant" "danger" "text" "Delete" "icon" "<path d='...'/>")}}
+  {{template "partials/button.html" (dict "text" "Cancel" "size" "sm" "class" "ml-2")}}
+*/}}
+
+{{/* Define variant-specific styles */}}
+{{$bgColor := "bg-slate-600"}}
+{{$hoverColor := "hover:bg-slate-700"}}
+{{$focusColor := "focus:ring-slate-500"}}
 
 {{if eq .variant "primary"}}
-  <button
-    {{if .type}}type="{{.type}}"{{else}}type="button"{{end}}
-    {{if .id}}id="{{.id}}"{{end}}
-    class="bg-primary hover:bg-primary-dark text-white focus:ring-primary {{if eq .size "sm"}}px-3 py-1 text-sm{{else if eq .size "lg"}}px-6 py-3 text-lg{{else}}px-4 py-2 text-sm{{end}} font-medium rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center gap-2{{if .class}} {{.class}}{{end}}{{if .disabled}} opacity-50 cursor-not-allowed{{end}}"
-    {{if .disabled}}disabled{{end}}
-    {{if .onclick}}onclick="{{.onclick}}"{{end}}
-    {{if .hxGet}}hx-get="{{.hxGet}}"{{end}}
-    {{if .hxPost}}hx-post="{{.hxPost}}"{{end}}
-    {{if .hxPut}}hx-put="{{.hxPut}}"{{end}}
-    {{if .hxDelete}}hx-delete="{{.hxDelete}}"{{end}}
-    {{if .hxTarget}}hx-target="{{.hxTarget}}"{{end}}
-    {{if .hxSwap}}hx-swap="{{.hxSwap}}"{{end}}
-    {{if .hxInclude}}hx-include="{{.hxInclude}}"{{end}}
-    {{if .hxTrigger}}hx-trigger="{{.hxTrigger}}"{{end}}
-    {{if .hxIndicator}}hx-indicator="{{.hxIndicator}}"{{end}}
-    {{if .hyperscript}}_="{{.hyperscript}}"{{end}}>
-    {{if .loading}}
-      <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>
-      <span>{{if .loadingText}}{{.loadingText}}{{else}}Loading...{{end}}</span>
-    {{else}}
-      {{if .icon}}
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          {{.icon}}
-        </svg>
-      {{end}}
-      <span>{{.text}}</span>
-    {{end}}
-  </button>
+  {{$bgColor = "bg-primary"}}
+  {{$hoverColor = "hover:bg-primary-dark"}}
+  {{$focusColor = "focus:ring-primary"}}
 {{else if eq .variant "danger"}}
-  <button
-    {{if .type}}type="{{.type}}"{{else}}type="button"{{end}}
-    {{if .id}}id="{{.id}}"{{end}}
-    class="bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 {{if eq .size "sm"}}px-3 py-1 text-sm{{else if eq .size "lg"}}px-6 py-3 text-lg{{else}}px-4 py-2 text-sm{{end}} font-medium rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center gap-2{{if .class}} {{.class}}{{end}}{{if .disabled}} opacity-50 cursor-not-allowed{{end}}"
-    {{if .disabled}}disabled{{end}}
-    {{if .onclick}}onclick="{{.onclick}}"{{end}}
-    {{if .hxGet}}hx-get="{{.hxGet}}"{{end}}
-    {{if .hxPost}}hx-post="{{.hxPost}}"{{end}}
-    {{if .hxPut}}hx-put="{{.hxPut}}"{{end}}
-    {{if .hxDelete}}hx-delete="{{.hxDelete}}"{{end}}
-    {{if .hxTarget}}hx-target="{{.hxTarget}}"{{end}}
-    {{if .hxSwap}}hx-swap="{{.hxSwap}}"{{end}}
-    {{if .hxInclude}}hx-include="{{.hxInclude}}"{{end}}
-    {{if .hxTrigger}}hx-trigger="{{.hxTrigger}}"{{end}}
-    {{if .hxIndicator}}hx-indicator="{{.hxIndicator}}"{{end}}
-    {{if .hyperscript}}_="{{.hyperscript}}"{{end}}>
-    {{if .loading}}
-      <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>
-      <span>{{if .loadingText}}{{.loadingText}}{{else}}Loading...{{end}}</span>
-    {{else}}
-      {{if .icon}}
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          {{.icon}}
-        </svg>
-      {{end}}
-      <span>{{.text}}</span>
-    {{end}}
-  </button>
-{{else}}
-  {{/* Default secondary button */}}
-  <button
-    {{if .type}}type="{{.type}}"{{else}}type="button"{{end}}
-    {{if .id}}id="{{.id}}"{{end}}
-    class="bg-slate-600 hover:bg-slate-700 text-white focus:ring-slate-500 {{if eq .size "sm"}}px-3 py-1 text-sm{{else if eq .size "lg"}}px-6 py-3 text-lg{{else}}px-4 py-2 text-sm{{end}} font-medium rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center gap-2{{if .class}} {{.class}}{{end}}{{if .disabled}} opacity-50 cursor-not-allowed{{end}}"
-    {{if .disabled}}disabled{{end}}
-    {{if .onclick}}onclick="{{.onclick}}"{{end}}
-    {{if .hxGet}}hx-get="{{.hxGet}}"{{end}}
-    {{if .hxPost}}hx-post="{{.hxPost}}"{{end}}
-    {{if .hxPut}}hx-put="{{.hxPut}}"{{end}}
-    {{if .hxDelete}}hx-delete="{{.hxDelete}}"{{end}}
-    {{if .hxTarget}}hx-target="{{.hxTarget}}"{{end}}
-    {{if .hxSwap}}hx-swap="{{.hxSwap}}"{{end}}
-    {{if .hxInclude}}hx-include="{{.hxInclude}}"{{end}}
-    {{if .hxTrigger}}hx-trigger="{{.hxTrigger}}"{{end}}
-    {{if .hxIndicator}}hx-indicator="{{.hxIndicator}}"{{end}}
-    {{if .hyperscript}}_="{{.hyperscript}}"{{end}}>
-    {{if .loading}}
-      <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>
-      <span>{{if .loadingText}}{{.loadingText}}{{else}}Loading...{{end}}</span>
-    {{else}}
-      {{if .icon}}
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          {{.icon}}
-        </svg>
-      {{end}}
-      <span>{{.text}}</span>
-    {{end}}
-  </button>
+  {{$bgColor = "bg-red-600"}}
+  {{$hoverColor = "hover:bg-red-700"}}
+  {{$focusColor = "focus:ring-red-500"}}
 {{end}}
+
+{{/* Define size-specific styles */}}
+{{$sizeClasses := "px-4 py-2.5 sm:py-2 text-sm min-h-[44px] sm:min-h-0"}}
+{{if eq .size "sm"}}
+  {{$sizeClasses = "px-3 py-2 sm:py-1 text-sm min-h-[44px] sm:min-h-0"}}
+{{else if eq .size "lg"}}
+  {{$sizeClasses = "px-6 py-3 text-lg min-h-[48px]"}}
+{{end}}
+
+{{/* Build the complete class string */}}
+{{$baseClasses := "font-medium rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center gap-2"}}
+{{$stateClasses := ""}}
+{{if .disabled}}
+  {{$stateClasses = "opacity-50 cursor-not-allowed"}}
+{{end}}
+
+<button
+  {{if .type}}type="{{.type}}"{{else}}type="button"{{end}}
+  {{if .id}}id="{{.id}}"{{end}}
+  class="{{$bgColor}} {{$hoverColor}} text-white {{$focusColor}} {{$sizeClasses}} {{$baseClasses}}{{if $stateClasses}} {{$stateClasses}}{{end}}{{if .class}} {{.class}}{{end}}"
+  {{if .disabled}}disabled{{end}}
+  {{if .ariaLabel}}aria-label="{{.ariaLabel}}"{{end}}
+  {{if .ariaDescribedby}}aria-describedby="{{.ariaDescribedby}}"{{end}}
+  {{if .ariaExpanded}}aria-expanded="{{.ariaExpanded}}"{{end}}
+  {{if .ariaControls}}aria-controls="{{.ariaControls}}"{{end}}
+  {{if .onclick}}onclick="{{.onclick}}"{{end}}
+  {{if .hxGet}}hx-get="{{.hxGet}}"{{end}}
+  {{if .hxPost}}hx-post="{{.hxPost}}"{{end}}
+  {{if .hxPut}}hx-put="{{.hxPut}}"{{end}}
+  {{if .hxDelete}}hx-delete="{{.hxDelete}}"{{end}}
+  {{if .hxTarget}}hx-target="{{.hxTarget}}"{{end}}
+  {{if .hxSwap}}hx-swap="{{.hxSwap}}"{{end}}
+  {{if .hxInclude}}hx-include="{{.hxInclude}}"{{end}}
+  {{if .hxTrigger}}hx-trigger="{{.hxTrigger}}"{{end}}
+  {{if .hxIndicator}}hx-indicator="{{.hxIndicator}}"{{end}}
+  {{if .hyperscript}}_="{{.hyperscript}}"{{end}}>
+  {{if .loading}}
+    <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+    <span>{{if .loadingText}}{{.loadingText}}{{else}}Loading...{{end}}</span>
+  {{else}}
+    {{if .icon}}
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        {{.icon}}
+      </svg>
+    {{end}}
+    <span{{if and .icon (not .text)}} class="sr-only"{{end}}>{{if .text}}{{.text}}{{else if .ariaLabel}}{{.ariaLabel}}{{end}}</span>
+  {{end}}
+</button>
 {{end}}
