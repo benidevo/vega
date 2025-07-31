@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -13,15 +14,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// authService defines the methods AuthHandler needs from the auth service
+type authService interface {
+	Login(ctx context.Context, username, password string) (string, string, error)
+	VerifyToken(token string) (*services.Claims, error)
+	RefreshAccessToken(ctx context.Context, refreshToken string) (string, error)
+	LogError(err error)
+}
+
 // AuthHandler handles authentication-related HTTP requests.
 type AuthHandler struct {
-	service  *services.AuthService
+	service  authService
 	cfg      *config.Settings
 	renderer *render.HTMLRenderer
 }
 
 // NewAuthHandler creates and returns a new AuthHandler with the provided AuthService.
-func NewAuthHandler(service *services.AuthService, cfg *config.Settings) *AuthHandler {
+func NewAuthHandler(service authService, cfg *config.Settings) *AuthHandler {
 	return &AuthHandler{
 		service:  service,
 		cfg:      cfg,
@@ -48,6 +57,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	var req models.LoginRequest
 	if err := c.ShouldBind(&req); err != nil {
 		h.service.LogError(err)
+		c.Header("X-Toast-Message", models.ErrInvalidCredentials.Error())
+		c.Header("X-Toast-Type", string(alerts.TypeError))
 		alerts.TriggerToast(c, models.ErrInvalidCredentials.Error(), alerts.TypeError)
 		c.Status(http.StatusUnauthorized)
 		return
@@ -56,6 +67,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	accessToken, refreshToken, loginErr := h.service.Login(c.Request.Context(), req.Username, req.Password)
 	if loginErr != nil {
 		h.service.LogError(loginErr)
+		c.Header("X-Toast-Message", loginErr.Error())
+		c.Header("X-Toast-Type", string(alerts.TypeError))
 		alerts.TriggerToast(c, loginErr.Error(), alerts.TypeError)
 		c.Status(http.StatusUnauthorized)
 		return

@@ -5,7 +5,6 @@ import (
 
 	apimodels "github.com/benidevo/vega/internal/api/job/models"
 	ctxutil "github.com/benidevo/vega/internal/common/context"
-	"github.com/benidevo/vega/internal/job"
 	"github.com/benidevo/vega/internal/job/models"
 	"github.com/benidevo/vega/internal/quota"
 	"github.com/gin-gonic/gin"
@@ -13,12 +12,12 @@ import (
 
 // JobAPIHandler handles job-related API requests
 type JobAPIHandler struct {
-	jobService   *job.JobService
-	quotaService *quota.UnifiedService
+	jobService   jobService
+	quotaService quotaService
 }
 
 // NewJobAPIHandler creates a new job API handler
-func NewJobAPIHandler(jobService *job.JobService, quotaService *quota.UnifiedService) *JobAPIHandler {
+func NewJobAPIHandler(jobService jobService, quotaService quotaService) *JobAPIHandler {
 	return &JobAPIHandler{
 		jobService:   jobService,
 		quotaService: quotaService,
