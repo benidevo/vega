@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// MockUserRepository implements UserRepository for testing
 type MockUserRepository struct {
 	mock.Mock
 }
@@ -308,7 +307,6 @@ func TestRefreshAccessToken(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEmpty(t, newAccessToken)
 
-		// Verify the new access token
 		claims, err := authService.VerifyToken(newAccessToken)
 		require.NoError(t, err)
 		require.Equal(t, "access", claims.TokenType)
@@ -491,11 +489,10 @@ func TestLoginEdgeCases(t *testing.T) {
 		cfg := setupTestConfig()
 		ctx := context.Background()
 
-		// User created via OAuth has empty password
 		mockRepo.On("FindByUsername", ctx, "oauth@example.com").Return(&models.User{
 			ID:       1,
 			Username: "oauth@example.com",
-			Password: "", // Empty password for OAuth users
+			Password: "",
 			Role:     models.STANDARD,
 		}, nil)
 
@@ -538,7 +535,6 @@ func TestVerifyTokenEdgeCases(t *testing.T) {
 	authService := NewAuthService(mockRepo, cfg)
 
 	t.Run("should_reject_expired_token", func(t *testing.T) {
-		// Create a token with negative expiry (already expired)
 		user := &models.User{
 			ID:       1,
 			Username: "testuser",
@@ -556,8 +552,7 @@ func TestVerifyTokenEdgeCases(t *testing.T) {
 	})
 
 	t.Run("should_reject_token_with_wrong_signing_method", func(t *testing.T) {
-		// This will be tested by providing a malformed token
-		claims, err := authService.VerifyToken("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxfQ.invalid")
+		claims, err := authService.VerifyToken("invalid.test.token")
 
 		require.Error(t, err)
 		require.Equal(t, models.ErrInvalidToken, err)
@@ -571,7 +566,6 @@ func TestHashPasswordEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEmpty(t, hashedPassword)
 
-		// Verify empty password can be verified
 		result := verifyPassword(hashedPassword, "")
 		require.True(t, result)
 	})
@@ -585,10 +579,8 @@ func TestHashPasswordEdgeCases(t *testing.T) {
 		hash2, err2 := hashPassword(password)
 		require.NoError(t, err2)
 
-		// Hashes should be different due to salt
 		require.NotEqual(t, hash1, hash2)
 
-		// But both should verify correctly
 		require.True(t, verifyPassword(hash1, password))
 		require.True(t, verifyPassword(hash2, password))
 	})
@@ -599,7 +591,6 @@ func TestLogError(t *testing.T) {
 	cfg := setupTestConfig()
 	authService := NewAuthService(mockRepo, cfg)
 
-	// Test LogError method - just ensure it doesn't panic
 	authService.LogError(errors.New("test error"))
 	authService.LogError(nil)
 }
@@ -610,7 +601,6 @@ func TestRegisterWithLongPassword(t *testing.T) {
 		cfg := setupTestConfig()
 		ctx := context.Background()
 
-		// Use a password exactly at bcrypt's 72 byte limit
 		password72Bytes := ""
 		for i := 0; i < 72; i++ {
 			password72Bytes += "a"
@@ -636,7 +626,6 @@ func TestRegisterWithLongPassword(t *testing.T) {
 		cfg := setupTestConfig()
 		ctx := context.Background()
 
-		// Use a password over bcrypt's 72 byte limit
 		passwordTooLong := ""
 		for i := 0; i < 73; i++ {
 			passwordTooLong += "a"

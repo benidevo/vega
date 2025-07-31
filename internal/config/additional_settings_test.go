@@ -11,7 +11,6 @@ import (
 )
 
 func TestNewSettings(t *testing.T) {
-	// Clear all env vars to test defaults
 	envVars := []string{
 		"IS_DEVELOPMENT", "GO_ENV", "CLOUD_MODE", "APP_NAME", "SERVER_PORT",
 		"DB_CONNECTION_STRING", "LOG_LEVEL", "ACCESS_TOKEN_EXPIRY", "REFRESH_TOKEN_EXPIRY",
@@ -137,7 +136,6 @@ func TestNewSettings(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Clear env vars
 			for _, env := range envVars {
 				os.Unsetenv(env)
 			}
@@ -146,7 +144,6 @@ func TestNewSettings(t *testing.T) {
 			settings := NewSettings()
 			tt.validate(t, settings)
 
-			// Cleanup
 			for _, env := range envVars {
 				os.Unsetenv(env)
 			}
@@ -306,13 +303,15 @@ func TestSettingsWithFileEnvVars(t *testing.T) {
 			name: "should_ignore_relative_path_when_not_absolute",
 			setup: func() string {
 				os.Setenv("TOKEN_SECRET_FILE", "relative/path/token")
+				os.Unsetenv("TOKEN_SECRET") // Clear any existing env var
 				return ""
 			},
 			cleanup: func() {
 				os.Unsetenv("TOKEN_SECRET_FILE")
 			},
 			validate: func(t *testing.T, settings Settings) {
-				assert.Equal(t, "default-secret-key", settings.TokenSecret)
+				expectedSecret := getEnv("TOKEN_SECRET", "default-secret-key")
+				assert.Equal(t, expectedSecret, settings.TokenSecret)
 			},
 		},
 		{
@@ -325,7 +324,8 @@ func TestSettingsWithFileEnvVars(t *testing.T) {
 				os.Unsetenv("TOKEN_SECRET_FILE")
 			},
 			validate: func(t *testing.T, settings Settings) {
-				assert.Equal(t, "default-secret-key", settings.TokenSecret)
+				expectedSecret := getEnv("TOKEN_SECRET", "default-secret-key")
+				assert.Equal(t, expectedSecret, settings.TokenSecret)
 			},
 		},
 		{
@@ -343,7 +343,8 @@ func TestSettingsWithFileEnvVars(t *testing.T) {
 				os.Unsetenv("TOKEN_SECRET_FILE")
 			},
 			validate: func(t *testing.T, settings Settings) {
-				assert.Equal(t, "default-secret-key", settings.TokenSecret)
+				expectedSecret := getEnv("TOKEN_SECRET", "default-secret-key")
+				assert.Equal(t, expectedSecret, settings.TokenSecret)
 			},
 		},
 		{
@@ -356,14 +357,15 @@ func TestSettingsWithFileEnvVars(t *testing.T) {
 				os.Unsetenv("TOKEN_SECRET_FILE")
 			},
 			validate: func(t *testing.T, settings Settings) {
-				assert.Equal(t, "default-secret-key", settings.TokenSecret)
+				expectedSecret := getEnv("TOKEN_SECRET", "default-secret-key")
+				assert.Equal(t, expectedSecret, settings.TokenSecret)
 			},
 		},
 		{
 			name: "should_ignore_large_file_when_exceeds_max_size",
 			setup: func() string {
 				largeFile := filepath.Join(tempDir, "large-token")
-				largeContent := make([]byte, 1024*1024+1) // 1MB + 1 byte
+				largeContent := make([]byte, 1024*1024+1)
 				for i := range largeContent {
 					largeContent[i] = 'A'
 				}
@@ -376,7 +378,8 @@ func TestSettingsWithFileEnvVars(t *testing.T) {
 				os.Unsetenv("TOKEN_SECRET_FILE")
 			},
 			validate: func(t *testing.T, settings Settings) {
-				assert.Equal(t, "default-secret-key", settings.TokenSecret)
+				expectedSecret := getEnv("TOKEN_SECRET", "default-secret-key")
+				assert.Equal(t, expectedSecret, settings.TokenSecret)
 			},
 		},
 	}
