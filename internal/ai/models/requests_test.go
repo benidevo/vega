@@ -302,30 +302,6 @@ func TestPrompt_ToCVGenerationPrompt(t *testing.T) {
 				"Developer Role",
 			},
 		},
-		{
-			name: "should_include_previous_matches_when_provided",
-			prompt: Prompt{
-				Instructions: "Generate targeted CV",
-				CVText:       "Charlie Brown\nFull Stack Developer",
-				Request: Request{
-					CVText:         "Charlie Brown\nFull Stack Developer",
-					JobDescription: "Lead Developer Position",
-					PreviousMatches: []PreviousMatch{
-						{
-							JobTitle:    "Senior Developer",
-							Company:     "Tech Inc",
-							MatchScore:  85,
-							KeyInsights: "Strong technical skills",
-							DaysAgo:     7,
-						},
-					},
-				},
-			},
-			contains: []string{
-				"Charlie Brown",
-				"Lead Developer Position",
-			},
-		},
 	}
 
 	for _, tt := range tests {

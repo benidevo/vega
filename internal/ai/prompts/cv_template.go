@@ -37,7 +37,15 @@ Generate a structured CV based on the user's profile that is specifically tailor
    - Lead with achievements and quantifiable impact
    - Use current date context to assess experience recency and prioritize more recent/relevant experience
    - Use strong action verbs (managed, developed, implemented, etc.)
-   - Focus on results: "Increased X by Y%" or "Reduced Z by $N"
+   - DEDUCE MEASURABLE IMPACT: Infer reasonable metrics from context without fabricating
+     * If they "managed a team" → estimate team size based on role level (e.g., "Managed a team of 5-7 professionals")
+     * If they "improved processes" → suggest efficiency gains (e.g., "Streamlined workflow reducing processing time by approximately 20%")
+     * If they "handled customer service" → infer volume (e.g., "Resolved 50+ customer inquiries daily with high satisfaction")
+     * If they "developed features" → suggest scope (e.g., "Delivered 3 major features improving user engagement")
+   - BE CREATIVE BUT TRUTHFUL: Transform generic descriptions into specific achievements
+     * "Responsible for sales" → "Drove sales growth through strategic client relationships"
+     * "Worked on projects" → "Contributed to 5+ cross-functional projects delivering on-time results"
+     * "Helped with marketing" → "Supported marketing campaigns that expanded brand reach"
    - Reframe basic responsibilities as achievements where possible
    - Highlight leadership, problem-solving, and impact even in non-leadership roles
    - Tailor descriptions to emphasize skills mentioned in the job posting
@@ -63,6 +71,8 @@ Generate a structured CV based on the user's profile that is specifically tailor
    - IMPORTANT: Use ONLY the information provided in the User Profile. Do not make up names, companies, education institutions, or any other details
    - Extract all personal information, work experience, education, and skills directly from the provided profile
    - ENHANCE and ELEVATE the presentation without crossing into dishonesty
+   - USE QUALIFIERS when deducing metrics: "approximately", "typically", "average of", "up to" to maintain credibility
+   - Example: "Managed inventory for approximately 500+ SKUs" rather than claiming exact numbers
 
 7. **Format and Style**
    - Keep descriptions concise and impactful

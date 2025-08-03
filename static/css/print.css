@@ -16,28 +16,28 @@
     margin: 0 !important;
     max-width: 100% !important;
     font-size: 11pt !important;
-    line-height: 1.3 !important;
+    line-height: 1.5 !important;
   }
 
   .resume-section {
-    margin-bottom: 0.5em !important;
+    margin-bottom: 1em !important;
     page-break-inside: auto;
     break-inside: auto;
   }
 
   h2 {
     font-size: 18pt !important;
-    margin-bottom: 2pt !important;
+    margin-bottom: 4pt !important;
   }
 
   h3 {
     font-size: 12pt !important;
-    margin-bottom: 4pt !important;
+    margin-bottom: 6pt !important;
   }
 
   h4 {
     font-size: 11pt !important;
-    margin-bottom: 2pt !important;
+    margin-bottom: 4pt !important;
   }
 
   p, div, span {
@@ -49,27 +49,73 @@
   }
 
   .mb-2 {
-    margin-bottom: 0.4em !important;
+    margin-bottom: 0.6em !important;
   }
 
   .mb-1\.5 {
-    margin-bottom: 0.3em !important;
+    margin-bottom: 0.5em !important;
   }
 
   .mb-1 {
-    margin-bottom: 0.2em !important;
+    margin-bottom: 0.4em !important;
   }
 
   .print\:hidden {
     display: none !important;
   }
 
-  div[data-section="experience"] .mb-1\.5 {
-    margin-bottom: 0.4em !important;
+  div[data-section="experience"] .mb-3 {
+    margin-bottom: 0.8em !important;
   }
 
   .whitespace-pre-wrap {
-    line-height: 1.2 !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Additional spacing improvements */
+  .mb-3 {
+    margin-bottom: 0.8em !important;
+  }
+
+  .mb-4 {
+    margin-bottom: 1em !important;
+  }
+
+  .mt-1 {
+    margin-top: 0.3em !important;
+  }
+
+  /* Ensure proper spacing for contact info */
+  .text-xs.text-gray-600 {
+    line-height: 1.4 !important;
+  }
+}
+
+/* ==========================================================================
+   Cover Letter Print Styles
+   ========================================================================== */
+@media print {
+  #cover-letter-content {
+    padding: 0.5in !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    font-size: 11pt !important;
+    line-height: 1.6 !important;
+  }
+
+  #cover-letter-content .border-b {
+    margin-bottom: 1.2em !important;
+    padding-bottom: 0.8em !important;
+  }
+
+  #cover-letter-content h2 {
+    font-size: 18pt !important;
+    margin-bottom: 6pt !important;
+  }
+
+  #cover-letter-content .whitespace-pre-wrap {
+    line-height: 1.6 !important;
+    white-space: pre-wrap !important;
   }
 }
 

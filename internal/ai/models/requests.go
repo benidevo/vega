@@ -30,7 +30,6 @@ type Request struct {
 	ApplicantProfile string
 	JobDescription   string
 	ExtraContext     string
-	PreviousMatches  []PreviousMatch
 	CVText           string
 
 	WorkExperience  []settingsmodels.WorkExperience `json:"work_experience,omitempty"`
@@ -38,15 +37,6 @@ type Request struct {
 	Certifications  []settingsmodels.Certification  `json:"certifications,omitempty"`
 	Skills          []string                        `json:"skills,omitempty"`
 	YearsExperience int                             `json:"years_experience,omitempty"`
-}
-
-// PreviousMatch represents a summary of a previous match result for context
-type PreviousMatch struct {
-	JobTitle    string
-	Company     string
-	MatchScore  int
-	KeyInsights string
-	DaysAgo     int
 }
 
 // Prompt represents the structure for a prompt used in the application.
@@ -267,34 +257,13 @@ func (p Prompt) ToMatchAnalysisPrompt(minMatchScore, maxMatchScore int) string {
 		)
 	}
 
-	previousMatchContext := ""
-	if len(p.PreviousMatches) > 0 {
-		previousMatchContext = "\n\nPrevious Match History (for context):\n"
-		for i, match := range p.PreviousMatches {
-			if i >= 3 { // Limit to 3 previous matches
-				break
-			}
-			jobTitle := match.JobTitle
-			company := match.Company
-			keyInsights := match.KeyInsights
-			if p.sanitizer != nil {
-				jobTitle = p.sanitizer.SanitizeText(match.JobTitle)
-				company = p.sanitizer.SanitizeText(match.Company)
-				keyInsights = p.sanitizer.SanitizeText(match.KeyInsights)
-			}
-			previousMatchContext += fmt.Sprintf("- %s at %s (%d days ago): Score %d/100. %s\n",
-				jobTitle, company, match.DaysAgo, match.MatchScore, keyInsights)
-		}
-		previousMatchContext += "\nNote: These are for minor context only - base your score on the CURRENT profile content, not historical scores.\n"
-	}
-
 	return fmt.Sprintf(`%s
 
 Analyze the match between this applicant and job opportunity:
 
 Job Description: %s
 Applicant Profile: %s
-%s%s
+%s
 
 CRITICAL SCORING GUIDELINES:
 - Profile completeness is ESSENTIAL - incomplete profiles MUST receive VERY LOW scores (15%% or less)
@@ -302,7 +271,6 @@ CRITICAL SCORING GUIDELINES:
 - Missing work experience section: automatic cap at 20%% (even with good title match)
 - Missing BOTH work experience AND education: automatic cap at 15%%
 - Missing skills section when job lists required skills: reduce score by at least 20%%
-- Previous match history is ONLY supplementary context - base your score primarily on the CURRENT profile content
 - Empty or minimal career summaries (under 50 words) should cap score at 25%%
 - To score above 50%%, profile MUST have substantial work experience, skills, AND either education or certifications
 
@@ -334,7 +302,6 @@ Return the analysis as a JSON object with EXACTLY this structure:
 		sanitizedJobDescription,
 		sanitizedApplicantProfile,
 		sanitizedExtraContext,
-		previousMatchContext,
 		minMatchScore,
 		maxMatchScore,
 		minMatchScore,
