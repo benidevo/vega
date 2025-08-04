@@ -34,7 +34,7 @@
             <ul class="space-y-1 text-blue-300">
               <li>• Click any section to edit text directly</li>
               <li>• Press <kbd class="px-1 py-0.5 bg-blue-800 rounded text-xs">Enter</kbd> for new line</li>
-              <li>• Use the <span class="px-2 py-0.5 bg-primary rounded text-xs">+ Bullet</span> button to add bullet points in work experience</li>
+              <li>• Use the <span class="px-2 py-0.5 bg-primary rounded text-xs">Bullet</span> button to add bullet points in work experience</li>
               <li>• Use the 🗑️ button to delete sections</li>
               <li>• Changes appear in your downloaded PDF</li>
             </ul>
@@ -42,20 +42,23 @@
         </div>
       </div>
 
-      <div id="resume-content" class="bg-white text-gray-800 p-4 md:p-6 rounded-md text-xs leading-tight min-h-[300px] md:min-h-[400px] overflow-x-auto break-words max-w-full">
-        <div class="mb-2">
-          <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-0" contenteditable="true">{{.GeneratedCV.PersonalInfo.FirstName | html}} {{.GeneratedCV.PersonalInfo.LastName | html}}</h2>
-          <p class="text-sm md:text-base text-gray-700 mb-0.5" contenteditable="true">{{.GeneratedCV.PersonalInfo.Title | html}}</p>
+      <div id="resume-content" class="bg-white text-gray-800 p-4 md:p-6 rounded-md text-xs leading-relaxed min-h-[300px] md:min-h-[400px] overflow-x-auto break-words max-w-full">
+        <div class="mb-4">
+          <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-1" contenteditable="true">{{.GeneratedCV.PersonalInfo.FirstName | html}} {{.GeneratedCV.PersonalInfo.LastName | html}}</h2>
+          <p class="text-sm md:text-base text-gray-700 mb-1" contenteditable="true">{{.GeneratedCV.PersonalInfo.Title | html}}</p>
           <div class="text-xs text-gray-600">
-            {{if .GeneratedCV.PersonalInfo.Location}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Location | html}}</span> | {{end}}
-            {{if .GeneratedCV.PersonalInfo.Email}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Email | html}}</span> | {{end}}
-            {{if .GeneratedCV.PersonalInfo.Phone}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Phone | html}}</span> | {{end}}
+            {{if .GeneratedCV.PersonalInfo.Location}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Location | html}}</span>{{end}}
+            {{if and .GeneratedCV.PersonalInfo.Location (or .GeneratedCV.PersonalInfo.Email .GeneratedCV.PersonalInfo.Phone .GeneratedCV.PersonalInfo.LinkedIn)}} | {{end}}
+            {{if .GeneratedCV.PersonalInfo.Email}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Email | html}}</span>{{end}}
+            {{if and .GeneratedCV.PersonalInfo.Email (or .GeneratedCV.PersonalInfo.Phone .GeneratedCV.PersonalInfo.LinkedIn)}} | {{end}}
+            {{if .GeneratedCV.PersonalInfo.Phone}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Phone | html}}</span>{{end}}
+            {{if and .GeneratedCV.PersonalInfo.Phone .GeneratedCV.PersonalInfo.LinkedIn}} | {{end}}
             {{if .GeneratedCV.PersonalInfo.LinkedIn}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.LinkedIn | html}}</span>{{end}}
           </div>
         </div>
 
         {{if .GeneratedCV.PersonalInfo.Summary}}
-        <div class="resume-section mb-2" data-section="summary">
+        <div class="resume-section mb-4" data-section="summary">
           <div class="flex justify-between items-center mb-0.5">
             <h3 class="text-sm font-semibold text-gray-900 border-b border-gray-300 pb-0.5 flex-grow">Professional Summary</h3>
             <button onclick="deleteSection(this)" class="ml-2 text-red-500 hover:text-red-700 text-xs print:hidden">
@@ -64,11 +67,11 @@
               </svg>
             </button>
           </div>
-          <p class="text-xs text-gray-700 leading-relaxed" contenteditable="true">{{.GeneratedCV.PersonalInfo.Summary | html}}</p>
+          <p class="text-xs text-gray-700 leading-relaxed mt-1" contenteditable="true">{{.GeneratedCV.PersonalInfo.Summary | html}}</p>
         </div>
         {{end}}
 
-        <div class="resume-section mb-1" data-section="skills">
+        <div class="resume-section mb-4" data-section="skills">
           <div class="flex justify-between items-center mb-0.5">
             <h3 class="text-sm font-semibold text-gray-900 border-b border-gray-300 pb-0.5 flex-grow">Skills</h3>
             <button onclick="deleteSection(this)" class="ml-2 text-red-500 hover:text-red-700 text-xs print:hidden">
@@ -77,11 +80,11 @@
               </svg>
             </button>
           </div>
-          <div id="skills-container" class="text-xs text-gray-700 leading-relaxed mb-1" contenteditable="true">{{range $i, $skill := .GeneratedCV.Skills}}{{if $i}}, {{end}}{{$skill | html}}{{end}}</div>
+          <div id="skills-container" class="text-xs text-gray-700 leading-relaxed mt-1" contenteditable="true">{{range $i, $skill := .GeneratedCV.Skills}}{{if $i}}, {{end}}{{$skill | html}}{{end}}</div>
         </div>
 
         {{if .GeneratedCV.WorkExperience}}
-        <div class="resume-section mb-2" data-section="experience">
+        <div class="resume-section mb-4" data-section="experience">
           <div class="flex justify-between items-center mb-1">
             <h3 class="text-sm font-semibold text-gray-900 border-b border-gray-300 pb-0.5 flex-grow">Work Experience</h3>
             <button onclick="deleteSection(this)" class="ml-2 text-red-500 hover:text-red-700 text-xs print:hidden">
@@ -91,7 +94,7 @@
             </button>
           </div>
           {{range .GeneratedCV.WorkExperience}}
-          <div class="mb-1.5">
+          <div class="mb-3">
             <div class="flex justify-between items-start">
               <div>
                 <h4 class="text-xs font-semibold text-gray-900 inline" contenteditable="true">{{.Title | html}}</h4>
@@ -99,10 +102,10 @@
               <span class="text-xs text-gray-600 flex-shrink-0 ml-2" contenteditable="true">{{.StartDate}} - {{.EndDate}}</span>
             </div>
             <p class="text-xs text-gray-700" contenteditable="true">{{.Company | html}}{{if .Location}} – <span class="italic text-gray-600">{{.Location | html}}</span>{{end}}</p>
-            <div class="text-xs text-gray-700 whitespace-pre-wrap mt-0.5 leading-relaxed" contenteditable="true" data-newline-support="true">{{.Description | html}}</div>
+            <div class="text-xs text-gray-700 whitespace-pre-wrap mt-1 leading-relaxed" contenteditable="true" data-newline-support="true">{{.Description | html}}</div>
             <div class="mt-1 print:hidden">
-              <button onclick="addBulletPointToField(this)" class="px-2 py-1 bg-primary hover:bg-primary-dark text-white rounded text-xs transition-colors" title="Add bullet point">
-                + Bullet
+              <button onclick="addBulletPointToField(this)" class="cv-button-compact bg-primary hover:bg-primary-dark text-white rounded transition-colors" title="Add bullet point">
+                Bullet
               </button>
             </div>
           </div>
@@ -111,7 +114,7 @@
         {{end}}
 
         {{if .GeneratedCV.Education}}
-        <div class="resume-section mb-2" data-section="education">
+        <div class="resume-section mb-4" data-section="education">
           <div class="flex justify-between items-center mb-1">
             <h3 class="text-sm font-semibold text-gray-900 border-b border-gray-300 pb-0.5 flex-grow">Education</h3>
             <button onclick="deleteSection(this)" class="ml-2 text-red-500 hover:text-red-700 text-xs print:hidden">
@@ -121,7 +124,7 @@
             </button>
           </div>
           {{range .GeneratedCV.Education}}
-          <div class="mb-1">
+          <div class="mb-2">
             <div class="flex justify-between items-start">
               <h4 class="text-xs font-semibold text-gray-900" contenteditable="true">{{.Degree}}{{if .FieldOfStudy}} in {{.FieldOfStudy}}{{end}}</h4>
               <span class="text-xs text-gray-600 flex-shrink-0 ml-2" contenteditable="true">{{.StartDate}} - {{.EndDate}}</span>
@@ -133,7 +136,7 @@
         {{end}}
 
         {{if .GeneratedCV.Certifications}}
-        <div class="resume-section mb-2" data-section="certifications">
+        <div class="resume-section mb-4" data-section="certifications">
           <div class="flex justify-between items-center mb-1">
             <h3 class="text-sm font-semibold text-gray-900 border-b border-gray-300 pb-0.5 flex-grow">Certifications</h3>
             <button onclick="deleteSection(this)" class="ml-2 text-red-500 hover:text-red-700 text-xs print:hidden">
@@ -143,7 +146,7 @@
             </button>
           </div>
           {{range .GeneratedCV.Certifications}}
-          <div class="mb-1">
+          <div class="mb-2">
             <div class="flex justify-between items-start">
               <h4 class="text-xs font-semibold text-gray-900" contenteditable="true">{{.Name}}</h4>
               <span class="text-xs text-gray-600 flex-shrink-0 ml-2" contenteditable="true">{{.IssueDate}}{{if .ExpiryDate}} - {{.ExpiryDate}}{{end}}</span>
@@ -155,8 +158,8 @@
         {{end}}
 
         <div class="mt-2 text-center print:hidden">
-          <button onclick="showAddSectionModal()" class="px-3 py-1 bg-primary hover:bg-primary-dark text-white text-xs rounded-md transition-colors">
-            + Add Section
+          <button onclick="showAddSectionModal()" class="cv-button-compact bg-primary hover:bg-primary-dark text-white rounded-md transition-colors">
+            Add Section
           </button>
         </div>
       </div>
@@ -373,7 +376,7 @@
     const pageHeight = doc.internal.pageSize.getHeight();
     const contentWidth = pageWidth - (2 * margin);
     let yPos = margin;
-    const lineHeight = 12;
+    const lineHeight = 14;
 
     // Set document properties for better rendering
     try {
@@ -429,7 +432,7 @@
             yPos = margin;
           }
           doc.text(line, margin, yPos);
-          yPos += fontSize * 1.3;
+          yPos += fontSize * 1.5;
         });
       } catch (textError) {
         // Fallback for any unexpected text processing errors
@@ -486,7 +489,7 @@
     sections.forEach(section => {
       const sectionTitle = section.querySelector('h3');
       if (sectionTitle) {
-        yPos += 4; // Spacing before section
+        yPos += 8; // Spacing before section
 
         // Section title in bold
         const titleText = sectionTitle.textContent.trim();
@@ -500,7 +503,7 @@
         doc.setDrawColor(220, 220, 220);
         doc.setLineWidth(0.5);
         doc.line(margin, yPos, pageWidth - margin, yPos);
-        yPos += 10; // Spacing after section title
+        yPos += 12; // Spacing after section title
       }
 
       const sectionType = section.getAttribute('data-section');
@@ -509,20 +512,20 @@
         const summaryText = section.querySelector('p');
         if (summaryText) {
           addText(summaryText.textContent.trim(), 10, { color: [50, 50, 50] });
-          yPos += 10;
+          yPos += 12;
         }
       } else if (sectionType === 'skills') {
         const skillsContainer = section.querySelector('#skills-container');
         if (skillsContainer) {
           addText(skillsContainer.textContent.trim(), 10, { color: [50, 50, 50] });
-          yPos += 4;
+          yPos += 8;
         }
       } else if (sectionType === 'experience') {
-        const experiences = section.querySelectorAll('.mb-1\\.5, .mb-2');
+        const experiences = section.querySelectorAll('.mb-3');
         experiences.forEach((exp, expIndex) => {
           const jobTitle = exp.querySelector('h4');
           const companyInfo = exp.querySelector('p.text-xs');
-          const dates = exp.querySelector('.text-xs.text-gray-600');
+          const dates = exp.querySelector('span.text-xs.text-gray-600');
           const description = exp.querySelector('.whitespace-pre-wrap');
 
           if (jobTitle) {
@@ -600,7 +603,7 @@
                       yPos = margin;
                     }
                     doc.text(wLine, margin + 10, yPos);
-                    yPos += 10 * 1.3;
+                    yPos += 10 * 1.5;
                   });
                 } else {
                   // Regular text
@@ -611,7 +614,7 @@
                       yPos = margin;
                     }
                     doc.text(wLine, margin, yPos);
-                    yPos += 10 * 1.3;
+                    yPos += 10 * 1.5;
                   });
                 }
               });
@@ -619,17 +622,17 @@
 
             // spacing between experiences
             if (expIndex < experiences.length - 1) {
-              yPos += 4;
+              yPos += 8;
             }
           }
         });
         yPos += 4; // Spacing after Work Experience section
       } else if (sectionType === 'education') {
-        const educationItems = section.querySelectorAll('.mb-1');
+        const educationItems = section.querySelectorAll('.mb-2');
         educationItems.forEach((edu, eduIndex) => {
           const degree = edu.querySelector('h4');
           const institution = edu.querySelector('p.text-xs');
-          const endDate = edu.querySelector('.text-xs.text-gray-600');
+          const endDate = edu.querySelector('span.text-xs.text-gray-600');
 
           if (degree) {
             const degreeText = degree.textContent.trim();
@@ -659,17 +662,17 @@
 
             // spacing between education items
             if (eduIndex < educationItems.length - 1) {
-              yPos += 3;
+              yPos += 6;
             }
           }
         });
         yPos += 4; // Spacing after Education section
       } else if (sectionType === 'certifications') {
-        const certificationItems = section.querySelectorAll('.mb-1');
+        const certificationItems = section.querySelectorAll('.mb-2');
         certificationItems.forEach((cert, certIndex) => {
           const certName = cert.querySelector('h4');
           const certOrg = cert.querySelector('p.text-xs');
-          const certDate = cert.querySelector('.text-xs.text-gray-600');
+          const certDate = cert.querySelector('span.text-xs.text-gray-600');
 
           if (certName) {
             // Certification name (bold) and date on same line
@@ -700,7 +703,7 @@
 
             // spacing between certification items
             if (certIndex < certificationItems.length - 1) {
-              yPos += 3;
+              yPos += 6;
             }
           }
         });

@@ -50,13 +50,16 @@
       <!-- Mobile-optimized editable cover letter -->
       <div id="cover-letter-content" class="bg-white text-gray-800 p-4 md:p-6 rounded-md text-sm md:text-base leading-relaxed min-h-[300px] md:min-h-[400px] overflow-x-auto break-words max-w-full">
         <!-- Personal Information Header -->
-        <div class="mb-4 border-b pb-3">
-          <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-1" contenteditable="true">{{.GeneratedCV.PersonalInfo.FirstName | html}} {{.GeneratedCV.PersonalInfo.LastName | html}}</h2>
-          <p class="text-sm md:text-base text-gray-700 mb-1" contenteditable="true">{{.GeneratedCV.PersonalInfo.Title | html}}</p>
+        <div class="mb-6 border-b pb-4">
+          <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-2" contenteditable="true">{{.GeneratedCV.PersonalInfo.FirstName | html}} {{.GeneratedCV.PersonalInfo.LastName | html}}</h2>
+          <p class="text-sm md:text-base text-gray-700 mb-2" contenteditable="true">{{.GeneratedCV.PersonalInfo.Title | html}}</p>
           <div class="text-xs text-gray-600">
-            {{if .GeneratedCV.PersonalInfo.Location}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Location | html}}</span> | {{end}}
-            {{if .GeneratedCV.PersonalInfo.Email}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Email | html}}</span> | {{end}}
-            {{if .GeneratedCV.PersonalInfo.Phone}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Phone | html}}</span> | {{end}}
+            {{if .GeneratedCV.PersonalInfo.Location}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Location | html}}</span>{{end}}
+            {{if and .GeneratedCV.PersonalInfo.Location (or .GeneratedCV.PersonalInfo.Email .GeneratedCV.PersonalInfo.Phone .GeneratedCV.PersonalInfo.LinkedIn)}} | {{end}}
+            {{if .GeneratedCV.PersonalInfo.Email}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Email | html}}</span>{{end}}
+            {{if and .GeneratedCV.PersonalInfo.Email (or .GeneratedCV.PersonalInfo.Phone .GeneratedCV.PersonalInfo.LinkedIn)}} | {{end}}
+            {{if .GeneratedCV.PersonalInfo.Phone}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.Phone | html}}</span>{{end}}
+            {{if and .GeneratedCV.PersonalInfo.Phone .GeneratedCV.PersonalInfo.LinkedIn}} | {{end}}
             {{if .GeneratedCV.PersonalInfo.LinkedIn}}<span contenteditable="true">{{.GeneratedCV.PersonalInfo.LinkedIn | html}}</span>{{end}}
           </div>
         </div>
@@ -203,7 +206,7 @@
     const pageHeight = doc.internal.pageSize.getHeight();
     const contentWidth = pageWidth - (2 * margin);
     let yPos = margin;
-    const lineHeight = 14;
+    const lineHeight = 16;
 
     // Set document properties for better rendering
     try {
@@ -258,7 +261,7 @@
             yPos = margin;
           }
           doc.text(line, margin, yPos);
-          yPos += fontSize * 1.3;
+          yPos += fontSize * 1.5;
         });
       } catch (textError) {
         // Fallback for any unexpected text processing errors
@@ -281,18 +284,18 @@
 
       if (titleElement) {
         addText(titleElement.textContent.trim(), 14, { color: [60, 60, 60] });
-        yPos += 4;
+        yPos += 6;
       }
 
       if (contactInfo) {
         addText(contactInfo.textContent.replace(/\s+/g, ' ').trim(), 10, { color: [80, 80, 80] });
-        yPos += 8;
+        yPos += 12;
 
         // Add underline after header to match preview
         doc.setDrawColor(200, 200, 200);
         doc.setLineWidth(0.5);
         doc.line(margin, yPos, pageWidth - margin, yPos);
-        yPos += 20;
+        yPos += 24;
       }
     }
 
@@ -310,10 +313,10 @@
             const dateWidth = doc.getTextWidth(paragraph.trim());
             doc.text(paragraph.trim(), pageWidth - margin - dateWidth, yPos);
             doc.setTextColor(0, 0, 0);
-            yPos += 18;
+            yPos += 20;
           } else {
             addText(paragraph.trim(), 10, { color: [40, 40, 40] });
-            yPos += 16;
+            yPos += 18;
           }
         }
       });

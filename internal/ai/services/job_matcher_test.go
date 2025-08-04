@@ -144,21 +144,12 @@ func TestJobMatcherService_AnalyzeMatch(t *testing.T) {
 			errorContains: "unexpected response type",
 		},
 		{
-			name: "should_include_previous_matches_when_provided",
+			name: "should_analyze_match_for_data_scientist_role",
 			request: models.Request{
 				ApplicantName: "Jane Smith",
 				ApplicantProfile: `Current Title: Data Scientist
 Skills: Python, ML, SQL`,
 				JobDescription: "Data Scientist role requiring ML experience",
-				PreviousMatches: []models.PreviousMatch{
-					{
-						JobTitle:    "ML Engineer",
-						Company:     "AI Corp",
-						MatchScore:  75,
-						KeyInsights: "Good ML skills but limited production experience",
-						DaysAgo:     5,
-					},
-				},
 			},
 			setupMock: func(m *MockJobMatcher) {
 				matchResult := models.MatchResult{
@@ -221,67 +212,67 @@ func TestJobMatcherService_GetMatchCategories(t *testing.T) {
 			name:                "should_return_excellent_when_score_90_or_above",
 			score:               95,
 			expectedCategory:    "Excellent Match",
-			expectedDescription: "You are an outstanding fit for the role with minimal gaps.",
+			expectedDescription: "You're an ideal candidate with all key qualifications and relevant experience. Apply with confidence.",
 		},
 		{
 			name:                "should_return_strong_when_score_80_to_89",
 			score:               85,
 			expectedCategory:    "Strong Match",
-			expectedDescription: "You have strong qualifications with only minor areas for development.",
+			expectedDescription: "You meet 80%+ of requirements with transferable skills covering gaps. Strong application potential.",
 		},
 		{
 			name:                "should_return_good_when_score_70_to_79",
 			score:               75,
 			expectedCategory:    "Good Match",
-			expectedDescription: "You meet most requirements with some skill gaps that can be addressed.",
+			expectedDescription: "You have solid core qualifications. Address the skill gaps in your cover letter to strengthen your application.",
 		},
 		{
 			name:                "should_return_fair_when_score_60_to_69",
 			score:               65,
 			expectedCategory:    "Fair Match",
-			expectedDescription: "You have potential but may need significant development in key areas.",
+			expectedDescription: "You show promise but lack some key requirements. Consider gaining experience in missing areas first.",
 		},
 		{
 			name:                "should_return_partial_when_score_50_to_59",
 			score:               55,
 			expectedCategory:    "Partial Match",
-			expectedDescription: "You have some relevant qualifications but significant gaps exist.",
+			expectedDescription: "Your profile shows potential but significant gaps exist. This role may be a stretch at this time.",
 		},
 		{
 			name:                "should_return_poor_when_score_below_50",
 			score:               30,
 			expectedCategory:    "Poor Match",
-			expectedDescription: "You do not meet the core requirements for this position.",
+			expectedDescription: "Your current qualifications don't align with this role. Focus on building relevant skills and experience.",
 		},
 		{
 			name:                "should_handle_boundary_score_90",
 			score:               90,
 			expectedCategory:    "Excellent Match",
-			expectedDescription: "You are an outstanding fit for the role with minimal gaps.",
+			expectedDescription: "You're an ideal candidate with all key qualifications and relevant experience. Apply with confidence.",
 		},
 		{
 			name:                "should_handle_boundary_score_80",
 			score:               80,
 			expectedCategory:    "Strong Match",
-			expectedDescription: "You have strong qualifications with only minor areas for development.",
+			expectedDescription: "You meet 80%+ of requirements with transferable skills covering gaps. Strong application potential.",
 		},
 		{
 			name:                "should_handle_boundary_score_70",
 			score:               70,
 			expectedCategory:    "Good Match",
-			expectedDescription: "You meet most requirements with some skill gaps that can be addressed.",
+			expectedDescription: "You have solid core qualifications. Address the skill gaps in your cover letter to strengthen your application.",
 		},
 		{
 			name:                "should_handle_boundary_score_60",
 			score:               60,
 			expectedCategory:    "Fair Match",
-			expectedDescription: "You have potential but may need significant development in key areas.",
+			expectedDescription: "You show promise but lack some key requirements. Consider gaining experience in missing areas first.",
 		},
 		{
 			name:                "should_handle_boundary_score_50",
 			score:               50,
 			expectedCategory:    "Partial Match",
-			expectedDescription: "You have some relevant qualifications but significant gaps exist.",
+			expectedDescription: "Your profile shows potential but significant gaps exist. This role may be a stretch at this time.",
 		},
 	}
 

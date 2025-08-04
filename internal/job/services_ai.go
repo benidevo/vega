@@ -101,32 +101,7 @@ func (s *JobService) AnalyzeJobMatch(ctx context.Context, userID, jobID int) (*m
 		return nil, err
 	}
 
-	previousMatches, err := s.jobRepo.GetRecentMatchResultsWithDetails(ctx, userID, 3, jobID)
-	if err != nil {
-		s.log.Warn().Err(err).
-			Str("user_ref", userRef).
-			Int("job_id", jobID).
-			Str("error_type", "previous_matches_fetch_failed").
-			Msg("Failed to fetch previous match results, continuing without context")
-		// Don't fail the operation, just proceed without context
-		previousMatches = nil
-	}
-
 	aiRequest := s.buildAIRequest(job, profile)
-
-	// Convert match summaries to AI request format
-	if len(previousMatches) > 0 {
-		aiRequest.PreviousMatches = make([]aimodels.PreviousMatch, len(previousMatches))
-		for i, match := range previousMatches {
-			aiRequest.PreviousMatches[i] = aimodels.PreviousMatch{
-				JobTitle:    match.JobTitle,
-				Company:     match.Company,
-				MatchScore:  match.MatchScore,
-				KeyInsights: match.KeyInsights,
-				DaysAgo:     match.DaysAgo,
-			}
-		}
-	}
 
 	aiResult, err := s.aiService.JobMatcher.AnalyzeMatch(ctx, aiRequest)
 	if err != nil {
