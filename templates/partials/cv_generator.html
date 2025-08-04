@@ -34,7 +34,7 @@
             <ul class="space-y-1 text-blue-300">
               <li>• Click any section to edit text directly</li>
               <li>• Press <kbd class="px-1 py-0.5 bg-blue-800 rounded text-xs">Enter</kbd> for new line</li>
-              <li>• Use the <span class="px-2 py-0.5 bg-primary rounded text-xs">+ Bullet</span> button to add bullet points in work experience</li>
+              <li>• Use the <span class="px-2 py-0.5 bg-primary rounded text-xs">Bullet</span> button to add bullet points in work experience</li>
               <li>• Use the 🗑️ button to delete sections</li>
               <li>• Changes appear in your downloaded PDF</li>
             </ul>
@@ -104,8 +104,8 @@
             <p class="text-xs text-gray-700" contenteditable="true">{{.Company | html}}{{if .Location}} – <span class="italic text-gray-600">{{.Location | html}}</span>{{end}}</p>
             <div class="text-xs text-gray-700 whitespace-pre-wrap mt-1 leading-relaxed" contenteditable="true" data-newline-support="true">{{.Description | html}}</div>
             <div class="mt-1 print:hidden">
-              <button onclick="addBulletPointToField(this)" class="px-2 py-1 bg-primary hover:bg-primary-dark text-white rounded text-xs transition-colors" title="Add bullet point">
-                + Bullet
+              <button onclick="addBulletPointToField(this)" class="cv-button-compact bg-primary hover:bg-primary-dark text-white rounded transition-colors" title="Add bullet point">
+                Bullet
               </button>
             </div>
           </div>
@@ -158,8 +158,8 @@
         {{end}}
 
         <div class="mt-2 text-center print:hidden">
-          <button onclick="showAddSectionModal()" class="px-3 py-1 bg-primary hover:bg-primary-dark text-white text-xs rounded-md transition-colors">
-            + Add Section
+          <button onclick="showAddSectionModal()" class="cv-button-compact bg-primary hover:bg-primary-dark text-white rounded-md transition-colors">
+            Add Section
           </button>
         </div>
       </div>
@@ -521,11 +521,11 @@
           yPos += 8;
         }
       } else if (sectionType === 'experience') {
-        const experiences = section.querySelectorAll('.mb-1\\.5, .mb-2');
+        const experiences = section.querySelectorAll('.mb-3');
         experiences.forEach((exp, expIndex) => {
           const jobTitle = exp.querySelector('h4');
           const companyInfo = exp.querySelector('p.text-xs');
-          const dates = exp.querySelector('.text-xs.text-gray-600');
+          const dates = exp.querySelector('span.text-xs.text-gray-600');
           const description = exp.querySelector('.whitespace-pre-wrap');
 
           if (jobTitle) {
@@ -628,11 +628,11 @@
         });
         yPos += 4; // Spacing after Work Experience section
       } else if (sectionType === 'education') {
-        const educationItems = section.querySelectorAll('.mb-1');
+        const educationItems = section.querySelectorAll('.mb-2');
         educationItems.forEach((edu, eduIndex) => {
           const degree = edu.querySelector('h4');
           const institution = edu.querySelector('p.text-xs');
-          const endDate = edu.querySelector('.text-xs.text-gray-600');
+          const endDate = edu.querySelector('span.text-xs.text-gray-600');
 
           if (degree) {
             const degreeText = degree.textContent.trim();
@@ -668,11 +668,11 @@
         });
         yPos += 4; // Spacing after Education section
       } else if (sectionType === 'certifications') {
-        const certificationItems = section.querySelectorAll('.mb-1');
+        const certificationItems = section.querySelectorAll('.mb-2');
         certificationItems.forEach((cert, certIndex) => {
           const certName = cert.querySelector('h4');
           const certOrg = cert.querySelector('p.text-xs');
-          const certDate = cert.querySelector('.text-xs.text-gray-600');
+          const certDate = cert.querySelector('span.text-xs.text-gray-600');
 
           if (certName) {
             // Certification name (bold) and date on same line

@@ -380,3 +380,72 @@ html {
     font-size: 0.6875rem !important;
   }
 }
+
+/* ==========================================================================
+   CV Generator Button Component
+   ========================================================================== */
+
+/* CV generator compact buttons with enhanced touch targets */
+.cv-button-compact {
+  /* Reset global button styles */
+  min-height: auto !important;
+  min-width: auto !important;
+  height: auto !important;
+  
+  /* Compact visual size */
+  padding: 2px 8px;
+  font-size: 0.75rem; /* 12px */
+  line-height: 1.25rem; /* 20px */
+  
+  /* Position relative for pseudo-element */
+  position: relative;
+  
+  /* Ensure button stays above pseudo-element */
+  z-index: 1;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 640px) {
+  .cv-button-compact {
+    /* Even smaller visual size on mobile */
+    padding: 0 2px;
+    font-size: 0.5625rem; /* 9px */
+  }
+}
+
+@media (min-width: 640px) and (max-width: 768px) {
+  .cv-button-compact {
+    /* Small screens */
+    padding: 2px 4px;
+    font-size: 0.625rem; /* 10px */
+  }
+}
+
+@media (min-width: 768px) {
+  .cv-button-compact {
+    /* Medium screens and up */
+    padding: 4px 8px;
+    font-size: 0.75rem; /* 12px */
+  }
+}
+
+/* Enhanced touch target for mobile (44x44px minimum) */
+@media (max-width: 768px) {
+  .cv-button-compact::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    z-index: -1;
+    /* Invisible but tappable */
+  }
+  
+  /* Override global mobile button styles for these specific buttons */
+  #resume-content .cv-button-compact {
+    min-height: auto !important;
+    display: inline-flex !important;
+  }
+}
