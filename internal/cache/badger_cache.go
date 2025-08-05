@@ -22,12 +22,10 @@ type BadgerCache struct {
 	db *badger.DB
 }
 
-// NewBadgerCache creates a new Badger-backed cache
 func NewBadgerCache(path string, maxMemoryMB int) (*BadgerCache, error) {
 	opts := badger.DefaultOptions(path)
 	opts.Logger = nil // Disable Badger's internal logger
 
-	// Memory optimizations
 	if maxMemoryMB > 0 {
 		opts.MemTableSize = int64(maxMemoryMB) * 1024 * 1024 / 8
 		opts.BaseTableSize = int64(maxMemoryMB) * 1024 * 1024 / 16
@@ -36,7 +34,6 @@ func NewBadgerCache(path string, maxMemoryMB int) (*BadgerCache, error) {
 		opts.NumLevelZeroTablesStall = 10
 	}
 
-	// Performance optimizations
 	opts.CompactL0OnClose = true
 	opts.ValueLogFileSize = 100 << 20 // 100MB
 	opts.ValueLogMaxEntries = 10000
@@ -49,13 +46,11 @@ func NewBadgerCache(path string, maxMemoryMB int) (*BadgerCache, error) {
 
 	bc := &BadgerCache{db: db}
 
-	// Start background garbage collection
 	go bc.runGC()
 
 	return bc, nil
 }
 
-// runGC runs garbage collection periodically
 func (c *BadgerCache) runGC() {
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
@@ -68,7 +63,6 @@ func (c *BadgerCache) runGC() {
 	}
 }
 
-// Get retrieves a value from cache
 func (c *BadgerCache) Get(ctx context.Context, key string, value interface{}) error {
 	if c == nil || c.db == nil {
 		return ErrCacheNil
@@ -105,7 +99,6 @@ func (c *BadgerCache) Get(ctx context.Context, key string, value interface{}) er
 	return nil
 }
 
-// Set stores a value in cache with optional TTL
 func (c *BadgerCache) Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
 	if c == nil || c.db == nil {
 		return ErrCacheNil
@@ -116,16 +109,21 @@ func (c *BadgerCache) Set(ctx context.Context, key string, value interface{}, tt
 		return fmt.Errorf("cache serialization error: %w", err)
 	}
 
+	// Enforce maximum TTL of 1 hour to prevent excessive memory usage
+	const maxTTL = time.Hour
+
+	effectiveTTL := ttl
+	if ttl == 0 || ttl > maxTTL {
+		effectiveTTL = maxTTL
+	}
+
 	return c.db.Update(func(txn *badger.Txn) error {
 		e := badger.NewEntry([]byte(key), data)
-		if ttl > 0 {
-			e.WithTTL(ttl)
-		}
+		e.WithTTL(effectiveTTL)
 		return txn.SetEntry(e)
 	})
 }
 
-// Delete removes one or more keys from cache
 func (c *BadgerCache) Delete(ctx context.Context, keys ...string) error {
 	if c == nil || c.db == nil {
 		return ErrCacheNil
@@ -141,13 +139,11 @@ func (c *BadgerCache) Delete(ctx context.Context, keys ...string) error {
 	})
 }
 
-// DeletePattern removes all keys matching the pattern
 func (c *BadgerCache) DeletePattern(ctx context.Context, pattern string) error {
 	if c == nil || c.db == nil {
 		return ErrCacheNil
 	}
 
-	// Convert pattern to prefix
 	// Supports patterns like "user:*" -> prefix "user:"
 	prefix := strings.TrimSuffix(pattern, "*")
 
@@ -175,7 +171,6 @@ func (c *BadgerCache) DeletePattern(ctx context.Context, pattern string) error {
 	})
 }
 
-// Exists checks if key exists in cache
 func (c *BadgerCache) Exists(ctx context.Context, key string) (bool, error) {
 	if c == nil || c.db == nil {
 		return false, ErrCacheNil
@@ -199,7 +194,6 @@ func (c *BadgerCache) Exists(ctx context.Context, key string) (bool, error) {
 	return exists, err
 }
 
-// Close gracefully shuts down the cache
 func (c *BadgerCache) Close() error {
 	if c == nil || c.db == nil {
 		return nil

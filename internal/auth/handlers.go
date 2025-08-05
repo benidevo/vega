@@ -101,7 +101,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-// Logout logs out the current user by clearing the authentication cookie and redirecting to the home page.
+// Logout logs out the current user by clearing the authentication cookies and redirecting to the home page.
 func (h *AuthHandler) Logout(c *gin.Context) {
 	h.clearAuthCookies(c)
 	c.Redirect(http.StatusFound, "/")

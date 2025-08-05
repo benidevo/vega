@@ -72,7 +72,6 @@ func TestBadgerCache_SetWithTTL(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Test that we can set values with different TTLs without error
 	testCases := []struct {
 		name string
 		ttl  time.Duration
@@ -87,11 +86,9 @@ func TestBadgerCache_SetWithTTL(t *testing.T) {
 			key := "ttl:" + tc.name
 			value := &testStruct{ID: 1, Name: tc.name}
 
-			// Should set without error
 			err := cache.Set(ctx, key, value, tc.ttl)
 			assert.NoError(t, err)
 
-			// Should be retrievable immediately
 			var retrieved testStruct
 			err = cache.Get(ctx, key, &retrieved)
 			assert.NoError(t, err)
@@ -130,7 +127,6 @@ func TestBadgerCache_DeletePattern(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Set values with different patterns
 	testData := map[string]int{
 		"user:1:profile": 1,
 		"user:1:stats":   2,
@@ -144,17 +140,14 @@ func TestBadgerCache_DeletePattern(t *testing.T) {
 		assert.NoError(t, err)
 	}
 
-	// Delete all user:1 keys
 	err := cache.DeletePattern(ctx, "user:1:*")
 	assert.NoError(t, err)
 
 	var value testStruct
 
-	// user:1 keys should be gone
 	assert.Equal(t, ErrCacheMiss, cache.Get(ctx, "user:1:profile", &value))
 	assert.Equal(t, ErrCacheMiss, cache.Get(ctx, "user:1:stats", &value))
 
-	// Other keys should remain
 	assert.NoError(t, cache.Get(ctx, "user:2:profile", &value))
 	assert.Equal(t, 3, value.ID)
 
@@ -173,12 +166,10 @@ func TestBadgerCache_Exists(t *testing.T) {
 
 	key := "exists:test"
 
-	// Key doesn't exist yet
 	exists, err := cache.Exists(ctx, key)
 	assert.NoError(t, err)
 	assert.False(t, exists)
 
-	// Set value
 	err = cache.Set(ctx, key, &testStruct{ID: 1}, 0)
 	assert.NoError(t, err)
 
@@ -189,7 +180,6 @@ func TestBadgerCache_Exists(t *testing.T) {
 	err = cache.Delete(ctx, key)
 	assert.NoError(t, err)
 
-	// Should not exist anymore
 	exists, err = cache.Exists(ctx, key)
 	assert.NoError(t, err)
 	assert.False(t, exists)

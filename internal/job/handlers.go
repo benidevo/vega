@@ -509,7 +509,6 @@ func (h *JobHandler) GetJobDetails(c *gin.Context) {
 	if err != nil {
 		// Log error but don't fail the page load
 		h.service.LogError(err)
-		// Create a default quota result that allows analysis
 		quotaCheckResult = &quota.QuotaCheckResult{
 			Allowed: true,
 			Reason:  "ok",
@@ -589,7 +588,6 @@ func (h *JobHandler) UpdateJobField(c *gin.Context) {
 		return
 	}
 
-	// Get the appropriate command for the field
 	command, err := h.commandFactory.GetCommand(field)
 	if err != nil {
 		h.renderError(c, err)
