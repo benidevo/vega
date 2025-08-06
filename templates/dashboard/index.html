@@ -13,37 +13,43 @@
     <p>{{.error}}</p>
   </div>
   {{end}}
-  
-  <div class="flex-none px-4 md:px-0">
-    <div class="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
-      <select
-        id="status-filter"
-        class="bg-slate-700 text-white border-slate-600 rounded-md px-4 py-3 text-base w-full sm:w-auto min-h-[48px]"
-        hx-get="/jobs"
-        hx-trigger="change"
-        hx-target="#jobs-container"
-        hx-push-url="true"
-        name="status"
-      >
-        <option value="all" {{if or (eq .statusFilter "") (eq .statusFilter "all")}}selected{{end}}>All Jobs</option>
-        <option value="interested" {{if eq .statusFilter "interested"}}selected{{end}}>Interested</option>
-        <option value="applied" {{if eq .statusFilter "applied"}}selected{{end}}>Applied</option>
-        <option value="interviewing" {{if eq .statusFilter "interviewing"}}selected{{end}}>Interviewing</option>
-        <option value="offer_received" {{if eq .statusFilter "offer_received"}}selected{{end}}>Offer Received</option>
-        <option value="rejected" {{if eq .statusFilter "rejected"}}selected{{end}}>Rejected</option>
-        <option value="not_interested" {{if eq .statusFilter "not_interested"}}selected{{end}}>Not Interested</option>
-      </select>
-      <button
-        class="bg-primary text-white px-4 py-3 sm:py-2 rounded-md text-sm font-medium hover:bg-primary-dark transition-colors w-full sm:w-auto min-h-[48px] sm:min-h-0"
-        hx-get="/jobs{{if .statusFilter}}?status={{.statusFilter}}{{end}}"
-        hx-target="#jobs-container"
-      >
-        Refresh
-      </button>
+
+  <div class="flex-none px-4 md:px-0 mb-4 sm:mb-6">
+    <div class="w-full sm:w-auto sm:inline-block">
+      <div class="relative">
+        <select
+          id="status-filter"
+          class="w-full sm:w-auto appearance-none bg-slate-800 text-slate-200 border rounded-lg px-3 py-2 pr-10 text-sm font-medium hover:bg-slate-750 hover:border-slate-600 focus:outline-none focus:ring-2 transition-colors cursor-pointer
+          {{if and .statusFilter (ne .statusFilter "all")}}
+            border-teal-600 focus:ring-teal-500/30 text-teal-100
+          {{else}}
+            border-slate-700 focus:ring-slate-500/30
+          {{end}}"
+          hx-get="/jobs"
+          hx-trigger="change"
+          hx-target="#jobs-container"
+          hx-push-url="true"
+          name="status"
+          aria-label="Filter jobs by status"
+        >
+          <option value="all" {{if or (eq .statusFilter "") (eq .statusFilter "all")}}selected{{end}}>All Jobs</option>
+          <option value="interested" {{if eq .statusFilter "interested"}}selected{{end}}>Interested</option>
+          <option value="applied" {{if eq .statusFilter "applied"}}selected{{end}}>Applied</option>
+          <option value="interviewing" {{if eq .statusFilter "interviewing"}}selected{{end}}>Interviewing</option>
+          <option value="offer_received" {{if eq .statusFilter "offer_received"}}selected{{end}}>Offer Received</option>
+          <option value="rejected" {{if eq .statusFilter "rejected"}}selected{{end}}>Rejected</option>
+          <option value="not_interested" {{if eq .statusFilter "not_interested"}}selected{{end}}>Not Interested</option>
+        </select>
+        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
+          <svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+          </svg>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div id="jobs-container" class="flex-1 flex flex-col relative" hx-get="/jobs{{if .statusFilter}}?status={{.statusFilter}}{{end}}" hx-trigger="load" hx-swap="innerHTML">
+  <div id="jobs-container" class="flex-1 flex flex-col relative" aria-live="polite" aria-busy="false" hx-get="/jobs{{if .statusFilter}}?status={{.statusFilter}}{{end}}" hx-trigger="load" hx-swap="innerHTML" _="on htmx:beforeRequest set @aria-busy to 'true' then on htmx:afterSwap set @aria-busy to 'false'">
     <div class="px-4 md:px-0">
       <div class="animate-pulse">
         <div class="bg-slate-700 h-24 rounded-lg mb-4"></div>

@@ -121,13 +121,13 @@
           {{end}}
         </div>
       </div>
-      
+
       {{if ne .quotaStatus.Limit -1}}
       <!-- Progress bar -->
       <div class="w-full bg-gray-700 rounded-full h-3 mb-3">
         <div class="{{quotaProgressClass .quotaStatus.Remaining}} rounded-full h-3 transition-all duration-300" style="width: {{.quotaStatus.Percentage}}%;"></div>
       </div>
-      
+
       <div class="flex items-center justify-between text-xs text-gray-400">
         <span>Resets on {{.quotaStatus.ResetDate.Format "Jan 2"}}</span>
         <span class="text-gray-300">Re-analysis of existing jobs is always free</span>
@@ -155,7 +155,7 @@
           <h3 class="text-base sm:text-lg font-semibold text-gray-300 mb-2">No Jobs Tracked Yet</h3>
           <p class="text-sm sm:text-base text-gray-400 mb-4 sm:mb-6">Start tracking your job applications to unlock AI-powered insights, match scores, and tailored recommendations.</p>
           <a href="/jobs/new" class="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg font-medium text-sm sm:text-base">
-            Add Your First Job
+            Add Job
           </a>
         </div>
       </div>

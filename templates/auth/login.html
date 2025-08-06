@@ -48,6 +48,8 @@
       <form hx-post="/auth/login"
             hx-indicator="#spinner"
             hx-headers='{"X-CSRF-Token": "{{.csrfToken}}"}'
+            hx-swap="none"
+            data-no-swap-on-error="true"
             class="relative z-10"
             aria-label="Login form"
             onsubmit="return validateLoginForm(event)">
