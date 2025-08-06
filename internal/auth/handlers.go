@@ -50,9 +50,7 @@ func (h *AuthHandler) GetLoginPage(c *gin.Context) {
 	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", data)
 }
 
-// Login handles user authentication by validating credentials from the request.
-// On success, it sets access and refresh token cookies and redirects to the dashboard.
-// On failure, it returns an unauthorized status and error message for HTMX response swapping.
+// Login authenticates user credentials and sets JWT cookies on success
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req models.LoginRequest
 	if err := c.ShouldBind(&req); err != nil {
@@ -60,7 +58,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		c.Header("X-Toast-Message", models.ErrInvalidCredentials.Error())
 		c.Header("X-Toast-Type", string(alerts.TypeError))
 		alerts.TriggerToast(c, models.ErrInvalidCredentials.Error(), alerts.TypeError)
-		c.Status(http.StatusUnauthorized)
+		c.String(http.StatusUnauthorized, "")
 		return
 	}
 
@@ -70,7 +68,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		c.Header("X-Toast-Message", loginErr.Error())
 		c.Header("X-Toast-Type", string(alerts.TypeError))
 		alerts.TriggerToast(c, loginErr.Error(), alerts.TypeError)
-		c.Status(http.StatusUnauthorized)
+		c.String(http.StatusUnauthorized, "")
 		return
 	}
 
@@ -192,7 +190,6 @@ func (h *AuthHandler) authMiddleware(c *gin.Context) (*services.Claims, error) {
 
 	claims, err := h.service.VerifyToken(tokenString)
 	if err != nil {
-		// Access token is invalid, but we might still have a valid refresh token
 		// Only clear the access token, not the refresh token
 		h.service.LogError(fmt.Errorf("access token verification failed: %w", err))
 		h.clearAccessTokenCookie(c)

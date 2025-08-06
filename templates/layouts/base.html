@@ -327,8 +327,14 @@
               return;
             }
           } else if (event.detail.xhr.status === 401 || event.detail.xhr.status === 400 || event.detail.xhr.status === 403) {
-            event.detail.shouldSwap = true;
-            event.detail.isError = false;
+            // Check if the form has a data attribute indicating it shouldn't swap on error
+            const shouldNotSwapOnError = event.detail.elt && 
+                                        event.detail.elt.hasAttribute('data-no-swap-on-error');
+            
+            if (!shouldNotSwapOnError) {
+              event.detail.shouldSwap = true;
+              event.detail.isError = false;
+            }
           } else if (event.detail.xhr.status >= 500) {
             event.detail.shouldSwap = false;
             if (event.detail.target) {

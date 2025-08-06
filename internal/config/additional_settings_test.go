@@ -37,7 +37,7 @@ func TestNewSettings(t *testing.T) {
 				assert.False(t, s.IsTest)
 				assert.False(t, s.IsCloudMode)
 				assert.Equal(t, 60*time.Minute, s.AccessTokenExpiry)
-				assert.Equal(t, 168*time.Hour, s.RefreshTokenExpiry)
+				assert.Equal(t, 72*time.Hour, s.RefreshTokenExpiry)
 				assert.Equal(t, 25, s.DBMaxOpenConns)
 				assert.Equal(t, 256, s.CacheMaxMemoryMB)
 			},

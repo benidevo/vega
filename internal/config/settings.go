@@ -77,7 +77,7 @@ func NewSettings() Settings {
 
 	// Production-optimized defaults
 	accessTokenExpiry := 60 * time.Minute
-	refreshTokenExpiry := 168 * time.Hour
+	refreshTokenExpiry := 72 * time.Hour
 	dbMaxOpenConns := 25
 	dbMaxIdleConns := 5
 	dbConnMaxLifetime := 5 * time.Minute
