@@ -3,7 +3,6 @@ package pages
 import (
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/benidevo/vega/internal/common/github"
 	"github.com/gin-gonic/gin"
@@ -15,7 +14,6 @@ func (h *Handler) GetExtensionDownload(c *gin.Context) {
 	downloadURL := github.GetExtensionDownloadURL(c.Request.Context())
 
 	if downloadURL != "" && downloadURL != github.ExtensionFallbackURL {
-		// Validate the URL is from GitHub to prevent open redirect
 		u, err := url.Parse(downloadURL)
 		if err != nil {
 			log.Warn().Err(err).Str("url", downloadURL).Msg("Invalid download URL")
@@ -23,9 +21,17 @@ func (h *Handler) GetExtensionDownload(c *gin.Context) {
 			return
 		}
 
-		// Ensure the host is github.com or a GitHub subdomain
-		if !strings.HasSuffix(u.Host, "github.com") && !strings.HasSuffix(u.Host, "githubusercontent.com") {
-			log.Warn().Str("url", downloadURL).Str("host", u.Host).Msg("Download URL not from GitHub")
+		// Whitelist of allowed GitHub hosts/subdomains
+		allowedHosts := map[string]bool{
+			"github.com":                true,
+			"api.github.com":            true,
+			"uploads.github.com":        true,
+			"githubusercontent.com":     true,
+			"raw.githubusercontent.com": true,
+		}
+
+		if !allowedHosts[u.Host] {
+			log.Warn().Str("url", downloadURL).Str("host", u.Host).Msg("Download URL not from allowed GitHub domain")
 			c.Redirect(http.StatusTemporaryRedirect, github.ExtensionFallbackURL)
 			return
 		}
