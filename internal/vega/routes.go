@@ -104,9 +104,10 @@ func SetupRoutes(a *App) {
 	jobAPIGroup.Use(authHandler.APIAuthMiddleware())
 	jobapi.RegisterRoutes(jobAPIGroup, jobAPIHandler)
 
+	pagesHandler := pages.NewHandler(&a.config)
 	if a.config.IsCloudMode {
-		pagesHandler := pages.NewHandler(&a.config)
 		a.router.GET("/privacy", pagesHandler.GetPrivacyPage)
+		a.router.GET("/extension/download", pagesHandler.GetExtensionDownload)
 	}
 
 	a.router.NoRoute(func(c *gin.Context) {

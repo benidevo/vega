@@ -32,8 +32,9 @@ func (h *Handler) GetHomePage(c *gin.Context) {
 	// In cloud mode, show landing page only for "/" route
 	if h.cfg.IsCloudMode && c.Request.URL.Path == "/" {
 		username, _ := c.Get("username")
+
 		h.renderer.HTML(c, http.StatusOK, "landing/index.html", gin.H{
-			"title":    "Vega AI - AI-Powered Job Search Assistant",
+			"title":    "Vega AI-Powered Job Search Assistant",
 			"username": username,
 		})
 		return
@@ -66,7 +67,6 @@ func (h *Handler) GetHomePage(c *gin.Context) {
 		}
 	}
 
-	// Create context with role for quota checking
 	ctx := c.Request.Context()
 	if roleValue, exists := c.Get("role"); exists {
 		if role, ok := roleValue.(string); ok {

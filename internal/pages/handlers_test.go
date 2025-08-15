@@ -112,3 +112,83 @@ func TestPagesHandler_Integration(t *testing.T) {
 		handler.GetPrivacyPage(c)
 	})
 }
+
+func TestPagesHandler_GetExtensionDownload(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	tests := []struct {
+		name             string
+		mockDownloadURL  string
+		expectedRedirect string
+		expectedStatus   int
+	}{
+		{
+			name:             "should_redirect_to_valid_github_releases_url",
+			mockDownloadURL:  "https://github.com/benidevo/vega-ai-extension/releases/download/v1.0.0/extension.zip",
+			expectedRedirect: "https://github.com/benidevo/vega-ai-extension/releases/download/v1.0.0/extension.zip",
+			expectedStatus:   http.StatusTemporaryRedirect,
+		},
+		{
+			name:             "should_redirect_to_valid_githubusercontent_url",
+			mockDownloadURL:  "https://github-releases.githubusercontent.com/12345/abc-def/extension.zip",
+			expectedRedirect: "https://github-releases.githubusercontent.com/12345/abc-def/extension.zip",
+			expectedStatus:   http.StatusTemporaryRedirect,
+		},
+		{
+			name:             "should_redirect_to_valid_api_github_subdomain",
+			mockDownloadURL:  "https://api.github.com/repos/owner/repo/releases/assets/12345",
+			expectedRedirect: "https://api.github.com/repos/owner/repo/releases/assets/12345",
+			expectedStatus:   http.StatusTemporaryRedirect,
+		},
+		{
+			name:             "should_block_malicious_github_com_suffix",
+			mockDownloadURL:  "https://evil-github.com/malicious/download",
+			expectedRedirect: "https://github.com/benidevo/vega-ai-extension/releases/latest",
+			expectedStatus:   http.StatusTemporaryRedirect,
+		},
+		{
+			name:             "should_block_malicious_githubusercontent_suffix",
+			mockDownloadURL:  "https://fake-githubusercontent.com/malicious/download",
+			expectedRedirect: "https://github.com/benidevo/vega-ai-extension/releases/latest",
+			expectedStatus:   http.StatusTemporaryRedirect,
+		},
+		{
+			name:             "should_handle_invalid_url",
+			mockDownloadURL:  "not-a-valid-url",
+			expectedRedirect: "https://github.com/benidevo/vega-ai-extension/releases/latest",
+			expectedStatus:   http.StatusTemporaryRedirect,
+		},
+		{
+			name:             "should_use_fallback_when_empty_url",
+			mockDownloadURL:  "",
+			expectedRedirect: "https://github.com/benidevo/vega-ai-extension/releases/latest",
+			expectedStatus:   http.StatusTemporaryRedirect,
+		},
+		{
+			name:             "should_use_fallback_when_fallback_url_returned",
+			mockDownloadURL:  "https://github.com/benidevo/vega-ai-extension/releases/latest",
+			expectedRedirect: "https://github.com/benidevo/vega-ai-extension/releases/latest",
+			expectedStatus:   http.StatusTemporaryRedirect,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := &config.Settings{
+				IsCloudMode: true,
+			}
+
+			handler := NewHandler(cfg)
+
+			w := httptest.NewRecorder()
+			c, router := gin.CreateTestContext(w)
+
+			router.GET("/extension/download", handler.GetExtensionDownload)
+
+			c.Request = httptest.NewRequest("GET", "/extension/download", nil)
+			router.ServeHTTP(w, c.Request)
+
+			assert.Equal(t, tt.expectedStatus, w.Code)
+		})
+	}
+}
