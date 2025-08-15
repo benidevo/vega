@@ -211,18 +211,25 @@
               <div class="pl-0 sm:pl-13">
                 <p class="text-gray-400 text-sm mb-3">Add the browser extension for one-click job capture from LinkedIn:</p>
                 <div class="space-y-3">
-                  <div>
-                    <p class="text-sm text-gray-300 mb-2 font-semibold">Easy Installation:</p>
-                    <a href="https://chromewebstore.google.com/detail/vega-ai-job-capture/oboedhpojbjemdmojfchifppbgbfehol" class="inline-block bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors text-center" target="_blank" rel="noopener">
-                      Get Extension
+                  <div id="extension-download-section">
+                    <p class="text-sm text-gray-300 mb-2 font-semibold">Direct Download:</p>
+                    <a href="/extension/download" class="inline-block bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors text-center" rel="noopener">
+                      Download Extension
                     </a>
+
+                    {{/* Link to view all releases */}}
+                    <p class="text-xs text-gray-500 mt-2">
+                      <a href="https://github.com/benidevo/vega-ai-extension/releases" class="text-primary hover:text-primary-dark transition-colors" target="_blank" rel="noopener">
+                        View all releases
+                      </a>
+                    </p>
                   </div>
                   <div>
-                    <p class="text-sm text-gray-300 mb-2 font-semibold">Manual Installation:</p>
+                    <p class="text-sm text-gray-300 mb-2 font-semibold">Installation Instructions:</p>
                     <ol class="space-y-1 text-xs sm:text-sm text-gray-400">
                       <li class="flex items-start">
                         <span class="text-primary font-medium mr-2 flex-shrink-0">a.</span>
-                        <span><a href="https://github.com/benidevo/vega-ai-extension/releases/latest" class="text-primary hover:text-primary-dark transition-colors" target="_blank" rel="noopener">Download the latest extension</a> (.zip file)</span>
+                        <span>Download and extract the extension ZIP file</span>
                       </li>
                       <li class="flex items-start">
                         <span class="text-primary font-medium mr-2 flex-shrink-0">b.</span>
