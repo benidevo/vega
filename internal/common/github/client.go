@@ -39,6 +39,12 @@ func newClient() *client {
 
 // getLatestRelease fetches the latest release for a given repository
 func (c *client) getLatestRelease(ctx context.Context, owner, repo string) (*release, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
 	url := fmt.Sprintf("%s/repos/%s/%s/releases/latest", c.baseURL, owner, repo)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -51,13 +57,28 @@ func (c *client) getLatestRelease(ctx context.Context, owner, repo string) (*rel
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("executing request: %w", err)
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			return nil, fmt.Errorf("executing request: %w", err)
+		}
 	}
 	defer resp.Body.Close()
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
 
 	if resp.StatusCode != http.StatusOK {
 		if resp.StatusCode == http.StatusNotFound {
 			log.Debug().Msg("No releases found for repository")
+			return nil, nil
+		}
+		if resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode == http.StatusForbidden {
+			log.Warn().Int("status", resp.StatusCode).Msg("GitHub API rate limit reached")
 			return nil, nil
 		}
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
@@ -65,7 +86,12 @@ func (c *client) getLatestRelease(ctx context.Context, owner, repo string) (*rel
 
 	var rel release
 	if err := json.NewDecoder(resp.Body).Decode(&rel); err != nil {
-		return nil, fmt.Errorf("decoding response: %w", err)
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			return nil, fmt.Errorf("decoding response: %w", err)
+		}
 	}
 
 	return &rel, nil

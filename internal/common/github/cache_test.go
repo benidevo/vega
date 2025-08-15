@@ -162,3 +162,114 @@ func TestReleaseCache_ClearCache(t *testing.T) {
 	cache.getLatestRelease(ctx, "owner", "repo")
 	assert.Equal(t, 2, apiCalls, "Expected 2 API calls (cache cleared)")
 }
+
+func TestReleaseCache_ConcurrentAccess(t *testing.T) {
+	var apiCalls int
+	var mu sync.Mutex
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		apiCalls++
+		callNum := apiCalls
+		mu.Unlock()
+
+		time.Sleep(50 * time.Millisecond)
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{
+			"tag_name": "v` + string(rune('0'+callNum)) + `.0.0",
+			"assets": [
+				{
+					"name": "extension.zip",
+					"browser_download_url": "https://github.com/download/v` + string(rune('0'+callNum)) + `.zip"
+				}
+			]
+		}`))
+	}))
+	defer server.Close()
+
+	cache := &releaseCache{
+		client: &client{
+			httpClient: &http.Client{Timeout: 10 * time.Second},
+			baseURL:    server.URL,
+		},
+		ttl:         50 * time.Millisecond,
+		fallbackURL: "https://fallback.url",
+	}
+
+	ctx := context.Background()
+
+	cache.getLatestRelease(ctx, "owner", "repo")
+	assert.Equal(t, 1, apiCalls, "Expected 1 API call for initial fetch")
+
+	time.Sleep(60 * time.Millisecond)
+
+	var wg sync.WaitGroup
+	results := make([]*release, 10)
+
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func(index int) {
+			defer wg.Done()
+			results[index] = cache.getLatestRelease(ctx, "owner", "repo")
+		}(i)
+	}
+
+	wg.Wait()
+
+	assert.Equal(t, 2, apiCalls, "Expected only 2 total API calls despite concurrent access")
+
+	for i := 0; i < 10; i++ {
+		assert.NotNil(t, results[i], "All concurrent requests should receive a release")
+	}
+	v1Count := 0
+	v2Count := 0
+	for i := 0; i < 10; i++ {
+		if results[i] != nil && len(results[i].Assets) > 0 {
+			url := results[i].Assets[0].BrowserDownloadURL
+			if url == "https://github.com/download/v1.zip" {
+				v1Count++
+			} else if url == "https://github.com/download/v2.zip" {
+				v2Count++
+			}
+		}
+	}
+
+	assert.Greater(t, v2Count, 0, "At least one goroutine should get the new version")
+	t.Logf("Results: %d got stale cache (v1), %d got new cache (v2)", v1Count, v2Count)
+}
+
+func TestReleaseCache_ContextCancellation(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(100 * time.Millisecond)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"tag_name": "v1.0.0"}`))
+	}))
+	defer server.Close()
+
+	cache := &releaseCache{
+		client: &client{
+			httpClient: &http.Client{Timeout: 10 * time.Second},
+			baseURL:    server.URL,
+		},
+		ttl:         1 * time.Hour,
+		fallbackURL: "https://fallback.url",
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Millisecond)
+	defer cancel()
+
+	go func() {
+		bgCtx := context.Background()
+		cache.getLatestRelease(bgCtx, "owner", "repo")
+	}()
+
+	time.Sleep(10 * time.Millisecond)
+
+	result := cache.getLatestRelease(ctx, "owner", "repo")
+
+	if ctx.Err() != nil {
+		assert.Nil(t, result, "Expected nil result when context is cancelled")
+		t.Log("Context cancelled as expected during concurrent refresh wait")
+	}
+}

@@ -3,6 +3,7 @@ package github
 import (
 	"context"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -16,6 +17,7 @@ type releaseCache struct {
 	lastFetch   time.Time
 	ttl         time.Duration
 	fallbackURL string
+	refreshing  int32 // atomic flag to prevent concurrent refreshes
 }
 
 // newReleaseCache creates a new release cache with specified TTL
@@ -37,12 +39,35 @@ func (rc *releaseCache) getLatestRelease(ctx context.Context, owner, repo string
 	}
 	rc.mu.RUnlock()
 
-	rc.mu.Lock()
-	defer rc.mu.Unlock()
-
-	if rc.release != nil && time.Since(rc.lastFetch) < rc.ttl {
-		return rc.release
+	if !atomic.CompareAndSwapInt32(&rc.refreshing, 0, 1) {
+		rc.mu.RLock()
+		release := rc.release
+		rc.mu.RUnlock()
+		if release != nil {
+			log.Debug().Msg("Returning stale cache while another goroutine refreshes")
+			return release
+		}
+		for atomic.LoadInt32(&rc.refreshing) == 1 {
+			select {
+			case <-ctx.Done():
+				return nil
+			case <-time.After(10 * time.Millisecond):
+			}
+		}
+		rc.mu.RLock()
+		release = rc.release
+		rc.mu.RUnlock()
+		return release
 	}
+	defer atomic.StoreInt32(&rc.refreshing, 0)
+
+	rc.mu.RLock()
+	if rc.release != nil && time.Since(rc.lastFetch) < rc.ttl {
+		release := rc.release
+		rc.mu.RUnlock()
+		return release
+	}
+	rc.mu.RUnlock()
 
 	release, err := rc.client.getLatestRelease(ctx, owner, repo)
 	if err != nil {
@@ -51,16 +76,22 @@ func (rc *releaseCache) getLatestRelease(ctx context.Context, owner, repo string
 			Str("repo", repo).
 			Msg("Failed to fetch latest release from GitHub")
 
-		if rc.release != nil {
+		rc.mu.RLock()
+		oldRelease := rc.release
+		rc.mu.RUnlock()
+
+		if oldRelease != nil {
 			log.Debug().Msg("Returning stale cached release due to fetch error")
-			return rc.release
+			return oldRelease
 		}
 
 		return nil
 	}
 
+	rc.mu.Lock()
 	rc.release = release
 	rc.lastFetch = time.Now()
+	rc.mu.Unlock()
 
 	return release
 }

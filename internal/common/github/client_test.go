@@ -137,3 +137,69 @@ func TestRelease_GetZipAssetURL(t *testing.T) {
 		})
 	}
 }
+
+func TestClient_ContextCancellation(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(200 * time.Millisecond)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"tag_name": "v1.0.0"}`))
+	}))
+	defer server.Close()
+
+	client := &client{
+		httpClient: &http.Client{Timeout: 10 * time.Second},
+		baseURL:    server.URL,
+	}
+
+	cancelledCtx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	release, err := client.getLatestRelease(cancelledCtx, "owner", "repo")
+	assert.Error(t, err, "Expected error for cancelled context")
+	assert.Nil(t, release, "Expected nil release for cancelled context")
+	assert.Equal(t, context.Canceled, err, "Expected context.Canceled error")
+
+	timeoutCtx, cancelTimeout := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancelTimeout()
+
+	release2, err2 := client.getLatestRelease(timeoutCtx, "owner", "repo")
+	assert.Error(t, err2, "Expected error for timeout context")
+	assert.Nil(t, release2, "Expected nil release for timeout context")
+}
+
+func TestClient_RateLimiting(t *testing.T) {
+	tests := []struct {
+		name         string
+		responseCode int
+	}{
+		{
+			name:         "rate limit 429",
+			responseCode: http.StatusTooManyRequests,
+		},
+		{
+			name:         "rate limit 403",
+			responseCode: http.StatusForbidden,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(tt.responseCode)
+				w.Write([]byte(`{"message": "API rate limit exceeded"}`))
+			}))
+			defer server.Close()
+
+			client := &client{
+				httpClient: &http.Client{Timeout: 10 * time.Second},
+				baseURL:    server.URL,
+			}
+
+			ctx := context.Background()
+			release, err := client.getLatestRelease(ctx, "owner", "repo")
+
+			assert.NoError(t, err, "Rate limiting should not return error")
+			assert.Nil(t, release, "Expected nil release for rate limit")
+		})
+	}
+}
