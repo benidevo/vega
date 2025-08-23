@@ -285,6 +285,8 @@ func (h *JobHandler) ListJobsPage(c *gin.Context) {
 	statusParam := c.Query("status")
 	pageParam := c.DefaultQuery("page", "1")
 	limitParam := c.DefaultQuery("limit", "12")
+	sortByParam := c.DefaultQuery("sort", "match_score")
+	sortOrderParam := c.DefaultQuery("order", "desc")
 
 	// Parse pagination parameters
 	page := 1
@@ -299,9 +301,25 @@ func (h *JobHandler) ListJobsPage(c *gin.Context) {
 
 	offset := (page - 1) * limit
 
+	// Validate sort parameters
+	validSortFields := map[string]bool{
+		"match_score": true,
+		"updated_at":  true,
+		"created_at":  true,
+	}
+	if !validSortFields[sortByParam] {
+		sortByParam = "match_score" // Default to match_score
+	}
+
+	if sortOrderParam != "asc" && sortOrderParam != "desc" {
+		sortOrderParam = "desc"
+	}
+
 	filter := models.JobFilter{
-		Limit:  limit,
-		Offset: offset,
+		Limit:     limit,
+		Offset:    offset,
+		SortBy:    sortByParam,
+		SortOrder: sortOrderParam,
 	}
 
 	if statusParam != "" && statusParam != "all" {
@@ -348,6 +366,8 @@ func (h *JobHandler) ListJobsPage(c *gin.Context) {
 		"jobs":         jobsWithPagination.Jobs,
 		"pagination":   jobsWithPagination.Pagination,
 		"statusFilter": statusParam,
+		"sortBy":       sortByParam,
+		"sortOrder":    sortOrderParam,
 	}
 
 	// Check if this is an HTMX request
