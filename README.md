@@ -137,4 +137,4 @@ What this means:
 - ✅ If you run this software on a server, you must make your source code available to users
 - ✅ Any modifications must also be released under AGPL-3.0
 
-**Commercial licensing:** For commercial use without AGPL restrictions, contact <benjaminidewor@gmail.com> for licensing options.
+**Commercial licensing:** For commercial use without AGPL restrictions, contact <vega@benidevo.com> for licensing options.
