@@ -7,6 +7,7 @@ import (
 	"time"
 
 	aimodels "github.com/benidevo/vega/internal/ai/models"
+	documentsmodels "github.com/benidevo/vega/internal/documents/models"
 	"github.com/benidevo/vega/internal/job/models"
 	settingsmodels "github.com/benidevo/vega/internal/settings/models"
 )
@@ -254,6 +255,27 @@ func (s *JobService) GenerateCoverLetter(ctx context.Context, userID, jobID int)
 	result := &models.CoverLetterWithProfile{
 		CoverLetter:  coverLetter,
 		PersonalInfo: personalInfo,
+	}
+
+	// Save generated document if document service is available
+	if s.documentService != nil {
+		_, err := s.documentService.SaveGeneratedDocument(
+			ctx, userID, jobID,
+			documentsmodels.DocumentTypeCoverLetter,
+			coverLetter.Content,
+		)
+		if err != nil {
+			// Log but don't fail - saving is not critical to generation
+			s.log.Error().Err(err).
+				Str("user_ref", userRef).
+				Int("job_id", jobID).
+				Msg("Failed to save cover letter document")
+		} else {
+			s.log.Debug().
+				Str("user_ref", userRef).
+				Int("job_id", jobID).
+				Msg("Cover letter document saved successfully")
+		}
 	}
 
 	s.log.Info().
@@ -615,6 +637,25 @@ func (s *JobService) GenerateCV(ctx context.Context, userID, jobID int) (*models
 
 	result := s.convertToGeneratedCV(aiResult, userID, jobID, profile)
 
+	// Save generated CV document
+	if s.documentService != nil {
+		// Convert CV to HTML format for storage
+		htmlContent := s.formatCVAsHTML(result)
+
+		_, err := s.documentService.SaveGeneratedDocument(
+			ctx, userID, jobID,
+			documentsmodels.DocumentTypeResume,
+			htmlContent,
+		)
+		if err != nil {
+			s.log.Error().Err(err).
+				Str("user_ref", userRef).
+				Int("job_id", jobID).
+				Msg("Failed to save CV document")
+			// Don't fail the generation if saving fails
+		}
+	}
+
 	s.log.Info().
 		Str("user_ref", userRef).
 		Int("job_id", jobID).
@@ -723,4 +764,64 @@ func convertCertifications(profileCerts []settingsmodels.Certification) []models
 		}
 	}
 	return certs
+}
+
+// formatCVAsHTML converts a GeneratedCV to HTML format for storage
+func (s *JobService) formatCVAsHTML(cv *models.GeneratedCV) string {
+	// Simple HTML formatting - this should match the template rendering
+	var html strings.Builder
+	html.WriteString("<div class='cv-content'>")
+
+	// Personal Info
+	html.WriteString("<section class='personal-info'>")
+	fullName := fmt.Sprintf("%s %s", cv.PersonalInfo.FirstName, cv.PersonalInfo.LastName)
+	html.WriteString(fmt.Sprintf("<h1>%s</h1>", fullName))
+	html.WriteString(fmt.Sprintf("<p>%s | %s</p>", cv.PersonalInfo.Email, cv.PersonalInfo.Phone))
+	html.WriteString("</section>")
+
+	// Skills
+	if len(cv.Skills) > 0 {
+		html.WriteString("<section class='skills'>")
+		html.WriteString("<h2>Skills</h2><p>")
+		html.WriteString(strings.Join(cv.Skills, ", "))
+		html.WriteString("</p></section>")
+	}
+
+	// Work Experience
+	if len(cv.WorkExperience) > 0 {
+		html.WriteString("<section class='experience'><h2>Work Experience</h2>")
+		for _, exp := range cv.WorkExperience {
+			html.WriteString(fmt.Sprintf("<div><h3>%s at %s</h3>", exp.Title, exp.Company))
+			html.WriteString(fmt.Sprintf("<p>%s - %s</p>", exp.StartDate, exp.EndDate))
+			html.WriteString(fmt.Sprintf("<p>%s</p></div>", exp.Description))
+		}
+		html.WriteString("</section>")
+	}
+
+	// Education
+	if len(cv.Education) > 0 {
+		html.WriteString("<section class='education'><h2>Education</h2>")
+		for _, edu := range cv.Education {
+			html.WriteString(fmt.Sprintf("<div><h3>%s</h3>", edu.Degree))
+			html.WriteString(fmt.Sprintf("<p>%s | %s - %s</p></div>", edu.Institution, edu.StartDate, edu.EndDate))
+		}
+		html.WriteString("</section>")
+	}
+
+	// Certifications
+	if len(cv.Certifications) > 0 {
+		html.WriteString("<section class='certifications'><h2>Certifications</h2>")
+		for _, cert := range cv.Certifications {
+			html.WriteString(fmt.Sprintf("<div><h3>%s</h3>", cert.Name))
+			if cert.IssuingOrg != "" {
+				html.WriteString(fmt.Sprintf("<p>%s | %s</p></div>", cert.IssuingOrg, cert.IssueDate))
+			} else {
+				html.WriteString(fmt.Sprintf("<p>%s</p></div>", cert.IssueDate))
+			}
+		}
+		html.WriteString("</section>")
+	}
+
+	html.WriteString("</div>")
+	return html.String()
 }
