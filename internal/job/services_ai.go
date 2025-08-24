@@ -7,7 +7,6 @@ import (
 	"time"
 
 	aimodels "github.com/benidevo/vega/internal/ai/models"
-	documentsmodels "github.com/benidevo/vega/internal/documents/models"
 	"github.com/benidevo/vega/internal/job/models"
 	settingsmodels "github.com/benidevo/vega/internal/settings/models"
 )
@@ -257,27 +256,6 @@ func (s *JobService) GenerateCoverLetter(ctx context.Context, userID, jobID int)
 		PersonalInfo: personalInfo,
 	}
 
-	// Save generated document if document service is available
-	if s.documentService != nil {
-		_, err := s.documentService.SaveGeneratedDocument(
-			ctx, userID, jobID,
-			documentsmodels.DocumentTypeCoverLetter,
-			coverLetter.Content,
-		)
-		if err != nil {
-			// Log but don't fail - saving is not critical to generation
-			s.log.Error().Err(err).
-				Str("user_ref", userRef).
-				Int("job_id", jobID).
-				Msg("Failed to save cover letter document")
-		} else {
-			s.log.Debug().
-				Str("user_ref", userRef).
-				Int("job_id", jobID).
-				Msg("Cover letter document saved successfully")
-		}
-	}
-
 	s.log.Info().
 		Str("user_ref", userRef).
 		Int("job_id", jobID).
@@ -428,13 +406,11 @@ func (s *JobService) buildProfileSummary(profile *settingsmodels.Profile) string
 }
 
 // calculateTotalExperience calculates the total years of work experience from work history
-// This function properly handles overlapping employment periods
 func (s *JobService) calculateTotalExperience(workExperience []settingsmodels.WorkExperience) float64 {
 	if len(workExperience) == 0 {
 		return 0
 	}
 
-	// Create time periods for each job
 	type TimePeriod struct {
 		Start time.Time
 		End   time.Time
@@ -462,7 +438,6 @@ func (s *JobService) calculateTotalExperience(workExperience []settingsmodels.Wo
 		return 0
 	}
 
-	// Sort periods by start date
 	for i := 0; i < len(periods); i++ {
 		for j := i + 1; j < len(periods); j++ {
 			if periods[i].Start.After(periods[j].Start) {
@@ -478,12 +453,10 @@ func (s *JobService) calculateTotalExperience(workExperience []settingsmodels.Wo
 		period := periods[i]
 
 		if current.End.After(period.Start) || current.End.Equal(period.Start) {
-			// Extend current period to include the overlapping period
 			if period.End.After(current.End) {
 				current.End = period.End
 			}
 		} else {
-			// No overlap, add current period and start new one
 			merged = append(merged, current)
 			current = period
 		}
@@ -622,7 +595,6 @@ func (s *JobService) GenerateCV(ctx context.Context, userID, jobID int) (*models
 	}
 
 	aiRequest := s.buildAIRequest(job, profile)
-	// Set CVText to be the profile summary for CV generation
 	aiRequest.CVText = s.buildProfileSummary(profile)
 
 	aiResult, err := s.aiService.CVGenerator.GenerateCV(ctx, aiRequest, jobID, job.Title)
@@ -636,25 +608,6 @@ func (s *JobService) GenerateCV(ctx context.Context, userID, jobID int) (*models
 	}
 
 	result := s.convertToGeneratedCV(aiResult, userID, jobID, profile)
-
-	// Save generated CV document
-	if s.documentService != nil {
-		// Convert CV to HTML format for storage
-		htmlContent := s.formatCVAsHTML(result)
-
-		_, err := s.documentService.SaveGeneratedDocument(
-			ctx, userID, jobID,
-			documentsmodels.DocumentTypeResume,
-			htmlContent,
-		)
-		if err != nil {
-			s.log.Error().Err(err).
-				Str("user_ref", userRef).
-				Int("job_id", jobID).
-				Msg("Failed to save CV document")
-			// Don't fail the generation if saving fails
-		}
-	}
 
 	s.log.Info().
 		Str("user_ref", userRef).
@@ -672,7 +625,6 @@ func (s *JobService) convertToGeneratedCV(aiResult *aimodels.GeneratedCV, userID
 
 	personalInfo := convertPersonalInfo(aiResult.PersonalInfo)
 
-	// Overwrite AI-generated contact info with actual user data (privacy-safe: not shared with AI)
 	if profile.PhoneNumber != "" {
 		personalInfo.Phone = profile.PhoneNumber
 	}
@@ -766,9 +718,7 @@ func convertCertifications(profileCerts []settingsmodels.Certification) []models
 	return certs
 }
 
-// formatCVAsHTML converts a GeneratedCV to HTML format for storage
 func (s *JobService) formatCVAsHTML(cv *models.GeneratedCV) string {
-	// Simple HTML formatting - this should match the template rendering
 	var html strings.Builder
 	html.WriteString("<div class='cv-content'>")
 

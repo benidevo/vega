@@ -94,6 +94,13 @@
       </div>
       {{template "footer" .}}
     </div>
+  {{else if eq .page "documents" }}
+    <div class="min-h-screen bg-slate-900 flex flex-col">
+      <div class="flex-1">
+        {{template "documents-content" .}}
+      </div>
+      {{template "footer" .}}
+    </div>
   {{else}}
     <div class="{{if eq .page "login"}}h-screen overflow-hidden{{else}}min-h-screen{{end}} flex {{if eq .page "home"}}flex-col{{end}} items-center justify-center relative overflow-hidden">
 

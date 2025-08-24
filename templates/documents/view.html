@@ -1,0 +1,158 @@
+{{define "document-view"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{if eq .DocumentType "cover_letter"}}Cover Letter{{else}}Resume{{end}} - {{.JobTitle}} at {{.CompanyName}}</title>
+  <link href="/static/css/output.css" rel="stylesheet">
+  <link href="/static/css/print.css" rel="stylesheet" media="print">
+  <style>
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      body {
+        background: white;
+        color: black;
+      }
+      .document-content {
+        background: white !important;
+        color: black !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-gray-100">
+  <!-- Header with actions - hidden in print -->
+  <div class="no-print sticky top-0 bg-slate-800 shadow-lg border-b border-slate-700 z-10">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="/documents" class="text-primary hover:text-primary-dark transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        </a>
+        <div>
+          <h1 class="text-lg font-semibold text-white">
+            {{if eq .DocumentType "cover_letter"}}Cover Letter{{else}}Resume{{end}}
+          </h1>
+          <p class="text-sm text-gray-400">{{.JobTitle}} at {{.CompanyName}}</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <!-- Copy Button -->
+        <button onclick="copyDocument()" 
+                class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium rounded-md transition-colors flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          <span>Copy</span>
+        </button>
+        
+        <!-- Print Button -->
+        <button onclick="window.print()" 
+                class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium rounded-md transition-colors flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+          </svg>
+          <span>Print</span>
+        </button>
+        
+        <!-- Download Button -->
+        <a href="/documents/{{.ID}}/export?format=pdf" 
+           class="px-3 py-2 bg-primary hover:bg-primary-dark text-white text-sm font-medium rounded-md transition-colors flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          <span>Download PDF</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Document Content -->
+  <div class="max-w-5xl mx-auto px-4 py-8">
+    <div id="document-content" class="document-content bg-white text-gray-800 p-8 md:p-12 rounded-lg shadow-2xl">
+      {{if eq .DocumentType "cover_letter"}}
+        <div class="whitespace-pre-wrap">{{.Content | html}}</div>
+      {{else}}
+        {{.Content | safeHTML}}
+      {{end}}
+    </div>
+    
+    <!-- Document Info - hidden in print -->
+    <div class="no-print mt-6 bg-slate-800 rounded-lg p-4 border border-slate-700">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div>
+          <span class="text-gray-400">Created:</span>
+          <span class="text-white ml-2">{{.CreatedAt.Format "Jan 2, 2006 at 3:04 PM"}}</span>
+        </div>
+        <div>
+          <span class="text-gray-400">Job Status:</span>
+          <span class="text-white ml-2">{{.JobStatus}}</span>
+        </div>
+        <div>
+          <span class="text-gray-400">Size:</span>
+          <span class="text-white ml-2">{{.SizeBytes}} bytes</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Related Actions - hidden in print -->
+    <div class="no-print mt-6 flex flex-wrap gap-3">
+      <a href="/jobs/{{.JobID}}/details" 
+         class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md transition-colors flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+        View Job Details
+      </a>
+      
+      <form action="/documents/{{.ID}}/regenerate" method="POST" class="inline">
+        <input type="hidden" name="csrf_token" value="{{.csrfToken}}">
+        <button type="submit"
+                class="px-4 py-2 bg-yellow-700 hover:bg-yellow-600 text-white rounded-md transition-colors flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Regenerate Document
+        </button>
+      </form>
+      
+      <form action="/documents/{{.ID}}" method="POST" onsubmit="return confirm('Are you sure you want to delete this document?');" class="inline">
+        <input type="hidden" name="_method" value="DELETE">
+        <input type="hidden" name="csrf_token" value="{{.csrfToken}}">
+        <button type="submit"
+                class="px-4 py-2 bg-red-800 hover:bg-red-700 text-white rounded-md transition-colors flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          Delete Document
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function copyDocument() {
+      const content = document.getElementById('document-content').innerText;
+      navigator.clipboard.writeText(content).then(() => {
+        // Show toast or temporary success message
+        const button = event.target.closest('button');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg><span>Copied!</span>';
+        setTimeout(() => {
+          button.innerHTML = originalText;
+        }, 2000);
+      });
+    }
+    
+  </script>
+</body>
+</html>
+{{end}}

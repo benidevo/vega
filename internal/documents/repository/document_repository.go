@@ -286,7 +286,7 @@ func (r *SQLiteDocumentRepository) GetDocumentMetrics(ctx context.Context, userI
 		WHERE user_id = ?`
 
 	var metrics models.DocumentMetrics
-	var lastCreated sql.NullTime
+	var lastCreated sql.NullString
 
 	err := r.db.QueryRowContext(ctx, query, userID).Scan(
 		&metrics.TotalDocuments,
@@ -300,8 +300,16 @@ func (r *SQLiteDocumentRepository) GetDocumentMetrics(ctx context.Context, userI
 		return nil, fmt.Errorf("failed to get document metrics: %w", err)
 	}
 
-	if lastCreated.Valid {
-		metrics.LastDocumentCreated = &lastCreated.Time
+	if lastCreated.Valid && lastCreated.String != "" {
+		parsedTime, err := time.Parse("2006-01-02 15:04:05", lastCreated.String)
+		if err != nil {
+			parsedTime, err = time.Parse("2006-01-02T15:04:05Z07:00", lastCreated.String)
+			if err == nil {
+				metrics.LastDocumentCreated = &parsedTime
+			}
+		} else {
+			metrics.LastDocumentCreated = &parsedTime
+		}
 	}
 
 	return &metrics, nil

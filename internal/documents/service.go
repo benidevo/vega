@@ -259,6 +259,10 @@ func (s *DocumentService) DeleteDocument(ctx context.Context, docID, userID int)
 
 	if s.cache != nil {
 		_ = s.cache.DeletePattern(ctx, fmt.Sprintf("user:%d:docs:*", userID))
+
+		_ = s.cache.Delete(ctx, fmt.Sprintf("user:%d:metrics", userID))
+
+		_ = s.cache.Delete(ctx, fmt.Sprintf("doc:%d", docID))
 	}
 
 	s.log.Info().
@@ -360,16 +364,26 @@ func (s *DocumentService) invalidateDocumentCaches(userID int, jobID int, docTyp
 
 	patterns := []string{
 		fmt.Sprintf("user:%d:docs:*", userID),
-		fmt.Sprintf("user:%d:metrics", userID),
-		fmt.Sprintf("job:%d:docs", jobID),
 	}
-
 	for _, pattern := range patterns {
 		if err := s.cache.DeletePattern(ctx, pattern); err != nil {
 			s.log.Warn().
 				Str("pattern", pattern).
 				Err(err).
 				Msg("Failed to invalidate cache pattern")
+		}
+	}
+
+	keys := []string{
+		fmt.Sprintf("user:%d:metrics", userID),
+		fmt.Sprintf("job:%d:docs", jobID),
+	}
+	for _, key := range keys {
+		if err := s.cache.Delete(ctx, key); err != nil {
+			s.log.Warn().
+				Str("key", key).
+				Err(err).
+				Msg("Failed to invalidate cache key")
 		}
 	}
 }
