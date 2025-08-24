@@ -35,6 +35,10 @@ func (r *SQLiteDocumentRepository) UpsertDocument(ctx context.Context, doc *mode
 		return fmt.Errorf("document size %d exceeds maximum size %d", doc.SizeBytes, models.MaxDocumentSize)
 	}
 
+	// Add timeout to prevent indefinite blocking on SQLite locks
+	ctx, cancel := context.WithTimeout(ctx, 7*time.Second)
+	defer cancel()
+
 	query := `
 		INSERT INTO documents (user_id, job_id, document_type, content, format, size_bytes, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
@@ -250,6 +254,10 @@ func (r *SQLiteDocumentRepository) GetAllDocuments(ctx context.Context, userID i
 }
 
 func (r *SQLiteDocumentRepository) DeleteDocument(ctx context.Context, docID, userID int) error {
+	// Add timeout to prevent indefinite blocking on SQLite locks
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
 	query := `DELETE FROM documents WHERE id = ? AND user_id = ?`
 
 	result, err := r.db.ExecContext(ctx, query, docID, userID)

@@ -565,9 +565,11 @@ func (h *DocumentHandler) SaveDocument(c *gin.Context) {
 		return
 	}
 
-	const maxContentSize = 10 * 1024 * 1024 // 10MB limit
-	if len(req.Content) > maxContentSize {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Document content too large"})
+	if len(req.Content) > models.MaxDocumentSize {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": fmt.Sprintf("Document content exceeds %dMB limit",
+				models.MaxDocumentSize/(1024*1024)),
+		})
 		return
 	}
 
