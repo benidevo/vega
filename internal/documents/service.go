@@ -312,7 +312,7 @@ func (s *DocumentService) GetDocumentsByJob(ctx context.Context, userID, jobID i
 	if s.cache != nil {
 		cacheKey := fmt.Sprintf("job:%d:docs", jobID)
 		var docs []*models.Document
-		
+
 		s.cacheMu.RLock()
 		cacheErr := s.cache.Get(ctx, cacheKey, &docs)
 		if cacheErr == nil && len(docs) > 0 {

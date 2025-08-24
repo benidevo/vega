@@ -580,12 +580,12 @@ func (h *DocumentHandler) SaveDocument(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid resume data"})
 			return
 		}
-		
+
 		if cv.PersonalInfo.FirstName == "" || cv.PersonalInfo.LastName == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Resume must include first and last name"})
 			return
 		}
-		
+
 		cleanJSON, err := json.Marshal(cv)
 		if err != nil {
 			h.log.Error().Err(err).Msg("Failed to re-encode resume JSON")
