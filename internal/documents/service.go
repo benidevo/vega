@@ -3,6 +3,7 @@ package documents
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/benidevo/vega/internal/cache"
@@ -12,9 +13,10 @@ import (
 )
 
 type DocumentService struct {
-	repo  repository.DocumentRepository
-	cache cache.Cache
-	log   *logger.PrivacyLogger
+	repo    repository.DocumentRepository
+	cache   cache.Cache
+	log     *logger.PrivacyLogger
+	cacheMu sync.RWMutex
 }
 
 func NewDocumentService(repo repository.DocumentRepository, cache cache.Cache) *DocumentService {
@@ -308,17 +310,25 @@ func (s *DocumentService) GetDocumentsByJob(ctx context.Context, userID, jobID i
 	userRef := fmt.Sprintf("user_%d", userID)
 
 	if s.cache != nil {
+		s.cacheMu.RLock()
 		cacheKey := fmt.Sprintf("job:%d:docs", jobID)
 		var docs []*models.Document
-		if err := s.cache.Get(ctx, cacheKey, &docs); err == nil {
-			if len(docs) > 0 && docs[0].UserID == userID {
-				return docs, nil
+		cacheErr := s.cache.Get(ctx, cacheKey, &docs)
+		s.cacheMu.RUnlock()
+
+		if cacheErr == nil {
+			if len(docs) > 0 {
+				if docs[0].UserID == userID {
+					return docs, nil
+				}
+				s.cacheMu.Lock()
+				_ = s.cache.Delete(ctx, cacheKey)
+				s.cacheMu.Unlock()
+				s.log.Warn().
+					Str("user_ref", userRef).
+					Int("job_id", jobID).
+					Msg("Cleared invalid cache entry for job documents")
 			}
-			_ = s.cache.Delete(ctx, cacheKey)
-			s.log.Warn().
-				Str("user_ref", userRef).
-				Int("job_id", jobID).
-				Msg("Cleared invalid cache entry for job documents")
 		}
 	}
 
@@ -338,7 +348,9 @@ func (s *DocumentService) GetDocumentsByJob(ctx context.Context, userID, jobID i
 	}
 
 	if s.cache != nil && len(docs) > 0 {
+		s.cacheMu.Lock()
 		_ = s.cache.Set(ctx, fmt.Sprintf("job:%d:docs", jobID), docs, 10*time.Minute)
+		s.cacheMu.Unlock()
 	}
 
 	return docs, nil
@@ -361,6 +373,9 @@ func (s *DocumentService) invalidateDocumentCaches(userID int, jobID int, docTyp
 	}
 
 	ctx := context.Background()
+
+	s.cacheMu.Lock()
+	defer s.cacheMu.Unlock()
 
 	patterns := []string{
 		fmt.Sprintf("user:%d:docs:*", userID),

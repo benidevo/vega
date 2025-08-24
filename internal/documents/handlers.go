@@ -1,8 +1,10 @@
 package documents
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
@@ -163,8 +165,8 @@ func (h *DocumentHandler) ExportDocument(c *gin.Context) {
 			c.Request.Context(),
 			userID,
 			doc.DocumentType,
-			1, // page
-			1, // just need one to get job info
+			1,
+			1,
 		)
 		if err == nil && len(documents) > 0 {
 			for _, summary := range documents {
@@ -289,12 +291,12 @@ func (h *DocumentHandler) GetDocumentPartial(c *gin.Context) {
 }
 
 func (h *DocumentHandler) formatCVAsHTML(cv *jobmodels.GeneratedCV) string {
-	html := `<!DOCTYPE html>
+	const resumeTemplate = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resume - ` + cv.PersonalInfo.FirstName + ` ` + cv.PersonalInfo.LastName + `</title>
+    <title>Resume - {{.FullName}}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -333,14 +335,88 @@ func (h *DocumentHandler) formatCVAsHTML(cv *jobmodels.GeneratedCV) string {
         }
     </style>
 </head>
-<body>`
+<body>
+    <div class="header-section">
+        <h1>{{.FullName}}</h1>
+        {{if .PersonalInfo.Title}}
+        <div class="title">{{.PersonalInfo.Title}}</div>
+        {{end}}
+        {{if .ContactInfo}}
+        <div class="contact-info">{{.ContactInfo}}</div>
+        {{end}}
+    </div>
 
-	html += `<div class="header-section">`
-	fullName := fmt.Sprintf("%s %s", cv.PersonalInfo.FirstName, cv.PersonalInfo.LastName)
-	html += fmt.Sprintf("<h1>%s</h1>", fullName)
+    {{if .PersonalInfo.Summary}}
+    <div class="section">
+        <h2>Professional Summary</h2>
+        <p class="description">{{.PersonalInfo.Summary}}</p>
+    </div>
+    {{end}}
 
-	if cv.PersonalInfo.Title != "" {
-		html += fmt.Sprintf(`<div class="title">%s</div>`, cv.PersonalInfo.Title)
+    {{if .Skills}}
+    <div class="section">
+        <h2>Skills</h2>
+        <div class="skills">{{.SkillsString}}</div>
+    </div>
+    {{end}}
+
+    {{if .WorkExperience}}
+    <div class="section">
+        <h2>Work Experience</h2>
+        {{range .WorkExperience}}
+        <div class="experience-item">
+            <h3>{{.Title}} at {{.Company}}</h3>
+            <div class="date">{{.StartDate}} - {{.EndDate}}{{if .Location}} | {{.Location}}{{end}}</div>
+            <div class="description">{{.FormattedDescription}}</div>
+        </div>
+        {{end}}
+    </div>
+    {{end}}
+
+    {{if .Education}}
+    <div class="section">
+        <h2>Education</h2>
+        {{range .Education}}
+        <div class="education-item">
+            <h3>{{.Degree}}{{if .FieldOfStudy}} in {{.FieldOfStudy}}{{end}}</h3>
+            <div>{{.Institution}}</div>
+            <div class="date">{{.StartDate}} - {{.EndDate}}</div>
+        </div>
+        {{end}}
+    </div>
+    {{end}}
+
+    {{if .Certifications}}
+    <div class="section">
+        <h2>Certifications</h2>
+        {{range .Certifications}}
+        <div style="margin-bottom: 8px;">
+            <strong>{{.Name}}</strong>{{if .IssuingOrg}} - {{.IssuingOrg}}{{end}}{{if .IssueDate}} ({{.IssueDate}}){{end}}
+        </div>
+        {{end}}
+    </div>
+    {{end}}
+</body>
+</html>`
+
+	type workExp struct {
+		Title                string
+		Company              string
+		StartDate            string
+		EndDate              string
+		Location             string
+		FormattedDescription template.HTML
+	}
+
+	type templateData struct {
+		FullName       string
+		PersonalInfo   *jobmodels.PersonalInfo
+		ContactInfo    string
+		Skills         []string
+		SkillsString   string
+		WorkExperience []workExp
+		Education      []jobmodels.Education
+		Certifications []jobmodels.Certification
 	}
 
 	var contactParts []string
@@ -357,81 +433,45 @@ func (h *DocumentHandler) formatCVAsHTML(cv *jobmodels.GeneratedCV) string {
 		contactParts = append(contactParts, cv.PersonalInfo.LinkedIn)
 	}
 
-	if len(contactParts) > 0 {
-		html += fmt.Sprintf(`<div class="contact-info">%s</div>`, strings.Join(contactParts, " | "))
-	}
-	html += `</div>`
-
-	if cv.PersonalInfo.Summary != "" {
-		html += `<div class="section">`
-		html += `<h2>Professional Summary</h2>`
-		html += fmt.Sprintf(`<p class="description">%s</p>`, cv.PersonalInfo.Summary)
-		html += `</div>`
-	}
-
-	if len(cv.Skills) > 0 {
-		html += `<div class="section">`
-		html += `<h2>Skills</h2>`
-		html += fmt.Sprintf(`<div class="skills">%s</div>`, strings.Join(cv.Skills, " • "))
-		html += `</div>`
+	var workExperience []workExp
+	for _, exp := range cv.WorkExperience {
+		workExperience = append(workExperience, workExp{
+			Title:                exp.Title,
+			Company:              exp.Company,
+			StartDate:            exp.StartDate,
+			EndDate:              exp.EndDate,
+			Location:             exp.Location,
+			FormattedDescription: template.HTML(h.formatDescriptionSafe(exp.Description)),
+		})
 	}
 
-	if len(cv.WorkExperience) > 0 {
-		html += `<div class="section">`
-		html += `<h2>Work Experience</h2>`
-		for _, exp := range cv.WorkExperience {
-			html += `<div class="experience-item">`
-			html += fmt.Sprintf("<h3>%s at %s</h3>", exp.Title, exp.Company)
-			dateStr := fmt.Sprintf("%s - %s", exp.StartDate, exp.EndDate)
-			if exp.Location != "" {
-				dateStr += fmt.Sprintf(" | %s", exp.Location)
-			}
-			html += fmt.Sprintf(`<div class="date">%s</div>`, dateStr)
-			html += fmt.Sprintf(`<div class="description">%s</div>`, h.formatDescription(exp.Description))
-			html += `</div>`
-		}
-		html += `</div>`
+	data := templateData{
+		FullName:       fmt.Sprintf("%s %s", cv.PersonalInfo.FirstName, cv.PersonalInfo.LastName),
+		PersonalInfo:   &cv.PersonalInfo,
+		ContactInfo:    strings.Join(contactParts, " | "),
+		Skills:         cv.Skills,
+		SkillsString:   strings.Join(cv.Skills, " • "),
+		WorkExperience: workExperience,
+		Education:      cv.Education,
+		Certifications: cv.Certifications,
 	}
 
-	if len(cv.Education) > 0 {
-		html += `<div class="section">`
-		html += `<h2>Education</h2>`
-		for _, edu := range cv.Education {
-			html += `<div class="education-item">`
-			degreeStr := edu.Degree
-			if edu.FieldOfStudy != "" {
-				degreeStr += fmt.Sprintf(" in %s", edu.FieldOfStudy)
-			}
-			html += fmt.Sprintf("<h3>%s</h3>", degreeStr)
-			html += fmt.Sprintf("<div>%s</div>", edu.Institution)
-			html += fmt.Sprintf(`<div class="date">%s - %s</div>`, edu.StartDate, edu.EndDate)
-			html += `</div>`
-		}
-		html += `</div>`
+	tmpl, err := template.New("resume").Parse(resumeTemplate)
+	if err != nil {
+		h.log.Error().Err(err).Msg("Failed to parse resume template")
+		return ""
 	}
 
-	if len(cv.Certifications) > 0 {
-		html += `<div class="section">`
-		html += `<h2>Certifications</h2>`
-		for _, cert := range cv.Certifications {
-			html += `<div style="margin-bottom: 8px;">`
-			html += fmt.Sprintf("<strong>%s</strong>", cert.Name)
-			if cert.IssuingOrg != "" {
-				html += fmt.Sprintf(" - %s", cert.IssuingOrg)
-			}
-			if cert.IssueDate != "" {
-				html += fmt.Sprintf(" (%s)", cert.IssueDate)
-			}
-			html += `</div>`
-		}
-		html += `</div>`
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		h.log.Error().Err(err).Msg("Failed to execute resume template")
+		return ""
 	}
 
-	html += `</body></html>`
-	return html
+	return buf.String()
 }
 
-func (h *DocumentHandler) formatDescription(text string) string {
+func (h *DocumentHandler) formatDescriptionSafe(text string) string {
 	if text == "" {
 		return ""
 	}
@@ -447,15 +487,22 @@ func (h *DocumentHandler) formatDescription(text string) string {
 				result.WriteString("<ul>")
 				inList = true
 			}
-			content := strings.TrimSpace(trimmed[1:])
-			result.WriteString(fmt.Sprintf("<li>%s</li>", content))
+			var content string
+			if strings.HasPrefix(trimmed, "•") {
+				content = strings.TrimSpace(trimmed[len("•"):])
+			} else {
+				content = strings.TrimSpace(trimmed[1:])
+			}
+			escapedContent := template.HTMLEscapeString(content)
+			result.WriteString(fmt.Sprintf("<li>%s</li>", escapedContent))
 		} else {
 			if inList {
 				result.WriteString("</ul>")
 				inList = false
 			}
 			if trimmed != "" {
-				result.WriteString(fmt.Sprintf("<p>%s</p>", trimmed))
+				escapedContent := template.HTMLEscapeString(trimmed)
+				result.WriteString(fmt.Sprintf("<p>%s</p>", escapedContent))
 			}
 		}
 	}
@@ -466,9 +513,13 @@ func (h *DocumentHandler) formatDescription(text string) string {
 
 	formatted := result.String()
 	if formatted == "" {
-		return text
+		return template.HTMLEscapeString(text)
 	}
 	return formatted
+}
+
+func (h *DocumentHandler) formatDescription(text string) string {
+	return h.formatDescriptionSafe(text)
 }
 
 type SaveDocumentRequest struct {
@@ -484,6 +535,18 @@ func (h *DocumentHandler) SaveDocument(c *gin.Context) {
 		return
 	}
 	userID := userIDValue.(int)
+
+	const maxBodySize = 2 * 1024 * 1024
+	if c.Request.ContentLength > maxBodySize {
+		h.log.Warn().
+			Int64("content_length", c.Request.ContentLength).
+			Int("user_id", userID).
+			Msg("Request body exceeds maximum size")
+		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "Request body too large"})
+		return
+	}
+
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxBodySize)
 
 	var req SaveDocumentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
