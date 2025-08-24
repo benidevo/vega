@@ -10,10 +10,8 @@ func RegisterRoutes(router *gin.RouterGroup, handler *DocumentHandler, authMiddl
 	{
 		documentRoutes.GET("", handler.GetDocumentsHub)
 		documentRoutes.GET("/partial", handler.GetDocumentPartial)
-		documentRoutes.GET("/:id", handler.GetDocument)
 		documentRoutes.GET("/:id/export", handler.ExportDocument)
 		documentRoutes.POST("/save", csrfMiddleware, handler.SaveDocument)
-		documentRoutes.POST("/:id/regenerate", csrfMiddleware, handler.RegenerateDocument)
 		documentRoutes.DELETE("/:id", csrfMiddleware, handler.DeleteDocument)
 	}
 }

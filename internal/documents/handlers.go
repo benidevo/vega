@@ -101,35 +101,6 @@ func (h *DocumentHandler) GetDocumentsHub(c *gin.Context) {
 	h.renderer.HTML(c, http.StatusOK, "layouts/base.html", data)
 }
 
-func (h *DocumentHandler) GetDocument(c *gin.Context) {
-	userIDValue, exists := c.Get("userID")
-	if !exists {
-		alerts.RenderError(c, http.StatusUnauthorized, "Authentication required", alerts.ContextGeneral)
-		return
-	}
-	userID := userIDValue.(int)
-
-	docIDStr := c.Param("id")
-	docID, err := strconv.Atoi(docIDStr)
-	if err != nil {
-		alerts.RenderError(c, http.StatusBadRequest, "Invalid document ID", alerts.ContextGeneral)
-		return
-	}
-
-	doc, err := h.service.GetDocument(c.Request.Context(), docID, userID)
-	if err != nil {
-		if err == models.ErrDocumentNotFound {
-			alerts.RenderError(c, http.StatusNotFound, "Document not found", alerts.ContextGeneral)
-		} else {
-			h.log.Error().Err(err).Int("doc_id", docID).Msg("Failed to get document")
-			alerts.RenderError(c, http.StatusInternalServerError, "Failed to load document", alerts.ContextGeneral)
-		}
-		return
-	}
-
-	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(doc.Content))
-}
-
 func (h *DocumentHandler) DeleteDocument(c *gin.Context) {
 	userIDValue, exists := c.Get("userID")
 	if !exists {
@@ -158,47 +129,6 @@ func (h *DocumentHandler) DeleteDocument(c *gin.Context) {
 
 	c.Header("HX-Trigger", "document-deleted")
 	alerts.RenderSuccess(c, "Document deleted successfully", alerts.ContextGeneral)
-}
-
-func (h *DocumentHandler) RegenerateDocument(c *gin.Context) {
-	userIDValue, exists := c.Get("userID")
-	if !exists {
-		alerts.RenderError(c, http.StatusUnauthorized, "Authentication required", alerts.ContextGeneral)
-		return
-	}
-	userID := userIDValue.(int)
-
-	docIDStr := c.Param("id")
-	docID, err := strconv.Atoi(docIDStr)
-	if err != nil {
-		alerts.RenderError(c, http.StatusBadRequest, "Invalid document ID", alerts.ContextGeneral)
-		return
-	}
-
-	doc, err := h.service.GetDocument(c.Request.Context(), docID, userID)
-	if err != nil {
-		if err == models.ErrDocumentNotFound {
-			alerts.RenderError(c, http.StatusNotFound, "Document not found", alerts.ContextGeneral)
-		} else {
-			h.log.Error().Err(err).Int("doc_id", docID).Msg("Failed to get document for regeneration")
-			alerts.RenderError(c, http.StatusInternalServerError, "Failed to regenerate document", alerts.ContextGeneral)
-		}
-		return
-	}
-
-	redirectURL := fmt.Sprintf("/jobs/%d/details", doc.JobID)
-	if doc.DocumentType == models.DocumentTypeCoverLetter {
-		redirectURL = fmt.Sprintf("/jobs/%d/cover-letter", doc.JobID)
-	} else if doc.DocumentType == models.DocumentTypeResume {
-		redirectURL = fmt.Sprintf("/jobs/%d/cv", doc.JobID)
-	}
-
-	if c.GetHeader("HX-Request") == "true" {
-		c.Header("HX-Redirect", redirectURL)
-		c.Status(http.StatusOK)
-	} else {
-		c.Redirect(http.StatusSeeOther, redirectURL)
-	}
 }
 
 func (h *DocumentHandler) ExportDocument(c *gin.Context) {
@@ -247,7 +177,6 @@ func (h *DocumentHandler) ExportDocument(c *gin.Context) {
 		}
 	}
 
-	// Prepare response data
 	responseData := gin.H{
 		"content":     doc.Content,
 		"type":        string(doc.DocumentType),
@@ -256,7 +185,6 @@ func (h *DocumentHandler) ExportDocument(c *gin.Context) {
 		"companyName": companyName,
 	}
 
-	// For cover letters, try to fetch personal info
 	if doc.DocumentType == models.DocumentTypeCoverLetter {
 		var coverLetterData struct {
 			Content      string                  `json:"content"`
@@ -543,14 +471,12 @@ func (h *DocumentHandler) formatDescription(text string) string {
 	return formatted
 }
 
-// SaveDocumentRequest represents the request body for saving a document
 type SaveDocumentRequest struct {
 	JobID        int    `json:"jobId" binding:"required"`
 	DocumentType string `json:"documentType" binding:"required,oneof=resume cover_letter"`
 	Content      string `json:"content" binding:"required"`
 }
 
-// SaveDocument handles saving a document from the job details page
 func (h *DocumentHandler) SaveDocument(c *gin.Context) {
 	userIDValue, exists := c.Get("userID")
 	if !exists {
