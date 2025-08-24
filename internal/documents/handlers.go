@@ -186,7 +186,7 @@ func (h *DocumentHandler) RegenerateDocument(c *gin.Context) {
 		return
 	}
 
-	redirectURL := fmt.Sprintf("/jobs/%d", doc.JobID)
+	redirectURL := fmt.Sprintf("/jobs/%d/details", doc.JobID)
 	if doc.DocumentType == models.DocumentTypeCoverLetter {
 		redirectURL = fmt.Sprintf("/jobs/%d/cover-letter", doc.JobID)
 	} else if doc.DocumentType == models.DocumentTypeResume {

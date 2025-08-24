@@ -457,17 +457,18 @@ func (h *JobHandler) CreateJob(c *gin.Context) {
 		return
 	}
 
-	// Set headers for compatibility with test framework
 	if isNew {
+		// Set headers for compatibility with test framework
 		c.Header("X-Toast-Message", "Job added successfully!")
 		c.Header("X-Toast-Type", "success")
 		alerts.TriggerToast(c, "Job added successfully!", alerts.TypeSuccess)
 	} else {
+		// Set headers for compatibility with test framework
 		c.Header("X-Toast-Message", "Job already exists in your list")
 		c.Header("X-Toast-Type", "info")
 		alerts.TriggerToast(c, "Job already exists in your list", alerts.TypeInfo)
 	}
-	c.Header("HX-Redirect", fmt.Sprintf("/jobs/%d", job.ID))
+	c.Header("HX-Redirect", fmt.Sprintf("/jobs/%d/details", job.ID))
 }
 
 // GetJobDetails handles the HTTP request to retrieve and display details for a specific job.
