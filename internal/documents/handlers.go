@@ -565,6 +565,12 @@ func (h *DocumentHandler) SaveDocument(c *gin.Context) {
 		return
 	}
 
+	const maxContentSize = 10 * 1024 * 1024 // 10MB limit
+	if len(req.Content) > maxContentSize {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Document content too large"})
+		return
+	}
+
 	content := req.Content
 
 	if docType == models.DocumentTypeResume {
@@ -573,6 +579,39 @@ func (h *DocumentHandler) SaveDocument(c *gin.Context) {
 			h.log.Error().Err(err).Msg("Failed to parse resume JSON")
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid resume data"})
 			return
+		}
+		
+		if cv.PersonalInfo.FirstName == "" || cv.PersonalInfo.LastName == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Resume must include first and last name"})
+			return
+		}
+		
+		cleanJSON, err := json.Marshal(cv)
+		if err != nil {
+			h.log.Error().Err(err).Msg("Failed to re-encode resume JSON")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process resume data"})
+			return
+		}
+		content = string(cleanJSON)
+	} else if docType == models.DocumentTypeCoverLetter {
+		var coverLetterData map[string]interface{}
+		if err := json.Unmarshal([]byte(req.Content), &coverLetterData); err != nil {
+			wrappedContent := map[string]string{"content": req.Content}
+			cleanJSON, err := json.Marshal(wrappedContent)
+			if err != nil {
+				h.log.Error().Err(err).Msg("Failed to marshal cover letter wrapper")
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process cover letter data"})
+				return
+			}
+			content = string(cleanJSON)
+		} else {
+			cleanJSON, err := json.Marshal(coverLetterData)
+			if err != nil {
+				h.log.Error().Err(err).Msg("Failed to re-encode cover letter JSON")
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process cover letter data"})
+				return
+			}
+			content = string(cleanJSON)
 		}
 	}
 

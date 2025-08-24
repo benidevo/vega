@@ -2,13 +2,24 @@
 window.DocumentFormatter = (function() {
   'use strict';
 
+  function escapeHtmlAttribute(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/\//g, '&#x2F;');
+  }
+
   function formatCVAsHTML(cvData) {
     if (typeof cvData === 'string') {
       try {
         cvData = JSON.parse(cvData);
       } catch (e) {
         console.error('Failed to parse CV data:', e);
-        return cvData; // Return as-is if parsing fails
+        return escapeHtmlAttribute(cvData); // Escape if parsing fails
       }
     }
 
@@ -17,7 +28,7 @@ window.DocumentFormatter = (function() {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resume - ${cvData.personalInfo?.firstName || ''} ${cvData.personalInfo?.lastName || ''}</title>
+    <title>Resume - ${escapeHtmlAttribute(cvData.personalInfo?.firstName || '')} ${escapeHtmlAttribute(cvData.personalInfo?.lastName || '')}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -93,17 +104,17 @@ window.DocumentFormatter = (function() {
       const p = cvData.personalInfo;
       html += `
     <div class="header-section">
-        <h1>${p.firstName || ''} ${p.lastName || ''}</h1>`;
+        <h1>${escapeHtmlAttribute(p.firstName || '')} ${escapeHtmlAttribute(p.lastName || '')}</h1>`;
       
       if (p.title) {
-        html += `<div class="title">${p.title}</div>`;
+        html += `<div class="title">${escapeHtmlAttribute(p.title)}</div>`;
       }
 
       const contactParts = [];
-      if (p.location) contactParts.push(p.location);
-      if (p.email) contactParts.push(p.email);
-      if (p.phone) contactParts.push(p.phone);
-      if (p.linkedin) contactParts.push(p.linkedin);
+      if (p.location) contactParts.push(escapeHtmlAttribute(p.location));
+      if (p.email) contactParts.push(escapeHtmlAttribute(p.email));
+      if (p.phone) contactParts.push(escapeHtmlAttribute(p.phone));
+      if (p.linkedin) contactParts.push(escapeHtmlAttribute(p.linkedin));
       
       if (contactParts.length > 0) {
         html += `<div class="contact-info">${contactParts.join(' | ')}</div>`;
@@ -113,17 +124,18 @@ window.DocumentFormatter = (function() {
         html += `
         <div class="section">
             <h2>Professional Summary</h2>
-            <p class="description">${p.summary}</p>
+            <p class="description">${escapeHtmlAttribute(p.summary)}</p>
         </div>`;
       }
       html += `</div>`;
     }
 
     if (cvData.skills && cvData.skills.length > 0) {
+      const escapedSkills = cvData.skills.map(skill => escapeHtmlAttribute(skill));
       html += `
     <div class="section">
         <h2>Skills</h2>
-        <div class="skills">${cvData.skills.join(' • ')}</div>
+        <div class="skills">${escapedSkills.join(' • ')}</div>
     </div>`;
     }
 
@@ -135,8 +147,8 @@ window.DocumentFormatter = (function() {
       cvData.workExperience.forEach(exp => {
         html += `
         <div class="experience-item">
-            <h3>${exp.title} at ${exp.company}</h3>
-            <div class="date">${exp.startDate} - ${exp.endDate}${exp.location ? ' | ' + exp.location : ''}</div>
+            <h3>${escapeHtmlAttribute(exp.title)} at ${escapeHtmlAttribute(exp.company)}</h3>
+            <div class="date">${escapeHtmlAttribute(exp.startDate)} - ${escapeHtmlAttribute(exp.endDate)}${exp.location ? ' | ' + escapeHtmlAttribute(exp.location) : ''}</div>
             <div class="description">${formatDescription(exp.description)}</div>
         </div>`;
       });
@@ -151,9 +163,9 @@ window.DocumentFormatter = (function() {
       cvData.education.forEach(edu => {
         html += `
         <div class="education-item">
-            <h3>${edu.degree}${edu.fieldOfStudy ? ' in ' + edu.fieldOfStudy : ''}</h3>
-            <div>${edu.institution}</div>
-            <div class="date">${edu.startDate} - ${edu.endDate}</div>
+            <h3>${escapeHtmlAttribute(edu.degree)}${edu.fieldOfStudy ? ' in ' + escapeHtmlAttribute(edu.fieldOfStudy) : ''}</h3>
+            <div>${escapeHtmlAttribute(edu.institution)}</div>
+            <div class="date">${escapeHtmlAttribute(edu.startDate)} - ${escapeHtmlAttribute(edu.endDate)}</div>
         </div>`;
       });
       html += `</div>`;
@@ -166,9 +178,9 @@ window.DocumentFormatter = (function() {
       
       cvData.certifications.forEach(cert => {
         html += `<div style="margin-bottom: 8px;">`;
-        html += `<strong>${cert.name}</strong>`;
-        if (cert.issuingOrg) html += ` - ${cert.issuingOrg}`;
-        if (cert.issueDate) html += ` (${cert.issueDate})`;
+        html += `<strong>${escapeHtmlAttribute(cert.name)}</strong>`;
+        if (cert.issuingOrg) html += ` - ${escapeHtmlAttribute(cert.issuingOrg)}`;
+        if (cert.issueDate) html += ` (${escapeHtmlAttribute(cert.issueDate)})`;
         html += `</div>`;
       });
       html += `</div>`;
@@ -246,16 +258,16 @@ window.DocumentFormatter = (function() {
 
     if (personalInfo && (personalInfo.firstName || personalInfo.lastName)) {
       let headerHtml = `<div class="header">`;
-      headerHtml += `<h1>${personalInfo.firstName || ''} ${personalInfo.lastName || ''}</h1>`;
+      headerHtml += `<h1>${escapeHtmlAttribute(personalInfo.firstName || '')} ${escapeHtmlAttribute(personalInfo.lastName || '')}</h1>`;
       
       if (personalInfo.title) {
-        headerHtml += `<div class="title">${personalInfo.title}</div>`;
+        headerHtml += `<div class="title">${escapeHtmlAttribute(personalInfo.title)}</div>`;
       }
 
       const contactParts = [];
-      if (personalInfo.location) contactParts.push(personalInfo.location);
-      if (personalInfo.email) contactParts.push(personalInfo.email);
-      if (personalInfo.phone) contactParts.push(personalInfo.phone);
+      if (personalInfo.location) contactParts.push(escapeHtmlAttribute(personalInfo.location));
+      if (personalInfo.email) contactParts.push(escapeHtmlAttribute(personalInfo.email));
+      if (personalInfo.phone) contactParts.push(escapeHtmlAttribute(personalInfo.phone));
       
       if (contactParts.length > 0) {
         headerHtml += `<div class="contact-info">${contactParts.join(' | ')}</div>`;
@@ -282,14 +294,14 @@ window.DocumentFormatter = (function() {
           formatted += '<ul>';
           inList = true;
         }
-        formatted += `<li>${trimmed.substring(1).trim()}</li>`;
+        formatted += `<li>${escapeHtmlAttribute(trimmed.substring(1).trim())}</li>`;
       } else {
         if (inList) {
           formatted += '</ul>';
           inList = false;
         }
         if (trimmed) {
-          formatted += `<p>${trimmed}</p>`;
+          formatted += `<p>${escapeHtmlAttribute(trimmed)}</p>`;
         }
       }
     });
@@ -298,7 +310,7 @@ window.DocumentFormatter = (function() {
       formatted += '</ul>';
     }
     
-    return formatted || text;
+    return formatted || escapeHtmlAttribute(text);
   }
 
   function escapeHtml(text) {

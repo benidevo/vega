@@ -587,19 +587,32 @@ window.addCustomSection = function(sectionTitle) {
   newSection.className = 'resume-section mb-3';
   newSection.setAttribute('data-section', sectionTitle.toLowerCase().replace(/\s+/g, '-'));
 
-  newSection.innerHTML = `
-    <div class="flex justify-between items-center mb-2">
-      <h3 class="text-sm md:text-base font-semibold text-gray-900 border-b border-gray-300 pb-0.5 flex-grow" contenteditable="true">${sectionTitle}</h3>
-      <button onclick="deleteSection(this)" class="ml-2 text-red-500 hover:text-red-700 text-xs">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-        </svg>
-      </button>
-    </div>
-    <div contenteditable="true" class="text-xs md:text-sm text-gray-700">
-      Click here to add content...
-    </div>
-  `;
+  const flexContainer = document.createElement('div');
+  flexContainer.className = 'flex justify-between items-center mb-2';
+  
+  const heading = document.createElement('h3');
+  heading.className = 'text-sm md:text-base font-semibold text-gray-900 border-b border-gray-300 pb-0.5 flex-grow';
+  heading.contentEditable = 'true';
+  heading.textContent = sectionTitle;
+  
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'ml-2 text-red-500 hover:text-red-700 text-xs';
+  deleteBtn.onclick = function() { deleteSection(this); };
+  
+  deleteBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+  </svg>`;
+  
+  flexContainer.appendChild(heading);
+  flexContainer.appendChild(deleteBtn);
+  
+  const contentDiv = document.createElement('div');
+  contentDiv.contentEditable = 'true';
+  contentDiv.className = 'text-xs md:text-sm text-gray-700';
+  contentDiv.textContent = 'Click here to add content...';
+  
+  newSection.appendChild(flexContainer);
+  newSection.appendChild(contentDiv);
 
   resumeContent.insertBefore(newSection, addButton);
 }
