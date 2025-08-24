@@ -310,25 +310,29 @@ func (s *DocumentService) GetDocumentsByJob(ctx context.Context, userID, jobID i
 	userRef := fmt.Sprintf("user_%d", userID)
 
 	if s.cache != nil {
-		s.cacheMu.RLock()
 		cacheKey := fmt.Sprintf("job:%d:docs", jobID)
 		var docs []*models.Document
+		
+		s.cacheMu.RLock()
 		cacheErr := s.cache.Get(ctx, cacheKey, &docs)
-		s.cacheMu.RUnlock()
-
-		if cacheErr == nil {
-			if len(docs) > 0 {
-				if docs[0].UserID == userID {
-					return docs, nil
-				}
-				s.cacheMu.Lock()
+		if cacheErr == nil && len(docs) > 0 {
+			if docs[0].UserID == userID {
+				s.cacheMu.RUnlock()
+				return docs, nil
+			}
+			s.cacheMu.RUnlock()
+			s.cacheMu.Lock()
+			// Re-check after acquiring write lock (another goroutine may have already deleted it)
+			if checkErr := s.cache.Get(ctx, cacheKey, &docs); checkErr == nil {
 				_ = s.cache.Delete(ctx, cacheKey)
-				s.cacheMu.Unlock()
 				s.log.Warn().
 					Str("user_ref", userRef).
 					Int("job_id", jobID).
 					Msg("Cleared invalid cache entry for job documents")
 			}
+			s.cacheMu.Unlock()
+		} else {
+			s.cacheMu.RUnlock()
 		}
 	}
 

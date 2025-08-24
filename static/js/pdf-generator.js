@@ -12,7 +12,13 @@ window.PDFGenerator = (function() {
       const data = await response.json();
       
       if (docType === 'resume') {
-        const cvData = typeof data.content === 'string' ? JSON.parse(data.content) : data.content;
+        let cvData;
+        try {
+          cvData = typeof data.content === 'string' ? JSON.parse(data.content) : data.content;
+        } catch (e) {
+          console.error('Invalid JSON in resume content:', e);
+          throw new Error('Invalid resume format');
+        }
         await generateResumePDFFromData(cvData, data.jobId, data.jobTitle, data.companyName);
       } else {
         let personalInfo = null;
